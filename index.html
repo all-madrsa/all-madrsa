@@ -137,14 +137,19 @@
   window.openModal = function() { regModal.classList.remove('hidden'); regModal.classList.add('flex'); }
   window.closeModal = function() { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); }
 
-  // Auth button click
-  authBtn.onclick = async () => {
+authBtn.onclick = async () => {
+  try {
     if (!auth.currentUser) {
       await signInWithPopup(auth, provider);
     } else {
       await signOut(auth);
     }
-  };
+  } catch (err) {
+    console.error("Login error:", err.code, err.message);
+    alert("Login failed: " + err.message);
+  }
+};
+
 
   onAuthStateChanged(auth, user => {
     if (user) {
