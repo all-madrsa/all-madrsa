@@ -13,6 +13,8 @@
       transition: transform .12s ease, box-shadow .12s ease;
     }
     .btn-3d:active { transform: translateY(1px); box-shadow: 0 4px 0 rgba(0,0,0,0.12); }
+    .card { transition: all 0.3s ease; cursor: pointer; }
+    .card.expanded { transform: scale(1.05); z-index: 10; }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -49,19 +51,16 @@
       <input id="mname" placeholder="Madarsa ka naam" class="w-full border p-2 rounded" required />
       <input id="maddress" placeholder="Address (City, State)" class="w-full border p-2 rounded" required />
       <input id="mcontact" placeholder="Contact number" class="w-full border p-2 rounded" required />
+      <input id="mwhatsapp" placeholder="WhatsApp number" class="w-full border p-2 rounded" />
       <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
-
-      <input id="mwhatsapp" placeholder="WhatsApp Number" class="w-full border p-2 rounded" />
-
       <div>
-        <label class="block text-sm">Upload Madarsa Image</label>
+        <label class="block text-sm">Upload Image (optional)</label>
         <input id="mimage" type="file" accept="image/*" class="mt-1" />
       </div>
       <div>
-        <label class="block text-sm">Upload UPI QR Code (optional)</label>
+        <label class="block text-sm">Upload UPI QR (optional)</label>
         <input id="mupi" type="file" accept="image/*" class="mt-1" />
       </div>
-
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
         <button type="submit" class="btn-3d text-white px-4 py-2 rounded">Submit</button>
@@ -73,8 +72,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  import { getStorage, ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -88,10 +86,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const storage = getStorage(app);
   const provider = new GoogleAuthProvider();
-
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   const authBtn = document.getElementById('authBtn');
   const addBtn = document.getElementById('addBtn');
@@ -100,16 +95,21 @@
   const regForm = document.getElementById('regForm');
 
   let currentUser = null;
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   window.openModal = () => { regModal.classList.remove('hidden'); regModal.classList.add('flex'); }
   window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); }
 
   // Auth
   authBtn.onclick = async () => {
-    if (!auth.currentUser) {
-      await signInWithPopup(auth, provider);
-    } else {
-      await signOut(auth);
+    try {
+      if (!auth.currentUser) {
+        await signInWithPopup(auth, provider);
+      } else {
+        await signOut(auth);
+      }
+    } catch (err) {
+      alert("Login failed: " + err.message);
     }
   };
 
@@ -122,86 +122,70 @@
       authBtn.textContent = "Login with Google";
       addBtn.classList.add('hidden');
     }
-    subscribeList();
+    loadList();
   });
 
   addBtn.onclick = () => openModal();
 
-  // Realtime listener
-  function subscribeList() {
+  // Load list (live updates)
+  function loadList() {
     const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
-    onSnapshot(q, snapshot => {
+    onSnapshot(q, (qSnap) => {
       listDiv.innerHTML = '';
-      if (snapshot.empty) {
-        listDiv.innerHTML = '<p class="text-gray-500">Koi Madarsa abhi add nahi hua hai.</p>';
-        return;
-      }
-
-      snapshot.forEach(docSnap => {
+      qSnap.forEach(docSnap => {
         const d = docSnap.data();
-        const id = docSnap.id;
 
-        const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
-        const isOwner = currentUser && currentUser.uid === d.ownerUid;
-
-        if (!isAdmin && !isOwner && d.status !== "approved") return;
+        // Visibility rules
+        if (d.status === "pending" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
+        if (d.status === "rejected" && (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.uid !== d.ownerUid))) return;
 
         const card = document.createElement('div');
-        card.className = "p-4 rounded-xl shadow-lg bg-gradient-to-r from-green-100 to-emerald-200 transform transition duration-300 hover:rotate-1 hover:scale-[1.02] cursor-pointer overflow-hidden max-h-[260px]";
+        card.className = "card p-4 rounded-xl shadow bg-gradient-to-r from-green-100 to-emerald-200 relative";
+
         card.innerHTML = `
-          ${d.image ? `<img src="${d.image}" class="w-full h-40 object-contain rounded mb-2 bg-white"/>` : ""}
+          ${d.image ? `<img src="${d.image}" class="w-full h-48 object-contain bg-white rounded mb-2"/>` : ""}
           <div class="text-lg font-bold text-emerald-800">${escapeHtml(d.name || '')}</div>
           <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
-          <div class="mt-1 text-xs text-gray-500">${d.contact || ''}</div>
-          <div class="mt-1 text-xs font-semibold">
-            Status: 
-            <span class="${d.status === 'approved' ? 'text-green-600' : d.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'}">
-              ${d.status}
-            </span>
+          <div class="mt-1 text-xs text-gray-500">📞 ${d.contact || ''}</div>
+          ${d.status === "rejected" ? `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>` : ""}
+          <div class="extra hidden mt-2">
+            ${d.courses && d.courses.length ? `<div class="text-sm"><b>Courses:</b> ${d.courses.join(", ")}</div>` : ""}
+            ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="block mt-2 bg-green-500 text-white px-3 py-1 rounded">📲 WhatsApp</a>` : ""}
+            ${d.showExtra && d.upi ? `<img src="${d.upi}" class="w-32 mt-2 rounded border"/>` : ""}
           </div>
-
-          <div class="extra hidden mt-2 text-sm text-gray-800 space-y-2">
-            ${d.courses?.length ? `<p><b>Courses:</b> ${d.courses.join(", ")}</p>` : ""}
-            <p><b>Owner Email:</b> ${d.ownerEmail || ""}</p>
-            ${d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="px-3 py-1 bg-green-600 text-white rounded inline-block">WhatsApp</a>` : ""}
-            ${d.upiQR ? `<img src="${d.upiQR}" class="w-32 h-32 object-contain border rounded bg-white"/>` : ""}
-          </div>
-
-          ${isAdmin ? `
-            <div class="mt-2 flex flex-wrap gap-2">
-              <button onclick="updateStatus('${id}', 'approved')" class="px-3 py-1 bg-green-600 text-white rounded">Approve</button>
-              <button onclick="updateStatus('${id}', 'rejected')" class="px-3 py-1 bg-red-600 text-white rounded">Reject</button>
-              <button onclick="deleteMadarsa('${id}')" class="px-3 py-1 bg-gray-700 text-white rounded">Delete</button>
-            </div>
-          ` : ""}
+          ${currentUser && currentUser.email === ADMIN_EMAIL ? `
+            <div class="flex gap-2 mt-2">
+              <button class="approve btn-3d text-white px-3 py-1 rounded">Approve</button>
+              <button class="reject bg-red-500 text-white px-3 py-1 rounded">Reject</button>
+              <button class="enable bg-blue-500 text-white px-3 py-1 rounded">Enable Extra Info</button>
+            </div>` : ""}
         `;
 
-        // Expand/Collapse on click
-        card.onclick = (e) => {
-          if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.tagName === "IMG") return;
-          card.classList.toggle("max-h-[260px]");
-          card.classList.toggle("max-h-[800px]");
-          card.classList.toggle("scale-105");
+        // expand toggle
+        card.querySelector("img")?.addEventListener("click", () => {
+          card.classList.toggle("expanded");
           card.querySelector(".extra").classList.toggle("hidden");
-        };
+        });
+
+        // admin actions
+        if (currentUser && currentUser.email === ADMIN_EMAIL) {
+          card.querySelector(".approve")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
+          });
+          card.querySelector(".reject")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { status: "rejected" });
+          });
+          card.querySelector(".enable")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { showExtra: true });
+          });
+        }
 
         listDiv.appendChild(card);
       });
     });
   }
 
-  // Update status
-  window.updateStatus = async (docId, newStatus) => {
-    await updateDoc(doc(db, "madarse", docId), { status: newStatus });
-  };
-
-  // Delete madarsa
-  window.deleteMadarsa = async (docId) => {
-    if (!confirm("Delete karna hai?")) return;
-    await deleteDoc(doc(db, "madarse", docId));
-  };
-
-  // Submit form
+  // Submit form (ImgBB uploads)
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!auth.currentUser) { alert('Google login required'); return; }
@@ -209,48 +193,44 @@
     const name = document.getElementById('mname').value.trim();
     const address = document.getElementById('maddress').value.trim();
     const contact = document.getElementById('mcontact').value.trim();
-    const courses = document.getElementById('mcourses').value.trim();
     const whatsapp = document.getElementById('mwhatsapp').value.trim();
+    const courses = document.getElementById('mcourses').value.trim();
     const imageFile = document.getElementById('mimage').files[0];
     const upiFile = document.getElementById('mupi').files[0];
 
-    let imgUrl = "";
-    let upiUrl = "";
-
-    if (imageFile) {
-      const id = Date.now().toString();
-      const imgRef = sref(storage, `madarse/${auth.currentUser.uid}_${id}_${imageFile.name}`);
-      const uploadSnap = await uploadBytes(imgRef, imageFile);
-      imgUrl = await getDownloadURL(uploadSnap.ref);
+    let imgUrl = "", upiUrl = "";
+    async function uploadImg(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) return data.data.url;
+      else throw new Error(data.error.message);
     }
 
-    if (upiFile) {
-      const id = Date.now().toString();
-      const upiRef = sref(storage, `madarse/${auth.currentUser.uid}_${id}_${upiFile.name}`);
-      const uploadSnap = await uploadBytes(upiRef, upiFile);
-      upiUrl = await getDownloadURL(uploadSnap.ref);
-    }
+    if (imageFile) imgUrl = await uploadImg(imageFile).catch(err => alert("Image upload failed: " + err.message));
+    if (upiFile) upiUrl = await uploadImg(upiFile).catch(err => alert("UPI upload failed: " + err.message));
 
     await addDoc(collection(db, 'madarse'), {
-      name,
-      address,
-      contact,
+      name, address, contact, whatsapp,
       courses: courses ? courses.split(',').map(s => s.trim()) : [],
-      whatsapp,
-      image: imgUrl,
-      upiQR: upiUrl,
+      image: imgUrl, upi: upiUrl,
       ownerUid: auth.currentUser.uid,
       ownerEmail: auth.currentUser.email,
       status: 'pending',
+      showExtra: false,
       createdAt: Date.now()
     });
 
+    alert('Registration submitted ✅');
     closeModal();
   });
 
   function escapeHtml(text) {
     if (!text) return '';
-    return text.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    return text.replace(/[&<>"']/g, c => (
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+    ));
   }
 </script>
 </body>
