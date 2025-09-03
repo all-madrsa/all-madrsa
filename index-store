@@ -6,67 +6,45 @@
   <title>Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .logo-text {
-      font-size: 1.8rem;
-      font-weight: 900;
-      background: linear-gradient(to right, #ff0000, #00ffcc, #ff00ff, #00ccff);
-      -webkit-background-clip: text;
-      color: transparent;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
-    }
     .btn-3d {
-      background: linear-gradient(to right, #ff7eb3, #ff758c, #ffce00, #7afcff);
-      color: #fff;
-      font-weight: 700;
-      padding: 6px 12px;
-      border-radius: 8px;
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
-      font-size: 0.9rem;
+      background: linear-gradient(180deg,#4ade80,#16a34a);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.2);
+      transform: translateY(-1px);
+      transition: transform .12s ease, box-shadow .12s ease;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.7rem;
     }
-    .btn-3d:hover {
-      transform: translateY(-2px);
-      box-shadow: 3px 3px 8px rgba(0,0,0,0.5);
+    .btn-3d:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #ff00cc, #3333ff, #00ffcc, #ff9900);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
     }
     .dropdown-menu {
-      display: none;
       position: absolute;
-      top: 100%;
-      left: 0;
-      background: #fff;
+      top: 100%; left: 0;
+      background: white;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      display: none;
       min-width: 150px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      border-radius: 6px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
       z-index: 50;
     }
-    .dropdown:hover .dropdown-menu {
-      display: block;
-    }
+    .dropdown:hover .dropdown-menu { display: block; }
     .dropdown-menu a {
       display: block;
-      padding: 8px 12px;
-      color: #333;
+      padding: 0.25rem 0.5rem;
       font-size: 0.85rem;
+      color: #333;
+      border-radius: 0.25rem;
     }
-    .dropdown-menu a:hover {
-      background: #f1f1f1;
-    }
-    .scrolling-text {
-      background: linear-gradient(to right, #ff00cc, #3333ff, #00ffcc);
-      color: #fff;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-    }
-    .scrolling-text span {
-      display: inline-block;
-      padding-left: 100%;
-      animation: scroll-left 15s linear infinite;
-    }
-    @keyframes scroll-left {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
-    }
+    .dropdown-menu a:hover { background: #f3f4f6; }
+    .card { transition: all 0.3s ease; cursor: pointer; position: relative; }
+    .card.expanded { transform: scale(1.05); z-index: 10; }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -77,12 +55,10 @@
     <!-- Logo + Login -->
     <div class="flex items-center justify-between w-full md:w-auto">
       <div class="logo-text">Talimi Ittehad</div>
-      <div class="flex items-center gap-2">
-        <button id="authBtn" class="btn-3d ml-3">Login</button>
-      </div>
+      <button id="authBtn" class="btn-3d ml-2">Login</button>
     </div>
-    <!-- Menu row -->
-    <div class="flex flex-wrap items-center gap-2 mt-2 md:mt-0 text-sm">
+    <!-- Menu + Buttons -->
+    <div class="flex flex-wrap items-center gap-1 mt-2 md:mt-0 text-sm">
       <!-- Dropdown 1 -->
       <div class="dropdown relative">
         <button class="btn-3d">About ⬇</button>
@@ -103,25 +79,26 @@
           <a href="#">Program</a>
         </div>
       </div>
-      <!-- Donate + Scroll buttons -->
-      <div class="flex items-center gap-2 ml-2">
-        <button class="btn-3d">🙏 Donate</button>
-        <button id="scrollBtn" class="btn-3d hidden">✍ Add Text</button>
-      </div>
+      <!-- Donate + Scroll buttons (tight together) -->
+      <button class="btn-3d">🙏 Donate</button>
+      <button id="scrollBtn" class="btn-3d hidden">✍ Add Text</button>
     </div>
   </div>
 </header>
 
-<!-- Scrolling text -->
-<div class="scrolling-text py-2">
-  <span id="scrollText">Welcome to Talimi Ittehad - Helping Poor Children for Education</span>
+<!-- SCROLLING TEXT -->
+<div id="scrollBox" class="bg-gradient-to-r from-yellow-400 via-red-400 to-pink-500 text-white py-1 overflow-hidden">
+  <marquee behavior="scroll" direction="left" scrollamount="5" class="font-semibold">
+    📢 Welcome to Talimi Ittehad – सभी मदरसे एक प्लेटफ़ॉर्म पर जुड़ें, तालीम को आगे बढ़ाएँ 🌙
+  </marquee>
 </div>
 
+<!-- MAIN -->
 <main class="max-w-6xl mx-auto p-4">
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Modal -->
+<!-- MODAL (Register Madarsa) -->
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
@@ -144,7 +121,7 @@
       </div>
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
-        <button type="submit" id="submitBtn" class="btn-3d">Submit</button>
+        <button type="submit" class="btn-3d text-white rounded">Submit</button>
       </div>
     </form>
   </div>
@@ -173,12 +150,10 @@
   const listDiv = document.getElementById('list');
   const regModal = document.getElementById('regModal');
   const regForm = document.getElementById('regForm');
-  const submitBtn = document.getElementById('submitBtn');
   const scrollBtn = document.getElementById('scrollBtn');
-  const scrollText = document.getElementById('scrollText');
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   let currentUser = null;
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   window.openModal = () => { regModal.classList.remove('hidden'); regModal.classList.add('flex'); }
   window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); }
@@ -200,21 +175,15 @@
     currentUser = user;
     if (user) {
       authBtn.textContent = "Logout";
-      if (user.email === ADMIN_EMAIL) scrollBtn.classList.remove("hidden");
+      if (user.email === ADMIN_EMAIL) {
+        scrollBtn.classList.remove("hidden");
+      }
     } else {
       authBtn.textContent = "Login";
       scrollBtn.classList.add("hidden");
     }
     loadList();
   });
-
-  // scrolling text update
-  scrollBtn.onclick = () => {
-    const newText = prompt("Enter scrolling text:");
-    if (newText) {
-      scrollText.textContent = newText;
-    }
-  };
 
   // Load list (live updates)
   function loadList() {
@@ -224,43 +193,44 @@
       qSnap.forEach(docSnap => {
         const d = docSnap.data();
 
-        // visibility rules
         if (d.status === "pending" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
         if (d.status === "rejected" && (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.uid !== d.ownerUid))) return;
 
         const card = document.createElement('div');
-        card.className = `p-4 rounded-xl shadow relative ${d.status === "approved" ? "bg-green-200" : "bg-white"}`;
+        card.className = `card p-4 rounded-xl shadow relative ${d.status === "approved" ? "bg-green-200" : "bg-gradient-to-r from-green-100 to-emerald-200"}`;
 
         card.innerHTML = `
-          ${d.image ? `<img src="${d.image}" class="w-full h-40 object-contain bg-white rounded mb-2"/>` : ""}
+          ${d.image ? `<img src="${d.image}" class="w-full h-48 object-contain bg-white rounded mb-2"/>` : ""}
           <div class="text-lg font-bold text-indigo-700">${escapeHtml(d.name || '')}</div>
           <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
-          ${d.status === "approved" && d.showExtra ? `<div class="mt-1 text-xs text-gray-800">📞 ${d.contact || ''}</div>` : ""}
-          ${d.status === "approved" && d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-2">WhatsApp</a>` : ""}
-          ${d.status === "approved" && d.showExtra && d.upi ? `
-            <div class="mt-2">
-              <img src="${d.upi}" class="w-24 mx-auto"/>
-              <p class="text-center text-sm text-purple-700 mt-1">🙏 Please donate for poor children's education</p>
-            </div>` : ""}
+          ${d.showExtra && d.contact ? `<div class="mt-1 text-xs text-gray-800">📞 ${d.contact}</div>` : ""}
           ${d.status === "rejected" ? `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>` : ""}
+          <div class="extra hidden mt-2">
+            ${d.courses && d.courses.length ? `<div class="text-sm text-pink-600"><b>📚 Courses:</b> ${d.courses.join(", ")}</div>` : ""}
+            ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="block mt-2 bg-green-500 text-white px-3 py-1 rounded">📲 WhatsApp</a>` : ""}
+            ${d.showExtra && d.upi ? `
+              <div class="mt-2">
+                <img src="${d.upi}" class="w-32 rounded border mx-auto"/>
+                <p class="text-center text-sm text-purple-700 mt-1">🙏 Please donate for poor children's education (गरीब बच्चों की तालीम में मदद करें)</p>
+              </div>` : ""}
+          </div>
           ${currentUser && currentUser.email === ADMIN_EMAIL ? `
-            <div class="flex gap-2 mt-2 flex-wrap">
+            <div class="flex gap-2 mt-2">
               ${d.status === "approved" 
                 ? `<button disabled class="bg-green-600 text-white px-3 py-1 rounded shadow">✅ Approved</button>` 
-                : `<button class="approve btn-3d">Approve</button>`}
-              <button class="reject btn-3d">Reject</button>
-              <button class="toggleExtra btn-3d">
+                : `<button class="approve btn-3d text-white rounded">Approve</button>`}
+              <button class="reject bg-red-500 text-white px-3 py-1 rounded shadow">Reject</button>
+              <button class="toggleExtra ${d.showExtra ? 'bg-orange-500' : 'bg-blue-500'} text-white px-3 py-1 rounded shadow">
                 ${d.showExtra ? '❌ Disable Extra Info' : 'Enable Extra Info'}
               </button>
             </div>` : ""}
-          ${d.status !== "approved" ? `
-            <div class="absolute top-2 right-2">
-              <span class="relative flex h-3 w-3">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
-              </span>
-            </div>` : ""}
         `;
+
+        // expand toggle
+        card.querySelector("img")?.addEventListener("click", () => {
+          card.classList.toggle("expanded");
+          card.querySelector(".extra").classList.toggle("hidden");
+        });
 
         // admin actions
         if (currentUser && currentUser.email === ADMIN_EMAIL) {
@@ -280,13 +250,10 @@
     });
   }
 
-  // Submit form (ImgBB uploads)
+  // Submit form
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!auth.currentUser) { alert('Google login required'); return; }
-
-    submitBtn.disabled = true;
-    setTimeout(() => submitBtn.disabled = false, 2000);
 
     const name = document.getElementById('mname').value.trim();
     const address = document.getElementById('maddress').value.trim();
