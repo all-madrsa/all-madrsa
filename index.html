@@ -8,11 +8,14 @@
   <style>
     .btn-3d {
       background: linear-gradient(180deg,#4ade80,#16a34a);
-      box-shadow: 0 8px 0 rgba(0,0,0,0.18), 0 12px 24px rgba(0,0,0,0.12);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.15);
       transform: translateY(-2px);
-      transition: transform .12s ease, box-shadow .12s ease;
+      transition: all .15s ease;
     }
-    .btn-3d:active { transform: translateY(1px); box-shadow: 0 4px 0 rgba(0,0,0,0.12); }
+    .btn-3d:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .btn-red { background: linear-gradient(180deg,#f87171,#dc2626); }
+    .btn-blue { background: linear-gradient(180deg,#60a5fa,#2563eb); }
+    .btn-yellow { background: linear-gradient(180deg,#facc15,#ca8a04); }
     .card { transition: all 0.3s ease; cursor: pointer; }
     .card.expanded { transform: scale(1.05); z-index: 10; }
   </style>
@@ -22,13 +25,20 @@
 <header class="bg-white shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex items-center justify-between p-3">
     <div class="flex items-center gap-3">
-      <img src="https://source.unsplash.com/80x80/?mosque" class="w-12 h-12 object-cover rounded"/>
+      <img id="headerImg" src="https://source.unsplash.com/120x120/?mosque" class="w-14 h-14 object-cover rounded"/>
       <div>
         <div class="text-xl font-bold">Madarsa Connect</div>
         <div class="text-sm text-gray-500">Sabhi Madarse ek platform par</div>
       </div>
     </div>
     <div class="flex items-center gap-3">
+      <!-- Admin Only -->
+      <div id="adminHeaderBtns" class="hidden gap-2">
+        <button id="changeHeaderBtn" class="btn-3d btn-blue text-white px-3 py-1 rounded">Change Header</button>
+        <button id="deleteHeaderBtn" class="btn-3d btn-red text-white px-3 py-1 rounded">Delete</button>
+        <input id="headerFile" type="file" accept="image/*" class="hidden"/>
+      </div>
+      <!-- Common -->
       <button id="addBtn" class="btn-3d text-white px-4 py-2 rounded hidden">+ Add Madarsa</button>
       <button id="authBtn" class="px-4 py-2 border rounded">Login with Google</button>
     </div>
@@ -63,7 +73,7 @@
       </div>
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
-        <button type="submit" class="btn-3d text-white px-4 py-2 rounded">Submit</button>
+        <button id="submitBtn" type="submit" class="btn-3d text-white px-4 py-2 rounded">Submit</button>
       </div>
     </form>
   </div>
@@ -72,9 +82,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
     authDomain: "all-madrsa.firebaseapp.com",
@@ -94,12 +103,17 @@
   const listDiv = document.getElementById('list');
   const regModal = document.getElementById('regModal');
   const regForm = document.getElementById('regForm');
+  const submitBtn = document.getElementById('submitBtn');
+
+  const adminHeaderBtns = document.getElementById("adminHeaderBtns");
+  const headerImg = document.getElementById("headerImg");
+  const headerFile = document.getElementById("headerFile");
 
   let currentUser = null;
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   window.openModal = () => { regModal.classList.remove('hidden'); regModal.classList.add('flex'); }
-  window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); }
+  window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); submitBtn.disabled = false; submitBtn.textContent = "Submit"; }
 
   // Auth
   authBtn.onclick = async () => {
@@ -119,9 +133,11 @@
     if (user) {
       authBtn.textContent = "Logout";
       addBtn.classList.remove('hidden');
+      if (user.email === ADMIN_EMAIL) adminHeaderBtns.classList.remove("hidden");
     } else {
       authBtn.textContent = "Login with Google";
       addBtn.classList.add('hidden');
+      adminHeaderBtns.classList.add("hidden");
     }
     loadList();
   });
@@ -136,7 +152,6 @@
       qSnap.forEach(docSnap => {
         const d = docSnap.data();
 
-        // Visibility rules
         if (d.status === "pending" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
         if (d.status === "rejected" && (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.uid !== d.ownerUid))) return;
 
@@ -151,14 +166,14 @@
           ${d.status === "rejected" ? `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>` : ""}
           <div class="extra hidden mt-2">
             ${d.courses && d.courses.length ? `<div class="text-sm"><b>Courses:</b> ${d.courses.join(", ")}</div>` : ""}
-            ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="block mt-2 bg-green-500 text-white px-3 py-1 rounded">📲 WhatsApp</a>` : ""}
+            ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="block mt-2 btn-3d text-white px-3 py-1 rounded">📲 WhatsApp</a>` : ""}
             ${d.showExtra && d.upi ? `<img src="${d.upi}" class="w-32 mt-2 rounded border"/>` : ""}
           </div>
           ${currentUser && currentUser.email === ADMIN_EMAIL ? `
             <div class="flex gap-2 mt-2">
               <button class="approve btn-3d text-white px-3 py-1 rounded">Approve</button>
-              <button class="reject bg-red-500 text-white px-3 py-1 rounded">Reject</button>
-              <button class="enable bg-blue-500 text-white px-3 py-1 rounded">Enable Extra Info</button>
+              <button class="reject btn-3d btn-red text-white px-3 py-1 rounded">Reject</button>
+              <button class="enable btn-3d btn-blue text-white px-3 py-1 rounded">Enable Extra</button>
             </div>` : ""}
         `;
 
@@ -168,16 +183,22 @@
           card.querySelector(".extra").classList.toggle("hidden");
         });
 
-        // admin actions
+        // admin actions with feedback
         if (currentUser && currentUser.email === ADMIN_EMAIL) {
-          card.querySelector(".approve")?.addEventListener("click", async () => {
+          card.querySelector(".approve")?.addEventListener("click", async (e) => {
+            e.target.textContent = "Approving...";
             await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
+            e.target.textContent = "Approved ✅";
           });
-          card.querySelector(".reject")?.addEventListener("click", async () => {
+          card.querySelector(".reject")?.addEventListener("click", async (e) => {
+            e.target.textContent = "Rejecting...";
             await updateDoc(doc(db, "madarse", docSnap.id), { status: "rejected" });
+            e.target.textContent = "Rejected ❌";
           });
-          card.querySelector(".enable")?.addEventListener("click", async () => {
+          card.querySelector(".enable")?.addEventListener("click", async (e) => {
+            e.target.textContent = "Enabling...";
             await updateDoc(doc(db, "madarse", docSnap.id), { showExtra: true });
+            e.target.textContent = "Enabled ✅";
           });
         }
 
@@ -186,10 +207,23 @@
     });
   }
 
-  // Submit form (ImgBB uploads)
+  // ImgBB upload function
+  async function uploadImg(file) {
+    const formData = new FormData();
+    formData.append("image", file);
+    const res = await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4", { method: "POST", body: formData });
+    const data = await res.json();
+    if (data.success) return data.data.url;
+    else throw new Error(data.error.message);
+  }
+
+  // Submit form
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!auth.currentUser) { alert('Google login required'); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
 
     const name = document.getElementById('mname').value.trim();
     const address = document.getElementById('maddress').value.trim();
@@ -199,33 +233,42 @@
     const imageFile = document.getElementById('mimage').files[0];
     const upiFile = document.getElementById('mupi').files[0];
 
-    let imgUrl = "", upiUrl = "";
-    async function uploadImg(file) {
-      const formData = new FormData();
-      formData.append("image", file);
-      const res = await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4", { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.success) return data.data.url;
-      else throw new Error(data.error.message);
+    try {
+      let imgUrl = "", upiUrl = "";
+      if (imageFile) imgUrl = await uploadImg(imageFile);
+      if (upiFile) upiUrl = await uploadImg(upiFile);
+
+      await addDoc(collection(db, 'madarse'), {
+        name, address, contact, whatsapp,
+        courses: courses ? courses.split(',').map(s => s.trim()) : [],
+        image: imgUrl, upi: upiUrl,
+        ownerUid: auth.currentUser.uid,
+        ownerEmail: auth.currentUser.email,
+        status: 'pending',
+        showExtra: false,
+        createdAt: Date.now()
+      });
+
+      submitBtn.textContent = "Submitted ✅";
+      setTimeout(() => closeModal(), 1200);
+    } catch (err) {
+      submitBtn.textContent = "Error ❌";
+      submitBtn.disabled = false;
     }
-
-    if (imageFile) imgUrl = await uploadImg(imageFile).catch(err => alert("Image upload failed: " + err.message));
-    if (upiFile) upiUrl = await uploadImg(upiFile).catch(err => alert("UPI upload failed: " + err.message));
-
-    await addDoc(collection(db, 'madarse'), {
-      name, address, contact, whatsapp,
-      courses: courses ? courses.split(',').map(s => s.trim()) : [],
-      image: imgUrl, upi: upiUrl,
-      ownerUid: auth.currentUser.uid,
-      ownerEmail: auth.currentUser.email,
-      status: 'pending',
-      showExtra: false,
-      createdAt: Date.now()
-    });
-
-    alert('Registration submitted ✅');
-    closeModal();
   });
+
+  // Admin Header buttons
+  document.getElementById("changeHeaderBtn").onclick = () => headerFile.click();
+  headerFile.onchange = async (e) => {
+    if (!e.target.files[0]) return;
+    const url = await uploadImg(e.target.files[0]);
+    headerImg.src = url;
+    await setDoc(doc(db, "config", "header"), { url });
+  };
+  document.getElementById("deleteHeaderBtn").onclick = async () => {
+    headerImg.src = "https://source.unsplash.com/120x120/?mosque";
+    await setDoc(doc(db, "config", "header"), { url: headerImg.src });
+  };
 
   function escapeHtml(text) {
     if (!text) return '';
