@@ -65,8 +65,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  import { getStorage, ref as sref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getStorage, ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -121,26 +121,37 @@
 
   addBtn.onclick = () => openModal();
 
-  // Load list
+  // Load list (newest first)
   async function loadList() {
     listDiv.innerHTML = 'Loading...';
-    const qSnap = await getDocs(query(collection(db, "madarse"), orderBy("createdAt", "desc")));
-    listDiv.innerHTML = '';
-    qSnap.forEach(docSnap => {
-      const d = docSnap.data();
-      const card = document.createElement('div');
-      card.className = "p-4 rounded-xl shadow bg-gradient-to-r from-green-100 to-emerald-200";
-      card.innerHTML = `
-        ${d.image ? `<img src="${d.image}" class="w-full h-40 object-cover rounded mb-2"/>` : ""}
-        <div class="text-lg font-bold text-emerald-800">${escapeHtml(d.name || '')}</div>
-        <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
-        <div class="mt-1 text-xs text-gray-500">${d.contact || ''}</div>
-      `;
-      listDiv.appendChild(card);
-    });
+    try {
+      const qSnap = await getDocs(query(collection(db, "madarse"), orderBy("createdAt", "desc")));
+      listDiv.innerHTML = '';
+
+      if (qSnap.empty) {
+        listDiv.innerHTML = '<p class="text-gray-500">Koi Madarsa abhi add nahi hua hai.</p>';
+        return;
+      }
+
+      qSnap.forEach(docSnap => {
+        const d = docSnap.data();
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-xl shadow bg-gradient-to-r from-green-100 to-emerald-200";
+        card.innerHTML = `
+          ${d.image ? `<img src="${d.image}" class="w-full h-40 object-cover rounded mb-2"/>` : ""}
+          <div class="text-lg font-bold text-emerald-800">${escapeHtml(d.name || '')}</div>
+          <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
+          <div class="mt-1 text-xs text-gray-500">${d.contact || ''}</div>
+        `;
+        listDiv.appendChild(card);
+      });
+    } catch (err) {
+      console.error("❌ Firestore read error:", err);
+      listDiv.innerHTML = `<p class="text-red-500">Error loading data: ${err.message}</p>`;
+    }
   }
 
-  // Submit form with image upload
+  // Submit form
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!auth.currentUser) { alert('Google login required'); return; }
@@ -157,29 +168,13 @@
         console.log("📤 Upload start:", imageFile.name);
         const id = Date.now().toString();
         const imgRef = sref(storage, `madarse/${auth.currentUser.uid}_${id}_${imageFile.name}`);
-        const uploadTask = uploadBytesResumable(imgRef, imageFile);
-
-        await new Promise((resolve, reject) => {
-          uploadTask.on(
-            "state_changed",
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              console.log("Progress:", progress + "%");
-            },
-            (error) => {
-              console.error("❌ Upload failed", error);
-              alert("Image upload failed: " + error.message);
-              reject(error);
-            },
-            async () => {
-              imgUrl = await getDownloadURL(uploadTask.snapshot.ref);
-              console.log("🌐 URL:", imgUrl);
-              resolve();
-            }
-          );
-        });
+        const uploadSnap = await uploadBytes(imgRef, imageFile);
+        console.log("✅ Upload complete");
+        imgUrl = await getDownloadURL(uploadSnap.ref);
+        console.log("🌐 URL:", imgUrl);
       } catch (err) {
-        console.error("❌ Upload exception", err);
+        console.error("❌ Upload failed", err);
+        alert("Image upload failed: " + err.message);
       }
     }
 
