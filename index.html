@@ -3,133 +3,85 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>talimi ittehad</title>
+  <title>Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 3D Buttons */
     .btn-3d {
       background: linear-gradient(180deg,#4ade80,#16a34a);
       box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.15);
       transform: translateY(-2px);
-      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      transition: transform .12s ease, box-shadow .12s ease;
     }
-    .btn-3d:hover { filter: brightness(1.05); }
     .btn-3d:active { transform: translateY(1px); box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
-
-    /* 3D Title */
-    .title-3d {
-      font-weight: 800;
-      font-size: 1.75rem;
-      letter-spacing: 1px;
-      text-shadow:
-        0 1px 0 #fff,
-        0 2px 0 #e5e7eb,
-        0 3px 0 #d1d5db,
-        0 4px 0 #9ca3af,
-        0 5px 10px rgba(0,0,0,.25);
-      background: linear-gradient(90deg,#f97316,#ef4444,#22c55e,#3b82f6,#a855f7);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    /* Header gradient + depth */
-    .header-3d {
-      background: linear-gradient(135deg,#f0f9ff 0%, #e0f2fe 30%, #e9d5ff 60%, #fce7f3 100%);
-      box-shadow: 0 8px 24px rgba(0,0,0,.08);
-    }
-
-    /* Cards */
     .card { transition: all 0.3s ease; cursor: pointer; position: relative; }
     .card.expanded { transform: scale(1.05); z-index: 10; }
-
-    /* Blinking LED */
-    .dot {
-      position: relative; display: inline-flex; height: 12px; width: 12px;
-    }
-    .dot::before {
-      content:""; position:absolute; inset:0; border-radius:999px; background:#16a34a;
-      animation: ping 1s cubic-bezier(0,0,0.2,1) infinite; opacity:.75;
-    }
-    .dot::after {
-      content:""; position:relative; display:inline-flex; height:12px; width:12px; border-radius:999px; background:#16a34a;
-    }
-    @keyframes ping { 75%,100% { transform: scale(2); opacity: 0; } }
-
-    /* Marquee */
-    .marquee { overflow:hidden; white-space:nowrap; background:linear-gradient(90deg,#22c55e,#3b82f6,#a855f7,#ef4444); color:#fff; border-radius:12px; }
-    .marquee span { display:inline-block; padding:8px 16px; animation: scroll-left 18s linear infinite; font-weight:600; }
-    @keyframes scroll-left { 0%{transform:translateX(100%);} 100%{transform:translateX(-100%);} }
-
-    /* Dropdown */
-    .dropdown { position:relative; }
+    .dropdown { position: relative; }
     .dropdown-menu {
-      position:absolute; top:110%; right:0; min-width:200px; background:white; border-radius:12px;
-      box-shadow:0 16px 40px rgba(0,0,0,.12); border:1px solid #e5e7eb; padding:6px; display:none;
+      position: absolute; top: 100%; right: 0; 
+      background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: none; min-width: 180px;
     }
-    .dropdown-menu.show { display:block; }
-    .dropdown-item { display:block; padding:8px 12px; border-radius:10px; font-weight:500; }
-    .dropdown-item:hover { background:#f1f5f9; }
+    .dropdown-menu a {
+      display: block; padding: 8px 12px; text-decoration: none; color: #333;
+    }
+    .dropdown-menu a:hover { background: #f1f5f9; }
+    .dropdown.open .dropdown-menu { display: block; }
+    .title-3d {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #2563eb;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-<!-- HEADER -->
-<header class="header-3d sticky top-0 z-40">
-  <div class="max-w-6xl mx-auto flex items-center justify-between p-3">
+<!-- Header -->
+<header class="bg-gradient-to-r from-indigo-400 to-purple-500 shadow sticky top-0 z-40">
+  <div class="max-w-6xl mx-auto flex items-center justify-between p-3 text-white">
     <div class="flex items-center gap-3">
-      <img id="headerLogo" src="https://source.unsplash.com/80x80/?education,school" class="w-12 h-12 object-cover rounded-xl ring-2 ring-white shadow"/>
-      <div>
-        <div class="title-3d">talimi ittehad</div>
-        <div class="text-sm text-gray-700 font-medium">🌙 Sabhi Madarse ek platform par</div>
-      </div>
+      <img id="headerLogo" src="https://source.unsplash.com/80x80/?mosque" class="w-12 h-12 object-cover rounded"/>
+      <div class="title-3d">Talimi Ittehad</div>
+      <button id="changeLogoBtn" class="ml-3 hidden px-2 py-1 text-xs bg-white text-black rounded">🖼 Change Logo</button>
+      <input id="logoInput" type="file" accept="image/*" class="hidden"/>
     </div>
-    <div class="flex items-center gap-2">
-      <!-- Dropdowns -->
-      <div class="dropdown">
-        <button class="btn-3d text-white px-4 py-2 rounded">Menu</button>
-        <div class="dropdown-menu" id="menu1">
-          <a href="#" class="dropdown-item text-indigo-600">About</a>
-          <a href="#" class="dropdown-item text-emerald-600">Contact</a>
-          <a href="#" class="dropdown-item text-pink-600">Privacy</a>
-          <a href="#" class="dropdown-item text-orange-600">Terms & Conditions</a>
-        </div>
-      </div>
-      <div class="dropdown">
-        <button class="btn-3d text-white px-4 py-2 rounded">Explore</button>
-        <div class="dropdown-menu" id="menu2">
-          <a href="#" class="dropdown-item text-fuchsia-600">Notice</a>
-          <a href="#" class="dropdown-item text-cyan-600">Talim</a>
-          <a href="#" class="dropdown-item text-rose-600">Requirement</a>
-          <a href="#" class="dropdown-item text-lime-600">Program</a>
-        </div>
-      </div>
-      <button id="addBtn" class="btn-3d text-white px-4 py-2 rounded hidden">+ Add Madarsa</button>
-      <button id="authBtn" class="px-4 py-2 border rounded bg-white">Login with Google</button>
-    </div>
-  </div>
 
-  <!-- Admin controls -->
-  <div id="adminHeaderBar" class="max-w-6xl mx-auto px-3 pb-3 hidden">
-    <label class="px-4 py-2 rounded bg-white border cursor-pointer">
-      Change Header Image
-      <input id="headerImageInput" type="file" accept="image/*" class="hidden">
-    </label>
-    <button id="editMarqueeBtn" class="btn-3d text-white px-4 py-2 rounded">✏️ Edit Scrolling Text</button>
+    <div class="flex items-center gap-3">
+      <!-- Dropdown 1 -->
+      <div class="dropdown">
+        <button class="px-4 py-2 rounded bg-indigo-600">Menu 1 ⬇</button>
+        <div class="dropdown-menu">
+          <a href="#">About</a>
+          <a href="#">Contact</a>
+          <a href="#">Privacy</a>
+          <a href="#">Terms & Conditions</a>
+        </div>
+      </div>
+
+      <!-- Dropdown 2 -->
+      <div class="dropdown">
+        <button class="px-4 py-2 rounded bg-purple-600">Menu 2 ⬇</button>
+        <div class="dropdown-menu">
+          <a href="#">Notice</a>
+          <a href="#">Talim</a>
+          <a href="#">Requirement</a>
+          <a href="#">Program</a>
+        </div>
+      </div>
+
+      <button id="donateBtn" class="btn-3d text-white px-4 py-2 rounded">💝 Donate</button>
+      <button id="addBtn" class="btn-3d text-white px-4 py-2 rounded hidden">+ Add Madarsa</button>
+      <button id="authBtn" class="px-4 py-2 border rounded bg-white text-black">Login with Google</button>
+    </div>
   </div>
 </header>
 
-<!-- Marquee -->
-<div class="max-w-6xl mx-auto px-3 mt-3">
-  <div class="marquee"><span id="marqueeText">Welcome to talimi ittehad — knowledge for all, unity for growth!</span></div>
-</div>
-
+<!-- Main Content -->
 <main class="max-w-6xl mx-auto p-4">
-  <h2 class="text-2xl font-bold mb-4 text-indigo-600">✨ Sabhi Madarse</h2>
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Modal -->
+<!-- Modal for Madarsa Register -->
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
@@ -158,7 +110,6 @@
   </div>
 </div>
 
-<!-- Firebase Scripts (same as आपका code, बस admin header + extra info logic update किया है) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
@@ -178,24 +129,29 @@
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-
   const authBtn = document.getElementById('authBtn');
   const addBtn = document.getElementById('addBtn');
   const listDiv = document.getElementById('list');
   const regModal = document.getElementById('regModal');
   const regForm = document.getElementById('regForm');
-  const adminHeaderBar = document.getElementById('adminHeaderBar');
 
   let currentUser = null;
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   window.openModal = () => { regModal.classList.remove('hidden'); regModal.classList.add('flex'); }
   window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); }
 
   // Auth
   authBtn.onclick = async () => {
-    if (!auth.currentUser) { await signInWithPopup(auth, provider); }
-    else { await signOut(auth); }
+    try {
+      if (!auth.currentUser) {
+        await signInWithPopup(auth, provider);
+      } else {
+        await signOut(auth);
+      }
+    } catch (err) {
+      alert("Login failed: " + err.message);
+    }
   };
 
   onAuthStateChanged(auth, user => {
@@ -203,20 +159,21 @@
     if (user) {
       authBtn.textContent = "Logout";
       addBtn.classList.remove('hidden');
-      if (user.email === ADMIN_EMAIL) adminHeaderBar.classList.remove('hidden');
+      if(user.email === ADMIN_EMAIL){
+        document.getElementById("changeLogoBtn").classList.remove("hidden");
+      }
     } else {
       authBtn.textContent = "Login with Google";
       addBtn.classList.add('hidden');
-      adminHeaderBar.classList.add('hidden');
     }
     loadList();
   });
 
   addBtn.onclick = () => openModal();
 
-  // Live updates list
+  // Load list (live updates)
   function loadList() {
-    const q = query(collection(db, "madarse"), orderBy("createdAt","desc"));
+    const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
     onSnapshot(q, (qSnap) => {
       listDiv.innerHTML = '';
       qSnap.forEach(docSnap => {
@@ -226,56 +183,142 @@
 
         const card = document.createElement('div');
         card.className = `card p-4 rounded-xl shadow relative ${d.status === "approved" ? "bg-green-200" : "bg-gradient-to-r from-green-100 to-emerald-200"}`;
+
         card.innerHTML = `
           ${d.image ? `<img src="${d.image}" class="w-full h-48 object-contain bg-white rounded mb-2"/>` : ""}
-          <div class="text-lg font-bold text-indigo-700">${escapeHtml(d.name||'')}</div>
-          <div class="text-sm text-gray-700">${escapeHtml(d.address||'')}</div>
-          <div class="mt-1 text-xs text-gray-500">📞 ${d.contact||''}</div>
-          ${d.status==="rejected" ? `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>` : ""}
+          <div class="text-lg font-bold text-indigo-700">${escapeHtml(d.name || '')}</div>
+          <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
+          <div class="mt-1 text-xs text-gray-500">📞 ${d.contact || ''}</div>
+          ${d.status === "rejected" ? `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>` : ""}
           <div class="extra hidden mt-2">
-            ${d.courses?.length ? `<div class="text-sm text-pink-600"><b>📚 Courses:</b> ${d.courses.join(", ")}</div>` : ""}
+            ${d.courses && d.courses.length ? `<div class="text-sm text-pink-600"><b>📚 Courses:</b> ${d.courses.join(", ")}</div>` : ""}
             ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="block mt-2 bg-green-500 text-white px-3 py-1 rounded">📲 WhatsApp</a>` : ""}
-            ${d.showExtra && d.upi ? `<div class="mt-2"><img src="${d.upi}" class="w-32 rounded border mx-auto"/><p class="text-center text-sm text-purple-700 mt-1">🙏 Please donate for poor children's education (गरीब बच्चों की तालीम में मदद करें)</p></div>` : ""}
+            ${d.showExtra && d.upi ? `
+              <div class="mt-2">
+                <img src="${d.upi}" class="w-32 rounded border mx-auto"/>
+                <p class="text-center text-sm text-purple-700 mt-1">🙏 Please donate for poor children's education (गरीब बच्चों की तालीम में मदद करें)</p>
+              </div>` : ""}
           </div>
-          ${currentUser && currentUser.email===ADMIN_EMAIL ? `
+          ${currentUser && currentUser.email === ADMIN_EMAIL ? `
             <div class="flex gap-2 mt-2">
-              ${d.status==="approved" ? `<button disabled class="bg-green-600 text-white px-3 py-1 rounded shadow">✅ Approved</button>` : `<button class="approve btn-3d text-white px-3 py-1 rounded">Approve</button>`}
+              ${d.status === "approved" 
+                ? `<button disabled class="bg-green-600 text-white px-3 py-1 rounded shadow">✅ Approved</button>` 
+                : `<button class="approve btn-3d text-white px-3 py-1 rounded">Approve</button>`}
               <button class="reject bg-red-500 text-white px-3 py-1 rounded shadow">Reject</button>
-              <button class="toggleExtra ${d.showExtra ? 'bg-orange-500':'bg-blue-500'} text-white px-3 py-1 rounded shadow">${d.showExtra ? '❌ Disable Extra Info':'Enable Extra Info'}</button>
-            </div>`:""}
-          ${d.status!=="approved" ? `<div class="absolute top-2 right-2"><span class="dot"></span></div>`:""}
+              <button class="toggleExtra ${d.showExtra ? 'bg-orange-500' : 'bg-blue-500'} text-white px-3 py-1 rounded shadow">
+                ${d.showExtra ? '❌ Disable Extra Info' : 'Enable Extra Info'}
+              </button>
+            </div>` : ""}
+          ${d.status !== "approved" ? `
+            <div class="absolute top-2 right-2">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
+              </span>
+            </div>` : ""}
         `;
-        // Expand toggle
-        card.querySelector("img")?.addEventListener("click",()=>{
+
+        card.querySelector("img")?.addEventListener("click", () => {
           card.classList.toggle("expanded");
           card.querySelector(".extra").classList.toggle("hidden");
         });
-        // Admin actions
-        if (currentUser && currentUser.email===ADMIN_EMAIL){
-          card.querySelector(".approve")?.addEventListener("click",()=>updateDoc(doc(db,"madarse",docSnap.id),{status:"approved"}));
-          card.querySelector(".reject")?.addEventListener("click",()=>updateDoc(doc(db,"madarse",docSnap.id),{status:"rejected"}));
-          card.querySelector(".toggleExtra")?.addEventListener("click",()=>updateDoc(doc(db,"madarse",docSnap.id),{showExtra:!d.showExtra}));
+
+        if (currentUser && currentUser.email === ADMIN_EMAIL) {
+          card.querySelector(".approve")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
+          });
+          card.querySelector(".reject")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { status: "rejected" });
+          });
+          card.querySelector(".toggleExtra")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { showExtra: !d.showExtra });
+          });
         }
+
         listDiv.appendChild(card);
       });
     });
   }
 
-  // Submit form with ImgBB
-  regForm.addEventListener('submit', async (e)=>{
+  // Submit form
+  regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!auth.currentUser){ alert('Google login required'); return; }
-    const submitBtn = regForm.querySelector("button[type=submit]");
-    submitBtn.disabled = true;
+    if (!auth.currentUser) { alert('Google login required'); return; }
 
-    const name=document.getElementById('mname').value.trim();
-    const address=document.getElementById('maddress').value.trim();
-    const contact=document.getElementById('mcontact').value.trim();
-    const whatsapp=document.getElementById('mwhatsapp').value.trim();
-    const courses=document.getElementById('mcourses').value.trim();
-    const imageFile=document.getElementById('mimage').files[0];
-    const upiFile=document.getElementById('mupi').files[0];
-    let imgUrl="",upiUrl="";
-    async function uploadImg(file){
-      const fd=new FormData(); fd.append("image",file);
-      const res=await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4",{
+    const name = document.getElementById('mname').value.trim();
+    const address = document.getElementById('maddress').value.trim();
+    const contact = document.getElementById('mcontact').value.trim();
+    const whatsapp = document.getElementById('mwhatsapp').value.trim();
+    const courses = document.getElementById('mcourses').value.trim();
+    const imageFile = document.getElementById('mimage').files[0];
+    const upiFile = document.getElementById('mupi').files[0];
+
+    let imgUrl = "", upiUrl = "";
+    async function uploadImg(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) return data.data.url;
+      else throw new Error(data.error.message);
+    }
+
+    if (imageFile) imgUrl = await uploadImg(imageFile).catch(err => alert("Image upload failed: " + err.message));
+    if (upiFile) upiUrl = await uploadImg(upiFile).catch(err => alert("UPI upload failed: " + err.message));
+
+    await addDoc(collection(db, 'madarse'), {
+      name, address, contact, whatsapp,
+      courses: courses ? courses.split(',').map(s => s.trim()) : [],
+      image: imgUrl, upi: upiUrl,
+      ownerUid: auth.currentUser.uid,
+      ownerEmail: auth.currentUser.email,
+      status: 'pending',
+      showExtra: false,
+      createdAt: Date.now()
+    });
+
+    alert('Registration submitted ✅');
+    closeModal();
+  });
+
+  // Dropdown logic
+  document.querySelectorAll('.dropdown button').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      btn.parentElement.classList.toggle('open');
+    });
+  });
+  document.body.addEventListener('click', ()=>{
+    document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'));
+  });
+
+  // Admin logo change
+  const changeLogoBtn = document.getElementById("changeLogoBtn");
+  const logoInput = document.getElementById("logoInput");
+  const headerLogo = document.getElementById("headerLogo");
+
+  changeLogoBtn.onclick = ()=>logoInput.click();
+  logoInput.onchange = async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const formData = new FormData();
+    formData.append("image", file);
+    const res = await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4",{method:"POST",body:formData});
+    const data = await res.json();
+    if(data.success){
+      headerLogo.src = data.data.url;
+      alert("✅ Logo updated!");
+    } else {
+      alert("❌ Upload failed");
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>"']/g, c => (
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+    ));
+  }
+</script>
+</body>
+</html>
