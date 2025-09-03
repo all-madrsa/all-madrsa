@@ -45,7 +45,7 @@
 <body class="bg-slate-50 min-h-screen">
 
 <!-- Header -->
-<header class="bg-black shadow sticky top-0 z-40">
+<header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 py-2">
@@ -86,13 +86,32 @@
 </header>
 
 <!-- Scrolling text -->
-<div id="scrollBox" class="bg-gradient-to-r from-pink-500 via-yellow-400 to-green-400 py-1">
-  <marquee id="scrollText" class="text-white font-semibold">📢 Welcome to Talimi Ittehad – गरीब बच्चों की तालीम में आपकी मदद जरूरी है!</marquee>
+<div id="scrollBox" class="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 py-1">
+  <marquee id="scrollText" class="text-white font-semibold">
+    📢 Welcome to Talimi Ittehad – गरीब बच्चों की तालीम में आपकी मदद जरूरी है!
+  </marquee>
 </div>
 
 <!-- Main content -->
 <main class="max-w-6xl mx-auto p-4">
-  <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Example card -->
+    <div class="border rounded-lg shadow bg-white p-3">
+      <h2 class="font-bold text-lg">Madarsa Noor</h2>
+      <p class="text-sm text-gray-600">Lucknow, UP</p>
+      <div class="mt-2">
+        <button onclick="toggleInfo(this)" class="btn-3d">Enable Extra Info</button>
+      </div>
+      <div class="extra-info hidden mt-2">
+        <p class="text-sm font-medium">Contact: +91-9876543210</p>
+        <button class="btn-3d mt-1">📞 WhatsApp</button>
+        <div class="mt-1">
+          <img src="https://i.ibb.co/7rR1k5W/sample-qr.png" alt="UPI QR" class="w-24 rounded">
+          <p class="text-xs font-semibold text-pink-600">🙏 Please donate for poor children's education</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Modal for Madarsa Register -->
@@ -139,7 +158,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -161,12 +180,16 @@
   const scrollModal = document.getElementById('scrollModal');
   const scrollInput = document.getElementById('scrollInput');
   const scrollText = document.getElementById('scrollText');
+  const regModal = document.getElementById('regModal');
 
   let currentUser = null;
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   // Modal helpers
-  window.closeModal = () => { document.getElementById('regModal').classList.add('hidden'); document.getElementById('regForm').reset(); }
+  window.closeModal = () => {
+    regModal.classList.add('hidden');
+    document.getElementById('regForm').reset();
+  }
   function openScrollModal(){ scrollModal.classList.remove('hidden'); scrollModal.classList.add('flex'); }
   function closeScrollModal(){ scrollModal.classList.add('hidden'); scrollModal.classList.remove('flex'); }
 
@@ -189,6 +212,12 @@
     }
   });
 
+  // Add Madarsa button → open modal
+  addBtn.onclick = () => {
+    regModal.classList.remove('hidden');
+    regModal.classList.add('flex');
+  };
+
   // Scroll text save
   window.saveScrollText = async () => {
     const txt = scrollInput.value.trim();
@@ -202,6 +231,18 @@
   onSnapshot(doc(db,"config","scroll"), (snap)=>{
     if(snap.exists()) scrollText.textContent = snap.data().text;
   });
+
+  // Toggle extra info
+  window.toggleInfo = (btn) => {
+    const extra = btn.closest("div").nextElementSibling;
+    if(extra.classList.contains("hidden")){
+      extra.classList.remove("hidden");
+      btn.textContent = "Disable Extra Info";
+    } else {
+      extra.classList.add("hidden");
+      btn.textContent = "Enable Extra Info";
+    }
+  }
 </script>
 </body>
 </html>
