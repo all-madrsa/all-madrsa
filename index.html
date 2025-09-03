@@ -38,7 +38,7 @@
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Modal: Registration Form -->
+<!-- Modal -->
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
@@ -91,7 +91,6 @@
 
   let currentUser = null;
 
-  // Modal helpers
   window.openModal = () => { regModal.classList.remove('hidden'); regModal.classList.add('flex'); }
   window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); }
 
@@ -122,55 +121,24 @@
 
   addBtn.onclick = () => openModal();
 
-  // Load List (newest first)
+  // Load list (newest first)
   async function loadList() {
     listDiv.innerHTML = 'Loading...';
     const qSnap = await getDocs(query(collection(db, "madarse"), orderBy("createdAt", "desc")));
     listDiv.innerHTML = '';
     qSnap.forEach(docSnap => {
       const d = docSnap.data();
-      const id = docSnap.id;
       const card = document.createElement('div');
       card.className = "p-4 rounded-xl shadow bg-gradient-to-r from-green-100 to-emerald-200";
-
-      let inner = `
+      card.innerHTML = `
         ${d.image ? `<img src="${d.image}" class="w-full h-40 object-cover rounded mb-2"/>` : ""}
         <div class="text-lg font-bold text-emerald-800">${escapeHtml(d.name || '')}</div>
         <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
         <div class="mt-1 text-xs text-gray-500">${d.contact || ''}</div>
       `;
-
-      // Admin buttons
-      if (currentUser && currentUser.email === "zaradigitalseva@gmail.com") {
-        inner += `
-          <div class="mt-3 flex flex-wrap gap-2">
-            <button class="px-2 py-1 bg-green-500 text-white rounded text-sm" onclick="approvePost('${id}')">Approve</button>
-            <button class="px-2 py-1 bg-red-500 text-white rounded text-sm" onclick="rejectPost('${id}')">Reject</button>
-            <button class="px-2 py-1 bg-gray-500 text-white rounded text-sm" onclick="deletePost('${id}')">Delete</button>
-          </div>
-        `;
-      }
-
-      card.innerHTML = inner;
       listDiv.appendChild(card);
     });
   }
-
-  // Admin actions
-  window.approvePost = async (id) => {
-    await updateDoc(doc(db, "madarse", id), { status: "approved" });
-    loadList();
-  };
-  window.rejectPost = async (id) => {
-    await updateDoc(doc(db, "madarse", id), { status: "rejected" });
-    loadList();
-  };
-  window.deletePost = async (id) => {
-    if (confirm("Delete this post?")) {
-      await deleteDoc(doc(db, "madarse", id));
-      loadList();
-    }
-  };
 
   // Submit form
   regForm.addEventListener('submit', async (e) => {
@@ -185,17 +153,25 @@
 
     let imgUrl = "";
     if (imageFile) {
-      const id = Date.now().toString();
-      const imgRef = sref(storage, `madarse/${auth.currentUser.uid}_${id}_${imageFile.name}`);
-      const uploadSnap = await uploadBytes(imgRef, imageFile);
-      imgUrl = await getDownloadURL(uploadSnap.ref);
+      try {
+        console.log("📤 Upload start:", imageFile.name);
+        const id = Date.now().toString();
+        const imgRef = sref(storage, `madarse/${auth.currentUser.uid}_${id}_${imageFile.name}`);
+        const uploadSnap = await uploadBytes(imgRef, imageFile);
+        console.log("✅ Upload complete");
+        imgUrl = await getDownloadURL(uploadSnap.ref);
+        console.log("🌐 URL:", imgUrl);
+      } catch (err) {
+        console.error("❌ Upload failed", err);
+        alert("Image upload failed: " + err.message);
+      }
     }
 
     await addDoc(collection(db, 'madarse'), {
       name,
       address,
       contact,
-      courses: courses ? courses.split(',').map(s=>s.trim()) : [],
+      courses: courses ? courses.split(',').map(s => s.trim()) : [],
       image: imgUrl,
       ownerUid: auth.currentUser.uid,
       ownerEmail: auth.currentUser.email,
