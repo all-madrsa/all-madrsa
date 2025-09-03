@@ -8,45 +8,35 @@
   <style>
     .btn-3d {
       background: linear-gradient(180deg,#4ade80,#16a34a);
-      box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.15);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.15);
       transform: translateY(-2px);
-      transition: all .15s ease;
+      transition: transform .12s ease, box-shadow .12s ease;
     }
-    .btn-3d:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
-    .btn-red { background: linear-gradient(180deg,#f87171,#dc2626); }
-    .btn-blue { background: linear-gradient(180deg,#60a5fa,#2563eb); }
-    .btn-yellow { background: linear-gradient(180deg,#facc15,#ca8a04); }
+    .btn-3d:active { transform: translateY(1px); box-shadow: 0 4px 0 rgba(0,0,0,0.12); }
     .card { transition: all 0.3s ease; cursor: pointer; }
     .card.expanded { transform: scale(1.05); z-index: 10; }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-gradient-to-br from-emerald-50 to-green-100 min-h-screen">
 
 <header class="bg-white shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex items-center justify-between p-3">
     <div class="flex items-center gap-3">
-      <img id="headerImg" src="https://source.unsplash.com/120x120/?mosque" class="w-14 h-14 object-cover rounded"/>
+      <img src="https://source.unsplash.com/80x80/?mosque" class="w-12 h-12 object-cover rounded shadow"/>
       <div>
-        <div class="text-xl font-bold">Madarsa Connect</div>
-        <div class="text-sm text-gray-500">Sabhi Madarse ek platform par</div>
+        <div class="text-2xl font-extrabold text-emerald-600 drop-shadow">🌙 Madarsa Connect</div>
+        <div class="text-sm text-gray-500">✨ सब मदरसे एक प्लेटफॉर्म पर</div>
       </div>
     </div>
     <div class="flex items-center gap-3">
-      <!-- Admin Only -->
-      <div id="adminHeaderBtns" class="hidden gap-2">
-        <button id="changeHeaderBtn" class="btn-3d btn-blue text-white px-3 py-1 rounded">Change Header</button>
-        <button id="deleteHeaderBtn" class="btn-3d btn-red text-white px-3 py-1 rounded">Delete</button>
-        <input id="headerFile" type="file" accept="image/*" class="hidden"/>
-      </div>
-      <!-- Common -->
       <button id="addBtn" class="btn-3d text-white px-4 py-2 rounded hidden">+ Add Madarsa</button>
-      <button id="authBtn" class="px-4 py-2 border rounded">Login with Google</button>
+      <button id="authBtn" class="btn-3d bg-emerald-500 text-white px-4 py-2 rounded">Login with Google</button>
     </div>
   </div>
 </header>
 
 <main class="max-w-6xl mx-auto p-4">
-  <h2 class="text-2xl font-bold mb-4">Sabhi Madarse</h2>
+  <h2 class="text-3xl font-bold mb-4 text-emerald-700">📋 सभी मदरसे</h2>
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
@@ -54,8 +44,8 @@
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
-      <h3 class="text-lg font-semibold">Register Madarsa</h3>
-      <button onclick="closeModal()" class="text-gray-600">X</button>
+      <h3 class="text-lg font-semibold text-emerald-700">🕌 Register Madarsa</h3>
+      <button onclick="closeModal()" class="text-gray-600 font-bold">X</button>
     </div>
     <form id="regForm" class="mt-3 space-y-3">
       <input id="mname" placeholder="Madarsa ka naam" class="w-full border p-2 rounded" required />
@@ -64,13 +54,14 @@
       <input id="mwhatsapp" placeholder="WhatsApp number" class="w-full border p-2 rounded" />
       <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
       <div>
-        <label class="block text-sm">Upload Image (optional)</label>
+        <label class="block text-sm text-emerald-600">Upload Image (optional)</label>
         <input id="mimage" type="file" accept="image/*" class="mt-1" />
       </div>
       <div>
-        <label class="block text-sm">Upload UPI QR (optional)</label>
+        <label class="block text-sm text-emerald-600">Upload UPI QR (optional)</label>
         <input id="mupi" type="file" accept="image/*" class="mt-1" />
       </div>
+      <div id="formMsg" class="text-center text-sm font-semibold"></div>
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
         <button id="submitBtn" type="submit" class="btn-3d text-white px-4 py-2 rounded">Submit</button>
@@ -82,7 +73,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -104,16 +95,13 @@
   const regModal = document.getElementById('regModal');
   const regForm = document.getElementById('regForm');
   const submitBtn = document.getElementById('submitBtn');
-
-  const adminHeaderBtns = document.getElementById("adminHeaderBtns");
-  const headerImg = document.getElementById("headerImg");
-  const headerFile = document.getElementById("headerFile");
+  const formMsg = document.getElementById('formMsg');
 
   let currentUser = null;
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   window.openModal = () => { regModal.classList.remove('hidden'); regModal.classList.add('flex'); }
-  window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); submitBtn.disabled = false; submitBtn.textContent = "Submit"; }
+  window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); formMsg.textContent=""; }
 
   // Auth
   authBtn.onclick = async () => {
@@ -133,11 +121,9 @@
     if (user) {
       authBtn.textContent = "Logout";
       addBtn.classList.remove('hidden');
-      if (user.email === ADMIN_EMAIL) adminHeaderBtns.classList.remove("hidden");
     } else {
       authBtn.textContent = "Login with Google";
       addBtn.classList.add('hidden');
-      adminHeaderBtns.classList.add("hidden");
     }
     loadList();
   });
@@ -152,53 +138,64 @@
       qSnap.forEach(docSnap => {
         const d = docSnap.data();
 
+        // Visibility rules
         if (d.status === "pending" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
         if (d.status === "rejected" && (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.uid !== d.ownerUid))) return;
 
         const card = document.createElement('div');
         card.className = "card p-4 rounded-xl shadow bg-gradient-to-r from-green-100 to-emerald-200 relative";
 
-        card.innerHTML = `
+        let cardHtml = `
           ${d.image ? `<img src="${d.image}" class="w-full h-48 object-contain bg-white rounded mb-2"/>` : ""}
           <div class="text-lg font-bold text-emerald-800">${escapeHtml(d.name || '')}</div>
-          <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
-          <div class="mt-1 text-xs text-gray-500">📞 ${d.contact || ''}</div>
-          ${d.status === "rejected" ? `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>` : ""}
-          <div class="extra hidden mt-2">
-            ${d.courses && d.courses.length ? `<div class="text-sm"><b>Courses:</b> ${d.courses.join(", ")}</div>` : ""}
-            ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="block mt-2 btn-3d text-white px-3 py-1 rounded">📲 WhatsApp</a>` : ""}
-            ${d.showExtra && d.upi ? `<img src="${d.upi}" class="w-32 mt-2 rounded border"/>` : ""}
-          </div>
-          ${currentUser && currentUser.email === ADMIN_EMAIL ? `
-            <div class="flex gap-2 mt-2">
-              <button class="approve btn-3d text-white px-3 py-1 rounded">Approve</button>
-              <button class="reject btn-3d btn-red text-white px-3 py-1 rounded">Reject</button>
-              <button class="enable btn-3d btn-blue text-white px-3 py-1 rounded">Enable Extra</button>
-            </div>` : ""}
         `;
 
-        // expand toggle
-        card.querySelector("img")?.addEventListener("click", () => {
-          card.classList.toggle("expanded");
-          card.querySelector(".extra").classList.toggle("hidden");
-        });
+        if (d.status === "approved") {
+          if (d.showExtra) {
+            cardHtml += `
+              <div class="extra mt-2">
+                ${d.address ? `<div class="text-sm text-blue-800">📍 ${escapeHtml(d.address)}</div>` : ""}
+                ${d.contact ? `<div class="text-xs text-pink-700">📞 ${escapeHtml(d.contact)}</div>` : ""}
+                ${d.courses && d.courses.length ? `<div class="text-sm text-purple-700"><b>📚 Courses:</b> ${d.courses.join(", ")}</div>` : ""}
+                ${d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="block mt-2 btn-3d text-white px-3 py-1 rounded">📲 WhatsApp</a>` : ""}
+                ${d.upi ? `
+                  <div class="mt-3 text-center bg-yellow-100 p-2 rounded-lg shadow">
+                    <img src="${d.upi}" class="w-32 mx-auto rounded border shadow"/>
+                    <div class="text-sm font-bold text-yellow-800 mt-2">
+                      🙏 Please donate to support poor children's education <br/>
+                      (गरीब बच्चों की तालीम में मदद करें)
+                    </div>
+                  </div>
+                ` : ""}
+              </div>
+            `;
+          }
+        }
 
-        // admin actions with feedback
+        if (d.status === "rejected") {
+          cardHtml += `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>`;
+        }
+
         if (currentUser && currentUser.email === ADMIN_EMAIL) {
-          card.querySelector(".approve")?.addEventListener("click", async (e) => {
-            e.target.textContent = "Approving...";
+          cardHtml += `
+            <div class="flex gap-2 mt-2">
+              <button class="approve btn-3d text-white px-3 py-1 rounded">Approve</button>
+              <button class="reject bg-red-500 text-white px-3 py-1 rounded shadow">Reject</button>
+              <button class="enable bg-blue-500 text-white px-3 py-1 rounded shadow">Enable Extra Info</button>
+            </div>`;
+        }
+
+        card.innerHTML = cardHtml;
+
+        if (currentUser && currentUser.email === ADMIN_EMAIL) {
+          card.querySelector(".approve")?.addEventListener("click", async () => {
             await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
-            e.target.textContent = "Approved ✅";
           });
-          card.querySelector(".reject")?.addEventListener("click", async (e) => {
-            e.target.textContent = "Rejecting...";
+          card.querySelector(".reject")?.addEventListener("click", async () => {
             await updateDoc(doc(db, "madarse", docSnap.id), { status: "rejected" });
-            e.target.textContent = "Rejected ❌";
           });
-          card.querySelector(".enable")?.addEventListener("click", async (e) => {
-            e.target.textContent = "Enabling...";
+          card.querySelector(".enable")?.addEventListener("click", async () => {
             await updateDoc(doc(db, "madarse", docSnap.id), { showExtra: true });
-            e.target.textContent = "Enabled ✅";
           });
         }
 
@@ -207,23 +204,14 @@
     });
   }
 
-  // ImgBB upload function
-  async function uploadImg(file) {
-    const formData = new FormData();
-    formData.append("image", file);
-    const res = await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4", { method: "POST", body: formData });
-    const data = await res.json();
-    if (data.success) return data.data.url;
-    else throw new Error(data.error.message);
-  }
-
-  // Submit form
+  // Submit form (ImgBB uploads)
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!auth.currentUser) { alert('Google login required'); return; }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = "Submitting...";
+    formMsg.textContent = "⏳ Uploading...";
+    formMsg.className = "text-blue-600 font-bold text-center";
 
     const name = document.getElementById('mname').value.trim();
     const address = document.getElementById('maddress').value.trim();
@@ -233,8 +221,17 @@
     const imageFile = document.getElementById('mimage').files[0];
     const upiFile = document.getElementById('mupi').files[0];
 
+    let imgUrl = "", upiUrl = "";
+    async function uploadImg(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) return data.data.url;
+      else throw new Error(data.error.message);
+    }
+
     try {
-      let imgUrl = "", upiUrl = "";
       if (imageFile) imgUrl = await uploadImg(imageFile);
       if (upiFile) upiUrl = await uploadImg(upiFile);
 
@@ -249,26 +246,15 @@
         createdAt: Date.now()
       });
 
-      submitBtn.textContent = "Submitted ✅";
-      setTimeout(() => closeModal(), 1200);
+      formMsg.textContent = "✅ Registration submitted!";
+      formMsg.className = "text-green-600 font-bold text-center";
+      setTimeout(() => { closeModal(); submitBtn.disabled = false; }, 1500);
     } catch (err) {
-      submitBtn.textContent = "Error ❌";
+      formMsg.textContent = "❌ Error: " + err.message;
+      formMsg.className = "text-red-600 font-bold text-center";
       submitBtn.disabled = false;
     }
   });
-
-  // Admin Header buttons
-  document.getElementById("changeHeaderBtn").onclick = () => headerFile.click();
-  headerFile.onchange = async (e) => {
-    if (!e.target.files[0]) return;
-    const url = await uploadImg(e.target.files[0]);
-    headerImg.src = url;
-    await setDoc(doc(db, "config", "header"), { url });
-  };
-  document.getElementById("deleteHeaderBtn").onclick = async () => {
-    headerImg.src = "https://source.unsplash.com/120x120/?mosque";
-    await setDoc(doc(db, "config", "header"), { url: headerImg.src });
-  };
 
   function escapeHtml(text) {
     if (!text) return '';
