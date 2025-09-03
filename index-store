@@ -6,57 +6,83 @@
   <title>Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    .logo-text {
+      font-size: 1.8rem;
+      font-weight: 900;
+      background: linear-gradient(to right, #ff0000, #00ffcc, #ff00ff, #00ccff);
+      -webkit-background-clip: text;
+      color: transparent;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+    }
     .btn-3d {
-      background: linear-gradient(180deg,#60a5fa,#2563eb);
+      background: linear-gradient(to right, #ff7eb3, #ff758c, #ffce00, #7afcff);
       color: #fff;
-      font-weight: bold;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 6px 10px rgba(0,0,0,0.15);
-      transform: translateY(-1px);
-      transition: transform .12s ease, box-shadow .12s ease;
-      border-radius: 0.5rem;
-      padding: 0.35rem 0.75rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
       font-size: 0.9rem;
     }
-    .btn-3d:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+    .btn-3d:hover {
+      transform: translateY(-2px);
+      box-shadow: 3px 3px 8px rgba(0,0,0,0.5);
+    }
     .dropdown-menu {
       display: none;
       position: absolute;
-      top: 100%; left: 0;
+      top: 100%;
+      left: 0;
       background: #fff;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-      border-radius: 0.5rem;
-      overflow: hidden;
+      min-width: 150px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border-radius: 6px;
       z-index: 50;
     }
-    .dropdown:hover .dropdown-menu { display: block; }
-    .dropdown-menu a {
-      display: block; padding: 0.5rem 1rem; font-size: 0.85rem;
-      color: #333; text-decoration: none;
+    .dropdown:hover .dropdown-menu {
+      display: block;
     }
-    .dropdown-menu a:hover { background: #f1f5f9; }
-    .logo-text {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: white;
-      text-shadow: 2px 2px 4px #000, 0 0 20px #38bdf8;
+    .dropdown-menu a {
+      display: block;
+      padding: 8px 12px;
+      color: #333;
+      font-size: 0.85rem;
+    }
+    .dropdown-menu a:hover {
+      background: #f1f1f1;
+    }
+    .scrolling-text {
+      background: linear-gradient(to right, #ff00cc, #3333ff, #00ffcc);
+      color: #fff;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .scrolling-text span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scroll-left 15s linear infinite;
+    }
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
     }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
 <!-- HEADER -->
-<header class="bg-gradient-to-r from-purple-700 via-pink-600 to-indigo-700 shadow-lg sticky top-0 z-40">
+<header class="bg-gradient-to-r from-purple-700 via-pink-600 to-indigo-700 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto px-3 py-2 flex flex-col md:flex-row md:items-center md:justify-between">
     <!-- Logo + Login -->
     <div class="flex items-center justify-between w-full md:w-auto">
       <div class="logo-text">Talimi Ittehad</div>
       <div class="flex items-center gap-2">
-        <button id="authBtn" class="btn-3d ml-3">Login with Google</button>
+        <button id="authBtn" class="btn-3d ml-3">Login</button>
       </div>
     </div>
-
     <!-- Menu row -->
-    <div class="flex flex-wrap items-center gap-3 mt-2 md:mt-0 text-sm">
+    <div class="flex flex-wrap items-center gap-2 mt-2 md:mt-0 text-sm">
       <!-- Dropdown 1 -->
       <div class="dropdown relative">
         <button class="btn-3d">About ⬇</button>
@@ -78,34 +104,28 @@
         </div>
       </div>
       <!-- Donate + Scroll buttons -->
-      <div class="flex items-center gap-2 ml-auto">
+      <div class="flex items-center gap-2 ml-2">
         <button class="btn-3d">🙏 Donate</button>
-        <button id="scrollBtn" class="btn-3d hidden">✍ Add Scrolling Text</button>
+        <button id="scrollBtn" class="btn-3d hidden">✍ Add Text</button>
       </div>
     </div>
   </div>
 </header>
 
-<!-- SCROLLING TEXT -->
-<div class="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 text-white py-1">
-  <marquee id="scrollText" behavior="scroll" direction="left" class="font-semibold">
-    🌙 Welcome to Talimi Ittehad – सभी मदरसों का डिजिटल प्लेटफ़ॉर्म 🌙
-  </marquee>
+<!-- Scrolling text -->
+<div class="scrolling-text py-2">
+  <span id="scrollText">Welcome to Talimi Ittehad - Helping Poor Children for Education</span>
 </div>
 
-<!-- MAIN -->
 <main class="max-w-6xl mx-auto p-4">
-  <div class="flex justify-end mb-3">
-    <button id="addBtn" class="btn-3d hidden">+ Add Madarsa</button>
-  </div>
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Modal (Add Madarsa) -->
+<!-- Modal -->
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
-      <h3 class="text-lg font-semibold text-indigo-600">Register Madarsa</h3>
+      <h3 class="text-lg font-semibold text-emerald-600">Register Madarsa</h3>
       <button onclick="closeModal()" class="text-gray-600">X</button>
     </div>
     <form id="regForm" class="mt-3 space-y-3">
@@ -115,16 +135,16 @@
       <input id="mwhatsapp" placeholder="WhatsApp number" class="w-full border p-2 rounded" />
       <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
       <div>
-        <label class="block text-sm text-indigo-600">Upload Image</label>
+        <label class="block text-sm text-indigo-600">Upload Image (optional)</label>
         <input id="mimage" type="file" accept="image/*" class="mt-1" />
       </div>
       <div>
-        <label class="block text-sm text-indigo-600">Upload UPI QR</label>
+        <label class="block text-sm text-indigo-600">Upload UPI QR (optional)</label>
         <input id="mupi" type="file" accept="image/*" class="mt-1" />
       </div>
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
-        <button type="submit" class="btn-3d">Submit</button>
+        <button type="submit" id="submitBtn" class="btn-3d">Submit</button>
       </div>
     </form>
   </div>
@@ -150,10 +170,10 @@
   const provider = new GoogleAuthProvider();
 
   const authBtn = document.getElementById('authBtn');
-  const addBtn = document.getElementById('addBtn');
   const listDiv = document.getElementById('list');
   const regModal = document.getElementById('regModal');
   const regForm = document.getElementById('regForm');
+  const submitBtn = document.getElementById('submitBtn');
   const scrollBtn = document.getElementById('scrollBtn');
   const scrollText = document.getElementById('scrollText');
 
@@ -166,79 +186,107 @@
   // Auth
   authBtn.onclick = async () => {
     try {
-      if (!auth.currentUser) await signInWithPopup(auth, provider);
-      else await signOut(auth);
-    } catch (err) { alert("Login failed: " + err.message); }
+      if (!auth.currentUser) {
+        await signInWithPopup(auth, provider);
+      } else {
+        await signOut(auth);
+      }
+    } catch (err) {
+      alert("Login failed: " + err.message);
+    }
   };
 
   onAuthStateChanged(auth, user => {
     currentUser = user;
     if (user) {
       authBtn.textContent = "Logout";
-      addBtn.classList.remove('hidden');
-      if (user.email === ADMIN_EMAIL) scrollBtn.classList.remove('hidden');
+      if (user.email === ADMIN_EMAIL) scrollBtn.classList.remove("hidden");
     } else {
-      authBtn.textContent = "Login with Google";
-      addBtn.classList.add('hidden');
-      scrollBtn.classList.add('hidden');
+      authBtn.textContent = "Login";
+      scrollBtn.classList.add("hidden");
     }
     loadList();
   });
 
-  addBtn.onclick = () => openModal();
-
-  // Scrolling text admin
+  // scrolling text update
   scrollBtn.onclick = () => {
-    const txt = prompt("Enter new scrolling text:");
-    if (txt) scrollText.textContent = txt;
+    const newText = prompt("Enter scrolling text:");
+    if (newText) {
+      scrollText.textContent = newText;
+    }
   };
 
-  // Live list
+  // Load list (live updates)
   function loadList() {
     const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
     onSnapshot(q, (qSnap) => {
       listDiv.innerHTML = '';
       qSnap.forEach(docSnap => {
         const d = docSnap.data();
+
+        // visibility rules
         if (d.status === "pending" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
+        if (d.status === "rejected" && (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.uid !== d.ownerUid))) return;
 
         const card = document.createElement('div');
-        card.className = `p-3 rounded-xl shadow bg-white`;
+        card.className = `p-4 rounded-xl shadow relative ${d.status === "approved" ? "bg-green-200" : "bg-white"}`;
 
         card.innerHTML = `
-          ${d.image ? `<img src="${d.image}" class="w-full h-40 object-contain bg-gray-100 rounded mb-2"/>` : ""}
+          ${d.image ? `<img src="${d.image}" class="w-full h-40 object-contain bg-white rounded mb-2"/>` : ""}
           <div class="text-lg font-bold text-indigo-700">${escapeHtml(d.name || '')}</div>
           <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
-          ${d.status === "approved" && d.showExtra ? `
-            <div class="mt-2 text-xs">📞 ${d.contact}</div>
-            ${d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-1 inline-block">WhatsApp</a>` : ""}
-            ${d.upi ? `<div class="mt-2 text-center"><img src="${d.upi}" class="w-24 mx-auto"/><p class="text-purple-700 text-sm">🙏 Please donate for poor children's education</p></div>` : ""}
-          ` : ""}
+          ${d.status === "approved" && d.showExtra ? `<div class="mt-1 text-xs text-gray-800">📞 ${d.contact || ''}</div>` : ""}
+          ${d.status === "approved" && d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-2">WhatsApp</a>` : ""}
+          ${d.status === "approved" && d.showExtra && d.upi ? `
+            <div class="mt-2">
+              <img src="${d.upi}" class="w-24 mx-auto"/>
+              <p class="text-center text-sm text-purple-700 mt-1">🙏 Please donate for poor children's education</p>
+            </div>` : ""}
+          ${d.status === "rejected" ? `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>` : ""}
           ${currentUser && currentUser.email === ADMIN_EMAIL ? `
-            <div class="flex gap-2 mt-2">
-              ${d.status !== "approved" 
-                ? `<button class="approve btn-3d">Approve</button>` 
-                : `<button disabled class="btn-3d bg-green-600">Approved</button>`}
-              <button class="toggleExtra btn-3d">${d.showExtra ? '❌ Disable Extra Info' : 'Enable Extra Info'}</button>
+            <div class="flex gap-2 mt-2 flex-wrap">
+              ${d.status === "approved" 
+                ? `<button disabled class="bg-green-600 text-white px-3 py-1 rounded shadow">✅ Approved</button>` 
+                : `<button class="approve btn-3d">Approve</button>`}
+              <button class="reject btn-3d">Reject</button>
+              <button class="toggleExtra btn-3d">
+                ${d.showExtra ? '❌ Disable Extra Info' : 'Enable Extra Info'}
+              </button>
+            </div>` : ""}
+          ${d.status !== "approved" ? `
+            <div class="absolute top-2 right-2">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
+              </span>
             </div>` : ""}
         `;
 
-        card.querySelector(".approve")?.addEventListener("click", async () => {
-          await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
-        });
-        card.querySelector(".toggleExtra")?.addEventListener("click", async () => {
-          await updateDoc(doc(db, "madarse", docSnap.id), { showExtra: !d.showExtra });
-        });
+        // admin actions
+        if (currentUser && currentUser.email === ADMIN_EMAIL) {
+          card.querySelector(".approve")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
+          });
+          card.querySelector(".reject")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { status: "rejected" });
+          });
+          card.querySelector(".toggleExtra")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { showExtra: !d.showExtra });
+          });
+        }
 
         listDiv.appendChild(card);
       });
     });
   }
 
-  // Form submit
+  // Submit form (ImgBB uploads)
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!auth.currentUser) { alert('Login required'); return; }
+    if (!auth.currentUser) { alert('Google login required'); return; }
+
+    submitBtn.disabled = true;
+    setTimeout(() => submitBtn.disabled = false, 2000);
 
     const name = document.getElementById('mname').value.trim();
     const address = document.getElementById('maddress').value.trim();
@@ -257,6 +305,7 @@
       if (data.success) return data.data.url;
       else throw new Error(data.error.message);
     }
+
     if (imageFile) imgUrl = await uploadImg(imageFile).catch(err => alert("Image upload failed: " + err.message));
     if (upiFile) upiUrl = await uploadImg(upiFile).catch(err => alert("UPI upload failed: " + err.message));
 
@@ -266,7 +315,9 @@
       image: imgUrl, upi: upiUrl,
       ownerUid: auth.currentUser.uid,
       ownerEmail: auth.currentUser.email,
-      status: 'pending', showExtra: false, createdAt: Date.now()
+      status: 'pending',
+      showExtra: false,
+      createdAt: Date.now()
     });
 
     alert('Registration submitted ✅');
