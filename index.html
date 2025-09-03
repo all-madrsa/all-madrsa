@@ -50,10 +50,18 @@
       <input id="maddress" placeholder="Address (City, State)" class="w-full border p-2 rounded" required />
       <input id="mcontact" placeholder="Contact number" class="w-full border p-2 rounded" required />
       <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
+
+      <input id="mwhatsapp" placeholder="WhatsApp Number" class="w-full border p-2 rounded" />
+
       <div>
-        <label class="block text-sm">Upload Image (optional)</label>
+        <label class="block text-sm">Upload Madarsa Image</label>
         <input id="mimage" type="file" accept="image/*" class="mt-1" />
       </div>
+      <div>
+        <label class="block text-sm">Upload UPI QR Code (optional)</label>
+        <input id="mupi" type="file" accept="image/*" class="mt-1" />
+      </div>
+
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
         <button type="submit" class="btn-3d text-white px-4 py-2 rounded">Submit</button>
@@ -114,12 +122,12 @@
       authBtn.textContent = "Login with Google";
       addBtn.classList.add('hidden');
     }
-    subscribeList(); // realtime
+    subscribeList();
   });
 
   addBtn.onclick = () => openModal();
 
-  // ✅ Real-time listener
+  // Realtime listener
   function subscribeList() {
     const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
     onSnapshot(q, snapshot => {
@@ -139,9 +147,9 @@
         if (!isAdmin && !isOwner && d.status !== "approved") return;
 
         const card = document.createElement('div');
-        card.className = "p-4 rounded-xl shadow-lg bg-gradient-to-r from-green-100 to-emerald-200 transform transition duration-300 hover:rotate-1 hover:scale-[1.02] cursor-pointer overflow-hidden max-h-[250px]";
+        card.className = "p-4 rounded-xl shadow-lg bg-gradient-to-r from-green-100 to-emerald-200 transform transition duration-300 hover:rotate-1 hover:scale-[1.02] cursor-pointer overflow-hidden max-h-[260px]";
         card.innerHTML = `
-          ${d.image ? `<img src="${d.image}" class="w-full h-40 object-cover rounded mb-2"/>` : ""}
+          ${d.image ? `<img src="${d.image}" class="w-full h-40 object-contain rounded mb-2 bg-white"/>` : ""}
           <div class="text-lg font-bold text-emerald-800">${escapeHtml(d.name || '')}</div>
           <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
           <div class="mt-1 text-xs text-gray-500">${d.contact || ''}</div>
@@ -152,13 +160,15 @@
             </span>
           </div>
 
-          <div class="extra hidden mt-2 text-sm text-gray-800">
+          <div class="extra hidden mt-2 text-sm text-gray-800 space-y-2">
             ${d.courses?.length ? `<p><b>Courses:</b> ${d.courses.join(", ")}</p>` : ""}
             <p><b>Owner Email:</b> ${d.ownerEmail || ""}</p>
+            ${d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="px-3 py-1 bg-green-600 text-white rounded inline-block">WhatsApp</a>` : ""}
+            ${d.upiQR ? `<img src="${d.upiQR}" class="w-32 h-32 object-contain border rounded bg-white"/>` : ""}
           </div>
 
           ${isAdmin ? `
-            <div class="mt-2 flex gap-2">
+            <div class="mt-2 flex flex-wrap gap-2">
               <button onclick="updateStatus('${id}', 'approved')" class="px-3 py-1 bg-green-600 text-white rounded">Approve</button>
               <button onclick="updateStatus('${id}', 'rejected')" class="px-3 py-1 bg-red-600 text-white rounded">Reject</button>
               <button onclick="deleteMadarsa('${id}')" class="px-3 py-1 bg-gray-700 text-white rounded">Delete</button>
@@ -168,9 +178,9 @@
 
         // Expand/Collapse on click
         card.onclick = (e) => {
-          if (e.target.tagName === "BUTTON") return; // buttons ke click ignore
-          card.classList.toggle("max-h-[250px]");
-          card.classList.toggle("max-h-[600px]");
+          if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.tagName === "IMG") return;
+          card.classList.toggle("max-h-[260px]");
+          card.classList.toggle("max-h-[800px]");
           card.classList.toggle("scale-105");
           card.querySelector(".extra").classList.toggle("hidden");
         };
@@ -200,9 +210,13 @@
     const address = document.getElementById('maddress').value.trim();
     const contact = document.getElementById('mcontact').value.trim();
     const courses = document.getElementById('mcourses').value.trim();
+    const whatsapp = document.getElementById('mwhatsapp').value.trim();
     const imageFile = document.getElementById('mimage').files[0];
+    const upiFile = document.getElementById('mupi').files[0];
 
     let imgUrl = "";
+    let upiUrl = "";
+
     if (imageFile) {
       const id = Date.now().toString();
       const imgRef = sref(storage, `madarse/${auth.currentUser.uid}_${id}_${imageFile.name}`);
@@ -210,12 +224,21 @@
       imgUrl = await getDownloadURL(uploadSnap.ref);
     }
 
+    if (upiFile) {
+      const id = Date.now().toString();
+      const upiRef = sref(storage, `madarse/${auth.currentUser.uid}_${id}_${upiFile.name}`);
+      const uploadSnap = await uploadBytes(upiRef, upiFile);
+      upiUrl = await getDownloadURL(uploadSnap.ref);
+    }
+
     await addDoc(collection(db, 'madarse'), {
       name,
       address,
       contact,
       courses: courses ? courses.split(',').map(s => s.trim()) : [],
+      whatsapp,
       image: imgUrl,
+      upiQR: upiUrl,
       ownerUid: auth.currentUser.uid,
       ownerEmail: auth.currentUser.email,
       status: 'pending',
