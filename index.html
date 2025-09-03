@@ -9,10 +9,8 @@
     .title-3d {
       font-weight: bold;
       font-size: 1.8rem;
-      background: linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+      color: white;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
     }
     .dropdown:hover .dropdown-menu { display:block; }
     .dropdown-menu {
@@ -32,13 +30,16 @@
     }
     .dropdown-menu a:hover { background:#f3f4f6; }
     .btn-3d {
-      background: linear-gradient(180deg,#4ade80,#16a34a);
-      box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.15);
+      background: linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.2);
       transition: transform .12s ease, box-shadow .12s ease;
       font-size: 0.85rem;
       padding: 0.35rem 0.7rem;
+      color: white;
+      font-weight: 600;
+      border-radius: 6px;
     }
-    .btn-3d:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+    .btn-3d:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -50,15 +51,15 @@
     <div class="flex items-center justify-between px-4 py-2">
       <div class="title-3d">Talimi Ittehad</div>
       <div class="flex items-center gap-2">
-        <button id="addBtn" class="btn-3d text-white rounded hidden">+ Add Madarsa</button>
-        <button id="authBtn" class="px-3 py-1 border rounded bg-white text-black text-sm">Login</button>
+        <button id="addBtn" class="btn-3d hidden">+ Add Madarsa</button>
+        <button id="authBtn" class="btn-3d">Login</button>
       </div>
     </div>
     <!-- Menu row -->
-    <div class="flex gap-4 px-4 pb-2 text-sm">
+    <div class="flex items-center gap-4 px-4 pb-2 text-sm">
       <!-- Dropdown 1 -->
       <div class="dropdown relative">
-        <button class="px-3 py-1 rounded bg-gray-700 text-white">About ⬇</button>
+        <button class="px-3 py-1 rounded bg-transparent text-white">About ⬇</button>
         <div class="dropdown-menu">
           <a href="#">About</a>
           <a href="#">Contact</a>
@@ -68,7 +69,7 @@
       </div>
       <!-- Dropdown 2 -->
       <div class="dropdown relative">
-        <button class="px-3 py-1 rounded bg-gray-700 text-white">More ⬇</button>
+        <button class="px-3 py-1 rounded bg-transparent text-white">More ⬇</button>
         <div class="dropdown-menu">
           <a href="#">Notice</a>
           <a href="#">Talim</a>
@@ -76,13 +77,17 @@
           <a href="#">Program</a>
         </div>
       </div>
+      <!-- Donate button -->
+      <button class="btn-3d">🙏 Donate</button>
+      <!-- Admin scroll text button -->
+      <button id="scrollBtn" class="btn-3d hidden">✍ Add Scrolling Text</button>
     </div>
   </div>
 </header>
 
 <!-- Scrolling text -->
-<div class="bg-gradient-to-r from-pink-500 via-yellow-400 to-green-400 py-1">
-  <marquee class="text-white font-semibold">📢 Welcome to Talimi Ittehad – Garib Bachhon ki Taleem mein aapki madad ek nayi roshni hai!</marquee>
+<div id="scrollBox" class="bg-gradient-to-r from-pink-500 via-yellow-400 to-green-400 py-1">
+  <marquee id="scrollText" class="text-white font-semibold">📢 Welcome to Talimi Ittehad – गरीब बच्चों की तालीम में आपकी मदद जरूरी है!</marquee>
 </div>
 
 <!-- Main content -->
@@ -90,7 +95,7 @@
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Modal -->
+<!-- Modal for Madarsa Register -->
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
@@ -113,16 +118,28 @@
       </div>
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
-        <button type="submit" class="btn-3d text-white rounded">Submit</button>
+        <button type="submit" class="btn-3d">Submit</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal for Admin Scroll Text -->
+<div id="scrollModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow max-w-md w-full p-4">
+    <h3 class="text-lg font-semibold text-indigo-600 mb-2">Add Scrolling Text</h3>
+    <textarea id="scrollInput" rows="3" class="w-full border p-2 rounded" placeholder="Type scrolling text here..."></textarea>
+    <div class="flex justify-end gap-2 mt-2">
+      <button onclick="closeScrollModal()" class="px-4 py-2 border rounded">Cancel</button>
+      <button onclick="saveScrollText()" class="btn-3d">Save</button>
+    </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -140,27 +157,23 @@
 
   const authBtn = document.getElementById('authBtn');
   const addBtn = document.getElementById('addBtn');
-  const listDiv = document.getElementById('list');
-  const regModal = document.getElementById('regModal');
-  const regForm = document.getElementById('regForm');
+  const scrollBtn = document.getElementById('scrollBtn');
+  const scrollModal = document.getElementById('scrollModal');
+  const scrollInput = document.getElementById('scrollInput');
+  const scrollText = document.getElementById('scrollText');
 
   let currentUser = null;
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
-  window.openModal = () => { regModal.classList.remove('hidden'); regModal.classList.add('flex'); }
-  window.closeModal = () => { regModal.classList.add('hidden'); regModal.classList.remove('flex'); regForm.reset(); }
+  // Modal helpers
+  window.closeModal = () => { document.getElementById('regModal').classList.add('hidden'); document.getElementById('regForm').reset(); }
+  function openScrollModal(){ scrollModal.classList.remove('hidden'); scrollModal.classList.add('flex'); }
+  function closeScrollModal(){ scrollModal.classList.add('hidden'); scrollModal.classList.remove('flex'); }
 
   // Auth
   authBtn.onclick = async () => {
-    try {
-      if (!auth.currentUser) {
-        await signInWithPopup(auth, provider);
-      } else {
-        await signOut(auth);
-      }
-    } catch (err) {
-      alert("Login failed: " + err.message);
-    }
+    if (!auth.currentUser) await signInWithPopup(auth, provider);
+    else await signOut(auth);
   };
 
   onAuthStateChanged(auth, user => {
@@ -168,132 +181,27 @@
     if (user) {
       authBtn.textContent = "Logout";
       addBtn.classList.remove('hidden');
+      if (user.email === ADMIN_EMAIL) scrollBtn.classList.remove('hidden');
     } else {
-      authBtn.textContent = "Login with Google";
+      authBtn.textContent = "Login";
       addBtn.classList.add('hidden');
+      scrollBtn.classList.add('hidden');
     }
-    loadList();
   });
 
-  addBtn.onclick = () => openModal();
+  // Scroll text save
+  window.saveScrollText = async () => {
+    const txt = scrollInput.value.trim();
+    if (!txt) return;
+    await setDoc(doc(db, "config", "scroll"), { text: txt });
+    closeScrollModal();
+  };
+  scrollBtn.onclick = () => openScrollModal();
 
-  // Load list
-  function loadList() {
-    const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
-    onSnapshot(q, (qSnap) => {
-      listDiv.innerHTML = '';
-      qSnap.forEach(docSnap => {
-        const d = docSnap.data();
-
-        // Visibility rules
-        if (d.status === "pending" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
-        if (d.status === "rejected" && (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.uid !== d.ownerUid))) return;
-
-        const card = document.createElement('div');
-        card.className = `card p-4 rounded-xl shadow relative ${d.status === "approved" ? "bg-green-200" : "bg-gradient-to-r from-green-100 to-emerald-200"}`;
-
-        card.innerHTML = `
-          ${d.image ? `<img src="${d.image}" class="w-full h-48 object-contain bg-white rounded mb-2"/>` : ""}
-          <div class="text-lg font-bold text-indigo-700">${escapeHtml(d.name || '')}</div>
-          <div class="text-sm text-gray-700">${escapeHtml(d.address || '')}</div>
-          <div class="mt-1 text-xs text-gray-500">📞 ${d.contact || ''}</div>
-          ${d.status === "rejected" ? `<div class="text-red-600 font-bold mt-2">❌ Rejected</div>` : ""}
-          <div class="extra hidden mt-2">
-            ${d.courses && d.courses.length ? `<div class="text-sm text-pink-600"><b>📚 Courses:</b> ${d.courses.join(", ")}</div>` : ""}
-            ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="block mt-2 bg-green-500 text-white px-3 py-1 rounded">📲 WhatsApp</a>` : ""}
-            ${d.showExtra && d.upi ? `
-              <div class="mt-2">
-                <img src="${d.upi}" class="w-32 rounded border mx-auto"/>
-                <p class="text-center text-sm text-purple-700 mt-1">🙏 Please donate for poor children's education</p>
-              </div>` : ""}
-          </div>
-          ${currentUser && currentUser.email === ADMIN_EMAIL ? `
-            <div class="flex gap-2 mt-2">
-              ${d.status === "approved" 
-                ? `<button disabled class="bg-green-600 text-white px-3 py-1 rounded shadow text-sm">✅ Approved</button>` 
-                : `<button class="approve btn-3d text-white rounded">Approve</button>`}
-              <button class="reject bg-red-500 text-white px-3 py-1 rounded shadow text-sm">Reject</button>
-              <button class="toggleExtra ${d.showExtra ? 'bg-orange-500' : 'bg-blue-500'} text-white px-3 py-1 rounded shadow text-sm">
-                ${d.showExtra ? '❌ Disable Extra Info' : 'Enable Extra Info'}
-              </button>
-            </div>` : ""}
-          ${d.status !== "approved" ? `
-            <div class="absolute top-2 right-2">
-              <span class="relative flex h-3 w-3">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
-              </span>
-            </div>` : ""}
-        `;
-
-        card.querySelector("img")?.addEventListener("click", () => {
-          card.classList.toggle("expanded");
-          card.querySelector(".extra").classList.toggle("hidden");
-        });
-
-        if (currentUser && currentUser.email === ADMIN_EMAIL) {
-          card.querySelector(".approve")?.addEventListener("click", async () => {
-            await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
-          });
-          card.querySelector(".reject")?.addEventListener("click", async () => {
-            await updateDoc(doc(db, "madarse", docSnap.id), { status: "rejected" });
-          });
-          card.querySelector(".toggleExtra")?.addEventListener("click", async () => {
-            await updateDoc(doc(db, "madarse", docSnap.id), { showExtra: !d.showExtra });
-          });
-        }
-
-        listDiv.appendChild(card);
-      });
-    });
-  }
-
-  regForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!auth.currentUser) { alert('Google login required'); return; }
-
-    const name = document.getElementById('mname').value.trim();
-    const address = document.getElementById('maddress').value.trim();
-    const contact = document.getElementById('mcontact').value.trim();
-    const whatsapp = document.getElementById('mwhatsapp').value.trim();
-    const courses = document.getElementById('mcourses').value.trim();
-    const imageFile = document.getElementById('mimage').files[0];
-    const upiFile = document.getElementById('mupi').files[0];
-
-    let imgUrl = "", upiUrl = "";
-    async function uploadImg(file) {
-      const formData = new FormData();
-      formData.append("image", file);
-      const res = await fetch("https://api.imgbb.com/1/upload?key=c4bc97c133edb76e062de6d070df67e4", { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.success) return data.data.url;
-      else throw new Error(data.error.message);
-    }
-
-    if (imageFile) imgUrl = await uploadImg(imageFile).catch(err => alert("Image upload failed: " + err.message));
-    if (upiFile) upiUrl = await uploadImg(upiFile).catch(err => alert("UPI upload failed: " + err.message));
-
-    await addDoc(collection(db, 'madarse'), {
-      name, address, contact, whatsapp,
-      courses: courses ? courses.split(',').map(s => s.trim()) : [],
-      image: imgUrl, upi: upiUrl,
-      ownerUid: auth.currentUser.uid,
-      ownerEmail: auth.currentUser.email,
-      status: 'pending',
-      showExtra: false,
-      createdAt: Date.now()
-    });
-
-    alert('Registration submitted ✅');
-    closeModal();
+  // Live update scrolling text
+  onSnapshot(doc(db,"config","scroll"), (snap)=>{
+    if(snap.exists()) scrollText.textContent = snap.data().text;
   });
-
-  function escapeHtml(text) {
-    if (!text) return '';
-    return text.replace(/[&<>"']/g, c => (
-      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
-    ));
-  }
 </script>
 </body>
 </html>
