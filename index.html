@@ -98,7 +98,7 @@
 </main>
 
 <!-- Modal for Madarsa Register -->
-<div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
+<div id="regModal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
       <h3 class="text-lg font-semibold text-emerald-600">Register Madarsa</h3>
@@ -127,7 +127,7 @@
 </div>
 
 <!-- Modal for Admin Scroll Text -->
-<div id="scrollModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
+<div id="scrollModal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-md w-full p-4">
     <h3 class="text-lg font-semibold text-indigo-600 mb-2">Add Scrolling Text</h3>
     <textarea id="scrollInput" rows="3" class="w-full border p-2 rounded" placeholder="Type scrolling text here..."></textarea>
@@ -174,8 +174,8 @@
     regModal.classList.add('hidden');
     document.getElementById('regForm').reset();
   }
-  function openScrollModal(){ scrollModal.classList.remove('hidden'); scrollModal.classList.add('flex'); }
-  function closeScrollModal(){ scrollModal.classList.add('hidden'); scrollModal.classList.remove('flex'); }
+  function openScrollModal(){ scrollModal.classList.remove('hidden'); }
+  function closeScrollModal(){ scrollModal.classList.add('hidden'); }
 
   // Auth
   authBtn.onclick = async () => {
@@ -200,7 +200,6 @@
   // Add Madarsa button
   addBtn.onclick = () => {
     regModal.classList.remove('hidden');
-    regModal.classList.add('flex');
   };
 
   // Scroll text save
