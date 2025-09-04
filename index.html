@@ -6,7 +6,7 @@
   <title>Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .title-3d { font-weight:bold; font-size:1.8rem; color:white; text-shadow:2px 2px 8px rgba(0,0,0,0.9); }
+    .title-3d { font-weight:bold; font-size:2rem; color:white; text-shadow:2px 2px 8px rgba(0,0,0,0.9); }
     .dropdown:hover .dropdown-menu { display:block; }
     .dropdown-menu { display:none; position:absolute; background:white; box-shadow:0 2px 6px rgba(0,0,0,0.2); border-radius:0.5rem; min-width:160px; z-index:50; }
     .dropdown-menu a { display:block; padding:6px 12px; font-size:14px; color:#333; }
@@ -15,88 +15,107 @@
       background: linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
       box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.2);
       transition: transform .12s ease, box-shadow .12s ease;
-      font-size: 0.85rem; padding: 0.35rem 0.7rem; color: white; font-weight: 600; border-radius: 6px;
+      font-size: 0.75rem; padding: 0.25rem 0.6rem; color: white; font-weight: 600; border-radius: 6px;
     }
     .btn-3d:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
     .carousel { position: relative; overflow: hidden; }
     .carousel-track { display: flex; transition: transform 0.6s ease-in-out; }
     .carousel img { width: 100%; height: 160px; object-fit: cover; flex-shrink: 0; }
-    marquee { font-weight:600; }
+    marquee { background:#fff3cd; color:#856404; padding:6px; font-size:14px; border-bottom:1px solid #fcd34d; }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
 <!-- Header -->
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
-  <div class="max-w-6xl mx-auto flex flex-col">
-    <div class="flex items-center justify-between px-4 py-2">
-      <div class="title-3d">Talimi Ittehad</div>
-      <div class="flex items-center gap-3">
-
-        <!-- Dropdown Menus -->
-        <div class="dropdown relative">
-          <button class="btn-3d">About ⬇</button>
-          <div class="dropdown-menu">
-            <a href="#">हमारे बारे में</a>
-            <a href="#">मिशन</a>
-          </div>
+  <div class="max-w-6xl mx-auto flex flex-col px-3">
+    <!-- Logo -->
+    <div class="flex justify-center py-2">
+      <div class="title-3d text-center">Talimi Ittehad</div>
+    </div>
+    <!-- Menu -->
+    <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
+      <div class="dropdown relative">
+        <button class="btn-3d">About ⬇</button>
+        <div class="dropdown-menu">
+          <a href="#">हमारे बारे में</a>
+          <a href="#">मिशन</a>
         </div>
-        <div class="dropdown relative">
-          <button class="btn-3d">More ⬇</button>
-          <div class="dropdown-menu">
-            <a href="#">संपर्क करें</a>
-            <a href="#">FAQ</a>
-          </div>
-        </div>
-
-        <!-- Donation Button -->
-        <button class="btn-3d">🙏 Donate</button>
-
-        <!-- Auth Buttons -->
-        <button id="authBtn" class="btn-3d">Login</button>
       </div>
+      <div class="dropdown relative">
+        <button class="btn-3d">More ⬇</button>
+        <div class="dropdown-menu">
+          <a href="#">संपर्क करें</a>
+          <a href="#">FAQ</a>
+        </div>
+      </div>
+      <button class="btn-3d">🙏 Donate</button>
+      <button id="addBtn" class="btn-3d hidden">+ Add Madarsa</button>
+      <button id="authBtn" class="btn-3d">Login</button>
     </div>
   </div>
 </header>
 
-<!-- Notice -->
-<div class="bg-yellow-100 text-red-600 py-1 text-sm">
-  <marquee id="noticeText">📢 Welcome to Talimi Ittehad website</marquee>
+<!-- Notice Bar -->
+<div id="noticeBar" class="w-full">
+  <marquee id="noticeText">📢 Welcome to Talimi Ittehad!</marquee>
+</div>
+<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
+  <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
+  <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
 </div>
 
-<!-- Admin notice edit -->
-<div id="noticeAdmin" class="hidden max-w-6xl mx-auto mt-2 px-4">
-  <input id="noticeInput" placeholder="Type scrolling notice..." class="border p-2 rounded w-2/3"/>
-  <button id="noticeSave" class="btn-3d">Save Notice</button>
+<!-- Search -->
+<div class="max-w-6xl mx-auto px-4 mt-2">
+  <input id="searchBox" type="text" placeholder="🔍 Search Madarsa..." class="w-full border p-2 rounded"/>
 </div>
 
-<!-- Search Box -->
-<div class="max-w-6xl mx-auto px-4 mt-3">
-  <input id="searchInput" placeholder="Search Madarsa..." class="w-full border p-2 rounded"/>
-</div>
-
-<!-- Main content -->
+<!-- Main -->
 <main class="max-w-6xl mx-auto p-4">
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Google Translate -->
-<footer class="bg-gray-100 py-4 mt-6">
-  <div id="google_translate_element" class="text-center"></div>
-</footer>
+<!-- Modal -->
+<div id="regModal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center p-4 z-50 overflow-auto">
+  <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
+    <div class="flex justify-between items-center">
+      <h3 class="text-lg font-semibold text-emerald-600">Register Madarsa</h3>
+      <button onclick="closeModal()" class="text-gray-600">X</button>
+    </div>
+    <form id="regForm" class="mt-3 space-y-3">
+      <input id="mname" placeholder="Madarsa ka naam" class="w-full border p-2 rounded" required />
+      <input id="maddress" placeholder="Address" class="w-full border p-2 rounded" required />
+      <input id="mcontact" placeholder="Contact number" class="w-full border p-2 rounded" required />
+      <input id="mwhatsapp" placeholder="WhatsApp number" class="w-full border p-2 rounded" />
+      <input id="mcourses" placeholder="Courses" class="w-full border p-2 rounded" />
+      <textarea id="mabout" placeholder="About Madarsa" rows="3" class="w-full border p-2 rounded"></textarea>
+      <div>
+        <label class="text-sm">Upload Images (1-5)</label>
+        <input id="mimages" type="file" accept="image/*" multiple required />
+      </div>
+      <div>
+        <label class="text-sm">Upload UPI QR</label>
+        <input id="mupi" type="file" accept="image/*" />
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
+        <button id="submitBtn" type="submit" class="btn-3d">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-<script type="text/javascript">
-  function googleTranslateElementInit() {
-    new google.translate.TranslateElement({pageLanguage: 'hi'}, 'google_translate_element');
-  }
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<!-- Footer -->
+<footer class="bg-gray-100 text-center py-4 mt-6">
+  <div id="google_translate_element"></div>
+  <p class="text-xs text-gray-500 mt-2">© 2025 Talimi Ittehad</p>
+</footer>
 
 <!-- Firebase + JS -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -106,107 +125,18 @@
     messagingSenderId: "619313835874",
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+  const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
+
   const authBtn = document.getElementById("authBtn");
-  const noticeText = document.getElementById("noticeText");
-  const noticeInput = document.getElementById("noticeInput");
-  const noticeSave = document.getElementById("noticeSave");
-  const noticeAdmin = document.getElementById("noticeAdmin");
-
-  // Auth
-  authBtn.onclick = async()=>{ 
-    if(!auth.currentUser) await signInWithPopup(auth,provider); 
-    else await signOut(auth); 
-  };
-
-  onAuthStateChanged(auth, async(user)=>{
-    if(user && user.email===ADMIN_EMAIL){ 
-      authBtn.textContent="Logout"; 
-      noticeAdmin.classList.remove("hidden");
-      const snap = await getDoc(doc(db,"config","notice"));
-      if(snap.exists()) noticeText.textContent = snap.data().text;
-    } else {
-      authBtn.textContent="Login"; 
-      noticeAdmin.classList.add("hidden");
-    }
-  });
-
-  noticeSave.onclick = async()=>{
-    const text = noticeInput.value.trim();
-    if(!text) return;
-    await setDoc(doc(db,"config","notice"), {text});
-    noticeText.textContent = text;
-    alert("✅ Notice updated!");
-  }
-
-  // ============================
-  // 🔎 Firestore Listing + Live Search
-  // ============================
-
-  const listBox = document.getElementById("list");
-  const searchInput = document.getElementById("searchInput");
-
-  let allMadarse = []; // cache
-
-  async function loadMadarse() {
-    listBox.innerHTML = `<p class="col-span-full text-center text-gray-500">⏳ Loading...</p>`;
-    const snap = await getDocs(collection(db,"madarse"));
-    allMadarse = [];
-    snap.forEach(docSnap => {
-      allMadarse.push({id:docSnap.id, ...docSnap.data()});
-    });
-    renderMadarse(allMadarse);
-  }
-
-  function renderMadarse(items){
-    if(items.length===0){
-      listBox.innerHTML = `<p class="col-span-full text-center text-gray-500">😔 कोई रिज़ल्ट नहीं मिला</p>`;
-      return;
-    }
-    listBox.innerHTML = "";
-    items.forEach(m=>{
-      const card = document.createElement("div");
-      card.className = "bg-white shadow rounded-lg overflow-hidden border";
-
-      card.innerHTML = `
-        <div class="carousel relative">
-          <div class="carousel-track">
-            ${(m.images || []).map(url=>`<img src="${url}" alt="">`).join("")}
-          </div>
-        </div>
-        <div class="p-3">
-          <h4 class="font-bold text-lg text-indigo-600">${m.name||""}</h4>
-          <p class="text-gray-600 text-sm">${m.address||""}</p>
-          <p class="text-sm text-gray-500">📞 ${m.contact||""}</p>
-          ${m.about ? `<p class="mt-1 text-gray-700 text-sm">${m.about}</p>` : ""}
-          ${m.upi ? `<img src="${m.upi}" alt="UPI QR" class="mt-2 w-28 h-28">` : ""}
-        </div>
-      `;
-      listBox.appendChild(card);
-    });
-  }
-
-  // 🔎 Live search (हर typing पर filter)
-  searchInput.addEventListener("input",()=>{
-    const q = searchInput.value.trim().toLowerCase();
-    if(!q) renderMadarse(allMadarse);
-    else {
-      const filtered = allMadarse.filter(m=>
-        (m.name && m.name.toLowerCase().includes(q)) ||
-        (m.address && m.address.toLowerCase().includes(q)) ||
-        (m.courses && m.courses.toLowerCase().includes(q))
-      );
-      renderMadarse(filtered);
-    }
-  });
-
-  // Load all on page start
-  loadMadarse();
-</script>
-</body>
-</html>
+  const addBtn = document.getElementById("addBtn");
+  const regModal = document.getElementById("regModal");
+  const listDiv = document.getElementById("list");
+  const submitBtn = document.getElementById("submitBtn");
+  const searchBox = document.getElement
