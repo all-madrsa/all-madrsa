@@ -40,33 +40,10 @@
       border-radius: 6px;
     }
     .btn-3d:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
-
-    /* Header overlay + responsive height */
-    #mainHeader {
-      position: relative;
-      min-height: 200px;
-      background-size: cover;
-      background-position: center;
-    }
-    @media(min-width:768px){
-      #mainHeader { min-height: 300px; }
-    }
-    #mainHeader::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to right, rgba(128,0,128,0.6), rgba(255,0,128,0.4));
-      z-index: 1;
-    }
-    #mainHeader > div {
-      position: relative;
-      z-index: 2;
-    }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-<!-- Header -->
 <!-- Header -->
 <header id="mainHeader" 
   class="shadow sticky top-0 z-40 
@@ -76,7 +53,6 @@
     <div class="flex items-center justify-between px-4 py-2">
       <div class="title-3d">Talimi Ittehad</div>
       <div class="flex items-center gap-2">
-        <!-- Header Image Change हटा दिया -->
         <button id="addBtn" class="btn-3d hidden">+ Add Madarsa</button>
         <button id="authBtn" class="btn-3d">Login</button>
       </div>
@@ -106,7 +82,6 @@
     </div>
   </div>
 </header>
-
 
 <!-- Scrolling text -->
 <div id="scrollBox" class="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 py-1">
@@ -164,8 +139,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+  import { getFirestore, collection, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -179,7 +153,6 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const storage = getStorage(app);
   const provider = new GoogleAuthProvider();
 
   const authBtn = document.getElementById('authBtn');
@@ -187,9 +160,6 @@
   const scrollBtn = document.getElementById('scrollBtn');
   const scrollText = document.getElementById('scrollText');
   const listDiv = document.getElementById('list');
-  const headerImgBtn = document.getElementById('headerImgBtn');
-  const headerImgInput = document.getElementById('headerImgInput');
-  const mainHeader = document.getElementById('mainHeader');
 
   let currentUser = null;
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
@@ -202,20 +172,6 @@
   function openScrollModal(){ scrollModal.classList.remove('hidden'); scrollModal.classList.add('flex'); }
   function closeScrollModal(){ scrollModal.classList.add('hidden'); scrollModal.classList.remove('flex'); }
 
-  // --- Header image live update ---
-  onSnapshot(doc(db,"config","header"), (snap)=>{
-    if(snap.exists()) mainHeader.style.backgroundImage = `url(${snap.data().url})`;
-  });
-
-  headerImgInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const storageRef = ref(storage, "header/" + Date.now() + "-" + file.name);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    await setDoc(doc(db, "config", "header"), { url });
-  });
-
   // Auth
   authBtn.onclick = async () => {
     if (!auth.currentUser) await signInWithPopup(auth, provider);
@@ -227,15 +183,11 @@
     if (user) {
       authBtn.textContent = "Logout";
       addBtn.classList.remove('hidden');
-      if (user.email === ADMIN_EMAIL) {
-        scrollBtn.classList.remove('hidden');
-        headerImgBtn.classList.remove('hidden');
-      }
+      if (user.email === ADMIN_EMAIL) scrollBtn.classList.remove('hidden');
     } else {
       authBtn.textContent = "Login";
       addBtn.classList.add('hidden');
       scrollBtn.classList.add('hidden');
-      headerImgBtn.classList.add('hidden');
     }
     loadList();
   });
