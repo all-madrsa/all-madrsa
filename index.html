@@ -98,7 +98,7 @@
 </main>
 
 <!-- Modal for Madarsa Register -->
-<div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
+<div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
       <h3 class="text-lg font-semibold text-emerald-600">Register Madarsa</h3>
@@ -127,7 +127,7 @@
 </div>
 
 <!-- Modal for Admin Scroll Text -->
-<div id="scrollModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
+<div id="scrollModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-md w-full p-4">
     <h3 class="text-lg font-semibold text-indigo-600 mb-2">Add Scrolling Text</h3>
     <textarea id="scrollInput" rows="3" class="w-full border p-2 rounded" placeholder="Type scrolling text here..."></textarea>
@@ -141,7 +141,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -167,7 +167,7 @@
   const listDiv = document.getElementById('list');
 
   let currentUser = null;
-  const ADMIN_EMAIL = "zarasamajiksevasanstha@gmail.com";
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   // Modal helpers
   window.closeModal = () => {
@@ -201,24 +201,6 @@
   addBtn.onclick = () => {
     regModal.classList.remove('hidden');
     regModal.classList.add('flex');
-  };
-
-  // Register Form Submit → Firestore add
-  document.getElementById('regForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const data = {
-      name: mname.value,
-      address: maddress.value,
-      contact: mcontact.value,
-      whatsapp: mwhatsapp.value,
-      courses: mcourses.value,
-      ownerUid: currentUser ? currentUser.uid : null,
-      status: "pending",
-      showExtra: true,
-      createdAt: serverTimestamp()
-    };
-    await addDoc(collection(db, "madarse"), data);
-    closeModal();
   };
 
   // Scroll text save
