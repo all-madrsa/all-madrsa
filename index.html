@@ -7,10 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .title-3d { font-weight:bold; font-size:1.8rem; color:white; text-shadow:2px 2px 8px rgba(0,0,0,0.9); }
-    .dropdown:hover .dropdown-menu { display:block; }
-    .dropdown-menu { display:none; position:absolute; background:white; box-shadow:0 2px 6px rgba(0,0,0,0.2); border-radius:0.5rem; min-width:160px; z-index:50; }
-    .dropdown-menu a { display:block; padding:6px 12px; font-size:14px; color:#333; }
-    .dropdown-menu a:hover { background:#f3f4f6; }
     .btn-3d {
       background: linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
       box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.2);
@@ -67,7 +63,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -164,7 +160,7 @@
     }
   });
 
-  // ✅ Load list with Show Info button
+  // ✅ Load list
   function loadList() {
     const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
     onSnapshot(q, (qSnap) => {
@@ -177,7 +173,7 @@
         const card = document.createElement("div");
         card.className = `border rounded-lg shadow bg-white p-3`;
         card.innerHTML = `
-          ${d.image?`<img src="${d.image}" class="w-full h-40 object-contain mb-2"/>`:""}
+          ${d.image?`<img src="${d.image}" class="w-full h-40 object-cover rounded mb-2"/>`:""}
           <h2 class="font-bold text-lg">${d.name||''}</h2>
           <p class="text-sm text-gray-600">${d.address||''}</p>
           ${d.status==="rejected"?`<p class="text-red-600 font-semibold">❌ Rejected</p>`:""}
@@ -196,7 +192,7 @@
             </div>`:""}
         `;
 
-        // Show/Hide Info button
+        // Show/Hide Info
         card.querySelector(".toggleInfo").addEventListener("click",()=>{
           const extra = card.querySelector(".extra");
           const btn = card.querySelector(".toggleInfo");
@@ -204,6 +200,7 @@
           btn.textContent = extra.classList.contains("hidden") ? "ℹ Show Info" : "Hide Info";
         });
 
+        // Admin controls
         if(currentUser&&currentUser.email===ADMIN_EMAIL){
           card.querySelector(".approve")?.addEventListener("click",async()=>{ await updateDoc(doc(db,"madarse",docSnap.id),{status:"approved"}); });
           card.querySelector(".reject")?.addEventListener("click",async()=>{ await updateDoc(doc(db,"madarse",docSnap.id),{status:"rejected"}); });
