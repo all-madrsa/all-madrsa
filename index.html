@@ -30,7 +30,28 @@
   <div class="max-w-6xl mx-auto flex flex-col">
     <div class="flex items-center justify-between px-4 py-2">
       <div class="title-3d">Talimi Ittehad</div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-3">
+
+        <!-- Dropdown Menus -->
+        <div class="dropdown relative">
+          <button class="btn-3d">About ⬇</button>
+          <div class="dropdown-menu">
+            <a href="#">हमारे बारे में</a>
+            <a href="#">मिशन</a>
+          </div>
+        </div>
+        <div class="dropdown relative">
+          <button class="btn-3d">More ⬇</button>
+          <div class="dropdown-menu">
+            <a href="#">संपर्क करें</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+
+        <!-- Donation Button -->
+        <button class="btn-3d">🙏 Donate</button>
+
+        <!-- Auth Buttons -->
         <button id="addBtn" class="btn-3d hidden">+ Add Madarsa</button>
         <button id="authBtn" class="btn-3d">Login</button>
       </div>
@@ -76,7 +97,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -102,7 +123,6 @@
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
-  // ✅ Helper: File -> Base64
   function toBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -112,7 +132,6 @@
     });
   }
 
-  // ✅ Upload to ImgBB
   async function uploadToImgBB(file) {
     if (!file) return "";
     const base64 = await toBase64(file);
@@ -124,10 +143,8 @@
     else throw new Error("ImgBB Upload Failed: " + data.error.message);
   }
 
-  // Modal helpers
   window.closeModal = () => { regModal.classList.add("hidden"); document.getElementById("regForm").reset(); }
 
-  // Auth
   authBtn.onclick = async () => { if (!auth.currentUser) await signInWithPopup(auth, provider); else await signOut(auth); };
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
@@ -138,7 +155,6 @@
 
   addBtn.onclick = () => { regModal.classList.remove("hidden"); regModal.classList.add("flex"); };
 
-  // ✅ Form submit
   document.getElementById("regForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser) { alert("Please login first"); return; }
@@ -193,7 +209,6 @@
     }
   });
 
-  // ✅ Load list with Auto-carousel
   function loadList() {
     const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
     onSnapshot(q, (qSnap) => {
@@ -227,15 +242,17 @@
               </div>` : ""}
             ${d.showExtra && d.about ? `<p class="mt-2 text-gray-700 text-sm">📝 ${d.about}</p>` : ""}
           </div>
-          ${currentUser&&currentUser.email===ADMIN_EMAIL?`
-            <div class="flex gap-2 mt-2">
+          <div class="flex gap-2 mt-2 flex-wrap">
+            ${currentUser && currentUser.email===ADMIN_EMAIL?`
               ${d.status==="approved"?`<button disabled class="btn-3d">✅ Approved</button>`:`<button class="approve btn-3d">Approve</button>`}
               <button class="reject btn-3d">Reject</button>
               <button class="toggleExtra btn-3d">${d.showExtra?'❌ Disable Extra Info':'🔓 Enable Extra Info'}</button>
-            </div>`:""}
+            `:""}
+            ${(currentUser && (currentUser.email===ADMIN_EMAIL || currentUser.uid===d.ownerUid)) ? 
+              `<button class="delete btn-3d">🗑 Delete</button>` : ""}
+          </div>
         `;
 
-        // Auto-carousel function
         const track = card.querySelector(".carousel-track");
         if (track && d.images.length > 1) {
           let index = 0;
@@ -245,7 +262,6 @@
           }, 3000);
         }
 
-        // Show/Hide Info
         card.querySelector(".toggleInfo").addEventListener("click",()=>{
           const extra = card.querySelector(".extra");
           const btn = card.querySelector(".toggleInfo");
@@ -258,6 +274,13 @@
           card.querySelector(".reject")?.addEventListener("click",async()=>{ await updateDoc(doc(db,"madarse",docSnap.id),{status:"rejected"}); });
           card.querySelector(".toggleExtra")?.addEventListener("click",async()=>{ await updateDoc(doc(db,"madarse",docSnap.id),{showExtra:!d.showExtra}); });
         }
+
+        card.querySelector(".delete")?.addEventListener("click", async()=>{
+          if(confirm("क्या आप इस पोस्ट को डिलीट करना चाहते हैं?")){
+            await deleteDoc(doc(db,"madarse",docSnap.id));
+            alert("🗑 Post Deleted");
+          }
+        });
 
         listDiv.appendChild(card);
       });
