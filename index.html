@@ -25,7 +25,6 @@
 <!-- Header -->
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col">
-    <!-- Top bar -->
     <div class="flex items-center justify-between px-4 py-2">
       <div class="title-3d">Talimi Ittehad</div>
       <div class="flex items-center gap-2">
@@ -33,7 +32,6 @@
         <button id="authBtn" class="btn-3d">Login</button>
       </div>
     </div>
-    <!-- Menu row -->
     <div class="flex items-center gap-4 px-4 pb-2 text-sm">
       <div class="dropdown relative">
         <button class="btn-3d">About ⬇</button>
@@ -55,7 +53,9 @@
 
 <!-- Scrolling text -->
 <div id="scrollBox" class="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 py-1">
-  <marquee id="scrollText" class="text-white font-semibold">📢 Welcome to Talimi Ittehad – गरीब बच्चों की तालीम में आपकी मदद जरूरी है!</marquee>
+  <marquee id="scrollText" class="text-white font-semibold">
+    📢 Welcome to Talimi Ittehad – गरीब बच्चों की तालीम में आपकी मदद जरूरी है!
+  </marquee>
 </div>
 
 <!-- Main content -->
@@ -101,7 +101,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
   const firebaseConfig = {
@@ -119,34 +119,34 @@
   const storage = getStorage(app);
   const provider = new GoogleAuthProvider();
 
-  const authBtn = document.getElementById('authBtn');
-  const addBtn = document.getElementById('addBtn');
-  const scrollBtn = document.getElementById('scrollBtn');
-  const scrollModal = document.getElementById('scrollModal');
-  const scrollInput = document.getElementById('scrollInput');
-  const scrollText = document.getElementById('scrollText');
-  const regModal = document.getElementById('regModal');
-  const listDiv = document.getElementById('list');
+  const authBtn = document.getElementById("authBtn");
+  const addBtn = document.getElementById("addBtn");
+  const scrollBtn = document.getElementById("scrollBtn");
+  const scrollModal = document.getElementById("scrollModal");
+  const scrollInput = document.getElementById("scrollInput");
+  const scrollText = document.getElementById("scrollText");
+  const regModal = document.getElementById("regModal");
+  const listDiv = document.getElementById("list");
 
   let currentUser = null;
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   // Modal helpers
-  window.closeModal = () => { regModal.classList.add('hidden'); document.getElementById('regForm').reset(); }
-  function openScrollModal(){ scrollModal.classList.remove('hidden'); scrollModal.classList.add('flex'); }
-  function closeScrollModal(){ scrollModal.classList.add('hidden'); scrollModal.classList.remove('flex'); }
+  window.closeModal = () => { regModal.classList.add("hidden"); document.getElementById("regForm").reset(); }
+  function openScrollModal(){ scrollModal.classList.remove("hidden"); scrollModal.classList.add("flex"); }
+  function closeScrollModal(){ scrollModal.classList.add("hidden"); scrollModal.classList.remove("flex"); }
 
   // Auth
   authBtn.onclick = async () => { if (!auth.currentUser) await signInWithPopup(auth, provider); else await signOut(auth); };
-  onAuthStateChanged(auth, user => {
+  onAuthStateChanged(auth, (user) => {
     currentUser = user;
-    if (user) { authBtn.textContent="Logout"; addBtn.classList.remove('hidden'); if(user.email===ADMIN_EMAIL) scrollBtn.classList.remove('hidden'); }
-    else { authBtn.textContent="Login"; addBtn.classList.add('hidden'); scrollBtn.classList.add('hidden'); }
+    if (user) { authBtn.textContent="Logout"; addBtn.classList.remove("hidden"); if(user.email===ADMIN_EMAIL) scrollBtn.classList.remove("hidden"); }
+    else { authBtn.textContent="Login"; addBtn.classList.add("hidden"); scrollBtn.classList.add("hidden"); }
     loadList();
   });
 
   // Add Madarsa button
-  addBtn.onclick = () => { regModal.classList.remove('hidden'); regModal.classList.add('flex'); };
+  addBtn.onclick = () => { regModal.classList.remove("hidden"); regModal.classList.add("flex"); };
 
   // Save scrolling text
   window.saveScrollText = async () => {
@@ -165,52 +165,59 @@
     e.preventDefault();
     if (!currentUser) { alert("Please login first"); return; }
 
-    const name = document.getElementById("mname").value.trim();
-    const address = document.getElementById("maddress").value.trim();
-    const contact = document.getElementById("mcontact").value.trim();
-    const whatsapp = document.getElementById("mwhatsapp").value.trim();
-    const courses = document.getElementById("mcourses").value.trim();
+    try {
+      const name = document.getElementById("mname").value.trim();
+      const address = document.getElementById("maddress").value.trim();
+      const contact = document.getElementById("mcontact").value.trim();
+      const whatsapp = document.getElementById("mwhatsapp").value.trim();
+      const courses = document.getElementById("mcourses").value.trim();
 
-    let imageUrl = "";
-    let upiUrl = "";
+      let imageUrl = "";
+      let upiUrl = "";
 
-    const imgFile = document.getElementById("mimage").files[0];
-    if (imgFile) {
-      const imgRef = ref(storage, "madarse/" + Date.now() + "_" + imgFile.name);
-      await uploadBytes(imgRef, imgFile);
-      imageUrl = await getDownloadURL(imgRef);
+      const imgFile = document.getElementById("mimage").files[0];
+      if (imgFile) {
+        const imgRef = ref(storage, "madarse/" + Date.now() + "_" + imgFile.name);
+        await uploadBytes(imgRef, imgFile);
+        imageUrl = await getDownloadURL(imgRef);
+      }
+
+      const upiFile = document.getElementById("mupi").files[0];
+      if (upiFile) {
+        const upiRef = ref(storage, "upi/" + Date.now() + "_" + upiFile.name);
+        await uploadBytes(upiRef, upiFile);
+        upiUrl = await getDownloadURL(upiRef);
+      }
+
+      await addDoc(collection(db, "madarse"), {
+        name, address, contact, whatsapp, courses,
+        image: imageUrl, upi: upiUrl,
+        ownerUid: currentUser.uid,
+        createdAt: serverTimestamp(),   // ✅ FIX
+        status: "pending",
+        showExtra: false
+      });
+
+      document.getElementById("regForm").reset();
+      regModal.classList.add("hidden");
+      alert("✅ Madarsa submitted for approval!");
+    } catch (err) {
+      console.error("Error adding document:", err);
+      alert("❌ Error: " + err.message);
     }
-    const upiFile = document.getElementById("mupi").files[0];
-    if (upiFile) {
-      const upiRef = ref(storage, "upi/" + Date.now() + "_" + upiFile.name);
-      await uploadBytes(upiRef, upiFile);
-      upiUrl = await getDownloadURL(upiRef);
-    }
-
-    await addDoc(collection(db, "madarse"), {
-      name, address, contact, whatsapp, courses,
-      image: imageUrl, upi: upiUrl,
-      ownerUid: currentUser.uid,
-      createdAt: new Date(),
-      status: "pending",
-      showExtra: false
-    });
-
-    closeModal();
-    alert("✅ Madarsa submitted for approval!");
   });
 
   // Load list
   function loadList() {
     const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
     onSnapshot(q, (qSnap) => {
-      listDiv.innerHTML = '';
+      listDiv.innerHTML = "";
       qSnap.forEach(docSnap => {
         const d = docSnap.data();
         if (d.status==="pending" && (!currentUser || currentUser.email!==ADMIN_EMAIL)) return;
         if (d.status==="rejected" && (!currentUser || (currentUser.email!==ADMIN_EMAIL && currentUser.uid!==d.ownerUid))) return;
 
-        const card = document.createElement('div');
+        const card = document.createElement("div");
         card.className = `border rounded-lg shadow bg-white p-3`;
         card.innerHTML = `
           ${d.image?`<img src="${d.image}" class="w-full h-40 object-contain mb-2"/>`:""}
