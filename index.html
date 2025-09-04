@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="hi">
 <head>
@@ -45,9 +46,7 @@
 <body class="bg-slate-50 min-h-screen">
 
 <!-- Header -->
-<header id="mainHeader" 
-  class="shadow sticky top-0 z-40 
-         bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500">
+<header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 py-2">
@@ -59,6 +58,7 @@
     </div>
     <!-- Menu row -->
     <div class="flex items-center gap-4 px-4 pb-2 text-sm">
+      <!-- Dropdown 1 -->
       <div class="dropdown relative">
         <button class="btn-3d">About ⬇</button>
         <div class="dropdown-menu">
@@ -68,6 +68,7 @@
           <a href="#">Terms & Conditions</a>
         </div>
       </div>
+      <!-- Dropdown 2 -->
       <div class="dropdown relative">
         <button class="btn-3d">More ⬇</button>
         <div class="dropdown-menu">
@@ -77,7 +78,9 @@
           <a href="#">Program</a>
         </div>
       </div>
+      <!-- Donate button -->
       <button class="btn-3d">🙏 Donate</button>
+      <!-- Admin scroll text button -->
       <button id="scrollBtn" class="btn-3d hidden">✍ Add Scrolling Text</button>
     </div>
   </div>
@@ -95,7 +98,7 @@
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Register Madarsa Modal -->
+<!-- Modal for Madarsa Register -->
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
@@ -124,7 +127,7 @@
   </div>
 </div>
 
-<!-- Scroll Modal -->
+<!-- Modal for Admin Scroll Text -->
 <div id="scrollModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-md w-full p-4">
     <h3 class="text-lg font-semibold text-indigo-600 mb-2">Add Scrolling Text</h3>
@@ -139,7 +142,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -158,7 +161,10 @@
   const authBtn = document.getElementById('authBtn');
   const addBtn = document.getElementById('addBtn');
   const scrollBtn = document.getElementById('scrollBtn');
+  const scrollModal = document.getElementById('scrollModal');
+  const scrollInput = document.getElementById('scrollInput');
   const scrollText = document.getElementById('scrollText');
+  const regModal = document.getElementById('regModal');
   const listDiv = document.getElementById('list');
 
   let currentUser = null;
@@ -192,6 +198,12 @@
     loadList();
   });
 
+  // Add Madarsa button
+  addBtn.onclick = () => {
+    regModal.classList.remove('hidden');
+    regModal.classList.add('flex');
+  };
+
   // Scroll text save
   window.saveScrollText = async () => {
     const txt = scrollInput.value.trim();
@@ -200,6 +212,8 @@
     closeScrollModal();
   };
   scrollBtn.onclick = () => openScrollModal();
+
+  // Live update scrolling text
   onSnapshot(doc(db,"config","scroll"), (snap)=>{
     if(snap.exists()) scrollText.textContent = snap.data().text;
   });
@@ -244,10 +258,12 @@
             </div>` : ""}
         `;
 
+        // expand toggle
         card.querySelector("img")?.addEventListener("click", () => {
           card.querySelector(".extra").classList.toggle("hidden");
         });
 
+        // admin actions
         if (currentUser && currentUser.email === ADMIN_EMAIL) {
           card.querySelector(".approve")?.addEventListener("click", async () => {
             await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
