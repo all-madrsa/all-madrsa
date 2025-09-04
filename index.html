@@ -76,6 +76,8 @@
       <input id="mcontact" placeholder="Contact number" class="w-full border p-2 rounded" required />
       <input id="mwhatsapp" placeholder="WhatsApp number" class="w-full border p-2 rounded" />
       <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
+      <!-- ✅ New About field -->
+      <textarea id="mabout" placeholder="About Madarsa (यह सबको सिर्फ admin enable करने के बाद दिखेगा)" rows="3" class="w-full border p-2 rounded"></textarea>
       <div><label class="block text-sm text-indigo-600">Upload Image</label><input id="mimage" type="file" accept="image/*" /></div>
       <div><label class="block text-sm text-indigo-600">Upload UPI QR</label><input id="mupi" type="file" accept="image/*" /></div>
       <div class="flex justify-end gap-2">
@@ -189,7 +191,7 @@
     if(snap.exists()) scrollText.textContent = snap.data().text; 
   });
 
-  // ✅ Form submit with ImgBB Upload
+  // ✅ Form submit with About + ImgBB Upload
   document.getElementById("regForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser) { alert("Please login first"); return; }
@@ -200,6 +202,7 @@
       const contact = document.getElementById("mcontact").value.trim();
       const whatsapp = document.getElementById("mwhatsapp").value.trim();
       const courses = document.getElementById("mcourses").value.trim();
+      const about = document.getElementById("mabout").value.trim();
 
       const imgFile = document.getElementById("mimage").files[0];
       const upiFile = document.getElementById("mupi").files[0];
@@ -208,7 +211,7 @@
       let upiUrl = upiFile ? await uploadToImgBB(upiFile) : "";
 
       await addDoc(collection(db, "madarse"), {
-        name, address, contact, whatsapp, courses,
+        name, address, contact, whatsapp, courses, about,
         image: imageUrl, upi: upiUrl,
         ownerUid: currentUser.uid,
         createdAt: serverTimestamp(),
@@ -246,6 +249,7 @@
             ${d.showExtra&&d.contact?`<p class="text-sm">📞 ${d.contact}</p>`:""}
             ${d.showExtra&&d.whatsapp?`<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-1 block text-center">📲 WhatsApp</a>`:""}
             ${d.showExtra&&d.upi?`<div class="mt-2"><img src="${d.upi}" class="w-24 mx-auto rounded border"/><p class="text-center text-xs text-pink-600">🙏 Please donate for poor children's education</p></div>`:""}
+            ${d.showExtra&&d.about?`<p class="mt-2 text-gray-700 text-sm">📝 ${d.about}</p>`:""}
           </div>
           ${currentUser&&currentUser.email===ADMIN_EMAIL?`
             <div class="flex gap-2 mt-2">
