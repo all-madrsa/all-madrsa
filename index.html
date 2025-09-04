@@ -67,17 +67,16 @@
 <body class="bg-slate-50 min-h-screen">
 
 <!-- Header -->
-<header id="mainHeader" class="shadow sticky top-0 z-40 bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500">
+<!-- Header -->
+<header id="mainHeader" 
+  class="shadow sticky top-0 z-40 
+         bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500">
   <div class="max-w-6xl mx-auto flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 py-2">
       <div class="title-3d">Talimi Ittehad</div>
       <div class="flex items-center gap-2">
-        <!-- Header Image Change (Admin only) -->
-        <label id="headerImgBtn" class="btn-3d hidden cursor-pointer">
-          Change Header
-          <input type="file" id="headerImgInput" accept="image/*" class="hidden">
-        </label>
+        <!-- Header Image Change हटा दिया -->
         <button id="addBtn" class="btn-3d hidden">+ Add Madarsa</button>
         <button id="authBtn" class="btn-3d">Login</button>
       </div>
@@ -107,6 +106,7 @@
     </div>
   </div>
 </header>
+
 
 <!-- Scrolling text -->
 <div id="scrollBox" class="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 py-1">
