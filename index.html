@@ -7,10 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .title-3d { font-weight:bold; font-size:1.8rem; color:white; text-shadow:2px 2px 8px rgba(0,0,0,0.9); }
-    .dropdown:hover .dropdown-menu { display:block; }
-    .dropdown-menu { display:none; position:absolute; background:white; box-shadow:0 2px 6px rgba(0,0,0,0.2); border-radius:0.5rem; min-width:160px; z-index:50; }
-    .dropdown-menu a { display:block; padding:6px 12px; font-size:14px; color:#333; }
-    .dropdown-menu a:hover { background:#f3f4f6; }
     .btn-3d {
       background: linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
       box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.2);
@@ -40,7 +36,7 @@
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Modal for Register -->
+<!-- Modal -->
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center p-4 z-50 overflow-auto">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
@@ -49,11 +45,14 @@
     </div>
     <form id="regForm" class="mt-3 space-y-3">
       <input id="mname" placeholder="Madarsa ka naam" class="w-full border p-2 rounded" required />
-      <input id="maddress" placeholder="Address (City, State)" class="w-full border p-2 rounded" required />
+      <input id="maddress" placeholder="Address" class="w-full border p-2 rounded" required />
       <input id="mcontact" placeholder="Contact number" class="w-full border p-2 rounded" required />
       <input id="mwhatsapp" placeholder="WhatsApp number" class="w-full border p-2 rounded" />
       <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
-      <div><label class="block text-sm text-indigo-600">Upload Images (max 5)</label><input id="mimage" type="file" accept="image/*" multiple /></div>
+      <div>
+        <label class="block text-sm text-indigo-600">Upload Images (max 5)</label>
+        <input id="mimage" type="file" accept="image/*" multiple />
+      </div>
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
         <button type="submit" class="btn-3d">Submit</button>
@@ -65,7 +64,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -88,9 +87,8 @@
 
   let currentUser = null;
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-  const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4"; // ✅ तुम्हारा key
+  const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
-  // Modal helpers
   window.closeModal = () => { regModal.classList.add("hidden"); document.getElementById("regForm").reset(); }
 
   // Auth
@@ -102,10 +100,9 @@
     loadList();
   });
 
-  // Add Madarsa button
   addBtn.onclick = () => { regModal.classList.remove("hidden"); regModal.classList.add("flex"); };
 
-  // ✅ Form submit
+  // Submit
   document.getElementById("regForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser) { alert("Please login first"); return; }
@@ -132,15 +129,12 @@
         images: imageUrls,
         ownerUid: currentUser.uid,
         createdAt: serverTimestamp(),
-        status: "pending",
-        showExtra: false
+        status: "pending"
       });
 
-      document.getElementById("regForm").reset();
-      regModal.classList.add("hidden");
+      closeModal();
       alert("✅ Madarsa submitted for approval!");
     } catch (err) {
-      console.error("Error adding document:", err);
       alert("❌ Error: " + err.message);
     }
   });
@@ -155,7 +149,7 @@
         if (d.status==="pending" && (!currentUser || currentUser.email!==ADMIN_EMAIL)) return;
 
         const card = document.createElement("div");
-        card.className = `border rounded-lg shadow bg-white p-3`;
+        card.className = "border rounded-lg shadow bg-white p-3";
 
         card.innerHTML = `
           ${d.images && d.images.length ? `
@@ -177,7 +171,7 @@
           <p class="text-sm text-gray-600">${d.address||''}</p>
         `;
 
-        // ✅ Carousel JS
+        // Carousel
         if (d.images && d.images.length > 1) {
           const carousel = card.querySelector(".carousel");
           const prevBtn = card.querySelector(".prev");
@@ -198,7 +192,6 @@
             updateCarousel();
           });
 
-          // Auto-slide
           setInterval(() => {
             index = (index + 1) % d.images.length;
             updateCarousel();
