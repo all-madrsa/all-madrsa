@@ -55,6 +55,33 @@
         <button id="authBtn" class="btn-3d">Login</button>
       </div>
     </div>
+    <!-- Menu row -->
+    <div class="flex items-center gap-4 px-4 pb-2 text-sm">
+      <!-- Dropdown 1 -->
+      <div class="dropdown relative">
+        <button class="btn-3d">About ⬇</button>
+        <div class="dropdown-menu">
+          <a href="#">About</a>
+          <a href="#">Contact</a>
+          <a href="#">Privacy</a>
+          <a href="#">Terms & Conditions</a>
+        </div>
+      </div>
+      <!-- Dropdown 2 -->
+      <div class="dropdown relative">
+        <button class="btn-3d">More ⬇</button>
+        <div class="dropdown-menu">
+          <a href="#">Notice</a>
+          <a href="#">Talim</a>
+          <a href="#">Requirement</a>
+          <a href="#">Program</a>
+        </div>
+      </div>
+      <!-- Donate button -->
+      <button class="btn-3d">🙏 Donate</button>
+      <!-- Admin scroll text button -->
+      <button id="scrollBtn" class="btn-3d hidden">✍ Add Scrolling Text</button>
+    </div>
   </div>
 </header>
 
@@ -70,7 +97,7 @@
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Modal: Madarsa Register -->
+<!-- Modal for Madarsa Register -->
 <div id="regModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
     <div class="flex justify-between items-center">
@@ -79,13 +106,17 @@
     </div>
     <form id="regForm" class="mt-3 space-y-3">
       <input id="mname" placeholder="Madarsa ka naam" class="w-full border p-2 rounded" required />
-      <input id="maddress" placeholder="Address" class="w-full border p-2 rounded" required />
+      <input id="maddress" placeholder="Address (City, State)" class="w-full border p-2 rounded" required />
       <input id="mcontact" placeholder="Contact number" class="w-full border p-2 rounded" required />
       <input id="mwhatsapp" placeholder="WhatsApp number" class="w-full border p-2 rounded" />
       <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
       <div>
-        <label class="block text-sm text-indigo-600">Upload Image</label>
-        <input id="mimage" type="file" accept="image/*" />
+        <label class="block text-sm text-indigo-600">Upload Image (optional)</label>
+        <input id="mimage" type="file" accept="image/*" class="mt-1" />
+      </div>
+      <div>
+        <label class="block text-sm text-indigo-600">Upload UPI QR (optional)</label>
+        <input id="mupi" type="file" accept="image/*" class="mt-1" />
       </div>
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
@@ -95,174 +126,159 @@
   </div>
 </div>
 
-<!-- Modal: Add Poster -->
-<div id="posterModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
-    <div class="flex justify-between items-center">
-      <h3 class="text-lg font-semibold text-indigo-600">Add Poster</h3>
-      <button onclick="closePosterModal()" class="text-gray-600">X</button>
+<!-- Modal for Admin Scroll Text -->
+<div id="scrollModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow max-w-md w-full p-4">
+    <h3 class="text-lg font-semibold text-indigo-600 mb-2">Add Scrolling Text</h3>
+    <textarea id="scrollInput" rows="3" class="w-full border p-2 rounded" placeholder="Type scrolling text here..."></textarea>
+    <div class="flex justify-end gap-2 mt-2">
+      <button onclick="closeScrollModal()" class="px-4 py-2 border rounded">Cancel</button>
+      <button onclick="saveScrollText()" class="btn-3d">Save</button>
     </div>
-    <form id="posterForm" class="mt-3 space-y-3">
-      <textarea id="pabout" placeholder="Poster About..." class="w-full border p-2 rounded" required></textarea>
-      <div>
-        <label class="block text-sm text-indigo-600">Upload up to 5 Images</label>
-        <input id="pimages" type="file" accept="image/*" multiple />
-      </div>
-      <div class="flex justify-end gap-2">
-        <button type="button" onclick="closePosterModal()" class="px-4 py-2 border rounded">Cancel</button>
-        <button type="submit" class="btn-3d">Submit</button>
-      </div>
-    </form>
   </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const provider = new GoogleAuthProvider();
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
 
-const authBtn = document.getElementById('authBtn');
-const addBtn = document.getElementById('addBtn');
-const regModal = document.getElementById('regModal');
-const posterModal = document.getElementById('posterModal');
-const listDiv = document.getElementById('list');
+  const authBtn = document.getElementById('authBtn');
+  const addBtn = document.getElementById('addBtn');
+  const scrollBtn = document.getElementById('scrollBtn');
+  const scrollModal = document.getElementById('scrollModal');
+  const scrollInput = document.getElementById('scrollInput');
+  const scrollText = document.getElementById('scrollText');
+  const regModal = document.getElementById('regModal');
+  const listDiv = document.getElementById('list');
 
-let currentUser = null;
-const ADMIN_EMAIL = "zarasamajiksevasanstha@gmail.com";
+  let currentUser = null;
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
-// ===== Modals =====
-window.closeModal = () => regModal.classList.add('hidden');
-window.closePosterModal = () => posterModal.classList.add('hidden');
-
-// ===== Auth =====
-authBtn.onclick = async () => {
-  if (!auth.currentUser) await signInWithPopup(auth, provider);
-  else await signOut(auth);
-};
-
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  authBtn.textContent = user ? "Logout" : "Login";
-  addBtn.classList.toggle('hidden', !user);
-  loadList();
-});
-
-// ===== Madarsa List =====
-function loadList() {
-  const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
-  onSnapshot(q, (qSnap) => {
-    listDiv.innerHTML = '';
-    qSnap.forEach(docSnap => {
-      const d = docSnap.data();
-      if (d.status !== "approved") return;
-
-      const card = document.createElement('div');
-      card.className = "border rounded-lg shadow bg-white p-3";
-
-      card.innerHTML = `
-        ${d.image ? `<img src="${d.image}" class="w-full h-40 object-contain mb-2"/>` : ""}
-        <h2 class="font-bold text-lg">${d.name}</h2>
-        <p class="text-sm text-gray-600">${d.address}</p>
-        <button class="viewPosters btn-3d mt-2">📜 View Posters</button>
-        <div class="posterSection hidden mt-3 border-t pt-2"></div>
-      `;
-
-      const posterSec = card.querySelector(".posterSection");
-      card.querySelector(".viewPosters").addEventListener("click", () => {
-        posterSec.classList.toggle("hidden");
-        if (!posterSec.classList.contains("hidden")) loadPosters(docSnap.id, posterSec);
-      });
-
-      listDiv.appendChild(card);
-    });
-  });
-}
-
-// ===== Load Posters =====
-function loadPosters(madarsaId, container) {
-  const q = query(collection(db,"posters"), where("madarsaId","==",madarsaId), orderBy("createdAt","desc"));
-  onSnapshot(q, (snap) => {
-    container.innerHTML = '';
-    if (currentUser) {
-      const addBtn = document.createElement("button");
-      addBtn.textContent = "➕ Add Poster";
-      addBtn.className = "btn-3d mb-2";
-      addBtn.onclick = () => {
-        posterModal.classList.remove("hidden");
-        posterModal.dataset.mid = madarsaId;
-      };
-      container.appendChild(addBtn);
-    }
-    snap.forEach(docSnap => {
-      const p = docSnap.data();
-      if (p.status !== "approved" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
-
-      const div = document.createElement("div");
-      div.className = "border rounded p-2 mb-2 bg-slate-50";
-      div.innerHTML = `
-        <p class="mb-2">${p.about}</p>
-        <div class="grid grid-cols-2 gap-2">
-          ${p.images.map(url => `<img src="${url}" class="h-32 object-cover rounded"/>`).join('')}
-        </div>
-        ${currentUser && currentUser.email===ADMIN_EMAIL ? `
-          <div class="mt-2 flex gap-2">
-            <button class="approve btn-3d">Approve</button>
-            <button class="reject btn-3d">Reject</button>
-          </div>` : ""}
-      `;
-      if (currentUser && currentUser.email===ADMIN_EMAIL){
-        div.querySelector(".approve").onclick = ()=>updateDoc(doc(db,"posters",docSnap.id),{status:"approved"});
-        div.querySelector(".reject").onclick = ()=>updateDoc(doc(db,"posters",docSnap.id),{status:"rejected"});
-      }
-      container.appendChild(div);
-    });
-  });
-}
-
-// ===== Poster Form Submit =====
-document.getElementById("posterForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const about = document.getElementById("pabout").value;
-  const files = document.getElementById("pimages").files;
-  const madarsaId = posterModal.dataset.mid;
-  let urls = [];
-
-  for (let i=0; i<files.length && i<5; i++){
-    const f = files[i];
-    const r = ref(storage, "posters/"+Date.now()+"_"+f.name);
-    await uploadBytes(r,f);
-    const url = await getDownloadURL(r);
-    urls.push(url);
+  // Modal helpers
+  window.closeModal = () => {
+    regModal.classList.add('hidden');
+    document.getElementById('regForm').reset();
   }
+  function openScrollModal(){ scrollModal.classList.remove('hidden'); scrollModal.classList.add('flex'); }
+  function closeScrollModal(){ scrollModal.classList.add('hidden'); scrollModal.classList.remove('flex'); }
 
-  await addDoc(collection(db,"posters"),{
-    madarsaId,
-    about,
-    images: urls,
-    status:"pending",
-    createdAt: new Date(),
-    ownerUid: currentUser.uid
+  // Auth
+  authBtn.onclick = async () => {
+    if (!auth.currentUser) await signInWithPopup(auth, provider);
+    else await signOut(auth);
+  };
+
+  onAuthStateChanged(auth, user => {
+    currentUser = user;
+    if (user) {
+      authBtn.textContent = "Logout";
+      addBtn.classList.remove('hidden');
+      if (user.email === ADMIN_EMAIL) scrollBtn.classList.remove('hidden');
+    } else {
+      authBtn.textContent = "Login";
+      addBtn.classList.add('hidden');
+      scrollBtn.classList.add('hidden');
+    }
+    loadList();
   });
 
-  e.target.reset();
-  closePosterModal();
-};
+  // Add Madarsa button
+  addBtn.onclick = () => {
+    regModal.classList.remove('hidden');
+    regModal.classList.add('flex');
+  };
+
+  // Scroll text save
+  window.saveScrollText = async () => {
+    const txt = scrollInput.value.trim();
+    if (!txt) return;
+    await setDoc(doc(db, "config", "scroll"), { text: txt });
+    closeScrollModal();
+  };
+  scrollBtn.onclick = () => openScrollModal();
+
+  // Live update scrolling text
+  onSnapshot(doc(db,"config","scroll"), (snap)=>{
+    if(snap.exists()) scrollText.textContent = snap.data().text;
+  });
+
+  // Load Madarsa list
+  function loadList() {
+    const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
+    onSnapshot(q, (qSnap) => {
+      listDiv.innerHTML = '';
+      qSnap.forEach(docSnap => {
+        const d = docSnap.data();
+
+        if (d.status === "pending" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
+        if (d.status === "rejected" && (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.uid !== d.ownerUid))) return;
+
+        const card = document.createElement('div');
+        card.className = `border rounded-lg shadow bg-white p-3`;
+
+        card.innerHTML = `
+          ${d.image ? `<img src="${d.image}" class="w-full h-40 object-contain mb-2"/>` : ""}
+          <h2 class="font-bold text-lg">${d.name || ''}</h2>
+          <p class="text-sm text-gray-600">${d.address || ''}</p>
+          ${d.status === "rejected" ? `<p class="text-red-600 font-semibold">❌ Rejected</p>` : ""}
+          <div class="extra hidden mt-2">
+            ${d.showExtra && d.contact ? `<p class="text-sm">📞 ${d.contact}</p>` : ""}
+            ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-1 block text-center">📲 WhatsApp</a>` : ""}
+            ${d.showExtra && d.upi ? `
+              <div class="mt-2">
+                <img src="${d.upi}" class="w-24 mx-auto rounded border"/>
+                <p class="text-center text-xs text-pink-600">🙏 Please donate for poor children's education</p>
+              </div>` : ""}
+          </div>
+          ${currentUser && currentUser.email === ADMIN_EMAIL ? `
+            <div class="flex gap-2 mt-2">
+              ${d.status === "approved" 
+                ? `<button disabled class="btn-3d">✅ Approved</button>` 
+                : `<button class="approve btn-3d">Approve</button>`}
+              <button class="reject btn-3d">Reject</button>
+              <button class="toggleExtra btn-3d">
+                ${d.showExtra ? '❌ Disable Extra Info' : 'Enable Extra Info'}
+              </button>
+            </div>` : ""}
+        `;
+
+        // expand toggle
+        card.querySelector("img")?.addEventListener("click", () => {
+          card.querySelector(".extra").classList.toggle("hidden");
+        });
+
+        // admin actions
+        if (currentUser && currentUser.email === ADMIN_EMAIL) {
+          card.querySelector(".approve")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
+          });
+          card.querySelector(".reject")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { status: "rejected" });
+          });
+          card.querySelector(".toggleExtra")?.addEventListener("click", async () => {
+            await updateDoc(doc(db, "madarse", docSnap.id), { showExtra: !d.showExtra });
+          });
+        }
+
+        listDiv.appendChild(card);
+      });
+    });
+  }
 </script>
 </body>
 </html>
