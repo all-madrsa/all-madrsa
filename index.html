@@ -6,7 +6,7 @@
   <title>Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .title-3d { font-weight:bold; font-size:2rem; color:white; text-shadow:3px 3px 10px rgba(0,0,0,0.9); }
+    .title-3d { font-weight:bold; font-size:1.8rem; color:white; text-shadow:2px 2px 8px rgba(0,0,0,0.9); }
     .dropdown:hover .dropdown-menu { display:block; }
     .dropdown-menu { display:none; position:absolute; background:white; box-shadow:0 2px 6px rgba(0,0,0,0.2); border-radius:0.5rem; min-width:160px; z-index:50; }
     .dropdown-menu a { display:block; padding:6px 12px; font-size:14px; color:#333; }
@@ -21,12 +21,7 @@
     .carousel { position: relative; overflow: hidden; }
     .carousel-track { display: flex; transition: transform 0.6s ease-in-out; }
     .carousel img { width: 100%; height: 160px; object-fit: cover; flex-shrink: 0; }
-    .sticky-donate {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-    }
+    marquee { font-weight:600; }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -34,101 +29,184 @@
 <!-- Header -->
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col">
-    
-    <!-- 3D Logo Top -->
-    <div class="text-center py-2">
-      <div class="title-3d">🌙 Talimi Ittehad</div>
-    </div>
+    <div class="flex items-center justify-between px-4 py-2">
+      <div class="title-3d">Talimi Ittehad</div>
+      <div class="flex items-center gap-3">
 
-    <div class="flex items-center justify-between px-4 py-2 flex-wrap gap-2">
-      <!-- Dropdown Menus -->
-      <div class="dropdown relative">
-        <button class="btn-3d">About ⬇</button>
-        <div class="dropdown-menu">
-          <a href="#">हमारे बारे में</a>
-          <a href="#">मिशन</a>
+        <!-- Dropdown Menus -->
+        <div class="dropdown relative">
+          <button class="btn-3d">About ⬇</button>
+          <div class="dropdown-menu">
+            <a href="#">हमारे बारे में</a>
+            <a href="#">मिशन</a>
+          </div>
         </div>
-      </div>
-      <div class="dropdown relative">
-        <button class="btn-3d">More ⬇</button>
-        <div class="dropdown-menu">
-          <a href="#">संपर्क करें</a>
-          <a href="#">FAQ</a>
+        <div class="dropdown relative">
+          <button class="btn-3d">More ⬇</button>
+          <div class="dropdown-menu">
+            <a href="#">संपर्क करें</a>
+            <a href="#">FAQ</a>
+          </div>
         </div>
+
+        <!-- Donation Button -->
+        <button class="btn-3d">🙏 Donate</button>
+
+        <!-- Auth Buttons -->
+        <button id="authBtn" class="btn-3d">Login</button>
       </div>
-
-      <!-- Search Box -->
-      <input id="searchBox" type="text" placeholder="Search Madarsa..." class="border rounded px-2 py-1 text-sm w-36 sm:w-48" />
-
-      <!-- Language Switcher -->
-      <select id="langSwitch" class="border rounded px-2 py-1 text-sm">
-        <option value="hi">हिंदी</option>
-        <option value="en">English</option>
-      </select>
-
-      <!-- Auth Buttons -->
-      <button id="addBtn" class="btn-3d hidden">+ Add Madarsa</button>
-      <button id="authBtn" class="btn-3d">Login</button>
     </div>
   </div>
 </header>
+
+<!-- Notice -->
+<div class="bg-yellow-100 text-red-600 py-1 text-sm">
+  <marquee id="noticeText">📢 Welcome to Talimi Ittehad website</marquee>
+</div>
+
+<!-- Admin notice edit -->
+<div id="noticeAdmin" class="hidden max-w-6xl mx-auto mt-2 px-4">
+  <input id="noticeInput" placeholder="Type scrolling notice..." class="border p-2 rounded w-2/3"/>
+  <button id="noticeSave" class="btn-3d">Save Notice</button>
+</div>
+
+<!-- Search Box -->
+<div class="max-w-6xl mx-auto px-4 mt-3">
+  <input id="searchInput" placeholder="Search Madarsa..." class="w-full border p-2 rounded"/>
+</div>
 
 <!-- Main content -->
 <main class="max-w-6xl mx-auto p-4">
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Sticky Donate -->
-<div class="sticky-donate">
-  <button class="btn-3d">🙏 Donate</button>
-</div>
+<!-- Google Translate -->
+<footer class="bg-gray-100 py-4 mt-6">
+  <div id="google_translate_element" class="text-center"></div>
+</footer>
 
-<!-- ... बाकी modal और scripts तुम्हारे code जैसे ही रहेंगे ... -->
+<script type="text/javascript">
+  function googleTranslateElementInit() {
+    new google.translate.TranslateElement({pageLanguage: 'hi'}, 'google_translate_element');
+  }
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
+<!-- Firebase + JS -->
 <script type="module">
-  // 🔹 तुम्हारा Firebase वाला पूरा script ज्यों का त्यों रहेगा
-  // बस नीचे search/filter और language वाला part add किया गया है
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  const searchBox = document.getElementById("searchBox");
-  const langSwitch = document.getElementById("langSwitch");
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
 
-  let currentLang = "hi";
-  let madarsaCache = [];
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+  const authBtn = document.getElementById("authBtn");
+  const noticeText = document.getElementById("noticeText");
+  const noticeInput = document.getElementById("noticeInput");
+  const noticeSave = document.getElementById("noticeSave");
+  const noticeAdmin = document.getElementById("noticeAdmin");
 
-  // Modified loadList
-  function loadList() {
-    const q = query(collection(db, "madarse"), orderBy("createdAt", "desc"));
-    onSnapshot(q, (qSnap) => {
-      madarsaCache = [];
-      qSnap.forEach(docSnap => {
-        madarsaCache.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      renderList();
-    });
-  }
+  // Auth
+  authBtn.onclick = async()=>{ 
+    if(!auth.currentUser) await signInWithPopup(auth,provider); 
+    else await signOut(auth); 
+  };
 
-  function renderList() {
-    const listDiv = document.getElementById("list");
-    listDiv.innerHTML = "";
-    const keyword = searchBox.value.toLowerCase();
-
-    madarsaCache.filter(d => {
-      if (keyword && !(d.name?.toLowerCase().includes(keyword) || d.address?.toLowerCase().includes(keyword))) return false;
-      return true;
-    }).forEach(d => {
-      // 🔹 वही card code जो पहले था (innerHTML वाला) यहां call करना है
-      // (तुम्हारे card बनाने वाला code 그대로 रखना)
-    });
-  }
-
-  searchBox.addEventListener("input", renderList);
-
-  langSwitch.addEventListener("change", (e) => {
-    currentLang = e.target.value;
-    alert(currentLang === "en" ? "English Mode Enabled" : "हिंदी मोड चालू");
-    // यहां आगे जाकर multi-language content switch कर सकते हो
+  onAuthStateChanged(auth, async(user)=>{
+    if(user && user.email===ADMIN_EMAIL){ 
+      authBtn.textContent="Logout"; 
+      noticeAdmin.classList.remove("hidden");
+      const snap = await getDoc(doc(db,"config","notice"));
+      if(snap.exists()) noticeText.textContent = snap.data().text;
+    } else {
+      authBtn.textContent="Login"; 
+      noticeAdmin.classList.add("hidden");
+    }
   });
 
+  noticeSave.onclick = async()=>{
+    const text = noticeInput.value.trim();
+    if(!text) return;
+    await setDoc(doc(db,"config","notice"), {text});
+    noticeText.textContent = text;
+    alert("✅ Notice updated!");
+  }
+
+  // ============================
+  // 🔎 Firestore Listing + Live Search
+  // ============================
+
+  const listBox = document.getElementById("list");
+  const searchInput = document.getElementById("searchInput");
+
+  let allMadarse = []; // cache
+
+  async function loadMadarse() {
+    listBox.innerHTML = `<p class="col-span-full text-center text-gray-500">⏳ Loading...</p>`;
+    const snap = await getDocs(collection(db,"madarse"));
+    allMadarse = [];
+    snap.forEach(docSnap => {
+      allMadarse.push({id:docSnap.id, ...docSnap.data()});
+    });
+    renderMadarse(allMadarse);
+  }
+
+  function renderMadarse(items){
+    if(items.length===0){
+      listBox.innerHTML = `<p class="col-span-full text-center text-gray-500">😔 कोई रिज़ल्ट नहीं मिला</p>`;
+      return;
+    }
+    listBox.innerHTML = "";
+    items.forEach(m=>{
+      const card = document.createElement("div");
+      card.className = "bg-white shadow rounded-lg overflow-hidden border";
+
+      card.innerHTML = `
+        <div class="carousel relative">
+          <div class="carousel-track">
+            ${(m.images || []).map(url=>`<img src="${url}" alt="">`).join("")}
+          </div>
+        </div>
+        <div class="p-3">
+          <h4 class="font-bold text-lg text-indigo-600">${m.name||""}</h4>
+          <p class="text-gray-600 text-sm">${m.address||""}</p>
+          <p class="text-sm text-gray-500">📞 ${m.contact||""}</p>
+          ${m.about ? `<p class="mt-1 text-gray-700 text-sm">${m.about}</p>` : ""}
+          ${m.upi ? `<img src="${m.upi}" alt="UPI QR" class="mt-2 w-28 h-28">` : ""}
+        </div>
+      `;
+      listBox.appendChild(card);
+    });
+  }
+
+  // 🔎 Live search (हर typing पर filter)
+  searchInput.addEventListener("input",()=>{
+    const q = searchInput.value.trim().toLowerCase();
+    if(!q) renderMadarse(allMadarse);
+    else {
+      const filtered = allMadarse.filter(m=>
+        (m.name && m.name.toLowerCase().includes(q)) ||
+        (m.address && m.address.toLowerCase().includes(q)) ||
+        (m.courses && m.courses.toLowerCase().includes(q))
+      );
+      renderMadarse(filtered);
+    }
+  });
+
+  // Load all on page start
+  loadMadarse();
 </script>
 </body>
 </html>
