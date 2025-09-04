@@ -215,7 +215,8 @@
             ${d.upi ? `<div class="mt-2 text-center"><img src="${d.upi}" class="w-24 mx-auto"/><p class="text-purple-700 text-sm">🙏 Please donate for poor children's education</p></div>` : ""}
           ` : ""}
           ${currentUser && currentUser.email === ADMIN_EMAIL ? `
-            <div class="flex gap-2 mt-2">
+           <div class="flex items-center gap-1">
+
               ${d.status !== "approved" 
                 ? `<button class="approve btn-3d">Approve</button>` 
                 : `<button disabled class="btn-3d bg-green-600">Approved</button>`}
