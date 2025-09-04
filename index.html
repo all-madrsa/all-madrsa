@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="hi">
 <head>
@@ -48,7 +47,6 @@
 <!-- Header -->
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col">
-    <!-- Top bar -->
     <div class="flex items-center justify-between px-4 py-2">
       <div class="title-3d">Talimi Ittehad</div>
       <div class="flex items-center gap-2">
@@ -56,9 +54,7 @@
         <button id="authBtn" class="btn-3d">Login</button>
       </div>
     </div>
-    <!-- Menu row -->
     <div class="flex items-center gap-4 px-4 pb-2 text-sm">
-      <!-- Dropdown 1 -->
       <div class="dropdown relative">
         <button class="btn-3d">About ⬇</button>
         <div class="dropdown-menu">
@@ -68,7 +64,6 @@
           <a href="#">Terms & Conditions</a>
         </div>
       </div>
-      <!-- Dropdown 2 -->
       <div class="dropdown relative">
         <button class="btn-3d">More ⬇</button>
         <div class="dropdown-menu">
@@ -78,9 +73,7 @@
           <a href="#">Program</a>
         </div>
       </div>
-      <!-- Donate button -->
       <button class="btn-3d">🙏 Donate</button>
-      <!-- Admin scroll text button -->
       <button id="scrollBtn" class="btn-3d hidden">✍ Add Scrolling Text</button>
     </div>
   </div>
@@ -142,7 +135,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, query, orderBy, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -156,6 +150,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const storage = getStorage(app);
   const provider = new GoogleAuthProvider();
 
   const authBtn = document.getElementById('authBtn');
@@ -169,8 +164,6 @@
 
   let currentUser = null;
   const ADMIN_EMAIL = "zarasamajiksevasanstha@gmail.com";
-   const ADMIN_EMAIL = "zarasamajiksevasanstha@gmail.com";
-
 
   // Modal helpers
   window.closeModal = () => {
@@ -206,6 +199,46 @@
     regModal.classList.add('flex');
   };
 
+  // Form submit with image upload
+  document.getElementById('regForm').onsubmit = async (e) => {
+    e.preventDefault();
+
+    const mimage = document.getElementById('mimage').files[0];
+    const mupi = document.getElementById('mupi').files[0];
+
+    let imageUrl = "";
+    let upiUrl = "";
+
+    if (mimage) {
+      const imgRef = ref(storage, "images/" + Date.now() + "_" + mimage.name);
+      await uploadBytes(imgRef, mimage);
+      imageUrl = await getDownloadURL(imgRef);
+    }
+
+    if (mupi) {
+      const upiRef = ref(storage, "upi/" + Date.now() + "_" + mupi.name);
+      await uploadBytes(upiRef, mupi);
+      upiUrl = await getDownloadURL(upiRef);
+    }
+
+    const data = {
+      name: document.getElementById('mname').value,
+      address: document.getElementById('maddress').value,
+      contact: document.getElementById('mcontact').value,
+      whatsapp: document.getElementById('mwhatsapp').value,
+      courses: document.getElementById('mcourses').value,
+      image: imageUrl,
+      upi: upiUrl,
+      createdAt: serverTimestamp(),
+      ownerUid: currentUser.uid,
+      status: "pending",
+      showExtra: false
+    };
+
+    await addDoc(collection(db,"madarse"), data);
+    closeModal();
+  };
+
   // Scroll text save
   window.saveScrollText = async () => {
     const txt = scrollInput.value.trim();
@@ -227,7 +260,6 @@
       listDiv.innerHTML = '';
       qSnap.forEach(docSnap => {
         const d = docSnap.data();
-
         if (d.status === "pending" && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
         if (d.status === "rejected" && (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.uid !== d.ownerUid))) return;
 
@@ -260,12 +292,10 @@
             </div>` : ""}
         `;
 
-        // expand toggle
         card.querySelector("img")?.addEventListener("click", () => {
           card.querySelector(".extra").classList.toggle("hidden");
         });
 
-        // admin actions
         if (currentUser && currentUser.email === ADMIN_EMAIL) {
           card.querySelector(".approve")?.addEventListener("click", async () => {
             await updateDoc(doc(db, "madarse", docSnap.id), { status: "approved" });
