@@ -102,12 +102,12 @@
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
-  // ✅ Helper: File -> Base64 (पूरा string)
+  // ✅ Helper: File -> Base64
   function toBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);  // पूरा string लौटाओ
+      reader.onload = () => resolve(reader.result.split(",")[1]);
       reader.onerror = (error) => reject(error);
     });
   }
@@ -218,10 +218,14 @@
           ${d.status==="rejected"?`<p class="text-red-600 font-semibold">❌ Rejected</p>`:""}
           <button class="toggleInfo btn-3d mt-2">ℹ Show Info</button>
           <div class="extra hidden mt-2">
-            ${d.showExtra&&d.contact?`<p class="text-sm">📞 ${d.contact}</p>`:""}
-            ${d.showExtra&&d.whatsapp?`<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-1 block text-center">📲 WhatsApp</a>`:""}
-            ${d.showExtra&&d.upi?`<div class="mt-2"><img src="${d.upi}" class="w-24 mx-auto rounded border"/><p class="text-center text-xs text-pink-600">🙏 Please donate</p></div>`:""}
-            ${d.showExtra&&d.about?`<p class="mt-2 text-gray-700 text-sm">📝 ${d.about}</p>`:""}
+            ${d.showExtra && d.contact ? `<p class="text-sm">📞 ${d.contact}</p>` : ""}
+            ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-1 block text-center">📲 WhatsApp</a>` : ""}
+            ${d.showExtra && d.upi ? `
+              <div class="mt-2">
+                <img src="${d.upi}" class="w-24 mx-auto rounded border"/>
+                <p class="text-center text-xs text-pink-600">🙏 Please donate</p>
+              </div>` : ""}
+            ${d.showExtra && d.about ? `<p class="mt-2 text-gray-700 text-sm">📝 ${d.about}</p>` : ""}
           </div>
           ${currentUser&&currentUser.email===ADMIN_EMAIL?`
             <div class="flex gap-2 mt-2">
@@ -231,7 +235,7 @@
             </div>`:""}
         `;
 
-        // Auto-carousel
+        // Auto-carousel function
         const track = card.querySelector(".carousel-track");
         if (track && d.images.length > 1) {
           let index = 0;
