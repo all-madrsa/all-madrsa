@@ -58,6 +58,9 @@
     </form>
   </div>
 
+  <!-- User Donation List -->
+  <div id="userDonationsList" class="card-3d mb-6 hidden"></div>
+
   <!-- Admin Panel -->
   <div id="adminPanel" class="card-3d hidden">
     <h2 class="font-bold text-lg mb-3">👑 Admin - Donations List</h2>
@@ -125,6 +128,7 @@
   const donationsList=document.getElementById("donationsList");
   const thankyouModal=document.getElementById("thankyouModal");
   const closeModal=document.getElementById("closeModal");
+  const userDonationsList=document.getElementById("userDonationsList");
 
   let currentUser=null;
   let modalTimer=null;
@@ -132,13 +136,10 @@
   // --- Show Modal ---
   function showModal(){
     thankyouModal.classList.remove("hidden");
-
-    // Play loud notification
     const sound=document.getElementById("notifySound");
     sound.currentTime=0;
     sound.play().catch(err=>console.log("Autoplay blocked:",err));
-
-    modalTimer=setTimeout(()=>thankyouModal.classList.add("hidden"),10000);
+    modalTimer=setTimeout(()=>thankyouModal.classList.add("hidden"),8000);
   }
   closeModal.onclick=()=>{
     thankyouModal.classList.add("hidden");
@@ -153,7 +154,7 @@
       liveDonationStatus();
       if(user.email===ADMIN_EMAIL){
         adminPanel.classList.remove("hidden");
-        loadDonationsLive(); // 🔥 realtime admin panel
+        loadDonationsLive();
       }
     }else{
       await signInWithPopup(auth,provider);
@@ -166,18 +167,23 @@
     const q=query(collection(db,"donations"), where("uid","==",currentUser.uid));
     onSnapshot(q,snap=>{
       if(snap.empty) return;
+      let html="<h3 class='font-bold mb-2'>📝 Your Donations</h3>";
       snap.forEach(d=>{
         const data=d.data();
+        html+=`
+          <div class="border rounded p-2 mb-2">
+            <p><b>💰 ₹${data.amount}</b> - ${data.verified ? "✅ Verified" : "⏳ Pending"}</p>
+            <img src="${data.screenshot}" class="w-32 mt-1 border rounded" />
+          </div>`;
         if(data.verified){
           if(localStorage.getItem("lastVerified")!==d.id){
             localStorage.setItem("lastVerified",d.id);
             showModal();
           }
-          submitBtn.disabled=false;
-        }else{
-          submitBtn.disabled=true;
         }
       });
+      userDonationsList.classList.remove("hidden");
+      userDonationsList.innerHTML=html;
     });
   }
 
@@ -208,12 +214,18 @@
     if(!currentUser) return alert("Please login first!");
 
     submitBtn.disabled=true;
+    submitBtn.textContent="⏳ Uploading...";
 
     const name=document.getElementById("name").value;
     const address=document.getElementById("address").value;
     const amount=document.getElementById("amount").value;
     const file=document.getElementById("screenshot").files[0];
-    if(!file) return alert("Upload screenshot!");
+    if(!file){
+      alert("Upload screenshot!");
+      submitBtn.disabled=false;
+      submitBtn.textContent="🚀 Submit Donation";
+      return;
+    }
 
     try{
       const screenshotUrl=await uploadToImgBB(file);
@@ -225,7 +237,9 @@
       donationForm.reset();
     }catch(err){
       alert("❌ Error: "+err.message);
+    }finally{
       submitBtn.disabled=false;
+      submitBtn.textContent="🚀 Submit Donation";
     }
   };
 
@@ -243,23 +257,21 @@
           <img src="${d.screenshot}" class="w-40 my-2 border rounded shadow" />
           <p>Status: ${d.verified?"✅ Verified":"⏳ Pending"}</p>
           <div class="flex gap-2 mt-2">
-            <button class="btn-3d verify">✅ Verify</button>
+            ${!d.verified ? `<button class="btn-3d verify">✅ Verify</button>` : ""}
             <button class="btn-3d delete">🗑 Delete</button>
-          </div>
-        `;
-
-        // Verify
-        div.querySelector(".verify").onclick=async()=>{
-          await updateDoc(doc(db,"donations",docSnap.id),{verified:true});
-        };
-
-        // Delete
+          </div>`;
+        if(!d.verified){
+          div.querySelector(".verify").onclick=async()=>{
+            await updateDoc(doc(db,"donations",docSnap.id),{verified:true});
+            alert("✅ Donation verified!");
+          };
+        }
         div.querySelector(".delete").onclick=async()=>{
           if(confirm("Delete donation?")){
             await deleteDoc(doc(db,"donations",docSnap.id));
+            alert("🗑 Donation deleted!");
           }
         };
-
         donationsList.appendChild(div);
       });
     });
@@ -310,4 +322,3 @@
 </script>
 </body>
 </html>
-
