@@ -10,8 +10,9 @@
     .btn-3d{background:linear-gradient(135deg,#4f46e5,#9333ea);color:#fff;padding:.5rem 1rem;border-radius:.5rem;box-shadow:0 3px 6px rgba(0,0,0,.3);transition:.2s;}
     .btn-3d:hover{transform:translateY(-2px);box-shadow:0 5px 10px rgba(0,0,0,.4);}
     .card-3d{background:#fff;border-radius:.8rem;padding:1rem;box-shadow:0 6px 14px rgba(0,0,0,.15);}
-    .popup{position:fixed;top:20px;right:20px;z-index:50;max-width:300px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;padding:1rem;border-radius:.6rem;box-shadow:0 5px 12px rgba(0,0,0,.3);}
-    .hidden{display:none;}
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:1000;}
+    .modal-content{background:#fff;padding:1.5rem;border-radius:.8rem;box-shadow:0 10px 25px rgba(0,0,0,.4);max-width:400px;text-align:center;animation:zoomIn .4s ease;}
+    @keyframes zoomIn{from{transform:scale(0.6);opacity:0;}to{transform:scale(1);opacity:1;}}
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -30,12 +31,6 @@
 <!-- Main -->
 <main class="max-w-2xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">💝 Support with Donation</h1>
-
-  <!-- Popup -->
-  <div id="thankPopup" class="popup hidden">
-    ✅ आपका payment मिल गया है, शुक्रिया!
-    <button id="closePopup" class="ml-2 bg-white text-green-700 px-2 py-0.5 rounded">❌</button>
-  </div>
 
   <!-- Donation Form -->
   <div class="card-3d mb-6">
@@ -59,7 +54,7 @@
         <input type="file" id="screenshot" accept="image/*" class="border p-2 rounded w-full" required />
       </div>
 
-      <button id="submitBtn" type="submit" class="btn-3d">🚀 Submit Donation</button>
+      <button type="submit" id="submitBtn" class="btn-3d">🚀 Submit Donation</button>
     </form>
   </div>
 
@@ -79,9 +74,22 @@
   </div>
 </main>
 
+<!-- Footer -->
 <footer class="bg-gray-100 text-center py-4 mt-10">
   <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
 </footer>
+
+<!-- Modal Popup -->
+<div id="thankyouModal" class="modal hidden">
+  <div class="modal-content">
+    <h2 class="text-xl font-bold mb-2">✅ Payment Verified</h2>
+    <p>आपका payment मिल गया है। <br/> अल्लाह आपका भला करे! 🤲</p>
+    <button id="closeModal" class="btn-3d mt-4">❌ Close</button>
+  </div>
+</div>
+
+<!-- Loud Notification Sound -->
+<audio id="notifySound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
@@ -107,70 +115,66 @@
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; 
 
-  // Elements
+  // DOM Elements
+  const donationForm=document.getElementById("donationForm");
+  const submitBtn=document.getElementById("submitBtn");
   const qrImg=document.getElementById("qrImg");
   const upiText=document.getElementById("upiText");
   const copyUpiBtn=document.getElementById("copyUpiBtn");
-  const qrUpload=document.getElementById("qrUpload");
-  const upiInput=document.getElementById("upiInput");
-  const uploadQRBtn=document.getElementById("uploadQRBtn");
-  const deleteQRBtn=document.getElementById("deleteQRBtn");
-  const donationForm=document.getElementById("donationForm");
-  const submitBtn=document.getElementById("submitBtn");
   const adminPanel=document.getElementById("adminPanel");
   const donationsList=document.getElementById("donationsList");
-  const thankPopup=document.getElementById("thankPopup");
-  const closePopup=document.getElementById("closePopup");
+  const thankyouModal=document.getElementById("thankyouModal");
+  const closeModal=document.getElementById("closeModal");
 
   let currentUser=null;
+  let modalTimer=null;
+
+  // --- Show Modal ---
+  function showModal(){
+    thankyouModal.classList.remove("hidden");
+
+    // Play loud notification
+    const sound=document.getElementById("notifySound");
+    sound.currentTime=0;
+    sound.play().catch(err=>console.log("Autoplay blocked:",err));
+
+    modalTimer=setTimeout(()=>thankyouModal.classList.add("hidden"),10000);
+  }
+  closeModal.onclick=()=>{
+    thankyouModal.classList.add("hidden");
+    if(modalTimer) clearTimeout(modalTimer);
+  };
 
   // --- Auth ---
   onAuthStateChanged(auth,async user=>{
     if(user){
       currentUser=user;
       liveQR();
-      watchUserDonation();
-      if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"), watchDonations();
+      liveDonationStatus();
+      if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"), loadDonations();
     }else{
       await signInWithPopup(auth,provider);
     }
   });
 
-  // --- Popup Show ---
-  function showPopupOnce(msg,id){
-    if(localStorage.getItem("lastPopupId")===id) return; 
-    thankPopup.classList.remove("hidden");
-    thankPopup.querySelector("div")?.remove; 
-    thankPopup.firstChild.textContent=msg;
-    localStorage.setItem("lastPopupId",id);
-    setTimeout(()=>thankPopup.classList.add("hidden"),10000);
-  }
-  closePopup.onclick=()=>thankPopup.classList.add("hidden");
-
-  // --- Watch User Donation ---
-  function watchUserDonation(){
+  // --- Live Donation Status (user specific) ---
+  function liveDonationStatus(){
+    if(!currentUser) return;
     const q=query(collection(db,"donations"), where("uid","==",currentUser.uid));
-    onSnapshot(q,(snap)=>{
-      let hasPending=false;
-      snap.forEach(docSnap=>{
-        const d=docSnap.data();
-        if(d.verified){
-          showPopupOnce("✅ आपका payment मिल गया है, शुक्रिया!",docSnap.id);
-          submitBtn.classList.remove("hidden");
+    onSnapshot(q,snap=>{
+      if(snap.empty) return;
+      snap.forEach(d=>{
+        const data=d.data();
+        if(data.verified){
+          if(localStorage.getItem("lastVerified")!==d.id){
+            localStorage.setItem("lastVerified",d.id);
+            showModal();
+          }
           submitBtn.disabled=false;
-          submitBtn.textContent="🚀 Submit Donation";
         }else{
-          hasPending=true;
           submitBtn.disabled=true;
-          submitBtn.textContent="⏳ Awaiting Verification...";
-          submitBtn.classList.add("hidden");
         }
       });
-      if(!hasPending){
-        submitBtn.classList.remove("hidden");
-        submitBtn.disabled=false;
-        submitBtn.textContent="🚀 Submit Donation";
-      }
     });
   }
 
@@ -192,13 +196,16 @@
     const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{method:"POST",body:fd});
     const data=await res.json();
     if(data.success) return data.data.url;
-    else throw new Error("ImgBB upload failed: "+JSON.stringify(data));
+    else throw new Error("ImgBB upload failed");
   }
 
   // --- Submit Donation ---
   donationForm.onsubmit=async e=>{
     e.preventDefault();
     if(!currentUser) return alert("Please login first!");
+
+    submitBtn.disabled=true;
+
     const name=document.getElementById("name").value;
     const address=document.getElementById("address").value;
     const amount=document.getElementById("amount").value;
@@ -208,48 +215,50 @@
     try{
       const screenshotUrl=await uploadToImgBB(file);
       await addDoc(collection(db,"donations"),{
-        uid:currentUser.uid,
-        name,address,amount,
-        screenshot:screenshotUrl,
-        verified:false,
-        created:Date.now()
+        uid:currentUser.uid,name,address,amount,
+        screenshot:screenshotUrl,verified:false,created:Date.now()
       });
-      alert("✅ Donation submitted! Admin verification pending.");
+      alert("✅ Donation submitted! Awaiting admin verification.");
       donationForm.reset();
-      submitBtn.disabled=true;
-      submitBtn.textContent="⏳ Awaiting Verification...";
-      submitBtn.classList.add("hidden");
     }catch(err){
       alert("❌ Error: "+err.message);
+      submitBtn.disabled=false;
     }
   };
 
   // --- Load Donations (Admin) ---
-  function watchDonations(){
-    onSnapshot(collection(db,"donations"),(snap)=>{
-      donationsList.innerHTML="";
-      snap.forEach(docSnap=>{
-        const d=docSnap.data();
-        const div=document.createElement("div");
-        div.className="border p-3 rounded shadow bg-white";
-        div.innerHTML=`
-          <p><b>👤 ${d.name}</b> (${d.address})</p>
-          <p>💰 Amount: ₹${d.amount}</p>
-          <img src="${d.screenshot}" class="w-40 my-2 border rounded shadow" />
-          <p>Status: ${d.verified?"✅ Verified":"⏳ Pending"}</p>
-          <div class="flex gap-2 mt-2">
-            <button class="btn-3d verify">✅ Verify</button>
-            <button class="btn-3d delete">🗑 Delete</button>
-          </div>
-        `;
-        div.querySelector(".verify").onclick=async()=>await updateDoc(doc(db,"donations",docSnap.id),{verified:true});
-        div.querySelector(".delete").onclick=async()=>{if(confirm("Delete donation?")) await deleteDoc(doc(db,"donations",docSnap.id));};
-        donationsList.appendChild(div);
-      });
+  async function loadDonations(){
+    donationsList.innerHTML="";
+    const snap=await getDocs(collection(db,"donations"));
+    snap.forEach(docSnap=>{
+      const d=docSnap.data();
+      const div=document.createElement("div");
+      div.className="border p-3 rounded shadow bg-white";
+      div.innerHTML=`
+        <p><b>👤 ${d.name}</b> (${d.address})</p>
+        <p>💰 Amount: ₹${d.amount}</p>
+        <img src="${d.screenshot}" class="w-40 my-2 border rounded shadow" />
+        <p>Status: ${d.verified?"✅ Verified":"⏳ Pending"}</p>
+        <div class="flex gap-2 mt-2">
+          <button class="btn-3d verify">✅ Verify</button>
+          <button class="btn-3d delete">🗑 Delete</button>
+        </div>
+      `;
+      div.querySelector(".verify").onclick=async()=>{
+        await updateDoc(doc(db,"donations",docSnap.id),{verified:true});
+        loadDonations();
+      };
+      div.querySelector(".delete").onclick=async()=>{
+        if(confirm("Delete donation?")){
+          await deleteDoc(doc(db,"donations",docSnap.id));
+          loadDonations();
+        }
+      };
+      donationsList.appendChild(div);
     });
   }
 
-  // --- Live QR + UPI ---
+  // --- Live QR + UPI from Firestore ---
   function liveQR(){
     onSnapshot(doc(db,"config","qr"),snap=>{
       if(snap.exists()){
@@ -271,7 +280,12 @@
     }
   };
 
-  // --- Upload QR + UPI (Admin) ---
+  // --- Admin QR + UPI Upload/Delete ---
+  const qrUpload=document.getElementById("qrUpload");
+  const upiInput=document.getElementById("upiInput");
+  const uploadQRBtn=document.getElementById("uploadQRBtn");
+  const deleteQRBtn=document.getElementById("deleteQRBtn");
+
   uploadQRBtn.onclick=async()=>{
     let url=null;
     if(qrUpload.files[0]) url=await uploadToImgBB(qrUpload.files[0]);
@@ -281,8 +295,11 @@
     qrUpload.value=""; upiInput.value="";
   };
 
-  // --- Delete QR (Admin) ---
-  deleteQRBtn.onclick=async()=>{if(confirm("Delete QR & UPI?")) await deleteDoc(doc(db,"config","qr"));}
+  deleteQRBtn.onclick=async()=>{
+    if(confirm("Delete QR & UPI?")){
+      await deleteDoc(doc(db,"config","qr"));
+    }
+  };
 </script>
 </body>
 </html>
