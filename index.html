@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="hi">
 <head>
@@ -31,16 +30,18 @@
     .carousel-track{display:flex; transition:transform .6s ease-in-out;}
     .carousel img{width:100%; height:160px; object-fit:cover; flex-shrink:0;}
     marquee{background:#fff3cd; color:#856404; padding:6px; font-size:14px; border-bottom:1px solid #fcd34d;}
-   .floating-donate {
-  position: fixed;
-  right: 12px;    /* या left:12px; */
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 60;
-  border-radius: 9999px;
-  padding: .55rem .9rem;
-}
-
+    .floating-donate {
+      position: fixed;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 60;
+      border-radius: 9999px;
+      padding: .55rem .9rem;
+    }
+    /* Hide Google branding */
+    .goog-logo-link, .goog-te-gadget span { display:none !important; }
+    .goog-te-gadget { font-size:0 !important; }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -68,13 +69,16 @@
           <a href="#faq">FAQ</a>
         </div>
       </div>
-    
 
       <!-- 🌐 Translate Button -->
-      <div class="relative">
+      <div class="relative flex flex-col items-center">
         <button id="langBtn" class="btn-3d">🌐 Select Language</button>
-        <div id="google_translate_element" class="absolute right-0 mt-2 hidden bg-white rounded shadow p-1"></div>
+        <div id="google_translate_element" class="absolute top-full mt-2 hidden bg-white rounded shadow p-1 z-50 w-40 text-center"></div>
       </div>
+
+      <!-- Auth + Add Button -->
+      <button id="authBtn" class="btn-3d">Login</button>
+      <button id="addBtn" class="btn-3d hidden">➕ Add Madarsa</button>
     </div>
   </div>
 </header>
@@ -89,7 +93,7 @@
   <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
 </div>
 
-<!-- Search (under header) -->
+<!-- Search -->
 <div class="max-w-6xl mx-auto px-4 mt-2">
   <input id="searchBox" type="text" placeholder="🔍 Search by name / address / courses" class="w-full border p-2 rounded"/>
 </div>
@@ -129,12 +133,11 @@
   </div>
 </div>
 
-<!-- Floating Donate (always visible) -->
+<!-- Floating Donate -->
 <a href="#donate" class="btn-3d floating-donate">🙏 Donate</a>
 
 <!-- Footer -->
 <footer class="bg-gray-100 text-center py-4 mt-6">
-
   <p class="text-xs text-gray-500 mt-2">© 2025 Talimi Ittehad</p>
 </footer>
 
@@ -143,10 +146,24 @@
   function googleTranslateElementInit(){
     new google.translate.TranslateElement({
       pageLanguage:'hi',
-      autoDisplay:false,
-      includedLanguages: '' // खाली रहने दो ताकि Google का पूरा dropdown आये
+      autoDisplay:false
     }, 'google_translate_element');
   }
+
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btn = document.getElementById("langBtn");
+    const box = document.getElementById("google_translate_element");
+
+    btn.addEventListener("click", ()=>{
+      box.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click",(e)=>{
+      if(!box.contains(e.target) && !btn.contains(e.target)){
+        box.classList.add("hidden");
+      }
+    });
+  });
 </script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
@@ -186,9 +203,8 @@
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
   let currentUser = null;
-  let allDocs = []; // for search filter
+  let allDocs = [];
 
-  // Helper: File -> Base64
   function toBase64(file){
     return new Promise((resolve,reject)=>{
       const reader = new FileReader();
@@ -197,7 +213,6 @@
       reader.onerror = (e)=>reject(e);
     });
   }
-  // Upload to ImgBB
   async function uploadToImgBB(file){
     if(!file) return "";
     const base64 = await toBase64(file);
@@ -211,13 +226,11 @@
     else throw new Error(data?.error?.message || "ImgBB upload failed");
   }
 
-  // Modal helpers
   window.closeModal = () => {
     regModal.classList.add("hidden");
     document.getElementById("regForm").reset();
   };
 
-  // Auth
   authBtn.onclick = async ()=>{
     if(!auth.currentUser) await signInWithPopup(auth, provider);
     else await signOut(auth);
@@ -227,7 +240,6 @@
     if(user){
       authBtn.textContent = "Logout";
       addBtn.classList.remove("hidden");
-      // show notice editor to admin
       if(user.email === ADMIN_EMAIL){
         noticeAdmin.classList.remove("hidden");
       } else {
@@ -239,7 +251,7 @@
       noticeAdmin.classList.add("hidden");
     }
     await loadNotice();
-    loadList(); // (re)load
+    loadList();
   });
 
   addBtn.onclick = ()=>{
@@ -247,7 +259,6 @@
     regModal.classList.add("flex");
   };
 
-  // Form submit
   document.getElementById("regForm").addEventListener("submit", async (e)=>{
     e.preventDefault();
     if(!currentUser){ alert("Please login first"); return; }
@@ -300,7 +311,6 @@
     }
   });
 
-  // Load Notice from Firestore (config/global)
   async function loadNotice(){
     try{
       const cfgRef = doc(db, "config", "global");
@@ -311,11 +321,10 @@
         noticeInput.value = text;
       }
     }catch(e){
-      // fallback
       noticeText.textContent = "📢 Welcome to Talimi Ittehad!";
     }
   }
-  // Save Notice (admin)
+
   document.getElementById("saveNotice").addEventListener("click", async ()=>{
     if(!(currentUser && currentUser.email===ADMIN_EMAIL)) return;
     const text = noticeInput.value.trim() || "📢 Welcome to Talimi Ittehad!";
@@ -324,7 +333,6 @@
     alert("✅ Notice updated");
   });
 
-  // Search filter
   searchBox.addEventListener("input", ()=>{
     const q = searchBox.value.trim().toLowerCase();
     if(!q){ renderList(allDocs); return; }
@@ -337,14 +345,12 @@
     renderList(filtered);
   });
 
-  // Live list
   function loadList(){
     const qRef = query(collection(db,"madarse"), orderBy("createdAt","desc"));
     onSnapshot(qRef, (qSnap)=>{
       const arr = [];
       qSnap.forEach(docSnap=>{
         const d = docSnap.data();
-        // visibility rules
         if(d.status==="pending" && (!currentUser || currentUser.email!==ADMIN_EMAIL)) return;
         if(d.status==="rejected" && (!currentUser || (currentUser.email!==ADMIN_EMAIL && currentUser.uid!==d.ownerUid))) return;
         arr.push({ id:docSnap.id, ...d });
@@ -354,7 +360,6 @@
     });
   }
 
-  // Render cards
   function renderList(items){
     listDiv.innerHTML = "";
     items.forEach(d=>{
@@ -379,60 +384,29 @@
           ${d.showExtra&&d.upi?`
             <div class="mt-2">
               <img src="${d.upi}" class="w-28 mx-auto rounded border" alt="UPI QR"/>
-              <p class="text-center text-xs text-pink-600">🙏 Please donate</p>
-            </div>`:""}
-          ${d.showExtra&&d.about?`<p class="mt-2 text-gray-700 text-sm">📝 ${d.about}</p>`:""}
-        </div>
-        <div class="flex gap-2 mt-2 flex-wrap">
-          ${currentUser&&currentUser.email===ADMIN_EMAIL?`
-            ${d.status==="approved"?`<button disabled class="btn-3d">✅ Approved</button>`:`<button class="approve btn-3d">Approve</button>`}
-            <button class="reject btn-3d">Reject</button>
-            <button class="toggleExtra btn-3d">${d.showExtra?'❌ Disable Extra Info':'🔓 Enable Extra Info'}</button>
+              <p class="text-xs text-center text-gray-600">Scan UPI to Donate</p>
+            </div>
           `:""}
-          ${(currentUser && (currentUser.email===ADMIN_EMAIL || currentUser.uid===d.ownerUid)) ? 
-            `<button class="delete btn-3d">🗑 Delete</button>` : ""}
+          ${d.about?`<p class="text-sm mt-1">${d.about}</p>`:""}
+          ${d.courses?`<p class="text-sm mt-1">📚 ${d.courses}</p>`:""}
         </div>
+        ${(currentUser?.email===ADMIN_EMAIL)?`
+          <div class="flex gap-2 mt-2">
+            <button class="approve btn-3d">✅ Approve</button>
+            <button class="reject btn-3d">❌ Reject</button>
+            <button class="delete btn-3d">🗑 Delete</button>
+          </div>
+        `:""}
       `;
+      const toggleBtn = card.querySelector(".toggleInfo");
+      const extra = card.querySelector(".extra");
+      toggleBtn.onclick=()=>{ extra.classList.toggle("hidden"); };
 
-      // Auto-carousel
-      const track = card.querySelector(".carousel-track");
-      if(track && d.images.length>1){
-        let index = 0;
-        setInterval(()=>{
-          index = (index+1) % d.images.length;
-          track.style.transform = `translateX(-${index*100}%)`;
-        }, 3000);
+      if(currentUser?.email===ADMIN_EMAIL){
+        card.querySelector(".approve").onclick=async()=>{ await updateDoc(doc(db,"madarse",d.id),{ status:"approved", showExtra:true }); };
+        card.querySelector(".reject").onclick=async()=>{ await updateDoc(doc(db,"madarse",d.id),{ status:"rejected", showExtra:false }); };
+        card.querySelector(".delete").onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"madarse",d.id)); };
       }
-
-      // Show/Hide Info
-      card.querySelector(".toggleInfo")?.addEventListener("click", ()=>{
-        const extra = card.querySelector(".extra");
-        const btn = card.querySelector(".toggleInfo");
-        extra.classList.toggle("hidden");
-        btn.textContent = extra.classList.contains("hidden") ? "ℹ Show Info" : "Hide Info";
-      });
-
-      // Admin actions
-      if(currentUser && currentUser.email===ADMIN_EMAIL){
-        card.querySelector(".approve")?.addEventListener("click", async ()=>{
-          await updateDoc(doc(db,"madarse", d.id), { status:"approved" });
-        });
-        card.querySelector(".reject")?.addEventListener("click", async ()=>{
-          await updateDoc(doc(db,"madarse", d.id), { status:"rejected" });
-        });
-        card.querySelector(".toggleExtra")?.addEventListener("click", async ()=>{
-          await updateDoc(doc(db,"madarse", d.id), { showExtra: !d.showExtra });
-        });
-      }
-
-      // Delete (admin or owner)
-      card.querySelector(".delete")?.addEventListener("click", async ()=>{
-        if(confirm("क्या आप इस पोस्ट को डिलीट करना चाहते हैं?")){
-          await deleteDoc(doc(db,"madarse", d.id));
-          alert("🗑 Post Deleted");
-        }
-      });
-
       listDiv.appendChild(card);
     });
   }
