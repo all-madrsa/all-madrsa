@@ -13,6 +13,7 @@
     .gallery-img:hover{transform:scale(1.05)}
     #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;align-items:center;justify-content:center}
     #lightbox img{max-height:90%;max-width:90%;border-radius:.5rem;box-shadow:0 0 20px rgba(0,0,0,.6)}
+    #lightbox button{position:absolute;top:20px;right:20px;background:#f44336;color:#fff;padding:6px 12px;border-radius:6px}
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -37,13 +38,6 @@
 <main class="max-w-6xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">📸 Gallery</h1>
 
-  <!-- Auth Section -->
-  <div id="authSection" class="mb-4">
-    <button id="loginBtn" class="bg-green-600 text-white px-4 py-2 rounded">🔑 Admin Login</button>
-    <button id="logoutBtn" class="hidden bg-gray-600 text-white px-4 py-2 rounded">🚪 Logout</button>
-    <p id="userInfo" class="mt-2 text-sm text-gray-700"></p>
-  </div>
-
   <!-- 🔑 Admin Upload Section -->
   <div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow">
     <h2 class="font-semibold mb-2">🖼 Upload New Gallery Images</h2>
@@ -53,11 +47,13 @@
 
   <!-- Gallery Grid -->
   <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+  <p id="emptyMsg" class="text-gray-500 text-sm mt-4 hidden">⚠️ No images uploaded yet.</p>
 </main>
 
 <!-- Lightbox -->
 <div id="lightbox" class="flex">
   <img src="" alt="preview" id="lightbox-img" />
+  <button id="closeLightbox">✖</button>
 </div>
 
 <footer class="bg-gray-100 text-center py-4 mt-10">
@@ -67,8 +63,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+  // 🔥 Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
     authDomain: "all-madrsa.firebaseapp.com",
@@ -79,8 +76,8 @@
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
 
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";   // केवल admin के लिए upload/delete
-  const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c"; // आपका ImgBB API key
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";   // 🔑 Admin email
+  const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c"; // ⚡ ImgBB API key
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
@@ -90,9 +87,7 @@
   const galleryDiv = document.getElementById("galleryGrid");
   const adminBox = document.getElementById("adminUpload");
   const uploadBtn = document.getElementById("uploadBtn");
-  const loginBtn = document.getElementById("loginBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const userInfo = document.getElementById("userInfo");
+  const emptyMsg = document.getElementById("emptyMsg");
 
   let currentUser = null;
 
@@ -121,85 +116,80 @@
   async function loadGallery(){
     galleryDiv.innerHTML="";
     const snap = await getDocs(collection(db,"gallery"));
-    snap.forEach(docSnap=>{
-      const d = docSnap.data();
-      if(d.url){
-        const wrapper = document.createElement("div");
-        wrapper.className="relative group";
+    if(snap.empty){
+      emptyMsg.classList.remove("hidden");
+    } else {
+      emptyMsg.classList.add("hidden");
+      snap.forEach(docSnap=>{
+        const d = docSnap.data();
+        if(d.url){
+          const wrapper = document.createElement("div");
+          wrapper.className="relative group";
 
-        const img = document.createElement("img");
-        img.src = d.url;
-        img.className = "gallery-img rounded shadow w-full";
-        img.onclick=()=>{
-          document.getElementById("lightbox").style.display="flex";
-          document.getElementById("lightbox-img").src=d.url;
-        };
-        wrapper.appendChild(img);
-
-        // Delete button (only admin)
-        if(currentUser?.email===ADMIN_EMAIL){
-          const delBtn = document.createElement("button");
-          delBtn.textContent="🗑";
-          delBtn.className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded hidden group-hover:block";
-          delBtn.onclick=async()=>{
-            if(confirm("Delete this image?")){
-              await deleteDoc(doc(db,"gallery",docSnap.id));
-              loadGallery();
-            }
+          const img = document.createElement("img");
+          img.src = d.url;
+          img.className = "gallery-img rounded shadow w-full";
+          img.onclick=()=>{
+            document.getElementById("lightbox").style.display="flex";
+            document.getElementById("lightbox-img").src=d.url;
           };
-          wrapper.appendChild(delBtn);
-        }
+          wrapper.appendChild(img);
 
-        galleryDiv.appendChild(wrapper);
-      }
-    });
+          // Delete button (only admin)
+          if(currentUser?.email===ADMIN_EMAIL){
+            const delBtn = document.createElement("button");
+            delBtn.textContent="🗑";
+            delBtn.className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded hidden group-hover:block";
+            delBtn.onclick=async()=>{
+              if(confirm("Delete this image?")){
+                await deleteDoc(doc(db,"gallery",docSnap.id));
+                loadGallery();
+              }
+            };
+            wrapper.appendChild(delBtn);
+          }
+
+          galleryDiv.appendChild(wrapper);
+        }
+      });
+    }
   }
 
   // Upload handler (admin only)
   uploadBtn.onclick = async ()=>{
     const files = document.getElementById("galleryFiles").files;
-    if(!files.length){ alert("कृपया images चुनें!"); return; }
-    uploadBtn.disabled=true; uploadBtn.textContent="Uploading...";
-    try{
-      for(let f of files){
+    if(!files.length) return alert("Select at least one file!");
+
+    for(let f of files){
+      try{
         const url = await uploadToImgBB(f);
         await addDoc(collection(db,"gallery"),{
-          url, createdAt:serverTimestamp()
+          url,
+          createdAt: serverTimestamp()
         });
+      }catch(e){
+        alert("Upload failed: "+e.message);
       }
-      alert("✅ Upload सफल रहा!");
-      loadGallery();
-    }catch(e){ alert("❌ "+e.message); }
-    finally{ uploadBtn.disabled=false; uploadBtn.textContent="Upload"; }
+    }
+    loadGallery();
   };
 
-  // Auth events
-  loginBtn.onclick = ()=> signInWithPopup(auth, provider);
-  logoutBtn.onclick = ()=> signOut(auth);
-
+  // Auth state check
   onAuthStateChanged(auth, user=>{
-    currentUser=user;
-    if(user){
-      userInfo.textContent = "Logged in as: "+user.email;
-      loginBtn.classList.add("hidden");
-      logoutBtn.classList.remove("hidden");
-
-      if(user.email===ADMIN_EMAIL){
-        adminBox.classList.remove("hidden");
-      } else {
-        adminBox.classList.add("hidden");
-      }
-    }else{
-      userInfo.textContent="";
-      loginBtn.classList.remove("hidden");
-      logoutBtn.classList.add("hidden");
-      adminBox.classList.add("hidden");
+    currentUser = user;
+    if(user?.email===ADMIN_EMAIL){
+      adminBox.classList.remove("hidden");
     }
     loadGallery();
   });
 
-  // Initial load
-  loadGallery();
+  // Lightbox close
+  document.getElementById("closeLightbox").onclick=()=>{
+    document.getElementById("lightbox").style.display="none";
+  };
+  document.getElementById("lightbox").onclick=(e)=>{
+    if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none";
+  };
 </script>
 </body>
 </html>
