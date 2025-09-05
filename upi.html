@@ -1,31 +1,18 @@
 <!doctype html>
-<html lang="hi">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🙏 Donation | Talimi Ittehad</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>💝 Donation | Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .title-3d{font-weight:700;font-size:2rem;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,.9)}
     .nav-link{padding:.35rem .6rem;border-radius:.5rem}
     .nav-active{background:#ffffff22}
-    .card-3d{transition:transform .2s, box-shadow .2s}
-    .card-3d:hover{transform:translateY(-4px); box-shadow:0 6px 16px rgba(0,0,0,.25)}
-    .btn-3d{
-      background:linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
-      box-shadow:0 4px 0 rgba(0,0,0,.25), 0 6px 12px rgba(0,0,0,.2);
-      transition:transform .12s ease, box-shadow .12s ease;
-      font-size:.9rem; padding:.5rem .9rem; color:#fff; font-weight:600; border-radius:.65rem; white-space:nowrap;
-    }
-    .btn-3d:active{transform:translateY(1px); box-shadow:0 2px 0 rgba(0,0,0,.25)}
-    .chip{border:1px solid #e5e7eb; padding:.4rem .7rem; border-radius:9999px; cursor:pointer}
-    .chip.active{background:#111827; color:#fff; border-color:#111827}
+    .card{border:1px solid #ddd;border-radius:.5rem;padding:1rem;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1)}
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
-
-<!-- ✅ Login protection (हटाना चाहें तो इस लाइन को हटा दें) -->
-<script src="auth-protect.js" type="module"></script>
 
 <!-- Header -->
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
@@ -46,338 +33,96 @@
 </header>
 
 <!-- Main -->
-<main class="max-w-6xl mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-2">🙏 Donation</h1>
-  <p class="text-sm text-gray-600 mb-4 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded">
-    आपका दान Talimi Ittehad के शैक्षिक और समाजसेवी कार्यों में उपयोग होगा। अल्लाह क़ुबूल फरमाए।
+<main class="max-w-4xl mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-4">💝 Donation</h1>
+  <p class="mb-4 text-gray-700">
+    आपकी छोटी सी मदद हमारी बड़ी ताक़त बन सकती है। कृपया दान (Donation) देकर हमारी तालीमी मुहिम को मज़बूत करें।  
+    (Hijri तारीख़ों की तरह, Donation Details भी Admin अपडेट कर सकता है)
   </p>
 
-  <!-- Donation Card -->
-  <div class="grid md:grid-cols-2 gap-4">
-    <!-- Left: UPI + Amount -->
-    <div class="card-3d bg-white p-4 rounded shadow">
-      <h2 class="font-semibold text-lg mb-2">📲 UPI से Donate करें</h2>
+  <!-- Donation Info from Firebase -->
+  <div id="donationBox" class="space-y-4"></div>
 
-      <div class="flex items-center gap-2 mb-2">
-        <span class="text-sm text-gray-600">UPI ID:</span>
-        <code id="upiId" class="text-sm bg-gray-100 px-2 py-1 rounded">loading@upi</code>
-        <button id="copyUpi" class="btn-3d text-xs">Copy</button>
-      </div>
-      <div class="text-sm text-gray-600 mb-3">
-        नाम (UPI): <span id="upiName" class="font-semibold">Loading...</span>
-      </div>
-
-      <div class="mb-3">
-        <div class="flex flex-wrap gap-2">
-          <button class="chip" data-am="100">₹100</button>
-          <button class="chip" data-am="200">₹200</button>
-          <button class="chip" data-am="500">₹500</button>
-          <button class="chip" data-am="1000">₹1000</button>
-          <button class="chip" data-am="2500">₹2500</button>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label class="text-sm text-gray-600">Custom Amount (INR)</label>
-        <input id="amount" type="number" min="1" placeholder="e.g. 351" class="w-full border p-2 rounded mt-1" />
-      </div>
-
-      <div class="mb-3">
-        <label class="text-sm text-gray-600">Note (ऐच्छिक)</label>
-        <input id="note" type="text" maxlength="40" placeholder="Sadaqah / Zakat etc." class="w-full border p-2 rounded mt-1" />
-      </div>
-
-      <a id="payNow" class="btn-3d inline-block">📥 Pay Now (UPI App)</a>
-      <p class="text-xs text-gray-500 mt-2">Pay Now दबाते ही आपका UPI ऐप खुलेगा।</p>
-    </div>
-
-    <!-- Right: QR + Bank -->
-    <div class="card-3d bg-white p-4 rounded shadow">
-      <h2 class="font-semibold text-lg mb-2">🧾 QR स्कैन करें</h2>
-      <div class="flex items-center justify-center">
-        <img id="qrImg" src="" alt="UPI QR" class="w-52 h-52 object-contain border rounded" />
-      </div>
-      <p class="text-xs text-center text-gray-500 mt-2">UPI ऐप से QR स्कैन करके भुगतान करें।</p>
-
-      <hr class="my-4">
-
-      <h3 class="font-semibold mb-2">🏦 बैंक डिटेल्स</h3>
-      <div id="bankBox" class="text-sm text-gray-700 space-y-1">
-        <div>Bank: <span id="bankName">—</span></div>
-        <div>Account No: <span id="accNo">—</span></div>
-        <div>IFSC: <span id="ifsc">—</span></div>
-        <div>Branch: <span id="branch">—</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Admin Panel -->
-  <div id="adminPanel" class="hidden card-3d bg-white p-4 rounded shadow mt-6">
-    <h2 class="font-semibold text-lg mb-3">👨‍💻 Admin: Donation Settings</h2>
-
-    <div class="grid md:grid-cols-2 gap-4">
-      <div>
-        <label class="text-sm">UPI ID</label>
-        <input id="ad_upiId" class="w-full border p-2 rounded mt-1" placeholder="example@upi">
-      </div>
-      <div>
-        <label class="text-sm">UPI Name (pn)</label>
-        <input id="ad_upiName" class="w-full border p-2 rounded mt-1" placeholder="Talimi Ittehad">
-      </div>
-      <div>
-        <label class="text-sm">Bank Name</label>
-        <input id="ad_bankName" class="w-full border p-2 rounded mt-1">
-      </div>
-      <div>
-        <label class="text-sm">Account No</label>
-        <input id="ad_accNo" class="w-full border p-2 rounded mt-1">
-      </div>
-      <div>
-        <label class="text-sm">IFSC</label>
-        <input id="ad_ifsc" class="w-full border p-2 rounded mt-1">
-      </div>
-      <div>
-        <label class="text-sm">Branch</label>
-        <input id="ad_branch" class="w-full border p-2 rounded mt-1">
-      </div>
-      <div class="md:col-span-2">
-        <label class="text-sm">UPI QR Image (upload to ImgBB)</label>
-        <input id="ad_qrFile" type="file" accept="image/*" class="mt-1">
-        <p class="text-xs text-gray-500">नया QR अपलोड करें तो Save से पहले Upload दबाएँ।</p>
-        <div class="flex gap-2 mt-2">
-          <button id="uploadQR" class="btn-3d">⬆ Upload QR</button>
-          <input id="ad_qrUrl" class="flex-1 border p-2 rounded" placeholder="https://i.ibb.co/... (optional paste)">
-        </div>
-      </div>
-    </div>
-
-    <div class="flex justify-end mt-4">
-      <button id="saveDonation" class="btn-3d">💾 Save Settings</button>
-    </div>
+  <!-- 🔑 Admin Panel -->
+  <div id="adminPanel" class="hidden mt-8 card">
+    <h2 class="text-lg font-semibold mb-2">⚙ Admin: Add/Update Donation Details</h2>
+    <textarea id="donationText" rows="4" class="w-full border p-2 mb-2 rounded" placeholder="Donation info, UPI, Bank, PayPal etc."></textarea>
+    <input id="donationQR" type="url" placeholder="QR Code Image URL" class="w-full border p-2 mb-2 rounded"/>
+    <button id="saveDonation" class="bg-green-600 text-white px-4 py-2 rounded">💾 Save</button>
   </div>
 </main>
 
+<!-- Footer -->
 <footer class="bg-gray-100 text-center py-4 mt-10">
   <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
 </footer>
 
-<!-- Firebase + Logic -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  // ====== CONFIG ======
+  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
     authDomain: "all-madrsa.firebaseapp.com",
-    databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
     projectId: "all-madrsa",
     storageBucket: "all-madrsa.appspot.com",
     messagingSenderId: "619313835874",
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-  const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 
-  // ====== INIT ======
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";  // ✅ केवल Admin एडिट कर सकेगा
   const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const db = getFirestore(app);
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
-  // ====== UI Refs ======
-  const upiIdEl   = document.getElementById("upiId");
-  const upiNameEl = document.getElementById("upiName");
-  const qrImg     = document.getElementById("qrImg");
-
-  const bankNameEl = document.getElementById("bankName");
-  const accNoEl    = document.getElementById("accNo");
-  const ifscEl     = document.getElementById("ifsc");
-  const branchEl   = document.getElementById("branch");
-
-  const amountInput = document.getElementById("amount");
-  const noteInput   = document.getElementById("note");
-  const payNowBtn   = document.getElementById("payNow");
-
-  const copyUpiBtn  = document.getElementById("copyUpi");
-
-  // Admin refs
+  const box = document.getElementById("donationBox");
   const adminPanel = document.getElementById("adminPanel");
-  const ad_upiId   = document.getElementById("ad_upiId");
-  const ad_upiName = document.getElementById("ad_upiName");
-  const ad_bankName= document.getElementById("ad_bankName");
-  const ad_accNo   = document.getElementById("ad_accNo");
-  const ad_ifsc    = document.getElementById("ad_ifsc");
-  const ad_branch  = document.getElementById("ad_branch");
-  const ad_qrFile  = document.getElementById("ad_qrFile");
-  const ad_qrUrl   = document.getElementById("ad_qrUrl");
-  const uploadQRBtn= document.getElementById("uploadQR");
-  const saveBtn    = document.getElementById("saveDonation");
+  const saveBtn = document.getElementById("saveDonation");
 
   let currentUser = null;
-  let donationCfg = {
-    upiId: "loading@upi",
-    upiName: "Talimi Ittehad",
-    qrUrl: "",
-    bankName: "",
-    accNo: "",
-    ifsc: "",
-    branch: ""
-  };
 
-  // ====== Helpers ======
-  function toBase64(file){
-    return new Promise((resolve, reject)=>{
-      const r = new FileReader();
-      r.onload = ()=> resolve(r.result.split(",")[1]);
-      r.onerror = e => reject(e);
-      r.readAsDataURL(file);
-    });
-  }
-  async function uploadToImgBB(file){
-    const base64 = await toBase64(file);
-    const fd = new FormData();
-    fd.append("image", base64);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:"POST", body: fd });
-    const data = await res.json();
-    if(data.success) return data.data.url;
-    throw new Error("ImgBB upload failed");
-  }
-  function buildUpiLink(upiId, upiName, amount, note){
-    const params = new URLSearchParams({
-      pa: upiId,
-      pn: upiName || "Talimi Ittehad",
-      cu: "INR"
-    });
-    if(amount && Number(amount) > 0) params.set("am", String(amount));
-    if(note) params.set("tn", note.substring(0, 40));
-    return `upi://pay?${params.toString()}`;
-  }
-  function renderUI(){
-    // public UI
-    upiIdEl.textContent = donationCfg.upiId || "—";
-    upiNameEl.textContent = donationCfg.upiName || "—";
-    qrImg.src = donationCfg.qrUrl || "";
-    bankNameEl.textContent = donationCfg.bankName || "—";
-    accNoEl.textContent = donationCfg.accNo || "—";
-    ifscEl.textContent = donationCfg.ifsc || "—";
-    branchEl.textContent = donationCfg.branch || "—";
+  // Load Donation Info
+  async function loadDonation(){
+    const snap = await getDoc(doc(db,"site","donation"));
+    box.innerHTML="";
+    if(snap.exists()){
+      const d = snap.data();
+      const div = document.createElement("div");
+      div.className="card";
+      div.innerHTML=`
+        <div class="text-gray-700 whitespace-pre-line">${d.text || "No donation info yet."}</div>
+        ${d.qr ? `<img src="${d.qr}" alt="QR Code" class="w-48 mt-3 mx-auto"/>` : ""}
+      `;
+      box.appendChild(div);
 
-    // admin form
-    ad_upiId.value   = donationCfg.upiId || "";
-    ad_upiName.value = donationCfg.upiName || "";
-    ad_bankName.value= donationCfg.bankName || "";
-    ad_accNo.value   = donationCfg.accNo || "";
-    ad_ifsc.value    = donationCfg.ifsc || "";
-    ad_branch.value  = donationCfg.branch || "";
-    ad_qrUrl.value   = donationCfg.qrUrl || "";
-  }
-
-  // ====== Load Config ======
-  async function loadDonationCfg(){
-    const ref = doc(db, "config", "donation");
-    const snap = await getDoc(ref);
-    if(snap.exists()) donationCfg = { ...donationCfg, ...snap.data() };
-    renderUI();
-  }
-
-  // ====== Auth State ======
-  onAuthStateChanged(auth, async (user)=>{
-    currentUser = user || null;
-    if(!donationCfg.upiId || donationCfg.upiId === "loading@upi"){
-      await loadDonationCfg();
+      // If admin, fill inputs
+      if(currentUser?.email===ADMIN_EMAIL){
+        document.getElementById("donationText").value = d.text || "";
+        document.getElementById("donationQR").value = d.qr || "";
+      }
     }
-    // show admin panel
-    if(currentUser?.email === ADMIN_EMAIL){
-      adminPanel.classList.remove("hidden");
-    } else {
-      adminPanel.classList.add("hidden");
-    }
-  });
-
-  // ====== Chips (amount presets) ======
-  const chips = Array.from(document.querySelectorAll(".chip"));
-  chips.forEach(chip=>{
-    chip.addEventListener("click", ()=>{
-      chips.forEach(c=>c.classList.remove("active"));
-      chip.classList.add("active");
-      amountInput.value = chip.dataset.am;
-    });
-  });
-
-  // ====== Copy UPI ======
-  copyUpiBtn.onclick = async ()=>{
-    try{
-      await navigator.clipboard.writeText(donationCfg.upiId || "");
-      copyUpiBtn.textContent = "Copied!";
-      setTimeout(()=> copyUpiBtn.textContent = "Copy", 1200);
-    }catch(e){}
-  };
-
-  // ====== Pay Now ======
-  function updatePayLink(){
-    const am = amountInput.value.trim();
-    const nt = noteInput.value.trim();
-    const link = buildUpiLink(donationCfg.upiId, donationCfg.upiName, am, nt);
-    payNowBtn.setAttribute("href", link);
   }
-  amountInput.addEventListener("input", updatePayLink);
-  noteInput.addEventListener("input", updatePayLink);
-  updatePayLink();
 
-  // ====== Admin: Upload QR to ImgBB ======
-  uploadQRBtn.onclick = async ()=>{
-    if(!(currentUser?.email === ADMIN_EMAIL)) return alert("Not allowed");
-    const f = ad_qrFile.files?.[0];
-    if(!f) return alert("Select a file first");
-    uploadQRBtn.textContent = "Uploading...";
-    uploadQRBtn.disabled = true;
-    try{
-      const url = await uploadToImgBB(f);
-      ad_qrUrl.value = url;
-      alert("✅ QR uploaded");
-    }catch(err){
-      alert("❌ " + err.message);
-    }finally{
-      uploadQRBtn.textContent = "⬆ Upload QR";
-      uploadQRBtn.disabled = false;
-    }
-  };
-
-  // ====== Admin: Save Settings ======
+  // Save Donation Info
   saveBtn.onclick = async ()=>{
-    if(!(currentUser?.email === ADMIN_EMAIL)) return alert("Not allowed");
-    const ref = doc(db, "config", "donation");
-    const payload = {
-      upiId: ad_upiId.value.trim(),
-      upiName: ad_upiName.value.trim(),
-      bankName: ad_bankName.value.trim(),
-      accNo: ad_accNo.value.trim(),
-      ifsc: ad_ifsc.value.trim(),
-      branch: ad_branch.value.trim(),
-      qrUrl: ad_qrUrl.value.trim()
-    };
-    await setDoc(ref, payload, { merge: true });
-    donationCfg = { ...donationCfg, ...payload };
-    renderUI();
-    updatePayLink();
-    alert("✅ Donation settings updated");
+    const text = document.getElementById("donationText").value;
+    const qr = document.getElementById("donationQR").value;
+    await setDoc(doc(db,"site","donation"),{text,qr});
+    alert("Donation info saved ✅");
+    loadDonation();
   };
 
-  // ====== Fallback: If user opens without being logged in but page is protected ======
-  // (auth-protect.js आमतौर पर redirect कर देगा; फिर भी यहाँ एक fallback login button ट्रिगर कर सकते हैं)
-  // Example (Optional): auto-prompt sign-in on click of Pay Now if no user:
-  payNowBtn.addEventListener("click", async (e)=>{
-    if(!currentUser){
-      e.preventDefault();
-      try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
-      catch(err){ /* ignore */ }
+  // Auth
+  onAuthStateChanged(auth, user=>{
+    currentUser=user;
+    if(user?.email===ADMIN_EMAIL){
+      adminPanel.classList.remove("hidden");
     }
+    loadDonation();
   });
-
-  // Initial load
-  loadDonationCfg();
 </script>
 </body>
 </html>
