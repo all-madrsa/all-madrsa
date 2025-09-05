@@ -139,7 +139,7 @@
     const sound=document.getElementById("notifySound");
     sound.currentTime=0;
     sound.play().catch(err=>console.log("Autoplay blocked:",err));
-    modalTimer=setTimeout(()=>thankyouModal.classList.add("hidden"),8000);
+    modalTimer=setTimeout(()=>thankyouModal.classList.add("hidden"),3000);
   }
   closeModal.onclick=()=>{
     thankyouModal.classList.add("hidden");
