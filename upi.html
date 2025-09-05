@@ -6,13 +6,26 @@
   <title>💝 Donation | Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .title-3d{font-weight:700;font-size:2rem;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,.9)}
-    .nav-link{padding:.35rem .6rem;border-radius:.5rem}
-    .nav-active{background:#ffffff22}
-    .card{border:1px solid #ddd;border-radius:.5rem;padding:1rem;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+    .title-3d {
+      font-weight:700; font-size:2rem; color:#fff;
+      text-shadow:2px 2px 8px rgba(0,0,0,.9);
+    }
+    .nav-link { padding:.35rem .6rem; border-radius:.5rem; }
+    .nav-active { background:#ffffff22; }
+    .card-3d {
+      background:#fff;
+      border-radius:1rem;
+      padding:1.5rem;
+      box-shadow:0 8px 20px rgba(0,0,0,.15);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card-3d:hover {
+      transform: translateY(-4px);
+      box-shadow:0 12px 28px rgba(0,0,0,.25);
+    }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-100 min-h-screen">
 
 <!-- Header -->
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
@@ -34,20 +47,23 @@
 
 <!-- Main -->
 <main class="max-w-3xl mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4">💝 Donate to Support</h1>
-  <p class="mb-4 text-gray-700">आपकी मदद से तालीमी मुहिम को मज़बूती मिलेगी। नीचे दिए गए UPI, Bank या QR Code से आप दान कर सकते हैं।</p>
+  <h1 class="text-2xl font-bold mb-4 text-center">💝 Support with Your Donation</h1>
+  <p class="mb-6 text-gray-700 text-center">
+    आपकी मदद से तालीमी मुहिम को मज़बूती मिलेगी।<br>
+    नीचे दिए गए UPI, Bank या QR Code से आप आसानी से दान कर सकते हैं।
+  </p>
 
-  <!-- Donation Info from Firebase -->
-  <div id="donationBox" class="card mb-6"></div>
+  <!-- Donation Info -->
+  <div id="donationBox" class="card-3d mb-8 text-center"></div>
 
   <!-- 🔑 Admin Panel -->
-  <div id="adminPanel" class="hidden mt-8 card">
-    <h2 class="text-lg font-semibold mb-2">⚙ Admin: Update Donation Details</h2>
+  <div id="adminPanel" class="hidden card-3d">
+    <h2 class="text-lg font-semibold mb-3 text-left">⚙ Admin: Update Donation Details</h2>
     <input id="upiId" type="text" placeholder="UPI ID" class="w-full border p-2 mb-2 rounded"/>
     <textarea id="bankDetails" rows="3" class="w-full border p-2 mb-2 rounded" placeholder="Bank Account Details"></textarea>
     <input id="donationQR" type="url" placeholder="QR Code Image URL (ImgBB/Direct)" class="w-full border p-2 mb-2 rounded"/>
     <textarea id="extraInfo" rows="3" class="w-full border p-2 mb-2 rounded" placeholder="Extra Donation Info (Optional)"></textarea>
-    <button id="saveDonation" class="bg-green-600 text-white px-4 py-2 rounded">💾 Save</button>
+    <button id="saveDonation" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full mt-2">💾 Save</button>
   </div>
 </main>
 
@@ -59,7 +75,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // Firebase Config
   const firebaseConfig = {
@@ -75,7 +91,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
 
   const box = document.getElementById("donationBox");
   const adminPanel = document.getElementById("adminPanel");
@@ -90,14 +105,14 @@
     if(snap.exists()){
       const d = snap.data();
       box.innerHTML = `
-        <div class="text-gray-700">
-          ${d.upi ? `<p class="mb-2"><b>📌 UPI:</b> ${d.upi}</p>` : ""}
-          ${d.bank ? `<p class="mb-2 whitespace-pre-line"><b>🏦 Bank Details:</b>\n${d.bank}</p>` : ""}
-          ${d.qr ? `<img src="${d.qr}" alt="Donation QR" class="w-56 mt-3 mx-auto rounded shadow"/>` : ""}
-          ${d.extra ? `<p class="mt-3 text-sm text-gray-600">${d.extra}</p>` : ""}
+        <div class="space-y-3">
+          ${d.upi ? `<p class="text-lg font-semibold">📌 <span class="text-indigo-700">UPI:</span> ${d.upi}</p>` : ""}
+          ${d.bank ? `<div class="text-left"><b>🏦 Bank Details:</b><pre class="whitespace-pre-line text-sm bg-gray-50 p-2 rounded">${d.bank}</pre></div>` : ""}
+          ${d.qr ? `<img src="${d.qr}" alt="Donation QR" class="w-64 mx-auto mt-3 rounded-xl shadow-lg"/>` : ""}
+          ${d.extra ? `<p class="text-sm text-gray-600">${d.extra}</p>` : ""}
+          ${d.upi ? `<a href="upi://pay?pa=${d.upi}&pn=TalimiIttehad" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow inline-block mt-3">💳 Pay via UPI App</a>` : ""}
         </div>
       `;
-
       // Admin Fill Inputs
       if(currentUser?.email===ADMIN_EMAIL){
         document.getElementById("upiId").value = d.upi || "";
