@@ -37,6 +37,13 @@
 <main class="max-w-6xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">📸 Gallery</h1>
 
+  <!-- Auth Section -->
+  <div id="authSection" class="mb-4">
+    <button id="loginBtn" class="bg-green-600 text-white px-4 py-2 rounded">🔑 Admin Login</button>
+    <button id="logoutBtn" class="hidden bg-gray-600 text-white px-4 py-2 rounded">🚪 Logout</button>
+    <p id="userInfo" class="mt-2 text-sm text-gray-700"></p>
+  </div>
+
   <!-- 🔑 Admin Upload Section -->
   <div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow">
     <h2 class="font-semibold mb-2">🖼 Upload New Gallery Images</h2>
@@ -60,21 +67,20 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
- const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",   // ✅ spelling fix (all-madrsa → all-madrasa)
-  databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",      // ✅ storageBucket हमेशा .appspot.com होता है
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
 
-
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";   // 🔑 only this email can upload/delete
-  const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";           // ⚡ ImgBB API key
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";   // केवल admin के लिए upload/delete
+  const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c"; // आपका ImgBB API key
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
@@ -84,6 +90,9 @@
   const galleryDiv = document.getElementById("galleryGrid");
   const adminBox = document.getElementById("adminUpload");
   const uploadBtn = document.getElementById("uploadBtn");
+  const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userInfo = document.getElementById("userInfo");
 
   let currentUser = null;
 
@@ -149,4 +158,48 @@
   // Upload handler (admin only)
   uploadBtn.onclick = async ()=>{
     const files = document.getElementById("galleryFiles").files;
-    if(!files.lengt
+    if(!files.length){ alert("कृपया images चुनें!"); return; }
+    uploadBtn.disabled=true; uploadBtn.textContent="Uploading...";
+    try{
+      for(let f of files){
+        const url = await uploadToImgBB(f);
+        await addDoc(collection(db,"gallery"),{
+          url, createdAt:serverTimestamp()
+        });
+      }
+      alert("✅ Upload सफल रहा!");
+      loadGallery();
+    }catch(e){ alert("❌ "+e.message); }
+    finally{ uploadBtn.disabled=false; uploadBtn.textContent="Upload"; }
+  };
+
+  // Auth events
+  loginBtn.onclick = ()=> signInWithPopup(auth, provider);
+  logoutBtn.onclick = ()=> signOut(auth);
+
+  onAuthStateChanged(auth, user=>{
+    currentUser=user;
+    if(user){
+      userInfo.textContent = "Logged in as: "+user.email;
+      loginBtn.classList.add("hidden");
+      logoutBtn.classList.remove("hidden");
+
+      if(user.email===ADMIN_EMAIL){
+        adminBox.classList.remove("hidden");
+      } else {
+        adminBox.classList.add("hidden");
+      }
+    }else{
+      userInfo.textContent="";
+      loginBtn.classList.remove("hidden");
+      logoutBtn.classList.add("hidden");
+      adminBox.classList.add("hidden");
+    }
+    loadGallery();
+  });
+
+  // Initial load
+  loadGallery();
+</script>
+</body>
+</html>
