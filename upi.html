@@ -1,22 +1,230 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>💝 Donation | Talimi Ittehad</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🙏 Donation | Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .title-3d { font-weight:700; font-size:2rem; color:#fff; text-shadow:2px 2px 8px rgba(0,0,0,.9); }
-    .card-3d { background:#fff; border-radius:1rem; padding:1.5rem;
-      box-shadow:0 8px 20px rgba(0,0,0,.15); transition:.2s; }
-    .card-3d:hover { transform: translateY(-4px); box-shadow:0 12px 28px rgba(0,0,0,.25); }
-    .verified-msg { background:#22c55e; color:#fff; padding:.75rem; border-radius:.5rem; text-align:center; margin-bottom:1rem; }
+    .title-3d { font-weight:700; font-size:2rem; color:#fff;
+      text-shadow:2px 2px 8px rgba(0,0,0,.9);}
+    .nav-link { padding:.35rem .6rem; border-radius:.5rem;}
+    .nav-active { background:#ffffff22;}
+    .card-3d { transition: transform .2s, box-shadow .2s;}
+    .card-3d:hover { transform: translateY(-4px);
+      box-shadow:0 6px 16px rgba(0,0,0,.25);}
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen">
 
 <!-- Header -->
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto px-3 py-3 flex items-center justify-between">
     <a href="index.html" class="title-3d">Talimi Ittehad</a>
-    <nav class="
+    <nav class="flex flex-wrap gap-2 text-sm text-white">
+      <a href="index.html" class="nav-link">🏠 Home</a>
+      <a href="donation.html" class="nav-link nav-active">Donation</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
+      <a href="islamic-calendar.html" class="nav-link">Calendar</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-4">🙏 Make a Donation</h1>
+
+  <!-- Thank You -->
+  <div id="thankYou" class="hidden bg-green-600 text-white text-center p-3 mb-4 rounded shadow">
+    ✅ आपका भुगतान मिल गया है। अल्लाह आप को बेहतरीन बदला अता करे।
+  </div>
+
+  <!-- Admin Section -->
+  <div id="adminBox" class="hidden card-3d bg-white p-4 rounded shadow mb-6">
+    <h2 class="text-lg font-semibold mb-2">⚙️ Admin: Set Donation QR & UPI</h2>
+    <input id="upiId" type="text" placeholder="UPI ID" class="w-full border p-2 mb-2 rounded"/>
+    <input id="qrFile" type="file" accept="image/*" class="mb-2"/>
+    <button id="saveUPI" class="bg-indigo-600 text-white px-4 py-2 rounded">Save</button>
+  </div>
+
+  <!-- Show UPI/QR -->
+  <div id="upiSection" class="card-3d bg-white p-4 rounded shadow mb-6 text-center hidden">
+    <h2 class="font-semibold mb-2">Scan & Pay</h2>
+    <img id="qrImg" src="" alt="QR Code" class="mx-auto max-w-[200px] rounded shadow mb-2"/>
+    <p id="upiText" class="font-mono text-lg"></p>
+  </div>
+
+  <!-- User Donation Form -->
+  <div class="card-3d bg-white p-4 rounded shadow">
+    <h2 class="text-lg font-semibold mb-3">📝 Submit Donation Details</h2>
+    <form id="donateForm" class="space-y-2">
+      <input id="donorName" type="text" placeholder="Your Name" required class="w-full border p-2 rounded"/>
+      <input id="donorAddress" type="text" placeholder="Your Address" required class="w-full border p-2 rounded"/>
+      <input id="donorAmount" type="number" placeholder="Amount (₹)" required class="w-full border p-2 rounded"/>
+      <input id="screenshot" type="file" accept="image/*" required class="w-full border p-2 rounded"/>
+      <button class="bg-green-600 text-white px-4 py-2 rounded w-full">Submit</button>
+    </form>
+  </div>
+
+  <!-- Admin Donation List -->
+  <div id="donationsList" class="hidden mt-6">
+    <h2 class="text-lg font-semibold mb-2">📑 Donations</h2>
+    <div id="donationsBox" class="space-y-2"></div>
+  </div>
+</main>
+
+<footer class="bg-gray-100 text-center py-4 mt-10">
+  <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
+
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com"; 
+  const IMGBB_KEY = "YOUR_IMGBB_KEY"; // ⚡ Replace with your ImgBB Key
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  const adminBox=document.getElementById("adminBox");
+  const upiSection=document.getElementById("upiSection");
+  const qrImg=document.getElementById("qrImg");
+  const upiText=document.getElementById("upiText");
+  const thankYou=document.getElementById("thankYou");
+  const donationsList=document.getElementById("donationsList");
+  const donationsBox=document.getElementById("donationsBox");
+
+  let currentUser=null;
+
+  // Convert file to base64
+  function toBase64(file){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result.split(",")[1]);
+      reader.onerror=e=>reject(e);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Upload to ImgBB
+  async function uploadToImgBB(file){
+    const base64=await toBase64(file);
+    const fd=new FormData();
+    fd.append("image", base64);
+    const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{
+      method:"POST", body:fd
+    });
+    const data=await res.json();
+    if(data.success) return data.data.url;
+    else throw new Error("ImgBB upload failed");
+  }
+
+  // Load UPI
+  async function loadUPI(){
+    const snap=await getDocs(collection(db,"settings"));
+    snap.forEach(s=>{
+      const d=s.data();
+      if(d.upi){
+        upiSection.classList.remove("hidden");
+        upiText.textContent=d.upi;
+        qrImg.src=d.qr;
+      }
+    });
+  }
+
+  // Submit Donation
+  document.getElementById("donateForm").onsubmit=async e=>{
+    e.preventDefault();
+    const name=document.getElementById("donorName").value;
+    const address=document.getElementById("donorAddress").value;
+    const amount=document.getElementById("donorAmount").value;
+    const file=document.getElementById("screenshot").files[0];
+    if(!file) return alert("Upload screenshot!");
+
+    const url=await uploadToImgBB(file);
+    await addDoc(collection(db,"donations"),{
+      uid:currentUser?.uid||null,
+      name,address,amount,
+      screenshot:url,verified:false,
+      created:Date.now()
+    });
+
+    alert("Submitted! Admin will verify soon.");
+    e.target.reset();
+  };
+
+  // Admin Save UPI
+  document.getElementById("saveUPI").onclick=async()=>{
+    const upi=document.getElementById("upiId").value;
+    const file=document.getElementById("qrFile").files[0];
+    if(!upi||!file) return alert("Fill all fields");
+
+    const url=await uploadToImgBB(file);
+    await addDoc(collection(db,"settings"),{upi,qr:url});
+    alert("UPI Saved!");
+    loadUPI();
+  };
+
+  // Load Donations
+  async function loadDonations(){
+    donationsBox.innerHTML="";
+    const snap=await getDocs(collection(db,"donations"));
+    snap.forEach(s=>{
+      const d=s.data();
+      const div=document.createElement("div");
+      div.className="bg-white p-3 rounded shadow flex justify-between items-center";
+      div.innerHTML=`<div>
+        <p><b>${d.name}</b> (${d.address})</p>
+        <p>₹${d.amount}</p>
+        <img src="${d.screenshot}" class="w-24 rounded mt-1"/>
+      </div>
+      <div>
+        ${d.verified?'<span class="text-green-600 font-bold">Verified</span>':`
+        <button class="bg-green-600 text-white px-2 py-1 rounded verifyBtn">Verify</button>`}
+        <button class="bg-red-600 text-white px-2 py-1 rounded deleteBtn">Delete</button>
+      </div>`;
+
+      div.querySelector(".verifyBtn")?.addEventListener("click",async()=>{
+        await updateDoc(doc(db,"donations",s.id),{verified:true});
+        loadDonations();
+      });
+      div.querySelector(".deleteBtn").addEventListener("click",async()=>{
+        await deleteDoc(doc(db,"donations",s.id));
+        loadDonations();
+      });
+
+      donationsBox.appendChild(div);
+
+      // ThankYou check
+      if(d.uid===currentUser?.uid && d.verified){
+        thankYou.classList.remove("hidden");
+        setTimeout(()=>thankYou.classList.add("hidden"),6000);
+      }
+    });
+  }
+
+  // Auth
+  onAuthStateChanged(auth,u=>{
+    currentUser=u;
+    if(u?.email===ADMIN_EMAIL){
+      adminBox.classList.remove("hidden");
+      donationsList.classList.remove("hidden");
+      loadDonations();
+    }
+    loadUPI();
+  });
+</script>
+</body>
+</html>
