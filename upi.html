@@ -3,72 +3,61 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🙏 Donation | Talimi Ittehad</title>
+  <title>💝 Donate | Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .title-3d { font-weight:700; font-size:2rem; color:#fff;
-      text-shadow:2px 2px 8px rgba(0,0,0,.9);}
-    .nav-link { padding:.35rem .6rem; border-radius:.5rem;}
-    .nav-active { background:#ffffff22;}
-    .card-3d { transition: transform .2s, box-shadow .2s;}
-    .card-3d:hover { transform: translateY(-4px);
-      box-shadow:0 6px 16px rgba(0,0,0,.25);}
+    .title-3d{font-weight:700;font-size:1.5rem;color:#fff;text-shadow:2px 2px 6px rgba(0,0,0,.8);}
+    .btn-3d{background:linear-gradient(135deg,#4f46e5,#9333ea);color:#fff;padding:.5rem 1rem;border-radius:.5rem;box-shadow:0 3px 6px rgba(0,0,0,.3);transition:.2s;}
+    .btn-3d:hover{transform:translateY(-2px);box-shadow:0 5px 10px rgba(0,0,0,.4);}
+    .card-3d{background:#fff;border-radius:.8rem;padding:1rem;box-shadow:0 6px 14px rgba(0,0,0,.15);}
+    .success-msg{background:linear-gradient(135deg,#22c55e,#16a34a);color:white;padding:.8rem;border-radius:.6rem;margin-bottom:1rem;text-align:center;}
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
 <!-- Header -->
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
-  <div class="max-w-6xl mx-auto px-3 py-3 flex items-center justify-between">
+  <div class="max-w-5xl mx-auto px-3 py-3 flex items-center justify-between">
     <a href="index.html" class="title-3d">Talimi Ittehad</a>
-    <nav class="flex flex-wrap gap-2 text-sm text-white">
+    <nav class="flex gap-2 text-sm text-white">
       <a href="index.html" class="nav-link">🏠 Home</a>
-      <a href="donation.html" class="nav-link nav-active">Donation</a>
-      <a href="gallery.html" class="nav-link">Gallery</a>
-      <a href="islamic-calendar.html" class="nav-link">Calendar</a>
+      <a href="donation.html" class="nav-link nav-active">💝 Donate</a>
+      <a href="admin-donations.html" class="nav-link">👑 Admin</a>
     </nav>
   </div>
 </header>
 
-<main class="max-w-4xl mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4">🙏 Make a Donation</h1>
+<!-- Main -->
+<main class="max-w-2xl mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-4">💝 Support with Donation</h1>
 
-  <!-- Thank You -->
-  <div id="thankYou" class="hidden bg-green-600 text-white text-center p-3 mb-4 rounded shadow">
-    ✅ आपका भुगतान मिल गया है। अल्लाह आप को बेहतरीन बदला अता करे।
+  <!-- Success message (hidden by default) -->
+  <div id="successBox" class="success-msg hidden">
+    ✅ आपका payment मिल गया है, शुक्रिया!
   </div>
 
-  <!-- Admin Section -->
-  <div id="adminBox" class="hidden card-3d bg-white p-4 rounded shadow mb-6">
-    <h2 class="text-lg font-semibold mb-2">⚙️ Admin: Set Donation QR & UPI</h2>
-    <input id="upiId" type="text" placeholder="UPI ID" class="w-full border p-2 mb-2 rounded"/>
-    <input id="qrFile" type="file" accept="image/*" class="mb-2"/>
-    <button id="saveUPI" class="bg-indigo-600 text-white px-4 py-2 rounded">Save</button>
-  </div>
+  <!-- Donation Form -->
+  <div class="card-3d">
+    <h2 class="font-semibold mb-2">Fill your details</h2>
+    <form id="donationForm" class="flex flex-col gap-3">
+      <input type="text" id="name" placeholder="👤 Your Name" class="border p-2 rounded" required />
+      <input type="text" id="address" placeholder="🏠 Your Address" class="border p-2 rounded" required />
+      <input type="number" id="amount" placeholder="💰 Amount (₹)" class="border p-2 rounded" required />
 
-  <!-- Show UPI/QR -->
-  <div id="upiSection" class="card-3d bg-white p-4 rounded shadow mb-6 text-center hidden">
-    <h2 class="font-semibold mb-2">Scan & Pay</h2>
-    <img id="qrImg" src="" alt="QR Code" class="mx-auto max-w-[200px] rounded shadow mb-2"/>
-    <p id="upiText" class="font-mono text-lg"></p>
-  </div>
+      <!-- QR -->
+      <div class="text-center">
+        <p class="mb-2">📲 Pay on UPI (Scan QR)</p>
+        <img id="qrImg" src="your-qr.png" class="mx-auto w-48 h-48 border rounded shadow" alt="QR Code" />
+      </div>
 
-  <!-- User Donation Form -->
-  <div class="card-3d bg-white p-4 rounded shadow">
-    <h2 class="text-lg font-semibold mb-3">📝 Submit Donation Details</h2>
-    <form id="donateForm" class="space-y-2">
-      <input id="donorName" type="text" placeholder="Your Name" required class="w-full border p-2 rounded"/>
-      <input id="donorAddress" type="text" placeholder="Your Address" required class="w-full border p-2 rounded"/>
-      <input id="donorAmount" type="number" placeholder="Amount (₹)" required class="w-full border p-2 rounded"/>
-      <input id="screenshot" type="file" accept="image/*" required class="w-full border p-2 rounded"/>
-      <button class="bg-green-600 text-white px-4 py-2 rounded w-full">Submit</button>
+      <!-- Screenshot Upload -->
+      <div>
+        <label class="block font-medium mb-1">📸 Upload Payment Screenshot</label>
+        <input type="file" id="screenshot" accept="image/*" class="border p-2 rounded w-full" required />
+      </div>
+
+      <button type="submit" class="btn-3d">🚀 Submit Donation</button>
     </form>
-  </div>
-
-  <!-- Admin Donation List -->
-  <div id="donationsList" class="hidden mt-6">
-    <h2 class="text-lg font-semibold mb-2">📑 Donations</h2>
-    <div id="donationsBox" class="space-y-2"></div>
   </div>
 </main>
 
@@ -77,154 +66,94 @@
 </footer>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-    authDomain: "all-madrsa.firebaseapp.com",
-    projectId: "all-madrsa",
-    storageBucket: "all-madrsa.appspot.com",
-    messagingSenderId: "619313835874",
-    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+    apiKey: "YOUR_FIREBASE_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
   };
-
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com"; 
-  const IMGBB_KEY = "YOUR_IMGBB_KEY"; // ⚡ Replace with your ImgBB Key
-
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
-  const adminBox=document.getElementById("adminBox");
-  const upiSection=document.getElementById("upiSection");
-  const qrImg=document.getElementById("qrImg");
-  const upiText=document.getElementById("upiText");
-  const thankYou=document.getElementById("thankYou");
-  const donationsList=document.getElementById("donationsList");
-  const donationsBox=document.getElementById("donationsBox");
+  const IMGBB_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // 👈 आपका ImgBB key
+
+  const donationForm=document.getElementById("donationForm");
+  const successBox=document.getElementById("successBox");
 
   let currentUser=null;
 
-  // Convert file to base64
+  // --- Auth ---
+  onAuthStateChanged(auth,async user=>{
+    if(user){
+      currentUser=user;
+      checkVerified();
+    }else{
+      // अगर login नहीं है तो auto login
+      await signInWithPopup(auth,provider);
+    }
+  });
+
+  // --- Check if donation verified ---
+  async function checkVerified(){
+    const q=query(collection(db,"donations"), where("uid","==",currentUser.uid));
+    const snap=await getDocs(q);
+    snap.forEach(d=>{
+      if(d.data().verified){
+        successBox.classList.remove("hidden");
+        // scroll पर hide हो जाएगा
+        window.addEventListener("scroll",()=>successBox.classList.add("hidden"),{once:true});
+      }
+    });
+  }
+
+  // Convert file to base64 for ImgBB
   function toBase64(file){
     return new Promise((resolve,reject)=>{
       const reader=new FileReader();
       reader.onload=()=>resolve(reader.result.split(",")[1]);
-      reader.onerror=e=>reject(e);
+      reader.onerror=reject;
       reader.readAsDataURL(file);
     });
   }
 
-  // Upload to ImgBB
   async function uploadToImgBB(file){
     const base64=await toBase64(file);
     const fd=new FormData();
-    fd.append("image", base64);
-    const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{
-      method:"POST", body:fd
-    });
+    fd.append("image",base64);
+    const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{method:"POST",body:fd});
     const data=await res.json();
     if(data.success) return data.data.url;
     else throw new Error("ImgBB upload failed");
   }
 
-  // Load UPI
-  async function loadUPI(){
-    const snap=await getDocs(collection(db,"settings"));
-    snap.forEach(s=>{
-      const d=s.data();
-      if(d.upi){
-        upiSection.classList.remove("hidden");
-        upiText.textContent=d.upi;
-        qrImg.src=d.qr;
-      }
-    });
-  }
-
-  // Submit Donation
-  document.getElementById("donateForm").onsubmit=async e=>{
+  // --- Submit Donation ---
+  donationForm.onsubmit=async e=>{
     e.preventDefault();
-    const name=document.getElementById("donorName").value;
-    const address=document.getElementById("donorAddress").value;
-    const amount=document.getElementById("donorAmount").value;
+    const name=document.getElementById("name").value;
+    const address=document.getElementById("address").value;
+    const amount=document.getElementById("amount").value;
     const file=document.getElementById("screenshot").files[0];
+
     if(!file) return alert("Upload screenshot!");
 
-    const url=await uploadToImgBB(file);
+    const screenshotUrl=await uploadToImgBB(file);
+
     await addDoc(collection(db,"donations"),{
-      uid:currentUser?.uid||null,
+      uid:currentUser.uid,
       name,address,amount,
-      screenshot:url,verified:false,
+      screenshot:screenshotUrl,
+      verified:false,
       created:Date.now()
     });
 
-    alert("Submitted! Admin will verify soon.");
-    e.target.reset();
+    alert("✅ Donation submitted! Admin verification pending.");
+    donationForm.reset();
   };
-
-  // Admin Save UPI
-  document.getElementById("saveUPI").onclick=async()=>{
-    const upi=document.getElementById("upiId").value;
-    const file=document.getElementById("qrFile").files[0];
-    if(!upi||!file) return alert("Fill all fields");
-
-    const url=await uploadToImgBB(file);
-    await addDoc(collection(db,"settings"),{upi,qr:url});
-    alert("UPI Saved!");
-    loadUPI();
-  };
-
-  // Load Donations
-  async function loadDonations(){
-    donationsBox.innerHTML="";
-    const snap=await getDocs(collection(db,"donations"));
-    snap.forEach(s=>{
-      const d=s.data();
-      const div=document.createElement("div");
-      div.className="bg-white p-3 rounded shadow flex justify-between items-center";
-      div.innerHTML=`<div>
-        <p><b>${d.name}</b> (${d.address})</p>
-        <p>₹${d.amount}</p>
-        <img src="${d.screenshot}" class="w-24 rounded mt-1"/>
-      </div>
-      <div>
-        ${d.verified?'<span class="text-green-600 font-bold">Verified</span>':`
-        <button class="bg-green-600 text-white px-2 py-1 rounded verifyBtn">Verify</button>`}
-        <button class="bg-red-600 text-white px-2 py-1 rounded deleteBtn">Delete</button>
-      </div>`;
-
-      div.querySelector(".verifyBtn")?.addEventListener("click",async()=>{
-        await updateDoc(doc(db,"donations",s.id),{verified:true});
-        loadDonations();
-      });
-      div.querySelector(".deleteBtn").addEventListener("click",async()=>{
-        await deleteDoc(doc(db,"donations",s.id));
-        loadDonations();
-      });
-
-      donationsBox.appendChild(div);
-
-      // ThankYou check
-      if(d.uid===currentUser?.uid && d.verified){
-        thankYou.classList.remove("hidden");
-        setTimeout(()=>thankYou.classList.add("hidden"),6000);
-      }
-    });
-  }
-
-  // Auth
-  onAuthStateChanged(auth,u=>{
-    currentUser=u;
-    if(u?.email===ADMIN_EMAIL){
-      adminBox.classList.remove("hidden");
-      donationsList.classList.remove("hidden");
-      loadDonations();
-    }
-    loadUPI();
-  });
 </script>
 </body>
 </html>
