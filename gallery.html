@@ -22,7 +22,7 @@
   <div class="max-w-6xl mx-auto px-3 py-3 flex items-center justify-between">
     <a href="index.html" class="title-3d">Talimi Ittehad</a>
     <nav class="flex flex-wrap gap-2 text-sm text-white">
-       <a href="index.html" class="nav-link">🏠 Home</a>
+      <a href="index.html" class="nav-link">🏠 Home</a>
       <a href="about.html" class="nav-link">About</a>
       <a href="mission.html" class="nav-link">Mission</a>
       <a href="contact.html" class="nav-link">Contact</a>
@@ -36,7 +36,6 @@
 <!-- Main -->
 <main class="max-w-6xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">📸 Gallery</h1>
-  <p class="text-gray-700 mb-6">हमारे मदरसों और गतिविधियों की झलक:</p>
 
   <!-- 🔑 Admin Upload Section -->
   <div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow">
@@ -60,20 +59,19 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
- const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",   // ✅ spelling fix (all-madrsa → all-madrasa)
-  databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",      // ✅ storageBucket हमेशा .appspot.com होता है
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
+  const firebaseConfig = {
+    apiKey: "YOUR_KEY",
+    authDomain: "YOUR_APP.firebaseapp.com",
+    projectId: "YOUR_APP",
+    storageBucket: "YOUR_APP.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
 
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";   // 🔑 only this email can upload
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";   // 🔑 only this email can upload/delete
   const IMGBB_API_KEY = "YOUR_IMGBB_KEY";           // ⚡ ImgBB API key
 
   const app = initializeApp(firebaseConfig);
@@ -84,6 +82,8 @@
   const galleryDiv = document.getElementById("galleryGrid");
   const adminBox = document.getElementById("adminUpload");
   const uploadBtn = document.getElementById("uploadBtn");
+
+  let currentUser = null;
 
   // Convert file → base64
   function toBase64(file){
@@ -110,17 +110,36 @@
   async function loadGallery(){
     galleryDiv.innerHTML="";
     const snap = await getDocs(collection(db,"gallery"));
-    snap.forEach(doc=>{
-      const d = doc.data();
+    snap.forEach(docSnap=>{
+      const d = docSnap.data();
       if(d.url){
+        const wrapper = document.createElement("div");
+        wrapper.className="relative group";
+
         const img = document.createElement("img");
         img.src = d.url;
-        img.className = "gallery-img rounded shadow";
-        galleryDiv.appendChild(img);
+        img.className = "gallery-img rounded shadow w-full";
         img.onclick=()=>{
           document.getElementById("lightbox").style.display="flex";
           document.getElementById("lightbox-img").src=d.url;
         };
+        wrapper.appendChild(img);
+
+        // Delete button (only admin)
+        if(currentUser?.email===ADMIN_EMAIL){
+          const delBtn = document.createElement("button");
+          delBtn.textContent="🗑";
+          delBtn.className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded hidden group-hover:block";
+          delBtn.onclick=async()=>{
+            if(confirm("Delete this image?")){
+              await deleteDoc(doc(db,"gallery",docSnap.id));
+              loadGallery();
+            }
+          };
+          wrapper.appendChild(delBtn);
+        }
+
+        galleryDiv.appendChild(wrapper);
       }
     });
   }
@@ -128,32 +147,4 @@
   // Upload handler (admin only)
   uploadBtn.onclick = async ()=>{
     const files = document.getElementById("galleryFiles").files;
-    if(!files.length){ alert("Select images first!"); return; }
-    uploadBtn.disabled=true; uploadBtn.textContent="Uploading...";
-    try{
-      for(let f of files){
-        const url = await uploadToImgBB(f);
-        await addDoc(collection(db,"gallery"),{
-          url, createdAt:serverTimestamp()
-        });
-      }
-      alert("✅ Uploaded successfully!");
-      loadGallery();
-    }catch(e){ alert("❌ "+e.message); }
-    finally{ uploadBtn.disabled=false; uploadBtn.textContent="Upload"; }
-  };
-
-  // Auth state → check if admin
-  onAuthStateChanged(auth, user=>{
-    if(user && user.email===ADMIN_EMAIL){
-      adminBox.classList.remove("hidden");
-    } else {
-      adminBox.classList.add("hidden");
-    }
-  });
-
-  // auto load
-  loadGallery();
-</script>
-</body>
-</html>
+    if(!files.lengt
