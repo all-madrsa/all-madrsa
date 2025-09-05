@@ -46,12 +46,20 @@
 <body class="bg-slate-50 min-h-screen">
 
 <!-- Header -->
+<!-- Header -->
 <header id="header" class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col px-3">
-    <!-- Logo -->
-    <div class="flex justify-center py-2">
-      <div class="title-3d text-center">Talimi Ittehad</div>
+    <!-- Logo + Translator Button -->
+    <div class="flex justify-center items-center gap-3 py-2">
+      <div class="title-3d">Talimi Ittehad</div>
+
+      <!-- 🌐 Translate Button -->
+      <button id="translateBtn" class="btn-3d text-xs">🌐</button>
+
+      <!-- Hidden Translator -->
+      <div id="google_translate_element" class="hidden absolute mt-10 bg-white shadow rounded z-50"></div>
     </div>
+
     <!-- Menu -->
     <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
       <div class="dropdown relative">
@@ -68,8 +76,6 @@
           <a href="#faq">FAQ</a>
         </div>
       </div>
-      <!-- Donate button in header -->
-      <a href="#donate" class="btn-3d">🙏 Donate</a>
 
       <!-- Add + Auth -->
       <button id="addBtn" class="btn-3d hidden">+ Add Madarsa</button>
@@ -77,6 +83,7 @@
     </div>
   </div>
 </header>
+
 
 <!-- Notice Bar -->
 <div id="noticeBar" class="w-full">
@@ -131,23 +138,7 @@
 <!-- Floating Donate (always visible) -->
 <a href="#donate" class="btn-3d floating-donate">🙏 Donate</a>
 
-<!-- Footer -->
-<footer class="bg-gray-100 text-center py-4 mt-6">
-  <div id="google_translate_element"></div>
-  <p class="text-xs text-gray-500 mt-2">© 2025 Talimi Ittehad</p>
-</footer>
 
-<!-- Google Translate scripts -->
-<script>
-  function googleTranslateElementInit(){
-    new google.translate.TranslateElement({
-      pageLanguage:'hi',
-      autoDisplay:false,
-      includedLanguages: '' // खाली रहने दो ताकि Google का पूरा dropdown आये
-    }, 'google_translate_element');
-  }
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 <!-- Firebase + Logic -->
 <script type="module">
@@ -435,6 +426,27 @@
       listDiv.appendChild(card);
     });
   }
+
 </script>
+ <script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({
+      pageLanguage: 'hi',
+      autoDisplay: false,
+      includedLanguages: '' // खाली छोड़ो तो सभी भाषाएँ आएंगी
+    }, 'google_translate_element');
+  }
+
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btn = document.getElementById("translateBtn");
+    const box = document.getElementById("google_translate_element");
+    btn.addEventListener("click", ()=>{
+      box.classList.toggle("hidden");
+    });
+  });
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+
 </body>
 </html>
