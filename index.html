@@ -187,7 +187,6 @@
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
-  // DOM
   const authBtn = document.getElementById("authBtn");
   const addBtn = document.getElementById("addBtn");
   const regModal = document.getElementById("regModal");
@@ -197,7 +196,6 @@
   const noticeText = document.getElementById("noticeText");
   const noticeAdmin = document.getElementById("noticeAdmin");
   const noticeInput = document.getElementById("noticeInput");
-  const saveNoticeBtn = document.getElementById("saveNotice");
 
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
@@ -235,6 +233,7 @@
     if(!auth.currentUser) await signInWithPopup(auth, provider);
     else await signOut(auth);
   };
+
   onAuthStateChanged(auth, async (user)=>{
     currentUser = user;
     if(user){
@@ -360,6 +359,7 @@
     });
   }
 
+  // ✅ Updated renderList with Extra Info toggle
   function renderList(items){
     listDiv.innerHTML = "";
     items.forEach(d=>{
@@ -391,22 +391,38 @@
           ${d.courses?`<p class="text-sm mt-1">📚 ${d.courses}</p>`:""}
         </div>
         ${(currentUser?.email===ADMIN_EMAIL)?`
-          <div class="flex gap-2 mt-2">
+          <div class="flex flex-wrap gap-2 mt-2">
             <button class="approve btn-3d">✅ Approve</button>
             <button class="reject btn-3d">❌ Reject</button>
             <button class="delete btn-3d">🗑 Delete</button>
+            <button class="extraToggle btn-3d">
+              ${d.showExtra ? "🙈 Hide Extra" : "👁 Show Extra"}
+            </button>
           </div>
         `:""}
       `;
+
+      // ℹ️ Info toggle (for everyone)
       const toggleBtn = card.querySelector(".toggleInfo");
       const extra = card.querySelector(".extra");
       toggleBtn.onclick=()=>{ extra.classList.toggle("hidden"); };
 
+      // 👨‍💻 Admin controls
       if(currentUser?.email===ADMIN_EMAIL){
-        card.querySelector(".approve").onclick=async()=>{ await updateDoc(doc(db,"madarse",d.id),{ status:"approved", showExtra:true }); };
-        card.querySelector(".reject").onclick=async()=>{ await updateDoc(doc(db,"madarse",d.id),{ status:"rejected", showExtra:false }); };
-        card.querySelector(".delete").onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"madarse",d.id)); };
+        card.querySelector(".approve").onclick=async()=>{
+          await updateDoc(doc(db,"madarse",d.id),{ status:"approved" });
+        };
+        card.querySelector(".reject").onclick=async()=>{
+          await updateDoc(doc(db,"madarse",d.id),{ status:"rejected" });
+        };
+        card.querySelector(".delete").onclick=async()=>{
+          if(confirm("Delete?")) await deleteDoc(doc(db,"madarse",d.id));
+        };
+        card.querySelector(".extraToggle").onclick=async()=>{
+          await updateDoc(doc(db,"madarse",d.id),{ showExtra: !d.showExtra });
+        };
       }
+
       listDiv.appendChild(card);
     });
   }
