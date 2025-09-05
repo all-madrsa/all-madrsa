@@ -151,7 +151,10 @@
       currentUser=user;
       liveQR();
       liveDonationStatus();
-      if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"), loadDonations();
+      if(user.email===ADMIN_EMAIL){
+        adminPanel.classList.remove("hidden");
+        loadDonationsLive(); // 🔥 realtime admin panel
+      }
     }else{
       await signInWithPopup(auth,provider);
     }
@@ -226,35 +229,39 @@
     }
   };
 
-  // --- Load Donations (Admin) ---
-  async function loadDonations(){
-    donationsList.innerHTML="";
-    const snap=await getDocs(collection(db,"donations"));
-    snap.forEach(docSnap=>{
-      const d=docSnap.data();
-      const div=document.createElement("div");
-      div.className="border p-3 rounded shadow bg-white";
-      div.innerHTML=`
-        <p><b>👤 ${d.name}</b> (${d.address})</p>
-        <p>💰 Amount: ₹${d.amount}</p>
-        <img src="${d.screenshot}" class="w-40 my-2 border rounded shadow" />
-        <p>Status: ${d.verified?"✅ Verified":"⏳ Pending"}</p>
-        <div class="flex gap-2 mt-2">
-          <button class="btn-3d verify">✅ Verify</button>
-          <button class="btn-3d delete">🗑 Delete</button>
-        </div>
-      `;
-      div.querySelector(".verify").onclick=async()=>{
-        await updateDoc(doc(db,"donations",docSnap.id),{verified:true});
-        loadDonations();
-      };
-      div.querySelector(".delete").onclick=async()=>{
-        if(confirm("Delete donation?")){
-          await deleteDoc(doc(db,"donations",docSnap.id));
-          loadDonations();
-        }
-      };
-      donationsList.appendChild(div);
+  // --- Load Donations (Admin - Live) ---
+  function loadDonationsLive(){
+    onSnapshot(collection(db,"donations"),snap=>{
+      donationsList.innerHTML="";
+      snap.forEach(docSnap=>{
+        const d=docSnap.data();
+        const div=document.createElement("div");
+        div.className="border p-3 rounded shadow bg-white";
+        div.innerHTML=`
+          <p><b>👤 ${d.name}</b> (${d.address})</p>
+          <p>💰 Amount: ₹${d.amount}</p>
+          <img src="${d.screenshot}" class="w-40 my-2 border rounded shadow" />
+          <p>Status: ${d.verified?"✅ Verified":"⏳ Pending"}</p>
+          <div class="flex gap-2 mt-2">
+            <button class="btn-3d verify">✅ Verify</button>
+            <button class="btn-3d delete">🗑 Delete</button>
+          </div>
+        `;
+
+        // Verify
+        div.querySelector(".verify").onclick=async()=>{
+          await updateDoc(doc(db,"donations",docSnap.id),{verified:true});
+        };
+
+        // Delete
+        div.querySelector(".delete").onclick=async()=>{
+          if(confirm("Delete donation?")){
+            await deleteDoc(doc(db,"donations",docSnap.id));
+          }
+        };
+
+        donationsList.appendChild(div);
+      });
     });
   }
 
@@ -303,3 +310,4 @@
 </script>
 </body>
 </html>
+
