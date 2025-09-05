@@ -10,8 +10,8 @@
     .btn-3d{background:linear-gradient(135deg,#4f46e5,#9333ea);color:#fff;padding:.5rem 1rem;border-radius:.5rem;box-shadow:0 3px 6px rgba(0,0,0,.3);transition:.2s;}
     .btn-3d:hover{transform:translateY(-2px);box-shadow:0 5px 10px rgba(0,0,0,.4);}
     .card-3d{background:#fff;border-radius:.8rem;padding:1rem;box-shadow:0 6px 14px rgba(0,0,0,.15);}
-    .popup{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:1rem 2rem;border-radius:.8rem;box-shadow:0 6px 14px rgba(0,0,0,.2);z-index:999;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
-    .popup button{background:transparent;border:none;color:#fff;font-size:1.2rem;cursor:pointer;}
+    .popup{position:fixed;top:20px;right:20px;z-index:50;max-width:300px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;padding:1rem;border-radius:.6rem;box-shadow:0 5px 12px rgba(0,0,0,.3);}
+    .hidden{display:none;}
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -31,6 +31,12 @@
 <main class="max-w-2xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">💝 Support with Donation</h1>
 
+  <!-- Popup -->
+  <div id="thankPopup" class="popup hidden">
+    ✅ आपका payment मिल गया है, शुक्रिया!
+    <button id="closePopup" class="ml-2 bg-white text-green-700 px-2 py-0.5 rounded">❌</button>
+  </div>
+
   <!-- Donation Form -->
   <div class="card-3d mb-6">
     <h2 class="font-semibold mb-2">Fill your details</h2>
@@ -42,7 +48,7 @@
       <!-- QR + UPI -->
       <div class="text-center">
         <p class="mb-2">📲 Pay on UPI (Scan QR or Copy ID)</p>
-        <img id="qrImg" src="https://via.placeholder.com/200?text=No+QR" class="mx-auto w-48 h-48 border rounded shadow mb-2" alt="QR Code" />
+        <img id="qrImg" src="" class="mx-auto w-48 h-48 border rounded shadow mb-2" alt="QR Code" />
         <p id="upiText" class="font-bold text-lg text-indigo-700"></p>
         <button type="button" id="copyUpiBtn" class="btn-3d mt-2">📋 Copy UPI ID</button>
       </div>
@@ -53,7 +59,7 @@
         <input type="file" id="screenshot" accept="image/*" class="border p-2 rounded w-full" required />
       </div>
 
-      <button type="submit" id="submitBtn" class="btn-3d">🚀 Submit Donation</button>
+      <button id="submitBtn" type="submit" class="btn-3d">🚀 Submit Donation</button>
     </form>
   </div>
 
@@ -79,7 +85,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, where, orderBy, limit, onSnapshot, updateDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
 
   // --- Firebase Config ---
@@ -101,10 +107,7 @@
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; 
 
-  const submitBtn=document.getElementById("submitBtn");
-  const donationForm=document.getElementById("donationForm");
-  const adminPanel=document.getElementById("adminPanel");
-  const donationsList=document.getElementById("donationsList");
+  // Elements
   const qrImg=document.getElementById("qrImg");
   const upiText=document.getElementById("upiText");
   const copyUpiBtn=document.getElementById("copyUpiBtn");
@@ -112,21 +115,64 @@
   const upiInput=document.getElementById("upiInput");
   const uploadQRBtn=document.getElementById("uploadQRBtn");
   const deleteQRBtn=document.getElementById("deleteQRBtn");
+  const donationForm=document.getElementById("donationForm");
+  const submitBtn=document.getElementById("submitBtn");
+  const adminPanel=document.getElementById("adminPanel");
+  const donationsList=document.getElementById("donationsList");
+  const thankPopup=document.getElementById("thankPopup");
+  const closePopup=document.getElementById("closePopup");
 
   let currentUser=null;
-  let lastVerifiedId=null;
 
   // --- Auth ---
   onAuthStateChanged(auth,async user=>{
     if(user){
       currentUser=user;
       liveQR();
-      listenUserDonations();
-      if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"), listenAllDonations();
+      watchUserDonation();
+      if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"), watchDonations();
     }else{
       await signInWithPopup(auth,provider);
     }
   });
+
+  // --- Popup Show ---
+  function showPopupOnce(msg,id){
+    if(localStorage.getItem("lastPopupId")===id) return; 
+    thankPopup.classList.remove("hidden");
+    thankPopup.querySelector("div")?.remove; 
+    thankPopup.firstChild.textContent=msg;
+    localStorage.setItem("lastPopupId",id);
+    setTimeout(()=>thankPopup.classList.add("hidden"),10000);
+  }
+  closePopup.onclick=()=>thankPopup.classList.add("hidden");
+
+  // --- Watch User Donation ---
+  function watchUserDonation(){
+    const q=query(collection(db,"donations"), where("uid","==",currentUser.uid));
+    onSnapshot(q,(snap)=>{
+      let hasPending=false;
+      snap.forEach(docSnap=>{
+        const d=docSnap.data();
+        if(d.verified){
+          showPopupOnce("✅ आपका payment मिल गया है, शुक्रिया!",docSnap.id);
+          submitBtn.classList.remove("hidden");
+          submitBtn.disabled=false;
+          submitBtn.textContent="🚀 Submit Donation";
+        }else{
+          hasPending=true;
+          submitBtn.disabled=true;
+          submitBtn.textContent="⏳ Awaiting Verification...";
+          submitBtn.classList.add("hidden");
+        }
+      });
+      if(!hasPending){
+        submitBtn.classList.remove("hidden");
+        submitBtn.disabled=false;
+        submitBtn.textContent="🚀 Submit Donation";
+      }
+    });
+  }
 
   // --- File to Base64 ---
   function toBase64(file){
@@ -146,14 +192,13 @@
     const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{method:"POST",body:fd});
     const data=await res.json();
     if(data.success) return data.data.url;
-    else throw new Error("ImgBB upload failed");
+    else throw new Error("ImgBB upload failed: "+JSON.stringify(data));
   }
 
   // --- Submit Donation ---
   donationForm.onsubmit=async e=>{
     e.preventDefault();
     if(!currentUser) return alert("Please login first!");
-
     const name=document.getElementById("name").value;
     const address=document.getElementById("address").value;
     const amount=document.getElementById("amount").value;
@@ -161,8 +206,6 @@
     if(!file) return alert("Upload screenshot!");
 
     try{
-      submitBtn.disabled=true;
-      submitBtn.textContent="⏳ Submitting...";
       const screenshotUrl=await uploadToImgBB(file);
       await addDoc(collection(db,"donations"),{
         uid:currentUser.uid,
@@ -171,53 +214,18 @@
         verified:false,
         created:Date.now()
       });
-      donationForm.reset();
-      submitBtn.classList.add("hidden"); // hide until verified
       alert("✅ Donation submitted! Admin verification pending.");
+      donationForm.reset();
+      submitBtn.disabled=true;
+      submitBtn.textContent="⏳ Awaiting Verification...";
+      submitBtn.classList.add("hidden");
     }catch(err){
       alert("❌ Error: "+err.message);
-      submitBtn.disabled=false;
-      submitBtn.textContent="🚀 Submit Donation";
     }
   };
 
-  // --- Listen User Donations (only latest one) ---
-  function listenUserDonations(){
-    const q=query(collection(db,"donations"), where("uid","==",currentUser.uid), orderBy("created","desc"), limit(1));
-    onSnapshot(q,(snap)=>{
-      if(snap.empty) return;
-      const d=snap.docs[0];
-      const data=d.data();
-
-      if(!data.verified){
-        submitBtn.classList.add("hidden");
-      }else{
-        submitBtn.classList.remove("hidden");
-        submitBtn.disabled=false;
-        submitBtn.textContent="🚀 Submit Donation";
-
-        if(lastVerifiedId!==d.id){ 
-          showPopup("✅ आपका payment मिल गया है, शुक्रिया!");
-          lastVerifiedId=d.id;
-        }
-      }
-    });
-  }
-
-  // --- Show popup ---
-  function showPopup(msg){
-    const popup=document.createElement("div");
-    popup.className="popup";
-    popup.innerHTML=`<span>${msg}</span><button>&times;</button>`;
-    document.body.appendChild(popup);
-
-    const remove=()=>popup.remove();
-    popup.querySelector("button").onclick=remove;
-    setTimeout(remove,10000);
-  }
-
-  // --- Listen All Donations (Admin) ---
-  function listenAllDonations(){
+  // --- Load Donations (Admin) ---
+  function watchDonations(){
     onSnapshot(collection(db,"donations"),(snap)=>{
       donationsList.innerHTML="";
       snap.forEach(docSnap=>{
@@ -234,26 +242,34 @@
             <button class="btn-3d delete">🗑 Delete</button>
           </div>
         `;
-        div.querySelector(".verify").onclick=async()=>{await updateDoc(doc(db,"donations",docSnap.id),{verified:true});};
+        div.querySelector(".verify").onclick=async()=>await updateDoc(doc(db,"donations",docSnap.id),{verified:true});
         div.querySelector(".delete").onclick=async()=>{if(confirm("Delete donation?")) await deleteDoc(doc(db,"donations",docSnap.id));};
         donationsList.appendChild(div);
       });
     });
   }
 
-  // --- Live QR + UPI from Firestore ---
+  // --- Live QR + UPI ---
   function liveQR(){
     onSnapshot(doc(db,"config","qr"),snap=>{
       if(snap.exists()){
         const data=snap.data();
         qrImg.src=data.url||"https://via.placeholder.com/200?text=No+QR";
         upiText.textContent=data.upi||"";
+      }else{
+        qrImg.src="https://via.placeholder.com/200?text=No+QR";
+        upiText.textContent="";
       }
     });
   }
 
   // --- Copy UPI ---
-  copyUpiBtn.onclick=()=>{if(upiText.textContent){navigator.clipboard.writeText(upiText.textContent);alert("📋 Copied: "+upiText.textContent);}};
+  copyUpiBtn.onclick=()=>{
+    if(upiText.textContent){
+      navigator.clipboard.writeText(upiText.textContent);
+      alert("📋 Copied: "+upiText.textContent);
+    }
+  };
 
   // --- Upload QR + UPI (Admin) ---
   uploadQRBtn.onclick=async()=>{
@@ -266,7 +282,7 @@
   };
 
   // --- Delete QR (Admin) ---
-  deleteQRBtn.onclick=async()=>{if(confirm("Delete QR & UPI?")) await deleteDoc(doc(db,"config","qr"));};
+  deleteQRBtn.onclick=async()=>{if(confirm("Delete QR & UPI?")) await deleteDoc(doc(db,"config","qr"));}
 </script>
 </body>
 </html>
