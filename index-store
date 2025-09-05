@@ -6,10 +6,6 @@
   <title>Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .title-3d{
-      font-weight:700; font-size:2rem; color:#fff;
-      text-shadow:2px 2px 8px rgba(0,0,0,.9);
-    }
     .dropdown:hover .dropdown-menu{display:block;}
     .dropdown-menu{
       display:none; position:absolute; background:#fff;
@@ -40,24 +36,23 @@
   border-radius:9999px;
   padding:.55rem .9rem;
 }
-
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
 <!-- Header -->
-<!-- Header -->
 <header id="header" class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col px-3">
     <!-- Logo + Translator Button -->
-    <div class="flex justify-center items-center gap-3 py-2">
-      <div class="title-3d">Talimi Ittehad</div>
+    <div class="flex justify-center items-center gap-3 py-2 relative">
+      <!-- Logo Image (dynamic from Firestore) -->
+      <img id="logoImg" src="" alt="Logo" class="h-12 hidden"/>
 
       <!-- 🌐 Translate Button -->
-      <button id="translateBtn" class="btn-3d text-xs">🌐</button>
+      <button id="translateBtn" class="btn-3d text-xs bg-indigo-600">🌐</button>
 
       <!-- Hidden Translator -->
-      <div id="google_translate_element" class="hidden absolute mt-10 bg-white shadow rounded z-50"></div>
+      <div id="google_translate_element" class="hidden absolute mt-16 bg-white shadow rounded z-50"></div>
     </div>
 
     <!-- Menu -->
@@ -89,10 +84,18 @@
 <div id="noticeBar" class="w-full">
   <marquee id="noticeText">📢 Welcome to Talimi Ittehad!</marquee>
 </div>
+
 <!-- Admin Notice Editor (admin only) -->
-<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
+<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2 space-y-2">
   <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
   <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
+
+  <!-- Admin Logo Upload -->
+  <div class="mt-3">
+    <label class="block text-sm text-indigo-600">Upload Logo</label>
+    <input type="file" id="logoUpload" accept="image/*" />
+    <button id="saveLogo" class="btn-3d mt-1">📷 Save Logo</button>
+  </div>
 </div>
 
 <!-- Search (under header) -->
@@ -105,40 +108,8 @@
   <div id="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </main>
 
-<!-- Modal -->
-<div id="regModal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center p-4 z-50 overflow-auto">
-  <div class="bg-white rounded-lg shadow max-w-xl w-full p-4">
-    <div class="flex justify-between items-center">
-      <h3 class="text-lg font-semibold text-emerald-600">Register Madarsa</h3>
-      <button onclick="closeModal()" class="text-gray-600">X</button>
-    </div>
-    <form id="regForm" class="mt-3 space-y-3">
-      <input id="mname" placeholder="Madarsa ka naam" class="w-full border p-2 rounded" required />
-      <input id="maddress" placeholder="Address (City, State)" class="w-full border p-2 rounded" required />
-      <input id="mcontact" placeholder="Contact number" class="w-full border p-2 rounded" required />
-      <input id="mwhatsapp" placeholder="WhatsApp number" class="w-full border p-2 rounded" />
-      <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
-      <textarea id="mabout" placeholder="About Madarsa" rows="3" class="w-full border p-2 rounded"></textarea>
-      <div>
-        <label class="block text-sm text-indigo-600">Upload Images (1-5)</label>
-        <input id="mimages" type="file" accept="image/*" multiple required />
-      </div>
-      <div>
-        <label class="block text-sm text-indigo-600">Upload UPI QR</label>
-        <input id="mupi" type="file" accept="image/*" />
-      </div>
-      <div class="flex justify-end gap-2">
-        <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
-        <button id="submitBtn" type="submit" class="btn-3d">Submit</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- Floating Donate (always visible) -->
 <a href="#donate" class="btn-3d floating-donate">🙏 Donate</a>
-
-
 
 <!-- Firebase + Logic -->
 <script type="module">
@@ -160,23 +131,21 @@
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
-  // DOM
-  const authBtn = document.getElementById("authBtn");
-  const addBtn = document.getElementById("addBtn");
-  const regModal = document.getElementById("regModal");
-  const listDiv = document.getElementById("list");
-  const submitBtn = document.getElementById("submitBtn");
-  const searchBox = document.getElementById("searchBox");
-  const noticeText = document.getElementById("noticeText");
-  const noticeAdmin = document.getElementById("noticeAdmin");
-  const noticeInput = document.getElementById("noticeInput");
-  const saveNoticeBtn = document.getElementById("saveNotice");
-
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
+  // DOM
+  const logoImg = document.getElementById("logoImg");
+  const logoUpload = document.getElementById("logoUpload");
+  const saveLogoBtn = document.getElementById("saveLogo");
+  const noticeAdmin = document.getElementById("noticeAdmin");
+  const noticeInput = document.getElementById("noticeInput");
+  const noticeText = document.getElementById("noticeText");
+  const saveNoticeBtn = document.getElementById("saveNotice");
+  const authBtn = document.getElementById("authBtn");
+  const addBtn = document.getElementById("addBtn");
+
   let currentUser = null;
-  let allDocs = []; // for search filter
 
   // Helper: File -> Base64
   function toBase64(file){
@@ -187,25 +156,16 @@
       reader.onerror = (e)=>reject(e);
     });
   }
-  // Upload to ImgBB
   async function uploadToImgBB(file){
     if(!file) return "";
     const base64 = await toBase64(file);
     const fd = new FormData();
     fd.append("image", base64);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{
-      method:"POST", body:fd
-    });
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{ method:"POST", body:fd });
     const data = await res.json();
     if(data.success) return data.data.url;
     else throw new Error(data?.error?.message || "ImgBB upload failed");
   }
-
-  // Modal helpers
-  window.closeModal = () => {
-    regModal.classList.add("hidden");
-    document.getElementById("regForm").reset();
-  };
 
   // Auth
   authBtn.onclick = async ()=>{
@@ -217,10 +177,9 @@
     if(user){
       authBtn.textContent = "Logout";
       addBtn.classList.remove("hidden");
-      // show notice editor to admin
-      if(user.email === ADMIN_EMAIL){
+      if(user.email===ADMIN_EMAIL){
         noticeAdmin.classList.remove("hidden");
-      } else {
+      }else{
         noticeAdmin.classList.add("hidden");
       }
     }else{
@@ -229,214 +188,63 @@
       noticeAdmin.classList.add("hidden");
     }
     await loadNotice();
-    loadList(); // (re)load
+    await loadLogo();
   });
 
-  addBtn.onclick = ()=>{
-    regModal.classList.remove("hidden");
-    regModal.classList.add("flex");
-  };
-
-  // Form submit
-  document.getElementById("regForm").addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    if(!currentUser){ alert("Please login first"); return; }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Uploading... ⏳";
-    try{
-      const name = document.getElementById("mname").value.trim();
-      const address = document.getElementById("maddress").value.trim();
-      const contact = document.getElementById("mcontact").value.trim();
-      const whatsapp = document.getElementById("mwhatsapp").value.trim();
-      const courses = document.getElementById("mcourses").value.trim();
-      const about = document.getElementById("mabout").value.trim();
-
-      const imgFiles = document.getElementById("mimages").files;
-      const upiFile = document.getElementById("mupi").files[0];
-
-      if(imgFiles.length < 1 || imgFiles.length > 5){
-        alert("Please upload between 1 to 5 images.");
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Submit";
-        return;
-      }
-
-      const imageUrls = [];
-      for(let i=0;i<imgFiles.length;i++){
-        const url = await uploadToImgBB(imgFiles[i]);
-        imageUrls.push(url);
-      }
-      const upiUrl = upiFile ? await uploadToImgBB(upiFile) : "";
-
-      await addDoc(collection(db,"madarse"),{
-        name, address, contact, whatsapp, courses, about,
-        images:imageUrls,
-        upi: upiUrl,
-        ownerUid: currentUser.uid,
-        createdAt: serverTimestamp(),
-        status:"pending",
-        showExtra:false
-      });
-
-      document.getElementById("regForm").reset();
-      regModal.classList.add("hidden");
-      alert("✅ Madarsa submitted for approval!");
-    }catch(err){
-      alert("❌ Error: "+ err.message);
-    }finally{
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Submit";
-    }
-  });
-
-  // Load Notice from Firestore (config/global)
-  async function loadNotice(){
-    try{
-      const cfgRef = doc(db, "config", "global");
-      const snap = await getDoc(cfgRef);
-      const text = snap.exists() ? (snap.data().noticeText || "📢 Welcome to Talimi Ittehad!") : "📢 Welcome to Talimi Ittehad!";
-      noticeText.textContent = text;
-      if(currentUser?.email === ADMIN_EMAIL){
-        noticeInput.value = text;
-      }
-    }catch(e){
-      // fallback
-      noticeText.textContent = "📢 Welcome to Talimi Ittehad!";
-    }
-  }
-  // Save Notice (admin)
-  document.getElementById("saveNotice").addEventListener("click", async ()=>{
+  // Notice Save
+  saveNoticeBtn.onclick = async ()=>{
     if(!(currentUser && currentUser.email===ADMIN_EMAIL)) return;
     const text = noticeInput.value.trim() || "📢 Welcome to Talimi Ittehad!";
-    await setDoc(doc(db,"config","global"),{ noticeText:text }, { merge:true });
+    await setDoc(doc(db,"config","global"),{ noticeText:text },{ merge:true });
     noticeText.textContent = text;
     alert("✅ Notice updated");
-  });
+  };
 
-  // Search filter
-  searchBox.addEventListener("input", ()=>{
-    const q = searchBox.value.trim().toLowerCase();
-    if(!q){ renderList(allDocs); return; }
-    const filtered = allDocs.filter(d=>{
-      const name = (d.name||"").toLowerCase();
-      const addr = (d.address||"").toLowerCase();
-      const crs = (d.courses||"").toLowerCase();
-      return name.includes(q) || addr.includes(q) || crs.includes(q);
-    });
-    renderList(filtered);
-  });
+  // Logo Save
+  saveLogoBtn.onclick = async ()=>{
+    if(!(currentUser && currentUser.email===ADMIN_EMAIL)) return;
+    const file = logoUpload.files[0];
+    if(!file){ alert("Please select a logo file"); return; }
+    const url = await uploadToImgBB(file);
+    await setDoc(doc(db,"config","global"),{ logoUrl:url },{ merge:true });
+    logoImg.src = url;
+    logoImg.classList.remove("hidden");
+    alert("✅ Logo updated");
+  };
 
-  // Live list
-  function loadList(){
-    const qRef = query(collection(db,"madarse"), orderBy("createdAt","desc"));
-    onSnapshot(qRef, (qSnap)=>{
-      const arr = [];
-      qSnap.forEach(docSnap=>{
-        const d = docSnap.data();
-        // visibility rules
-        if(d.status==="pending" && (!currentUser || currentUser.email!==ADMIN_EMAIL)) return;
-        if(d.status==="rejected" && (!currentUser || (currentUser.email!==ADMIN_EMAIL && currentUser.uid!==d.ownerUid))) return;
-        arr.push({ id:docSnap.id, ...d });
-      });
-      allDocs = arr;
-      renderList(allDocs);
-    });
+  // Load Notice
+  async function loadNotice(){
+    try{
+      const snap = await getDoc(doc(db,"config","global"));
+      if(snap.exists()){
+        const data = snap.data();
+        noticeText.textContent = data.noticeText || "📢 Welcome to Talimi Ittehad!";
+        if(currentUser?.email===ADMIN_EMAIL) noticeInput.value = data.noticeText || "";
+      }
+    }catch{}
   }
 
-  // Render cards
-  function renderList(items){
-    listDiv.innerHTML = "";
-    items.forEach(d=>{
-      const card = document.createElement("div");
-      card.className = "border rounded-lg shadow bg-white p-3";
-
-      card.innerHTML = `
-        ${d.images && d.images.length ? `
-          <div class="carousel mb-2">
-            <div class="carousel-track">
-              ${d.images.map(u=>`<img src="${u}" alt="image"/>`).join("")}
-            </div>
-          </div>
-        ` : ""}
-        <h2 class="font-bold text-lg">${d.name||''}</h2>
-        <p class="text-sm text-gray-600">${d.address||''}</p>
-        ${d.status==="rejected"?`<p class="text-red-600 font-semibold">❌ Rejected</p>`:""}
-        <button class="toggleInfo btn-3d mt-2">ℹ Show Info</button>
-        <div class="extra hidden mt-2">
-          ${d.showExtra&&d.contact?`<p class="text-sm">📞 ${d.contact}</p>`:""}
-          ${d.showExtra&&d.whatsapp?`<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-1 inline-block">📲 WhatsApp</a>`:""}
-          ${d.showExtra&&d.upi?`
-            <div class="mt-2">
-              <img src="${d.upi}" class="w-28 mx-auto rounded border" alt="UPI QR"/>
-              <p class="text-center text-xs text-pink-600">🙏 Please donate</p>
-            </div>`:""}
-          ${d.showExtra&&d.about?`<p class="mt-2 text-gray-700 text-sm">📝 ${d.about}</p>`:""}
-        </div>
-        <div class="flex gap-2 mt-2 flex-wrap">
-          ${currentUser&&currentUser.email===ADMIN_EMAIL?`
-            ${d.status==="approved"?`<button disabled class="btn-3d">✅ Approved</button>`:`<button class="approve btn-3d">Approve</button>`}
-            <button class="reject btn-3d">Reject</button>
-            <button class="toggleExtra btn-3d">${d.showExtra?'❌ Disable Extra Info':'🔓 Enable Extra Info'}</button>
-          `:""}
-          ${(currentUser && (currentUser.email===ADMIN_EMAIL || currentUser.uid===d.ownerUid)) ? 
-            `<button class="delete btn-3d">🗑 Delete</button>` : ""}
-        </div>
-      `;
-
-      // Auto-carousel
-      const track = card.querySelector(".carousel-track");
-      if(track && d.images.length>1){
-        let index = 0;
-        setInterval(()=>{
-          index = (index+1) % d.images.length;
-          track.style.transform = `translateX(-${index*100}%)`;
-        }, 3000);
+  // Load Logo
+  async function loadLogo(){
+    try{
+      const snap = await getDoc(doc(db,"config","global"));
+      if(snap.exists() && snap.data().logoUrl){
+        logoImg.src = snap.data().logoUrl;
+        logoImg.classList.remove("hidden");
+      }else{
+        logoImg.classList.add("hidden");
       }
-
-      // Show/Hide Info
-      card.querySelector(".toggleInfo")?.addEventListener("click", ()=>{
-        const extra = card.querySelector(".extra");
-        const btn = card.querySelector(".toggleInfo");
-        extra.classList.toggle("hidden");
-        btn.textContent = extra.classList.contains("hidden") ? "ℹ Show Info" : "Hide Info";
-      });
-
-      // Admin actions
-      if(currentUser && currentUser.email===ADMIN_EMAIL){
-        card.querySelector(".approve")?.addEventListener("click", async ()=>{
-          await updateDoc(doc(db,"madarse", d.id), { status:"approved" });
-        });
-        card.querySelector(".reject")?.addEventListener("click", async ()=>{
-          await updateDoc(doc(db,"madarse", d.id), { status:"rejected" });
-        });
-        card.querySelector(".toggleExtra")?.addEventListener("click", async ()=>{
-          await updateDoc(doc(db,"madarse", d.id), { showExtra: !d.showExtra });
-        });
-      }
-
-      // Delete (admin or owner)
-      card.querySelector(".delete")?.addEventListener("click", async ()=>{
-        if(confirm("क्या आप इस पोस्ट को डिलीट करना चाहते हैं?")){
-          await deleteDoc(doc(db,"madarse", d.id));
-          alert("🗑 Post Deleted");
-        }
-      });
-
-      listDiv.appendChild(card);
-    });
+    }catch{}
   }
-
 </script>
- <script>
+
+<script>
   function googleTranslateElementInit(){
     new google.translate.TranslateElement({
       pageLanguage: 'hi',
-      autoDisplay: false,
-      includedLanguages: '' // खाली छोड़ो तो सभी भाषाएँ आएंगी
+      autoDisplay: false
     }, 'google_translate_element');
   }
-
   document.addEventListener("DOMContentLoaded", ()=>{
     const btn = document.getElementById("translateBtn");
     const box = document.getElementById("google_translate_element");
@@ -446,7 +254,5 @@
   });
 </script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-
 </body>
 </html>
