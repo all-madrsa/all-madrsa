@@ -37,13 +37,30 @@
 
 <!-- Main -->
 <main class="max-w-6xl mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4">📅 Islamic Calendar</h1>
+  <h1 class="text-2xl font-bold mb-2">📅 Islamic Calendar</h1>
+
+  <!-- Highlight Card for Today -->
+  <div id="todayCard" class="mb-4 p-4 rounded shadow text-center text-white hidden"></div>
+
+  <!-- Notice -->
+  <p class="text-sm text-gray-600 mb-4 bg-yellow-100 border border-yellow-300 px-3 py-2 rounded">
+    ℹ️ नोट: यह कैलेंडर calculation-based (Umm al-Qura) है। 
+    <strong>चाँद देखने के आधार पर तारीख़ें आपके इलाके में 1 दिन आगे या पीछे हो सकती हैं।</strong><br>
+    नीचे दिए गए बटन से आप तारीख़ adjust कर सकते हैं (यह setting आपके browser में save रहेगी)।
+  </p>
 
   <!-- Controls -->
-  <div class="flex items-center justify-between mb-4">
-    <button id="prevMonth" class="bg-indigo-600 text-white px-3 py-1 rounded">⬅ Prev</button>
-    <h2 id="monthTitle" class="text-xl font-semibold"></h2>
-    <button id="nextMonth" class="bg-indigo-600 text-white px-3 py-1 rounded">Next ➡</button>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+    <div class="flex gap-2">
+      <button id="prevMonth" class="bg-indigo-600 text-white px-3 py-1 rounded">⬅ Prev</button>
+      <button id="nextMonth" class="bg-indigo-600 text-white px-3 py-1 rounded">Next ➡</button>
+    </div>
+    <h2 id="monthTitle" class="text-xl font-semibold text-center"></h2>
+    <div class="flex gap-2">
+      <button id="minusDay" class="bg-red-500 text-white px-3 py-1 rounded">-1 दिन</button>
+      <button id="resetDay" class="bg-gray-400 text-white px-3 py-1 rounded">Reset</button>
+      <button id="plusDay" class="bg-green-600 text-white px-3 py-1 rounded">+1 दिन</button>
+    </div>
   </div>
 
   <!-- Weekdays -->
@@ -68,8 +85,12 @@
 <script>
   const grid = document.getElementById("calendarGrid");
   const title = document.getElementById("monthTitle");
+  const todayCard = document.getElementById("todayCard");
   let currentDate = new Date();
   const today = new Date();
+
+  // Load adjustment from LocalStorage
+  let hijriAdjustment = parseInt(localStorage.getItem("hijriAdjustment")) || 0;
 
   // Islamic Events (Hijri: month/day)
   const events = {
@@ -92,7 +113,7 @@
     // Month name (Gregorian + Hijri)
     const hijriMonthName = new Intl.DateTimeFormat("en-TN-u-ca-islamic", { month:"long", year:"numeric"}).format(date);
     const gregMonthName = new Intl.DateTimeFormat("en", { month:"long", year:"numeric"}).format(date);
-    title.textContent = `${hijriMonthName} | ${gregMonthName}`;
+    title.textContent = `${hijriMonthName} | ${gregMonthName} (Adj: ${hijriAdjustment} दिन)`;
 
     // First day of month
     const firstDay = new Date(year,month,1);
@@ -106,6 +127,9 @@
       grid.appendChild(document.createElement("div"));
     }
 
+    // Highlight card (reset each render)
+    todayCard.classList.add("hidden");
+
     // Days
     for(let d=1; d<=daysInMonth; d++){
       const cell = document.createElement("div");
@@ -115,8 +139,10 @@
       const gDate = new Date(year,month,d);
       const gText = d;
 
-      // Hijri date
-      const hijriDay = new Intl.DateTimeFormat("en-TN-u-ca-islamic",{day:"numeric",month:"numeric"}).format(gDate);
+      // Hijri date with adjustment
+      const adjDate = new Date(gDate);
+      adjDate.setDate(adjDate.getDate() + hijriAdjustment);
+      const hijriDay = new Intl.DateTimeFormat("en-TN-u-ca-islamic",{day:"numeric",month:"numeric"}).format(adjDate);
       const [hMonth,hDay] = hijriDay.split("/");
       const hijriKey = `${hMonth}/${hDay}`;
 
@@ -129,11 +155,28 @@
         cell.innerHTML = `<div class="font-bold">${gText}</div>
                           <div class="text-xs">Hijri ${hDay}/${hMonth}</div>
                           <div class="text-xs mt-1">⭐ ${events[hijriKey]}</div>`;
+
+        // Today highlight card
+        if(isToday){
+          todayCard.className = "mb-4 p-4 rounded shadow text-center text-white today";
+          todayCard.innerHTML = `<h2 class="text-xl font-bold">📌 आज का दिन</h2>
+                                <p class="mt-1">Gregorian: ${gDate.toDateString()}</p>
+                                <p>Hijri: ${hDay}/${hMonth}</p>
+                                <p class="mt-2 text-lg">⭐ ${events[hijriKey]}</p>`;
+          todayCard.classList.remove("hidden");
+        }
+
       } else if(isToday){
         cell.classList.add("today");
         cell.innerHTML = `<div class="font-bold">${gText}</div>
                           <div class="text-xs">Hijri ${hDay}/${hMonth}</div>
                           <div class="text-xs mt-1">📌 Today</div>`;
+
+        todayCard.className = "mb-4 p-4 rounded shadow text-center text-white today";
+        todayCard.innerHTML = `<h2 class="text-xl font-bold">📌 आज का दिन</h2>
+                              <p class="mt-1">Gregorian: ${gDate.toDateString()}</p>
+                              <p>Hijri: ${hDay}/${hMonth}</p>`;
+        todayCard.classList.remove("hidden");
       } else {
         cell.innerHTML = `<div class="font-bold">${gText}</div>
                           <div class="text-xs">Hijri ${hDay}/${hMonth}</div>`;
@@ -143,12 +186,30 @@
     }
   }
 
+  // Month navigation
   document.getElementById("prevMonth").onclick=()=>{
     currentDate.setMonth(currentDate.getMonth()-1);
     renderCalendar(currentDate);
   };
   document.getElementById("nextMonth").onclick=()=>{
     currentDate.setMonth(currentDate.getMonth()+1);
+    renderCalendar(currentDate);
+  };
+
+  // Hijri adjustment
+  document.getElementById("minusDay").onclick=()=>{
+    hijriAdjustment -= 1;
+    localStorage.setItem("hijriAdjustment", hijriAdjustment);
+    renderCalendar(currentDate);
+  };
+  document.getElementById("plusDay").onclick=()=>{
+    hijriAdjustment += 1;
+    localStorage.setItem("hijriAdjustment", hijriAdjustment);
+    renderCalendar(currentDate);
+  };
+  document.getElementById("resetDay").onclick=()=>{
+    hijriAdjustment = 0;
+    localStorage.setItem("hijriAdjustment", hijriAdjustment);
     renderCalendar(currentDate);
   };
 
