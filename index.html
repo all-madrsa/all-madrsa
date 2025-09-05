@@ -398,7 +398,16 @@
         
       <div class="extra hidden mt-2">
   ${d.showExtra && d.contact ? `<p class="text-sm">📞 ${d.contact}</p>` : ""}
-  ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-1 inline-block">📲 WhatsApp</a>` : ""}
+
+  
+ ${d.showExtra&&d.whatsapp?`
+  <a href="https://wa.me/${d.whatsapp}?text=Assalamu%20Alaikum%2C%20Main%20aapse%20Talimi%20Ittehad%20ke%20zariye%20contact%20karna%20chahta%20hoon"
+     target="_blank"
+     class="btn-3d mt-1 inline-block">📲 WhatsApp</a>
+`:""}
+
+
+  
   ${d.showExtra && d.upi ? `
     <div class="mt-2">
       <img src="${d.upi}" class="w-28 mx-auto rounded border" alt="UPI QR"/>
