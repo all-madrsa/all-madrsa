@@ -10,17 +10,8 @@
     .btn-3d{background:linear-gradient(135deg,#4f46e5,#9333ea);color:#fff;padding:.5rem 1rem;border-radius:.5rem;box-shadow:0 3px 6px rgba(0,0,0,.3);transition:.2s;}
     .btn-3d:hover{transform:translateY(-2px);box-shadow:0 5px 10px rgba(0,0,0,.4);}
     .card-3d{background:#fff;border-radius:.8rem;padding:1rem;box-shadow:0 6px 14px rgba(0,0,0,.15);}
-    .success-msg{background:linear-gradient(135deg,#22c55e,#16a34a);color:white;padding:.8rem;border-radius:.6rem;margin-bottom:1rem;text-align:center;}
-    /* --- Popup --- */
-    #donationPopup{
-      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);
-      background:white;padding:1.5rem;border-radius:1rem;
-      box-shadow:0 8px 20px rgba(0,0,0,.3);
-      z-index:9999;opacity:0;transition:all .3s ease;
-      max-width:90%;text-align:center;
-    }
-    #donationPopup.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
-    #donationPopup button{margin-top:1rem;}
+    .popup{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:1rem 2rem;border-radius:.8rem;box-shadow:0 6px 14px rgba(0,0,0,.2);z-index:999;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+    .popup button{background:transparent;border:none;color:#fff;font-size:1.2rem;cursor:pointer;}
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -31,26 +22,14 @@
     <a href="index.html" class="title-3d">Talimi Ittehad</a>
     <nav class="flex gap-2 text-sm text-white">
       <a href="index.html">🏠 Home</a>
-      <a href="https://all-madrsa.netlify.app/upi" class="font-bold underline">💝 Donate</a>
+      <a href="donate.html" class="font-bold underline">💝 Donate</a>
     </nav>
   </div>
 </header>
 
-<!-- Popup -->
-<div id="donationPopup" class="hidden">
-  <h2 class="text-xl font-bold text-green-600 mb-2">🎉 शुक्रिया!</h2>
-  <p>आपका donation हमें मिल गया है।</p>
-  <button id="closePopup" class="btn-3d">❌ बंद करें</button>
-</div>
-
 <!-- Main -->
 <main class="max-w-2xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">💝 Support with Donation</h1>
-
-  <!-- Success message -->
-  <div id="successBox" class="success-msg hidden">
-    ✅ आपका payment मिल गया है, शुक्रिया!
-  </div>
 
   <!-- Donation Form -->
   <div class="card-3d mb-6">
@@ -63,7 +42,7 @@
       <!-- QR + UPI -->
       <div class="text-center">
         <p class="mb-2">📲 Pay on UPI (Scan QR or Copy ID)</p>
-        <img id="qrImg" src="" class="mx-auto w-48 h-48 border rounded shadow mb-2" alt="QR Code" />
+        <img id="qrImg" src="https://via.placeholder.com/200?text=No+QR" class="mx-auto w-48 h-48 border rounded shadow mb-2" alt="QR Code" />
         <p id="upiText" class="font-bold text-lg text-indigo-700"></p>
         <button type="button" id="copyUpiBtn" class="btn-3d mt-2">📋 Copy UPI ID</button>
       </div>
@@ -100,9 +79,10 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, where, updateDoc, deleteDoc, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, where, orderBy, limit, onSnapshot, updateDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
 
+  // --- Firebase Config ---
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
     authDomain: "all-madrsa.firebaseapp.com",
@@ -117,17 +97,14 @@
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
+  // --- Config ---
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; 
 
-  // Elements
-  const donationForm=document.getElementById("donationForm");
   const submitBtn=document.getElementById("submitBtn");
-  const successBox=document.getElementById("successBox");
+  const donationForm=document.getElementById("donationForm");
   const adminPanel=document.getElementById("adminPanel");
   const donationsList=document.getElementById("donationsList");
-  const popup=document.getElementById("donationPopup");
-  const closePopup=document.getElementById("closePopup");
   const qrImg=document.getElementById("qrImg");
   const upiText=document.getElementById("upiText");
   const copyUpiBtn=document.getElementById("copyUpiBtn");
@@ -137,46 +114,109 @@
   const deleteQRBtn=document.getElementById("deleteQRBtn");
 
   let currentUser=null;
+  let lastVerifiedId=null;
 
+  // --- Auth ---
   onAuthStateChanged(auth,async user=>{
     if(user){
       currentUser=user;
-      listenUserDonations();
       liveQR();
+      listenUserDonations();
       if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"), listenAllDonations();
     }else{
       await signInWithPopup(auth,provider);
     }
   });
 
-  // --- Popup ---
-  function showPopup(){
-    popup.classList.remove("hidden");
-    setTimeout(()=>popup.classList.add("show"),100);
-    setTimeout(closePopupNow,10000);
-  }
-  function closePopupNow(){popup.classList.remove("show");setTimeout(()=>popup.classList.add("hidden"),500);}
-  closePopup.onclick=closePopupNow;
-
-  // --- Listen user's donations ---
-  function listenUserDonations(){
-    const q=query(collection(db,"donations"), where("uid","==",currentUser.uid));
-    onSnapshot(q,(snap)=>{
-      let hasPending=false;
-      snap.forEach(doc=>{
-        const d=doc.data();
-        if(d.verified){ // Verified
-          successBox.classList.remove("hidden");
-          window.addEventListener("scroll",()=>successBox.classList.add("hidden"),{once:true});
-          showPopup();
-          submitBtn.classList.remove("hidden");submitBtn.disabled=false;
-        }else{hasPending=true;}
-      });
-      if(hasPending){submitBtn.classList.add("hidden");} // hide until verify
+  // --- File to Base64 ---
+  function toBase64(file){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result.split(",")[1]);
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
     });
   }
 
-  // --- Listen all donations (Admin live) ---
+  // --- ImgBB Upload ---
+  async function uploadToImgBB(file){
+    const base64=await toBase64(file);
+    const fd=new FormData();
+    fd.append("image",base64);
+    const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{method:"POST",body:fd});
+    const data=await res.json();
+    if(data.success) return data.data.url;
+    else throw new Error("ImgBB upload failed");
+  }
+
+  // --- Submit Donation ---
+  donationForm.onsubmit=async e=>{
+    e.preventDefault();
+    if(!currentUser) return alert("Please login first!");
+
+    const name=document.getElementById("name").value;
+    const address=document.getElementById("address").value;
+    const amount=document.getElementById("amount").value;
+    const file=document.getElementById("screenshot").files[0];
+    if(!file) return alert("Upload screenshot!");
+
+    try{
+      submitBtn.disabled=true;
+      submitBtn.textContent="⏳ Submitting...";
+      const screenshotUrl=await uploadToImgBB(file);
+      await addDoc(collection(db,"donations"),{
+        uid:currentUser.uid,
+        name,address,amount,
+        screenshot:screenshotUrl,
+        verified:false,
+        created:Date.now()
+      });
+      donationForm.reset();
+      submitBtn.classList.add("hidden"); // hide until verified
+      alert("✅ Donation submitted! Admin verification pending.");
+    }catch(err){
+      alert("❌ Error: "+err.message);
+      submitBtn.disabled=false;
+      submitBtn.textContent="🚀 Submit Donation";
+    }
+  };
+
+  // --- Listen User Donations (only latest one) ---
+  function listenUserDonations(){
+    const q=query(collection(db,"donations"), where("uid","==",currentUser.uid), orderBy("created","desc"), limit(1));
+    onSnapshot(q,(snap)=>{
+      if(snap.empty) return;
+      const d=snap.docs[0];
+      const data=d.data();
+
+      if(!data.verified){
+        submitBtn.classList.add("hidden");
+      }else{
+        submitBtn.classList.remove("hidden");
+        submitBtn.disabled=false;
+        submitBtn.textContent="🚀 Submit Donation";
+
+        if(lastVerifiedId!==d.id){ 
+          showPopup("✅ आपका payment मिल गया है, शुक्रिया!");
+          lastVerifiedId=d.id;
+        }
+      }
+    });
+  }
+
+  // --- Show popup ---
+  function showPopup(msg){
+    const popup=document.createElement("div");
+    popup.className="popup";
+    popup.innerHTML=`<span>${msg}</span><button>&times;</button>`;
+    document.body.appendChild(popup);
+
+    const remove=()=>popup.remove();
+    popup.querySelector("button").onclick=remove;
+    setTimeout(remove,10000);
+  }
+
+  // --- Listen All Donations (Admin) ---
   function listenAllDonations(){
     onSnapshot(collection(db,"donations"),(snap)=>{
       donationsList.innerHTML="";
@@ -195,66 +235,38 @@
           </div>
         `;
         div.querySelector(".verify").onclick=async()=>{await updateDoc(doc(db,"donations",docSnap.id),{verified:true});};
-        div.querySelector(".delete").onclick=async()=>{if(confirm("Delete donation?")){await deleteDoc(doc(db,"donations",docSnap.id));}};
+        div.querySelector(".delete").onclick=async()=>{if(confirm("Delete donation?")) await deleteDoc(doc(db,"donations",docSnap.id));};
         donationsList.appendChild(div);
       });
     });
   }
 
-  // --- File to Base64 ---
-  function toBase64(file){
-    return new Promise((resolve,reject)=>{
-      const reader=new FileReader();
-      reader.onload=()=>resolve(reader.result.split(",")[1]);
-      reader.onerror=reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function uploadToImgBB(file){
-    const base64=await toBase64(file);
-    const fd=new FormData();
-    fd.append("image",base64);
-    const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{method:"POST",body:fd});
-    const data=await res.json();
-    if(data.success) return data.data.url; else throw new Error("ImgBB upload failed");
-  }
-
-  // --- Submit Donation ---
-  donationForm.onsubmit=async e=>{
-    e.preventDefault();
-    if(!currentUser) return alert("Please login first!");
-    submitBtn.disabled=true;
-
-    const name=document.getElementById("name").value;
-    const address=document.getElementById("address").value;
-    const amount=document.getElementById("amount").value;
-    const file=document.getElementById("screenshot").files[0];
-    if(!file) return alert("Upload screenshot!");
-
-    try{
-      const screenshotUrl=await uploadToImgBB(file);
-      await addDoc(collection(db,"donations"),{
-        uid:currentUser.uid,name,address,amount,
-        screenshot:screenshotUrl,verified:false,created:Date.now()
-      });
-      alert("✅ Donation submitted! Admin verification pending.");
-      donationForm.reset();
-      submitBtn.classList.add("hidden");
-    }catch(err){alert("❌ Error: "+err.message);submitBtn.disabled=false;}
-  };
-
-  // --- QR / UPI Live ---
+  // --- Live QR + UPI from Firestore ---
   function liveQR(){
     onSnapshot(doc(db,"config","qr"),snap=>{
-      if(snap.exists()){const data=snap.data();qrImg.src=data.url||"https://via.placeholder.com/200";upiText.textContent=data.upi||"";}
+      if(snap.exists()){
+        const data=snap.data();
+        qrImg.src=data.url||"https://via.placeholder.com/200?text=No+QR";
+        upiText.textContent=data.upi||"";
+      }
     });
   }
 
+  // --- Copy UPI ---
   copyUpiBtn.onclick=()=>{if(upiText.textContent){navigator.clipboard.writeText(upiText.textContent);alert("📋 Copied: "+upiText.textContent);}};
 
-  uploadQRBtn.onclick=async()=>{let url=null;if(qrUpload.files[0]) url=await uploadToImgBB(qrUpload.files[0]);const upi=upiInput.value;await setDoc(doc(db,"config","qr"),{url,upi});alert("✅ QR / UPI updated!");qrUpload.value="";upiInput.value="";};
-  deleteQRBtn.onclick=async()=>{if(confirm("Delete QR & UPI?")) await deleteDoc(doc(db,"config","qr"))};
+  // --- Upload QR + UPI (Admin) ---
+  uploadQRBtn.onclick=async()=>{
+    let url=null;
+    if(qrUpload.files[0]) url=await uploadToImgBB(qrUpload.files[0]);
+    const upi=upiInput.value;
+    await setDoc(doc(db,"config","qr"),{url,upi});
+    alert("✅ QR / UPI updated!");
+    qrUpload.value=""; upiInput.value="";
+  };
+
+  // --- Delete QR (Admin) ---
+  deleteQRBtn.onclick=async()=>{if(confirm("Delete QR & UPI?")) await deleteDoc(doc(db,"config","qr"));};
 </script>
 </body>
 </html>
