@@ -58,14 +58,28 @@
       <div class="dropdown relative">
         <button class="btn-3d">About ⬇</button>
         <div class="dropdown-menu">
-          <a href="#about">हमारे बारे में</a>
-          <a href="#mission">मिशन</a>
+
+          
+          <a href="https://all-madrsa.netlify.app/about.html">About us</a>
+          <a href="https://all-madrsa.netlify.app/mission.html">Mission</a>
+          <a href="https://all-madrsa.netlify.app/contact.html">Contect</a>
+          <a href="https://all-madrsa.netlify.app/privacy.html">Privacy policy</a>
+           <a href="https://all-madrsa.netlify.app/gallery.html">Gallery</a>
+          <a href="https://all-madrsa.netlify.app/terms.html">Terms & Conditions</a>
+
+           <a href="#Youtube">Youtube</a>
+           <a href="#Facbook">Facbook</a>
+          <a href="#Instagrm">Instagrm</a>
+
+          
+
+          
         </div>
       </div>
       <div class="dropdown relative">
         <button class="btn-3d">More ⬇</button>
         <div class="dropdown-menu">
-          <a href="#contact">संपर्क करें</a>
+          <a href="https://all-madrsa.netlify.app/Calendar.html">Calendar.html</a>
           <a href="#faq">FAQ</a>
         </div>
       </div>
@@ -134,7 +148,7 @@
 </div>
 
 <!-- Floating Donate -->
-<a href="#donate" class="btn-3d floating-donate">🙏 Donate</a>
+<a href="#donate" class="btn-3d floating-donate">Donate</a>
 
 <!-- Footer -->
 <footer class="bg-gray-100 text-center py-4 mt-6">
@@ -384,7 +398,16 @@
         
       <div class="extra hidden mt-2">
   ${d.showExtra && d.contact ? `<p class="text-sm">📞 ${d.contact}</p>` : ""}
-  ${d.showExtra && d.whatsapp ? `<a href="https://wa.me/${d.whatsapp}" target="_blank" class="btn-3d mt-1 inline-block">📲 WhatsApp</a>` : ""}
+
+  
+ ${d.showExtra&&d.whatsapp?`
+  <a href="https://wa.me/${d.whatsapp}?text=Assalamu%20Alaikum%2C%20Main%20aapse%20Talimi%20Ittehad%20ke%20zariye%20contact%20karna%20chahta%20hoon"
+     target="_blank"
+     class="btn-3d mt-1 inline-block">📲 WhatsApp</a>
+`:""}
+
+
+  
   ${d.showExtra && d.upi ? `
     <div class="mt-2">
       <img src="${d.upi}" class="w-28 mx-auto rounded border" alt="UPI QR"/>
