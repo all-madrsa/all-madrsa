@@ -71,13 +71,12 @@
       loadDonors();
     });
 
-    // 📥 Load Donors (correct Firestore path)
+    // 📥 Load Donors (✅ सही Path)
     function loadDonors() {
       donorsDiv.innerHTML = "⏳ Loading donors...";
 
-      // 👇 यहां असली nested collection path दिया है
       const qRef = query(
-        collection(db, "site", "donations", "RVLE7w4SLJqKb4O0eI6S"),
+        collection(db, "site", "donations"),   // ✅ यही सही path है
         orderBy("created", "desc")
       );
 
@@ -110,7 +109,7 @@
             donorCard.querySelector(".adminControls").classList.remove("hidden");
 
             donorCard.querySelector(".verifyBtn").onclick = async () => {
-              await updateDoc(doc(db, "site", "donations", "RVLE7w4SLJqKb4O0eI6S", docSnap.id), {
+              await updateDoc(doc(db, "site", "donations", docSnap.id), {
                 verified: true
               });
               alert("✅ Donor Verified!");
@@ -118,7 +117,7 @@
 
             donorCard.querySelector(".deleteBtn").onclick = async () => {
               if (confirm("Are you sure to delete this donor?")) {
-                await deleteDoc(doc(db, "site", "donations", "RVLE7w4SLJqKb4O0eI6S", docSnap.id));
+                await deleteDoc(doc(db, "site", "donations", docSnap.id));
               }
             };
           }
