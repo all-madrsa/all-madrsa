@@ -1,33 +1,96 @@
 <!doctype html>
-<html lang="en">
+<html lang="hi">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>All Donors</title>
+  <title>Talimi Ittehad — Donors</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .title-3d{
+      font-weight:700; font-size:1.6rem; color:#fff;
+      text-shadow:2px 2px 8px rgba(0,0,0,.9);
+    }
+    .btn-3d{
+      background:linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
+      box-shadow:0 6px 0 rgba(0,0,0,.25), 0 12px 24px rgba(0,0,0,.12);
+      transition:transform .12s ease, box-shadow .12s ease;
+      font-size:.85rem; padding:.45rem .9rem; color:#fff; font-weight:700; border-radius:8px;
+      white-space:nowrap;
+    }
+    .btn-3d:active{transform:translateY(2px); box-shadow:0 3px 0 rgba(0,0,0,.25);}
+    .card-3d{ border-radius:12px; box-shadow: 0 8px 24px rgba(15,23,42,.06); }
+    .floating-donate {
+      position: fixed; right: 1rem; bottom: 1rem; z-index: 60;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen">
 
-  <!-- Header -->
-  <div class="flex justify-between items-center bg-purple-700 text-white p-4">
-    <h1 class="text-xl font-bold">📋 All Donors</h1>
-    <button id="logoutBtn" class="bg-red-500 px-3 py-1 rounded hidden">Logout</button>
+  <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="title-3d">Talimi Ittehad</div>
+        <div class="text-sm text-white/90">— Donor List</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div id="adminLabel" class="text-sm text-white hidden"></div>
+        <button id="authBtn" class="btn-3d">Login</button>
+        <button id="openAddBtn" class="btn-3d hidden">➕ Add Donor</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-4">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold">All Donors</h2>
+      <div class="text-sm text-gray-600" id="statusText">⏳ Loading donors...</div>
+    </div>
+
+    <div id="donorList" class="grid gap-4 md:grid-cols-2"></div>
+
+    <div id="emptyState" class="text-center text-gray-500 mt-6 hidden">
+      No donors yet.
+    </div>
+  </main>
+
+  <!-- Floating Donate (just link to donate page) -->
+  <a href="#donate" class="btn-3d floating-donate">Donate</a>
+
+  <!-- Add Donor Modal (admin only) -->
+  <div id="addModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white w-full max-w-lg p-5 rounded-xl card-3d">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-lg font-semibold">Add Donor (Admin)</h3>
+        <button onclick="closeAddModal()" class="text-gray-600">✕</button>
+      </div>
+
+      <form id="addForm" class="space-y-3">
+        <input id="d_name" class="w-full border p-2 rounded" placeholder="नाम (Name)" required>
+        <input id="d_address" class="w-full border p-2 rounded" placeholder="पता (Address)" required>
+        <input id="d_amount" type="number" min="1" class="w-full border p-2 rounded" placeholder="Amount" required>
+        <input id="d_date" type="date" class="w-full border p-2 rounded" placeholder="Date (optional)">
+        <input id="d_screenshot" class="w-full border p-2 rounded" placeholder="Screenshot image URL (optional)">
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="closeAddModal()" class="px-4 py-2 border rounded">Cancel</button>
+          <button type="submit" class="btn-3d">Save Donor</button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <!-- Donors List -->
-  <div id="donorList" class="p-4 text-center">⏳ Loading donors...</div>
-
+  <!-- Firebase + Logic -->
   <script type="module">
-    // Firebase SDK imports
+    // --- Firebase imports (modular) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { 
-      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut 
+    import {
+      getAuth, GoogleAuthProvider,
+      signInWithPopup, signOut, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { 
-      getFirestore, collection, getDocs 
+    import {
+      getFirestore, collection, addDoc, query, orderBy, getDocs, onSnapshot, doc, getDoc
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // ✅ Firebase config
+    // --- Your Firebase config (use your existing config) ---
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
       authDomain: "all-madrsa.firebaseapp.com",
@@ -40,63 +103,224 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
 
+    // --- DOM ---
+    const authBtn = document.getElementById("authBtn");
+    const adminLabel = document.getElementById("adminLabel");
+    const openAddBtn = document.getElementById("openAddBtn");
+    const addModal = document.getElementById("addModal");
+    const addForm = document.getElementById("addForm");
     const donorList = document.getElementById("donorList");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const statusText = document.getElementById("statusText");
+    const emptyState = document.getElementById("emptyState");
 
-    // ✅ Donors load karne ka function
-    async function loadDonors() {
-      donorList.innerHTML = "⏳ Loading donors...";
-      try {
-        const snap = await getDocs(collection(db, "site", "donations"));
-        if (snap.empty) {
-          donorList.innerHTML = "No donors yet.";
-          return;
+    const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
+    let currentUser = null;
+    let unsubscribeRealtime = null;
+
+    // Auth button
+    authBtn.onclick = async () => {
+      if (!auth.currentUser) {
+        try {
+          await signInWithPopup(auth, provider);
+        } catch (e) {
+          alert("Login failed: " + e.message);
         }
-        donorList.innerHTML = "";
-        snap.forEach(doc => {
-          const d = doc.data();
-          const card = document.createElement("div");
-          card.className = "bg-white p-4 mb-3 rounded shadow text-left";
-          card.innerHTML = `
-            <h2 class="font-bold text-lg">${d.name}</h2>
-            <p>💵 Amount: ${d.amount}</p>
-            <p>📍 ${d.address}</p>
-            ${d.screenshot ? `<img src="${d.screenshot}" class="w-32 mt-2 rounded border"/>` : ""}
-            <p class="text-sm mt-2 ${d.verified ? "text-green-600" : "text-red-600"}">
-              ${d.verified ? "✅ Verified" : "⏳ Not Verified"}
-            </p>
-          `;
-          donorList.appendChild(card);
+      } else {
+        await signOut(auth);
+      }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if (user) {
+        authBtn.textContent = "Logout";
+        if (user.email === ADMIN_EMAIL) {
+          adminLabel.textContent = "Admin: " + user.displayName || user.email;
+          adminLabel.classList.remove("hidden");
+          openAddBtn.classList.remove("hidden");
+        } else {
+          adminLabel.textContent = user.email;
+          adminLabel.classList.remove("hidden");
+          openAddBtn.classList.add("hidden");
+        }
+      } else {
+        authBtn.textContent = "Login";
+        adminLabel.classList.add("hidden");
+        openAddBtn.classList.add("hidden");
+      }
+
+      // always (re)load donors on auth change
+      startRealtimeDonors();
+    });
+
+    // open/close modal
+    openAddBtn.onclick = () => {
+      addModal.classList.remove("hidden");
+      addModal.classList.add("flex");
+    };
+    function closeAddModal() {
+      addModal.classList.add("hidden");
+      addModal.classList.remove("flex");
+      addForm.reset();
+    }
+
+    // Add donor (admin)
+    addForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+        alert("Only admin can add donors.");
+        return;
+      }
+      const name = document.getElementById("d_name").value.trim();
+      const address = document.getElementById("d_address").value.trim();
+      const amount = document.getElementById("d_amount").value.trim();
+      const dateVal = document.getElementById("d_date").value;
+      const screenshot = document.getElementById("d_screenshot").value.trim();
+
+      const created = dateVal ? new Date(dateVal).getTime() : Date.now();
+
+      // We'll attempt to write to top-level "donations" collection.
+      try {
+        await addDoc(collection(db, "donations"), {
+          name, address, amount: String(amount), created, screenshot: screenshot || "", uid: currentUser.uid, verified: true
         });
+        alert("Donor added ✅");
+        closeAddModal();
       } catch (err) {
-        donorList.innerHTML = "❌ Error loading donors.";
-        console.error(err);
+        console.error("Add donor error:", err);
+        alert("Error adding donor: " + err.message);
+      }
+    });
+
+    // --- Helper: format date ---
+    function fmtDate(ts) {
+      if (!ts) return "-";
+      const d = typeof ts === "number" ? new Date(ts) : (ts.toDate ? ts.toDate() : new Date(ts));
+      return d.toLocaleDateString();
+    }
+
+    // Render donors
+    function renderDonors(arr) {
+      donorList.innerHTML = "";
+      if (!arr || arr.length === 0) {
+        emptyState.classList.remove("hidden");
+        statusText.textContent = "";
+        return;
+      }
+      emptyState.classList.add("hidden");
+      statusText.textContent = "Showing " + arr.length + " donors";
+
+      arr.forEach(d => {
+        const card = document.createElement("div");
+        card.className = "bg-white p-4 card-3d border rounded-lg";
+
+        card.innerHTML = `
+          <div class="flex gap-3">
+            <div class="w-20 h-20 bg-gray-100 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden">
+              ${d.screenshot ? `<img src="${d.screenshot}" alt="s" class="w-full h-full object-cover">` : `<div class="text-xs text-gray-400 px-2 text-center">No Image</div>`}
+            </div>
+            <div class="flex-1">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-semibold text-lg">${escapeHtml(d.name || "-")}</div>
+                  <div class="text-sm text-gray-600">${escapeHtml(d.address || "-")}</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-lg font-bold text-emerald-600">₹${escapeHtml(d.amount||"0")}</div>
+                  <div class="text-xs text-gray-500">${fmtDate(d.created)}</div>
+                </div>
+              </div>
+              ${d.verified ? `<div class="text-xs mt-2 inline-block text-white bg-emerald-600 px-2 py-0.5 rounded">Verified</div>` : ""}
+            </div>
+          </div>
+        `;
+        donorList.appendChild(card);
+      });
+    }
+
+    // sanitize small
+    function escapeHtml(str){
+      if(!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    // --- Realtime loader that tries both top-level and site/*/donations ---
+    async function startRealtimeDonors() {
+      // If subscribed before, unsubscribe
+      if (unsubscribeRealtime) {
+        unsubscribeRealtime();
+        unsubscribeRealtime = null;
+      }
+
+      statusText.textContent = "⏳ Loading donors...";
+      donorList.innerHTML = "";
+
+      // First try top-level collection "donations"
+      try {
+        const q = query(collection(db, "donations"), orderBy("created", "desc"));
+        // set up realtime snapshot
+        unsubscribeRealtime = onSnapshot(q, (snap) => {
+          const arr = [];
+          snap.forEach(docSnap => arr.push({ id: docSnap.id, ...docSnap.data() }));
+          if (arr.length > 0) {
+            renderDonors(arr);
+          } else {
+            // if top-level empty, try fallback to site/*/donations
+            fallbackSiteSubcollections();
+          }
+        }, (err) => {
+          console.error("Snapshot error for donations:", err);
+          // fallback too
+          fallbackSiteSubcollections();
+        });
+
+      } catch (err) {
+        console.warn("Error reading top-level donations:", err);
+        fallbackSiteSubcollections();
       }
     }
 
-    // ✅ Admin check
-    onAuthStateChanged(auth, (user) => {
-      if (user && user.email === "zaradigitalseva@gmail.com") {
-        logoutBtn.classList.remove("hidden");
-        loadDonors();
-      } else if (user) {
-        donorList.innerHTML = "❌ Access Denied. Admin only.";
-      } else {
-        // Auto login with Google popup
-        const provider = new GoogleAuthProvider();
-        signInWithPopup(auth, provider).catch(err => {
-          donorList.innerHTML = "⚠️ Login failed.";
-          console.error(err);
-        });
+    // fallback: search site collection documents for subcollection "donations"
+    async function fallbackSiteSubcollections() {
+      statusText.textContent = "⏳ Checking site subcollections...";
+      try {
+        const siteCol = collection(db, "site");
+        const siteDocsSnap = await getDocs(siteCol);
+        const merged = [];
+        // for each doc under site, try to read its 'donations' subcollection
+        for (const sd of siteDocsSnap.docs) {
+          const docId = sd.id;
+          try {
+            const subColRef = collection(db, "site", docId, "donations");
+            // Use getDocs once (no realtime) — or you can set up onSnapshot per subcollection, but for simplicity, use getDocs
+            const subSnap = await getDocs(subColRef);
+            subSnap.forEach(ss => merged.push({ id: ss.id, ...ss.data() }));
+          } catch (e) {
+            // skip if subcollection not present or permission error
+            console.warn("No subcollection donations under", docId, e.message);
+          }
+        }
+        // sort by created desc
+        merged.sort((a,b)=> (b.created || 0) - (a.created || 0));
+        renderDonors(merged);
+      } catch (err) {
+        console.error("fallbackSiteSubcollections error:", err);
+        statusText.textContent = "Error loading donors.";
+        donorList.innerHTML = "";
+        emptyState.classList.remove("hidden");
       }
-    });
+    }
 
-    // ✅ Logout
-    logoutBtn.addEventListener("click", () => {
-      signOut(auth);
-      location.reload();
-    });
+    // start once on load
+    startRealtimeDonors();
+
   </script>
+
 </body>
 </html>
