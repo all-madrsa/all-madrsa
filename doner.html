@@ -1,11 +1,33 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>All Donors</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
 
+  <!-- Header -->
+  <div class="flex justify-between items-center bg-purple-700 text-white p-4">
+    <h1 class="text-xl font-bold">📋 All Donors</h1>
+    <button id="logoutBtn" class="bg-red-500 px-3 py-1 rounded hidden">Logout</button>
+  </div>
+
+  <!-- Donors List -->
+  <div id="donorList" class="p-4 text-center">⏳ Loading donors...</div>
+
+  <script type="module">
+    // Firebase SDK imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { 
+      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut 
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, getDocs 
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // ✅ Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
       authDomain: "all-madrsa.firebaseapp.com",
@@ -16,24 +38,65 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
+    const donorList = document.getElementById("donorList");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // ✅ Donors load karne ka function
     async function loadDonors() {
-      const snap = await getDocs(collection(db, "site", "donations"));
-      if (snap.empty) {
-        document.body.innerHTML = "<h2>No donors found</h2>";
-        return;
+      donorList.innerHTML = "⏳ Loading donors...";
+      try {
+        const snap = await getDocs(collection(db, "site", "donations"));
+        if (snap.empty) {
+          donorList.innerHTML = "No donors yet.";
+          return;
+        }
+        donorList.innerHTML = "";
+        snap.forEach(doc => {
+          const d = doc.data();
+          const card = document.createElement("div");
+          card.className = "bg-white p-4 mb-3 rounded shadow text-left";
+          card.innerHTML = `
+            <h2 class="font-bold text-lg">${d.name}</h2>
+            <p>💵 Amount: ${d.amount}</p>
+            <p>📍 ${d.address}</p>
+            ${d.screenshot ? `<img src="${d.screenshot}" class="w-32 mt-2 rounded border"/>` : ""}
+            <p class="text-sm mt-2 ${d.verified ? "text-green-600" : "text-red-600"}">
+              ${d.verified ? "✅ Verified" : "⏳ Not Verified"}
+            </p>
+          `;
+          donorList.appendChild(card);
+        });
+      } catch (err) {
+        donorList.innerHTML = "❌ Error loading donors.";
+        console.error(err);
       }
-      snap.forEach(doc => {
-        console.log("📌 Donor:", doc.id, doc.data());  // Debug log
-        document.body.innerHTML += `<p>${doc.data().name} - ₹${doc.data().amount}</p>`;
-      });
     }
 
-    loadDonors();
+    // ✅ Admin check
+    onAuthStateChanged(auth, (user) => {
+      if (user && user.email === "zaradigitalseva@gmail.com") {
+        logoutBtn.classList.remove("hidden");
+        loadDonors();
+      } else if (user) {
+        donorList.innerHTML = "❌ Access Denied. Admin only.";
+      } else {
+        // Auto login with Google popup
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider).catch(err => {
+          donorList.innerHTML = "⚠️ Login failed.";
+          console.error(err);
+        });
+      }
+    });
+
+    // ✅ Logout
+    logoutBtn.addEventListener("click", () => {
+      signOut(auth);
+      location.reload();
+    });
   </script>
-</head>
-<body>
-  <h1>Donors Debug</h1>
 </body>
 </html>
