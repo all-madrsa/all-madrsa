@@ -42,9 +42,14 @@
 
       <!-- QR + UPI -->
       <div class="text-center">
-        <p class="mb-2">📲 Pay on UPI No. 8806940156 (Scan QR)</p>
+        <p class="mb-2">📲 Pay on UPI No. 8806940156 (Scan QR or Copy ID)</p>
         <img id="qrImg" src="" class="mx-auto w-48 h-48 border rounded shadow mb-2" alt="QR Code" />
         <p id="upiText" class="font-bold text-lg text-indigo-700"></p>
+
+        <!-- ✅ New QR Download Button -->
+        <div class="flex justify-center gap-2 mt-2">
+          <button type="button" id="downloadQrBtn" class="btn-3d">⬇ QR Download</button>
+        </div>
       </div>
 
       <!-- Screenshot Upload -->
@@ -85,7 +90,8 @@
 <div id="thankyouModal" class="modal hidden">
   <div class="modal-content">
     <h2 class="text-xl font-bold mb-2">✅ Payment Verified</h2>
-    <p>अस्सलाम अलैकुम<br/>तालीमी इत्तेहाद में आपका दिया गया मदद मिल गया है 👍 🤲</p>
+    <p>अस्सलाम अलैकुम<br/>तालीमी इत्तेहाद में आपका दिया गया मदद मिल गया है 👍
+ 🤲</p>
     <button id="closeModal" class="btn-3d mt-4">❌ Close</button>
   </div>
 </div>
@@ -122,11 +128,13 @@
   const submitBtn=document.getElementById("submitBtn");
   const qrImg=document.getElementById("qrImg");
   const upiText=document.getElementById("upiText");
+  const copyUpiBtn=document.getElementById("copyUpiBtn");
   const adminPanel=document.getElementById("adminPanel");
   const donationsList=document.getElementById("donationsList");
   const thankyouModal=document.getElementById("thankyouModal");
   const closeModal=document.getElementById("closeModal");
   const userDonationsList=document.getElementById("userDonationsList");
+  const downloadQrBtn=document.getElementById("downloadQrBtn"); // ✅ new
 
   let currentUser=null;
   let modalTimer=null;
@@ -204,6 +212,7 @@
       method: "POST",
       body: fd
     });
+
     const data=await res.json();
     if(data.success) return data.data.url;
     else throw new Error("ImgBB upload failed");
@@ -291,6 +300,29 @@
       }
     });
   }
+
+  // --- Copy UPI ---
+  // अगर copy button इस्तेमाल नहीं करना तो इसे remove कर सकते हो
+  // अभी वही रहने दिया ताकि कुछ खराब न हो
+  if(copyUpiBtn){
+    copyUpiBtn.onclick=()=>{
+      if(upiText.textContent){
+        navigator.clipboard.writeText(upiText.textContent);
+        alert("📋 Copied: "+upiText.textContent);
+      }
+    };
+  }
+
+  // --- Download QR ---
+  downloadQrBtn.onclick=()=>{
+    if(!qrImg.src) return alert("❌ QR not available!");
+    const a=document.createElement("a");
+    a.href=qrImg.src;
+    a.download="talimi_ittehad_qr.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   // --- Admin QR + UPI Upload/Delete ---
   const qrUpload=document.getElementById("qrUpload");
