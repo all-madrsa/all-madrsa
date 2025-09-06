@@ -462,20 +462,11 @@
       listDiv.appendChild(card);
     });
   }
-</script>
-  <button id="installBtn" class="btn-3d hidden">📲 Install App</button>
-...
-<!-- Footer -->
-<footer class="bg-gray-100 text-center py-4 mt-10">
-  <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
-</footer>
-
 <!-- Install App Button -->
-<div class="text-center mt-4">
-  <button id="installBtn" class="btn-3d hidden">📲 Install App</button>
-</div>
+<button id="installBtn" class="fixed bottom-1/2 right-1/2 translate-x-1/2 translate-y-1/2 bg-purple-600 text-white px-8 py-4 rounded-2xl text-2xl font-bold shadow-lg hidden z-50">
+  📲 Install App
+</button>
 
-<!-- Script -->
 <script>
   let deferredPrompt;
   const installBtn = document.getElementById("installBtn");
@@ -504,6 +495,7 @@
     }
   });
 </script>
+
 </body>
 </html>
 
