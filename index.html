@@ -464,6 +464,48 @@
   }
 </script>
   <button id="installBtn" class="btn-3d hidden">📲 Install App</button>
+...
+<!-- Footer -->
+<footer class="bg-gray-100 text-center py-4 mt-10">
+  <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
+</footer>
+
+<!-- Install App Button -->
+<div class="text-center mt-4">
+  <button id="installBtn" class="btn-3d hidden">📲 Install App</button>
+</div>
+
+<!-- Script -->
+<script>
+  let deferredPrompt;
+  const installBtn = document.getElementById("installBtn");
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js");
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.classList.remove("hidden");
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        console.log("✅ User installed the app");
+      } else {
+        console.log("❌ User dismissed the install");
+      }
+      deferredPrompt = null;
+      installBtn.classList.add("hidden");
+    }
+  });
+</script>
+</body>
+</html>
 
 </body>
 </html>
