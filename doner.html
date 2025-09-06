@@ -42,7 +42,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-  // ✅ Firebase config (your project details)
+  // ✅ Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
     authDomain: "all-madrsa.firebaseapp.com",
@@ -81,9 +81,9 @@
 
   // ✅ Load Donors
   function loadDonors() {
-    db.ref("donations").on("value", snap => {
+    db.ref("donations").once("value").then(snapshot => {
       donorList.innerHTML = "";
-      snap.forEach(child => {
+      snapshot.forEach(child => {
         const d = child.val();
         const id = child.key;
 
