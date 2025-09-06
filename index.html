@@ -1,11 +1,6 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#9333ea">
-
-
-  
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Talimi Ittehad</title>
@@ -84,7 +79,7 @@
       <div class="dropdown relative">
         <button class="btn-3d">More ⬇</button>
         <div class="dropdown-menu">
-          <a href="https://all-madrsa.netlify.app/Calendar.html">Calendar</a>
+          <a href="https://all-madrsa.netlify.app/Calendar.html">Calendar.html</a>
           <a href="#faq">FAQ</a>
         </div>
       </div>
@@ -153,7 +148,7 @@
 </div>
 
 <!-- Floating Donate -->
-<a href="https://all-madrsa.netlify.app/upi.html" class="btn-3d floating-donate">Donate</a>
+<a href="#donate" class="btn-3d floating-donate">Donate</a>
 
 <!-- Footer -->
 <footer class="bg-gray-100 text-center py-4 mt-6">
@@ -216,7 +211,7 @@
   const noticeAdmin = document.getElementById("noticeAdmin");
   const noticeInput = document.getElementById("noticeInput");
 
-  const ADMIN_EMAIL = "zarasamajiksevasanstha@gmail.com";
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
   let currentUser = null;
@@ -462,8 +457,13 @@
       listDiv.appendChild(card);
     });
   }
-<!-- Install App Button -->
-<button id="installBtn" class="fixed bottom-1/2 right-1/2 translate-x-1/2 translate-y-1/2 bg-purple-600 text-white px-8 py-4 rounded-2xl text-2xl font-bold shadow-lg hidden z-50">
+</script>
+
+<!-- ✅ Install App Button -->
+<button id="installBtn"
+  class="fixed bottom-1/2 right-1/2 translate-x-1/2 translate-y-1/2 
+         bg-purple-600 text-white px-8 py-4 rounded-2xl text-2xl font-bold 
+         shadow-lg hidden z-50">
   📲 Install App
 </button>
 
@@ -471,24 +471,27 @@
   let deferredPrompt;
   const installBtn = document.getElementById("installBtn");
 
+  // Service worker register
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/service-worker.js");
   }
 
+  // Show button when install prompt is available
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e;
     installBtn.classList.remove("hidden");
   });
 
+  // On click, trigger prompt
   installBtn.addEventListener("click", async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
-        console.log("✅ User installed the app");
+        console.log("✅ App Installed");
       } else {
-        console.log("❌ User dismissed the install");
+        console.log("❌ User dismissed");
       }
       deferredPrompt = null;
       installBtn.classList.add("hidden");
@@ -496,11 +499,6 @@
   });
 </script>
 
-</body>
-</html>
-<button id="installBtn" class="fixed bottom-1/2 right-1/2 translate-x-1/2 translate-y-1/2 bg-purple-600 text-white px-6 py-3 rounded-2xl text-xl font-bold shadow-lg hidden z-50">
-  📲 Install App
-</button>
 
 </body>
 </html>
