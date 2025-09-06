@@ -26,7 +26,6 @@
     </div>
   </main>
 
-  <!-- Firebase + Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { 
@@ -72,11 +71,13 @@
       loadDonors();
     });
 
-    // 📥 Load Donors
+    // 📥 Load Donors (correct Firestore path)
     function loadDonors() {
       donorsDiv.innerHTML = "⏳ Loading donors...";
+
+      // 👇 यहां असली nested collection path दिया है
       const qRef = query(
-        collection(db, "site", "donations"),
+        collection(db, "site", "donations", "RVLE7w4SLJqKb4O0eI6S"),
         orderBy("created", "desc")
       );
 
@@ -109,7 +110,7 @@
             donorCard.querySelector(".adminControls").classList.remove("hidden");
 
             donorCard.querySelector(".verifyBtn").onclick = async () => {
-              await updateDoc(doc(db, "site", "donations", docSnap.id), {
+              await updateDoc(doc(db, "site", "donations", "RVLE7w4SLJqKb4O0eI6S", docSnap.id), {
                 verified: true
               });
               alert("✅ Donor Verified!");
@@ -117,7 +118,7 @@
 
             donorCard.querySelector(".deleteBtn").onclick = async () => {
               if (confirm("Are you sure to delete this donor?")) {
-                await deleteDoc(doc(db, "site", "donations", docSnap.id));
+                await deleteDoc(doc(db, "site", "donations", "RVLE7w4SLJqKb4O0eI6S", docSnap.id));
               }
             };
           }
