@@ -1,43 +1,30 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="hi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Donors | Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <style>
-    .btn-3d {
-      @apply px-3 py-1 rounded bg-purple-600 text-white text-sm font-semibold shadow-md hover:bg-purple-700;
-    }
-  </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 min-h-screen">
 
   <!-- Header -->
-  <header class="bg-purple-700 text-white p-4 text-center font-bold text-xl">
-    🕌 Donor List - Talimi Ittehad
-  </header>
-
-  <!-- Admin login -->
-  <div id="adminLogin" class="p-4 text-center hidden">
-    <h2 class="text-lg font-bold mb-2">Admin Login</h2>
-    <input id="adminEmail" type="email" placeholder="Email"
-           class="border p-2 rounded w-64 mb-2">
-    <input id="adminPass" type="password" placeholder="Password"
-           class="border p-2 rounded w-64 mb-2">
-    <button onclick="adminLogin()"
-            class="bg-purple-600 text-white px-4 py-2 rounded shadow">
+  <header class="bg-purple-700 text-white py-4 shadow flex justify-between px-4">
+    <h1 class="text-xl font-bold">🎉 Donors List</h1>
+    <button id="authBtn" class="bg-white text-purple-700 px-3 py-1 rounded shadow text-sm font-semibold">
       Login
     </button>
-  </div>
+  </header>
 
   <!-- Donor List -->
-  <main class="p-4">
-    <div id="donorList" class="grid md:grid-cols-3 gap-4"></div>
+  <main class="max-w-5xl mx-auto p-4">
+    <div id="donorList" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </main>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
     // ✅ Firebase Config
@@ -54,95 +41,86 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-    // 🔑 अपना Admin Email यहां सेट करें
+    const donorList = document.getElementById("donorList");
+    const authBtn = document.getElementById("authBtn");
+
     const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-
     let currentUser = null;
 
-    // Auth state check
+    // ✅ Auth Button
+    authBtn.onclick = async () => {
+      if (!currentUser) {
+        await auth.signInWithPopup(provider);
+      } else {
+        await auth.signOut();
+      }
+    };
+
+    // ✅ On Auth State Change
     auth.onAuthStateChanged(user => {
       currentUser = user;
-      if (user && user.email === ADMIN_EMAIL) {
-        adminLogin.classList.add("hidden");
-        loadDonors();
-      } else if (!user) {
-        adminLogin.classList.remove("hidden");
-        loadDonors(); // normal user को सिर्फ verified दिखे
+      if (user) {
+        authBtn.textContent = "Logout";
       } else {
-        loadDonors(); // normal user logged in
+        authBtn.textContent = "Login";
       }
+      loadDonors();
     });
 
-    // Admin Login
-    function adminLogin() {
-      const email = document.getElementById("adminEmail").value;
-      const pass = document.getElementById("adminPass").value;
-      auth.signInWithEmailAndPassword(email, pass)
-        .catch(err => alert(err.message));
-    }
-
-    // Donors List Load
+    // ✅ Load Donors
     function loadDonors() {
       db.ref("site/donations").orderByChild("created").on("value", snapshot => {
         donorList.innerHTML = "";
-        const donors = [];
-
-        snapshot.forEach(child => {
-          donors.push({ id: child.key, ...child.val() });
-        });
-
-        donors.reverse(); // latest first
-
-        if (donors.length === 0) {
-          donorList.innerHTML =
-            "<p class='text-center text-gray-500 col-span-3'>No donors yet.</p>";
+        if (!snapshot.exists()) {
+          donorList.innerHTML = `<p class="text-center text-gray-600 col-span-full">No donors yet.</p>`;
           return;
         }
 
-        donors.forEach(d => {
-          if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
-            if (!d.verified) return; // केवल verified दिखे
-          }
+        snapshot.forEach(childSnap => {
+          const d = childSnap.val();
+          const id = childSnap.key;
+
+          // Public: only verified
+          if (!d.verified && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
 
           const card = document.createElement("div");
-          card.className = "bg-white rounded-lg shadow p-3";
-
-          const dateStr = d.created
-            ? new Date(Number(d.created) || Date.now()).toLocaleDateString("en-IN")
-            : "";
+          card.className = "bg-white shadow rounded-lg p-4 flex flex-col items-center text-center relative";
 
           card.innerHTML = `
-            ${d.screenshot ? `<img src="${d.screenshot}" class="w-full h-40 object-cover rounded mb-2"/>` : ""}
-            <h2 class="font-bold text-lg">${d.name || "Anonymous"}</h2>
+            <img src="${d.screenshot}" alt="screenshot" class="w-32 h-32 object-cover rounded mb-2 border">
+            <h2 class="text-lg font-bold text-purple-700">${d.name || "Anonymous"}</h2>
             <p class="text-sm text-gray-600">${d.address || ""}</p>
-            <p class="mt-1">💰 <b>₹${d.amount || "-"}</b></p>
-            <p class="text-xs text-gray-500">📅 ${dateStr}</p>
-            <p class="text-sm ${d.verified ? 'text-green-600' : 'text-yellow-600'}">
-              Status: ${d.verified ? "✅ Verified" : "⏳ Pending"}
-            </p>
+            <p class="text-green-600 font-semibold mt-1">💰 ₹${d.amount || "0"}</p>
+            ${d.verified ? `<span class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">Verified</span>` 
+                         : `<span class="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">Pending</span>`}
           `;
 
           // Admin Controls
-          if (currentUser && currentUser.email === ADMIN_EMAIL) {
-            const btns = document.createElement("div");
-            btns.className = "flex gap-2 mt-2";
+          if (currentUser?.email === ADMIN_EMAIL) {
+            const controls = document.createElement("div");
+            controls.className = "flex gap-2 mt-2";
 
             const verifyBtn = document.createElement("button");
             verifyBtn.textContent = "✅ Verify";
-            verifyBtn.className = "btn-3d";
-            verifyBtn.onclick = () =>
-              db.ref("site/donations/" + d.id).update({ verified: true });
+            verifyBtn.className = "bg-green-500 text-white px-3 py-1 rounded text-sm";
+            verifyBtn.onclick = () => {
+              db.ref("site/donations/" + id).update({ verified: true });
+            };
 
-            const rejectBtn = document.createElement("button");
-            rejectBtn.textContent = "❌ Reject";
-            rejectBtn.className = "btn-3d";
-            rejectBtn.onclick = () =>
-              db.ref("site/donations/" + d.id).update({ verified: false });
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "🗑 Delete";
+            deleteBtn.className = "bg-red-500 text-white px-3 py-1 rounded text-sm";
+            deleteBtn.onclick = () => {
+              if (confirm("Delete this donor?")) {
+                db.ref("site/donations/" + id).remove();
+              }
+            };
 
-            btns.appendChild(verifyBtn);
-            btns.appendChild(rejectBtn);
-            card.appendChild(btns);
+            controls.appendChild(verifyBtn);
+            controls.appendChild(deleteBtn);
+            card.appendChild(controls);
           }
 
           donorList.appendChild(card);
@@ -150,5 +128,6 @@
       });
     }
   </script>
+
 </body>
 </html>
