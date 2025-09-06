@@ -45,7 +45,11 @@
         <p class="mb-2">📲 Pay on UPI No. 8806940156 (Scan QR or Copy ID)</p>
         <img id="qrImg" src="" class="mx-auto w-48 h-48 border rounded shadow mb-2" alt="QR Code" />
         <p id="upiText" class="font-bold text-lg text-indigo-700"></p>
-        <button type="button" id="copyUpiBtn" class="btn-3d mt-2">📋 Copy UPI ID</button>
+
+        <!-- ✅ New QR Download Button -->
+        <div class="flex justify-center gap-2 mt-2">
+          <button type="button" id="downloadQrBtn" class="btn-3d">⬇ QR Download</button>
+        </div>
       </div>
 
       <!-- Screenshot Upload -->
@@ -130,6 +134,7 @@
   const thankyouModal=document.getElementById("thankyouModal");
   const closeModal=document.getElementById("closeModal");
   const userDonationsList=document.getElementById("userDonationsList");
+  const downloadQrBtn=document.getElementById("downloadQrBtn"); // ✅ new
 
   let currentUser=null;
   let modalTimer=null;
@@ -203,10 +208,10 @@
     const base64=await toBase64(file);
     const fd=new FormData();
     fd.append("image",base64);
-   const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
-  method: "POST",
-  body: fd
-});
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+      method: "POST",
+      body: fd
+    });
 
     const data=await res.json();
     if(data.success) return data.data.url;
@@ -297,11 +302,26 @@
   }
 
   // --- Copy UPI ---
-  copyUpiBtn.onclick=()=>{
-    if(upiText.textContent){
-      navigator.clipboard.writeText(upiText.textContent);
-      alert("📋 Copied: "+upiText.textContent);
-    }
+  // अगर copy button इस्तेमाल नहीं करना तो इसे remove कर सकते हो
+  // अभी वही रहने दिया ताकि कुछ खराब न हो
+  if(copyUpiBtn){
+    copyUpiBtn.onclick=()=>{
+      if(upiText.textContent){
+        navigator.clipboard.writeText(upiText.textContent);
+        alert("📋 Copied: "+upiText.textContent);
+      }
+    };
+  }
+
+  // --- Download QR ---
+  downloadQrBtn.onclick=()=>{
+    if(!qrImg.src) return alert("❌ QR not available!");
+    const a=document.createElement("a");
+    a.href=qrImg.src;
+    a.download="talimi_ittehad_qr.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // --- Admin QR + UPI Upload/Delete ---
