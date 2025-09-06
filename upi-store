@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>💝 Donate | Talimi Ittehad</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .title-3d{font-weight:700;font-size:1.5rem;color:#fff;text-shadow:0 0 6px rgba(0,0,0,.8);}
+    .btn-3d{background:linear-gradient(135deg,#4f46e5,#9333ea);color:#fff;padding:.5rem 1rem;border-radius:.5rem;box-shadow:0 3px 6px rgba(0,0,0,.3);transition:.2s;}
+    .btn-3d:hover{transform:translateY(-2px);box-shadow:0 5px 10px rgba(0,0,0,.4);}
+    .card-3d{background:#fff;border-radius:.8rem;padding:1rem;box-shadow:0 6px 14px rgba(0,0,0,.15);}
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:1000;}
+    .modal-content{background:#fff;padding:1.5rem;border-radius:.8rem;box-shadow:0 10px 25px rgba(0,0,0,.4);max-width:400px;text-align:center;animation:zoomIn .4s ease;}
+    @keyframes zoomIn{from{transform:scale(0.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Header -->
+<header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
+  <div class="max-w-5xl mx-auto px-3 py-3 flex items-center justify-between">
+    <a href="index.html" class="title-3d">Talimi Ittehad</a>
+    <nav class="flex gap-2 text-sm text-white">
+      <a href="index.html">🏠 Home</a>
+      <a href="donate.html" class="font-bold underline">💝 Doner </a>
+    </nav>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="max-w-2xl mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-4">💝 Support with Donation</h1>
+
+  <!-- Donation Form -->
+  <div class="card-3d mb-6">
+    <h2 class="font-semibold mb-2">Fill your details</h2>
+    <form id="donationForm" class="flex flex-col gap-3">
+      <input type="text" id="name" placeholder="👤 Your Name" class="border p-2 rounded" required />
+      <input type="text" id="address" placeholder="🏠 Your Address" class="border p-2 rounded" required />
+      <input type="number" id="amount" placeholder="💰 Amount (₹)" class="border p-2 rounded" required />
+
+      <!-- QR + UPI -->
+      <div class="text-center">
+        <p class="mb-2">📲 Pay on UPI No. 8806940156 (Scan QR or Copy ID)</p>
+        <img id="qrImg" src="" class="mx-auto w-48 h-48 border rounded shadow mb-2" alt="QR Code" />
+        <p id="upiText" class="font-bold text-lg text-indigo-700"></p>
+        <button type="button" id="copyUpiBtn" class="btn-3d mt-2">📋 Copy UPI ID</button>
+      </div>
+
+      <!-- Screenshot Upload -->
+      <div>
+        <label class="block font-medium mb-1">📸 Upload Payment Screenshot</label>
+        <input type="file" id="screenshot" accept="image/*" class="border p-2 rounded w-full" required />
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn-3d">🚀 Submit Donation</button>
+    </form>
+  </div>
+
+  <!-- User Donation List -->
+  <div id="userDonationsList" class="card-3d mb-6 hidden"></div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="card-3d hidden">
+    <h2 class="font-bold text-lg mb-3">👑 Admin - Donations List</h2>
+    <div id="donationsList" class="space-y-3 mb-6"></div>
+
+    <!-- QR + UPI Management -->
+    <h2 class="font-bold text-lg mb-2">🔑 Manage QR & UPI</h2>
+    <input type="file" id="qrUpload" accept="image/*" class="border p-2 rounded w-full mb-2" />
+    <input type="text" id="upiInput" placeholder="Enter UPI ID" class="border p-2 rounded w-full mb-2" />
+    <div class="flex gap-2">
+      <button id="uploadQRBtn" class="btn-3d">⬆ Update</button>
+      <button id="deleteQRBtn" class="btn-3d bg-red-600">🗑 Delete</button>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-100 text-center py-4 mt-10">
+  <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
+</footer>
+
+<!-- Modal Popup -->
+<div id="thankyouModal" class="modal hidden">
+  <div class="modal-content">
+    <h2 class="text-xl font-bold mb-2">✅ Payment Verified</h2>
+    <p>अस्सलाम अलैकुम<br/>तालीमी इत्तेहाद में आपका दिया गया मदद मिल गया है 👍
+ 🤲</p>
+    <button id="closeModal" class="btn-3d mt-4">❌ Close</button>
+  </div>
+</div>
+
+<!-- Loud Notification Sound -->
+<audio id="notifySound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
+
+  // --- Firebase Config ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // --- Config ---
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+  const IMGBB_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; 
+
+  // DOM Elements
+  const donationForm=document.getElementById("donationForm");
+  const submitBtn=document.getElementById("submitBtn");
+  const qrImg=document.getElementById("qrImg");
+  const upiText=document.getElementById("upiText");
+  const copyUpiBtn=document.getElementById("copyUpiBtn");
+  const adminPanel=document.getElementById("adminPanel");
+  const donationsList=document.getElementById("donationsList");
+  const thankyouModal=document.getElementById("thankyouModal");
+  const closeModal=document.getElementById("closeModal");
+  const userDonationsList=document.getElementById("userDonationsList");
+
+  let currentUser=null;
+  let modalTimer=null;
+
+  // --- Show Modal ---
+  function showModal(){
+    thankyouModal.classList.remove("hidden");
+    const sound=document.getElementById("notifySound");
+    sound.currentTime=0;
+    sound.play().catch(err=>console.log("Autoplay blocked:",err));
+    modalTimer=setTimeout(()=>thankyouModal.classList.add("hidden"),6000);
+  }
+  closeModal.onclick=()=>{
+    thankyouModal.classList.add("hidden");
+    if(modalTimer) clearTimeout(modalTimer);
+  };
+
+  // --- Auth ---
+  onAuthStateChanged(auth,async user=>{
+    if(user){
+      currentUser=user;
+      liveQR();
+      liveDonationStatus();
+      if(user.email===ADMIN_EMAIL){
+        adminPanel.classList.remove("hidden");
+        loadDonationsLive();
+      }
+    }else{
+      await signInWithPopup(auth,provider);
+    }
+  });
+
+  // --- Live Donation Status (user specific) ---
+  function liveDonationStatus(){
+    if(!currentUser) return;
+    const q=query(collection(db,"donations"), where("uid","==",currentUser.uid));
+    onSnapshot(q,snap=>{
+      if(snap.empty) return;
+      let html="<h3 class='font-bold mb-2'>📝 Your Donations</h3>";
+      snap.forEach(d=>{
+        const data=d.data();
+        html+=`
+          <div class="border rounded p-2 mb-2">
+            <p><b>💰 ₹${data.amount}</b> - ${data.verified ? "✅ Verified" : "⏳ Pending"}</p>
+            <img src="${data.screenshot}" class="w-32 mt-1 border rounded" />
+          </div>`;
+        if(data.verified){
+          if(localStorage.getItem("lastVerified")!==d.id){
+            localStorage.setItem("lastVerified",d.id);
+            showModal();
+          }
+        }
+      });
+      userDonationsList.classList.remove("hidden");
+      userDonationsList.innerHTML=html;
+    });
+  }
+
+  // --- File to Base64 ---
+  function toBase64(file){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result.split(",")[1]);
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // --- ImgBB Upload ---
+  async function uploadToImgBB(file){
+    const base64=await toBase64(file);
+    const fd=new FormData();
+    fd.append("image",base64);
+   const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+  method: "POST",
+  body: fd
+});
+
+    const data=await res.json();
+    if(data.success) return data.data.url;
+    else throw new Error("ImgBB upload failed");
+  }
+
+  // --- Submit Donation ---
+  donationForm.onsubmit=async e=>{
+    e.preventDefault();
+    if(!currentUser) return alert("Please login first!");
+
+    submitBtn.disabled=true;
+    submitBtn.textContent="⏳ Uploading...";
+
+    const name=document.getElementById("name").value;
+    const address=document.getElementById("address").value;
+    const amount=document.getElementById("amount").value;
+    const file=document.getElementById("screenshot").files[0];
+    if(!file){
+      alert("Upload screenshot!");
+      submitBtn.disabled=false;
+      submitBtn.textContent="🚀 Submit Donation";
+      return;
+    }
+
+    try{
+      const screenshotUrl=await uploadToImgBB(file);
+      await addDoc(collection(db,"donations"),{
+        uid:currentUser.uid,name,address,amount,
+        screenshot:screenshotUrl,verified:false,created:Date.now()
+      });
+      alert("✅ Donation submitted! Awaiting admin verification.");
+      donationForm.reset();
+    }catch(err){
+      alert("❌ Error: "+err.message);
+    }finally{
+      submitBtn.disabled=false;
+      submitBtn.textContent="🚀 Submit Donation";
+    }
+  };
+
+  // --- Load Donations (Admin - Live) ---
+  function loadDonationsLive(){
+    onSnapshot(collection(db,"donations"),snap=>{
+      donationsList.innerHTML="";
+      snap.forEach(docSnap=>{
+        const d=docSnap.data();
+        const div=document.createElement("div");
+        div.className="border p-3 rounded shadow bg-white";
+        div.innerHTML=`
+          <p><b>👤 ${d.name}</b> (${d.address})</p>
+          <p>💰 Amount: ₹${d.amount}</p>
+          <img src="${d.screenshot}" class="w-40 my-2 border rounded shadow" />
+          <p>Status: ${d.verified?"✅ Verified":"⏳ Pending"}</p>
+          <div class="flex gap-2 mt-2">
+            ${!d.verified ? `<button class="btn-3d verify">✅ Verify</button>` : ""}
+            <button class="btn-3d delete">🗑 Delete</button>
+          </div>`;
+        if(!d.verified){
+          div.querySelector(".verify").onclick=async()=>{
+            await updateDoc(doc(db,"donations",docSnap.id),{verified:true});
+            alert("✅ Donation verified!");
+          };
+        }
+        div.querySelector(".delete").onclick=async()=>{
+          if(confirm("Delete donation?")){
+            await deleteDoc(doc(db,"donations",docSnap.id));
+            alert("🗑 Donation deleted!");
+          }
+        };
+        donationsList.appendChild(div);
+      });
+    });
+  }
+
+  // --- Live QR + UPI from Firestore ---
+  function liveQR(){
+    onSnapshot(doc(db,"config","qr"),snap=>{
+      if(snap.exists()){
+        const data=snap.data();
+        qrImg.src=data.url||"https://via.placeholder.com/200?text=No+QR";
+        upiText.textContent=data.upi||"";
+      }else{
+        qrImg.src="https://via.placeholder.com/200?text=No+QR";
+        upiText.textContent="";
+      }
+    });
+  }
+
+  // --- Copy UPI ---
+  copyUpiBtn.onclick=()=>{
+    if(upiText.textContent){
+      navigator.clipboard.writeText(upiText.textContent);
+      alert("📋 Copied: "+upiText.textContent);
+    }
+  };
+
+  // --- Admin QR + UPI Upload/Delete ---
+  const qrUpload=document.getElementById("qrUpload");
+  const upiInput=document.getElementById("upiInput");
+  const uploadQRBtn=document.getElementById("uploadQRBtn");
+  const deleteQRBtn=document.getElementById("deleteQRBtn");
+
+  uploadQRBtn.onclick=async()=>{
+    let url=null;
+    if(qrUpload.files[0]) url=await uploadToImgBB(qrUpload.files[0]);
+    const upi=upiInput.value;
+    await setDoc(doc(db,"config","qr"),{url,upi});
+    alert("✅ QR / UPI updated!");
+    qrUpload.value=""; upiInput.value="";
+  };
+
+  deleteQRBtn.onclick=async()=>{
+    if(confirm("Delete QR & UPI?")){
+      await deleteDoc(doc(db,"config","qr"));
+    }
+  };
+</script>
+</body>
+</html>
