@@ -1,135 +1,141 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
   <title>Donors | Talimi Ittehad</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .btn-3d {
-      background: linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
-      box-shadow: 0 4px 0 rgba(0,0,0,.25), 0 6px 12px rgba(0,0,0,.2);
-      transition: transform .12s ease, box-shadow .12s ease;
-      font-size:.8rem; padding:.4rem .9rem;
-      color:#fff; font-weight:600; border-radius:6px;
+      background: linear-gradient(to bottom, #9333ea, #7e22ce);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px #4c1d95;
+      transition: all 0.2s;
     }
-    .btn-3d:active { transform: translateY(1px); }
+    .btn-3d:hover { transform: translateY(-2px); }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-100">
 
-<header class="bg-purple-700 text-white py-4 text-center font-bold text-xl shadow">
-  🫶 Donors – Talimi Ittehad
-</header>
+  <!-- Header -->
+  <div class="bg-purple-700 text-white p-4 text-center text-xl font-bold">
+    🕋 Donors List
+  </div>
 
-<div class="max-w-5xl mx-auto p-4">
-  <!-- Login Button -->
-  <div class="flex justify-end mb-4">
-    <button id="authBtn" class="btn-3d">Login</button>
+  <!-- Auth -->
+  <div id="authBox" class="p-4 text-center">
+    <button id="loginBtn" class="btn-3d">🔑 Admin Login</button>
+    <button id="logoutBtn" class="btn-3d hidden">🚪 Logout</button>
   </div>
 
   <!-- Donors List -->
-  <div id="donorList" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-</div>
+  <div id="donorList" class="grid gap-4 p-4 max-w-3xl mx-auto"></div>
 
-<footer class="bg-gray-100 text-center py-4 mt-6 text-sm text-gray-600">
-  © 2025 Talimi Ittehad
-</footer>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    // 🔑 Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+      authDomain: "all-madrsa.firebaseapp.com",
+      databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
+      projectId: "all-madrsa",
+      storageBucket: "all-madrsa.appspot.com",
+      messagingSenderId: "619313835874",
+      appId: "1:619313835874:web:e387e1297663f11fc2463b"
+    };
 
-<script>
-  // ✅ Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-    authDomain: "all-madrsa.firebaseapp.com",
-    databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
-    projectId: "all-madrsa",
-    storageBucket: "all-madrsa.appspot.com",
-    messagingSenderId: "619313835874",
-    appId: "1:619313835874:web:e387e1297663f11fc2463b"
-  };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
+    const donorList = document.getElementById("donorList");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const ADMIN_EMAIL = "admin@example.com"; // 👈 अपना admin email डालो
+    let currentUser = null;
 
-  const authBtn = document.getElementById("authBtn");
-  const donorList = document.getElementById("donorList");
+    // 🔹 Auth
+    loginBtn.onclick = () => {
+      const email = prompt("Enter admin email:");
+      const pass = prompt("Enter password:");
+      auth.signInWithEmailAndPassword(email, pass).catch(err => alert(err.message));
+    };
 
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-  let currentUser = null;
+    logoutBtn.onclick = () => auth.signOut();
 
-  // ✅ Auth Button
-  authBtn.onclick = () => {
-    if (!auth.currentUser) {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider);
-    } else {
-      auth.signOut();
-    }
-  };
-
-  auth.onAuthStateChanged(user => {
-    currentUser = user;
-    authBtn.textContent = user ? "Logout" : "Login";
-    loadDonors();
-  });
-
-  // ✅ Load Donors
-  function loadDonors() {
-    db.ref("donations").once("value").then(snapshot => {
-      donorList.innerHTML = "";
-      snapshot.forEach(child => {
-        const d = child.val();
-        const id = child.key;
-
-        // 👉 सिर्फ verified दिखे normal user को
-        if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
-          if (!d.verified) return;
-        }
-
-        const card = document.createElement("div");
-        card.className = "bg-white rounded-lg shadow p-3";
-
-        card.innerHTML = `
-          ${d.screenshot ? `<img src="${d.screenshot}" class="w-full h-40 object-cover rounded mb-2"/>` : ""}
-          <h2 class="font-bold text-lg">${d.name || "Anonymous"}</h2>
-          <p class="text-sm text-gray-600">${d.address || ""}</p>
-          <p class="mt-1">💰 <b>₹${d.amount || "-"}</b></p>
-          <p class="text-xs text-gray-500">📅 ${d.created ? new Date(d.created).toLocaleDateString("en-IN") : ""}</p>
-          <p class="text-sm ${d.verified ? 'text-green-600' : 'text-yellow-600'}">
-            Status: ${d.verified ? "✅ Verified" : "⏳ Pending"}
-          </p>
-        `;
-
-        // 👨‍💻 Admin controls
-        if (currentUser && currentUser.email === ADMIN_EMAIL) {
-          const btns = document.createElement("div");
-          btns.className = "flex gap-2 mt-2";
-
-          const verifyBtn = document.createElement("button");
-          verifyBtn.textContent = "✅ Verify";
-          verifyBtn.className = "btn-3d";
-          verifyBtn.onclick = () => db.ref("donations/" + id).update({ verified: true });
-
-          const rejectBtn = document.createElement("button");
-          rejectBtn.textContent = "❌ Reject";
-          rejectBtn.className = "btn-3d";
-          rejectBtn.onclick = () => db.ref("donations/" + id).update({ verified: false });
-
-          btns.appendChild(verifyBtn);
-          btns.appendChild(rejectBtn);
-          card.appendChild(btns);
-        }
-
-        donorList.appendChild(card);
-      });
+    auth.onAuthStateChanged(user => {
+      currentUser = user;
+      if (user) {
+        loginBtn.classList.add("hidden");
+        logoutBtn.classList.remove("hidden");
+      } else {
+        loginBtn.classList.remove("hidden");
+        logoutBtn.classList.add("hidden");
+      }
+      loadDonors();
     });
-  }
-</script>
+
+    // 🔹 Load Donors (Realtime)
+    function loadDonors() {
+      db.ref("donations").on("value", snapshot => {
+        donorList.innerHTML = "";
+        snapshot.forEach(child => {
+          const d = child.val();
+          const id = child.key;
+
+          // User → सिर्फ verified
+          if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+            if (!d.verified) return;
+          }
+
+          const card = document.createElement("div");
+          card.className = "bg-white rounded-lg shadow p-3";
+
+          card.innerHTML = `
+            ${d.screenshot ? `<img src="${d.screenshot}" class="w-full h-40 object-cover rounded mb-2"/>` : ""}
+            <h2 class="font-bold text-lg">${d.name || "Anonymous"}</h2>
+            <p class="text-sm text-gray-600">${d.address || ""}</p>
+            <p class="mt-1">💰 <b>₹${d.amount || "-"}</b></p>
+            <p class="text-xs text-gray-500">
+              📅 ${d.created ? new Date(Number(d.created)).toLocaleDateString("en-IN") : ""}
+            </p>
+            <p class="text-sm ${d.verified ? 'text-green-600' : 'text-yellow-600'}">
+              Status: ${d.verified ? "✅ Verified" : "⏳ Pending"}
+            </p>
+          `;
+
+          // Admin controls
+          if (currentUser && currentUser.email === ADMIN_EMAIL) {
+            const btns = document.createElement("div");
+            btns.className = "flex gap-2 mt-2";
+
+            const verifyBtn = document.createElement("button");
+            verifyBtn.textContent = "✅ Verify";
+            verifyBtn.className = "btn-3d";
+            verifyBtn.onclick = () => db.ref("donations/" + id).update({ verified: true });
+
+            const rejectBtn = document.createElement("button");
+            rejectBtn.textContent = "❌ Reject";
+            rejectBtn.className = "btn-3d";
+            rejectBtn.onclick = () => db.ref("donations/" + id).update({ verified: false });
+
+            btns.appendChild(verifyBtn);
+            btns.appendChild(rejectBtn);
+            card.appendChild(btns);
+          }
+
+          donorList.appendChild(card);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
