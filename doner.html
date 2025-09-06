@@ -24,17 +24,12 @@
 <body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
 
   <!-- Login -->
-  <div id="loginSection" class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-sm">
-    <h1 class="title-3d mb-4 text-center">Admin Login</h1>
-    <input id="email" type="email" placeholder="Email"
-           class="w-full mb-3 p-3 border rounded-lg focus:outline-none" />
-    <input id="password" type="password" placeholder="Password"
-           class="w-full mb-3 p-3 border rounded-lg focus:outline-none" />
-    <button id="loginBtn"
+  <div id="loginSection" class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-sm hidden">
+    <h1 class="title-3d mb-4 text-center">Login</h1>
+    <button id="googleLoginBtn"
             class="w-full bg-purple-600 text-white p-3 rounded-lg font-bold hover:bg-purple-700 transition">
-      Login
+      🔑 Login with Google
     </button>
-    <p id="loginError" class="text-red-600 mt-3 text-center hidden">Invalid login.</p>
   </div>
 
   <!-- Donors -->
@@ -55,7 +50,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, collection, query, orderBy, onSnapshot
@@ -78,23 +73,20 @@
     // DOM
     const loginSection = document.getElementById("loginSection");
     const donorSection = document.getElementById("donorSection");
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
-    const loginBtn = document.getElementById("loginBtn");
-    const loginError = document.getElementById("loginError");
+    const googleLoginBtn = document.getElementById("googleLoginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const statusText = document.getElementById("statusText");
     const donorList = document.getElementById("donorList");
 
     let unsubscribeRealtime = null;
 
-    // 🟣 Login
-    loginBtn.addEventListener("click", async () => {
+    // 🟣 Google Login
+    googleLoginBtn.addEventListener("click", async () => {
+      const provider = new GoogleAuthProvider();
       try {
-        await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+        await signInWithPopup(auth, provider);
       } catch (err) {
         console.error("Login failed:", err);
-        loginError.classList.remove("hidden");
       }
     });
 
@@ -105,15 +97,18 @@
 
     // 👀 Auth change
     onAuthStateChanged(auth, (user) => {
-      if (user && user.email === "zaradigitalseva@gmail.com") {
-        loginSection.classList.add("hidden");
-        donorSection.classList.remove("hidden");
-        startRealtimeDonors();
-      } else {
+      if (!user) {
+        // Not logged in → show login
         loginSection.classList.remove("hidden");
         donorSection.classList.add("hidden");
         stopRealtimeDonors();
+        return;
       }
+
+      // ✅ Logged in (admin or donor)
+      loginSection.classList.add("hidden");
+      donorSection.classList.remove("hidden");
+      startRealtimeDonors();
     });
 
     // 🔄 Start donors stream
