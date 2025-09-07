@@ -10,6 +10,7 @@
     .btn{background:#4f46e5;color:#fff;padding:.6rem 1rem;border-radius:.5rem;font-weight:600}
     .nav-link{padding:.35rem .6rem;border-radius:.5rem}
     .nav-active{background:#ffffff22}
+    .card-3d{background:#fff;border-radius:.8rem;padding:1rem;box-shadow:0 4px 10px rgba(0,0,0,.1);}
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -28,7 +29,7 @@
 </header>
 
 <!-- Main -->
-<main class="max-w-4xl mx-auto p-4">
+<main class="max-w-5xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-2">संपर्क करें</h1>
   <p class="text-gray-700 mb-4">किसी भी सुझाव/समस्या के लिए नीचे फ़ॉर्म भरें:</p>
 
@@ -49,9 +50,10 @@
     <button class="btn" type="submit">📩 Send</button>
   </form>
 
-  <div class="mt-6 text-sm text-gray-700">
-    <p><strong>ईमेल:</strong> zaradigitalseva@gmail.com</p>
-    <p><strong>WhatsApp:</strong> +91-XXXXXXXXXX</p>
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="card-3d mt-8 hidden">
+    <h2 class="text-xl font-bold mb-4">👑 Admin - Contact Messages</h2>
+    <div id="messagesList" class="space-y-3"></div>
   </div>
 </main>
 
@@ -63,9 +65,10 @@
 <!-- Firebase Script -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
 
-  // 🔑 Firebase Config (आपका ही config use करेंगे)
+  // 🔑 Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
     authDomain: "all-madrsa.firebaseapp.com",
@@ -75,24 +78,25 @@
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
 
-  // Init Firebase
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Admin Email
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
   // Form Submit
   const contactForm = document.getElementById("contactForm");
   contactForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const name = document.getElementById("name").value;
     const email = document.getElementById("email").value;
     const message = document.getElementById("message").value;
 
     try {
       await addDoc(collection(db, "contacts"), {
-        name,
-        email,
-        message,
+        name, email, message,
         createdAt: serverTimestamp()
       });
       alert("✅ आपका संदेश भेज दिया गया है!");
@@ -101,6 +105,50 @@
       alert("❌ Error: " + err.message);
     }
   });
+
+  // Admin Panel Access
+  const adminPanel = document.getElementById("adminPanel");
+  const messagesList = document.getElementById("messagesList");
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user && user.email === ADMIN_EMAIL) {
+      adminPanel.classList.remove("hidden");
+      loadMessages();
+    } else if (!user) {
+      // Auto Google login
+      await signInWithPopup(auth, provider);
+    }
+  });
+
+  // Load Messages (Admin Only)
+  function loadMessages() {
+    const q = query(collection(db, "contacts"), orderBy("createdAt", "desc"));
+    onSnapshot(q, (snap) => {
+      messagesList.innerHTML = "";
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "border p-3 rounded bg-white shadow flex justify-between items-start";
+        div.innerHTML = `
+          <div>
+            <p><b>👤 ${d.name}</b> (${d.email || "No Email"})</p>
+            <p>💬 ${d.message}</p>
+            <p class="text-xs text-gray-500">📅 ${d.createdAt?.toDate().toLocaleString() || ""}</p>
+          </div>
+          <button class="bg-red-500 text-white px-2 py-1 rounded text-sm deleteBtn">❌ Delete</button>
+        `;
+
+        // Delete Button Click
+        div.querySelector(".deleteBtn").addEventListener("click", async () => {
+          if (confirm("क्या आप यह संदेश हटाना चाहते हैं?")) {
+            await deleteDoc(doc(db, "contacts", docSnap.id));
+          }
+        });
+
+        messagesList.appendChild(div);
+      });
+    });
+  }
 </script>
 
 </body>
