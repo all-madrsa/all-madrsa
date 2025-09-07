@@ -36,12 +36,12 @@
   <!-- Contact Form -->
   <form id="contactForm" class="bg-white border rounded-lg p-4 space-y-3">
     <div>
-
-       <label class="text-sm text-gray-600">नाम</label>
+      <label class="text-sm text-gray-600">नाम</label>
       <input class="w-full border p-2 rounded" name="name" id="name" required />
     </div>
+    <div>
       <label class="text-sm text-gray-600">Whatsapp</label>
-      <input class="w-full border p-2 rounded" name="Whatsapp" id="Whatsapp" required />
+      <input class="w-full border p-2 rounded" name="whatsapp" id="whatsapp" required />
     </div>
     <div>
       <label class="text-sm text-gray-600">ईमेल</label>
@@ -95,12 +95,13 @@
   contactForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("name").value;
+    const whatsapp = document.getElementById("whatsapp").value;
     const email = document.getElementById("email").value;
     const message = document.getElementById("message").value;
 
     try {
       await addDoc(collection(db, "contacts"), {
-        name, email, message,
+        name, whatsapp, email, message,
         createdAt: serverTimestamp()
       });
       alert("✅ आपका संदेश भेज दिया गया है!");
@@ -136,6 +137,7 @@
         div.innerHTML = `
           <div>
             <p><b>👤 ${d.name}</b> (${d.email || "No Email"})</p>
+            <p>📱 ${d.whatsapp || "No WhatsApp"}</p>
             <p>💬 ${d.message}</p>
             <p class="text-xs text-gray-500">📅 ${d.createdAt?.toDate().toLocaleString() || ""}</p>
           </div>
