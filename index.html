@@ -107,6 +107,29 @@ Maharashtra.</a>
   </div>
 </header>
 
+
+<script>
+  async function getPrayerTimes() {
+    let city = "Delhi";   // 🔹 apna city name daal do
+    let country = "India";
+
+    let url = `https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`;
+
+    let res = await fetch(url);
+    let data = await res.json();
+    let timings = data.data.timings;
+
+    document.getElementById("prayer-times").innerHTML = `
+      🕌 Fajr: ${timings.Fajr} | Dhuhr: ${timings.Dhuhr} | Asr: ${timings.Asr} | Maghrib: ${timings.Maghrib} | Isha: ${timings.Isha}
+    `;
+  }
+
+  getPrayerTimes();
+</script>
+
+
+
+  
 <!-- Notice Bar -->
 <div id="noticeBar" class="w-full">
   <marquee id="noticeText">📢 Welcome to Talimi Ittehad!</marquee>
