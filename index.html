@@ -1,11 +1,6 @@
 <!doctype html>
 <html lang="hi">
 <head>
-
-<link rel="manifest" href="/manifest.json">
-
-
-  
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Talimi Ittehad</title>
@@ -50,7 +45,6 @@
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
-
 <!-- Header -->
 <header id="header" class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between px-3 py-2">    
@@ -118,20 +112,57 @@
   loadPrayerTimes();
 </script>
 
+<!-- Header -->
+<header id="header" class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
+  <div class="max-w-6xl mx-auto flex flex-col px-3">    
+    <!-- Logo -->
+    <div class="flex justify-center py-2">
+      <div class="title-3d text-center">Talimi Ittehad</div>
+    </div>
+    <!-- Menu -->
+    <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
+      <div class="dropdown relative">
+        <button class="btn-3d">About ⬇</button>
+        <div class="dropdown-menu">
 
+          
+          <a href="https://all-madrsa.netlify.app/about.html">About us</a>
+          <a href="https://all-madrsa.netlify.app/mission.html">Mission</a>
+          <a href="https://all-madrsa.netlify.app/contact.html">Contect</a>
+          <a href="https://all-madrsa.netlify.app/privacy.html">Privacy policy</a>
+           <a href="https://all-madrsa.netlify.app/gallery.html">Gallery</a>
+          <a href="https://all-madrsa.netlify.app/terms.html">Terms & Conditions</a>
 
+           <a href="#Youtube">Youtube</a>
+           <a href="#Facbook">Facbook</a>
+          <a href="#Instagrm">Instagrm</a>
 
+          
 
+          
+        </div>
+      </div>
+      <div class="dropdown relative">
+        <button class="btn-3d">More ⬇</button>
+        <div class="dropdown-menu">
+          <a href="https://all-madrsa.netlify.app/Calendar.html">Calendar.html</a>
+          <a href="#faq">FAQ</a>
+        </div>
+      </div>
 
+      <!-- 🌐 Translate Button -->
+      <div class="relative flex flex-col items-center">
+        <button id="langBtn" class="btn-3d">🌐 Select Language</button>
+        <div id="google_translate_element" class="absolute top-full mt-2 hidden bg-white rounded shadow p-1 z-50 w-40 text-center"></div>
+      </div>
 
+      <!-- Auth + Add Button -->
+      <button id="authBtn" class="btn-3d">Login</button>
+      <button id="addBtn" class="btn-3d hidden">➕ Add Madarsa</button>
+    </div>
+  </div>
+</header>
 
-
-
-
-
-
-
-  
 <!-- Notice Bar -->
 <div id="noticeBar" class="w-full">
   <marquee id="noticeText">📢 Welcome to Talimi Ittehad!</marquee>
@@ -183,7 +214,7 @@
 </div>
 
 <!-- Floating Donate -->
-<a href="https://all-madrsa.netlify.app/upi.html" class="btn-3d floating-donate">Donate</a>
+<a href="#donate" class="btn-3d floating-donate">Donate</a>
 
 <!-- Footer -->
 <footer class="bg-gray-100 text-center py-4 mt-6">
@@ -493,49 +524,5 @@
     });
   }
 </script>
-
-<!-- ✅ Install App Button -->
-<button id="installBtn"
-  class="btn-3d fixed top-1/2 left-4 -translate-y-1/2 
-         px-4 py-2 rounded-full text-sm font-bold 
-         hidden z-50">
-  📲 Install
-</button>
-
-<script>
-  let deferredPrompt;
-  const installBtn = document.getElementById("installBtn");
-
-  // Service worker register
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/service-worker.js");
-  }
-
-  // Show button when install prompt is available
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.classList.remove("hidden");
-  });
-
-  // On click, trigger prompt (only once)
-  installBtn.addEventListener("click", async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        console.log("✅ App Installed");
-      } else {
-        console.log("❌ User dismissed");
-      }
-      deferredPrompt = null;
-      installBtn.classList.add("hidden");
-    }
-  });
-
-
-</script>
-
-
 </body>
 </html>
