@@ -8,7 +8,7 @@
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
     header { background: darkblue; color: white; padding: 15px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
     header h1 { margin: 0; font-size: 20px; flex: 1; text-align: center; }
-    header button { background: white; color: darkblue; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    header button { background: white; color: darkblue; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px; }
     header button:hover { background: #f1f1f1; }
     main { padding: 20px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white; }
@@ -18,19 +18,20 @@
     form { background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px; max-width: 400px; margin: auto; }
     label { display: block; margin: 10px 0 5px; font-weight: bold; }
     input[type="text"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-    button { background: darkblue; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
-    button:hover { background: navy; }
+    button.addBtn { background: darkblue; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+    button.addBtn:hover { background: navy; }
   </style>
 </head>
 <body>
-  <header>
-    <button id="homeBtn">Home</button>
-    <h1>Minorities Development Department, Maharashtra – Members</h1>
-    <div>
-      <span id="welcomeMsg" style="margin-right:10px; font-size:14px;"></span>
-      <button id="authBtn">Login with Google</button>
-    </div>
-  </header>
+ <header>
+  <button onclick="window.location.href='index.html'">Home</button>
+  <h1>Minorities Development Department, Maharashtra – Members</h1>
+  <div>
+    <span id="welcomeMsg" style="margin-right:10px; font-size:14px;"></span>
+    <button id="loginBtn">Login with Google</button>
+    <button id="logoutBtn" style="display:none;">Logout</button>
+  </div>
+</header>
 
   <main>
     <!-- Members Table -->
@@ -45,7 +46,9 @@
           <th>Action</th>
         </tr>
       </thead>
-      <tbody id="membersList"></tbody>
+      <tbody id="membersList">
+        <!-- Data Firebase से आएगा -->
+      </tbody>
     </table>
 
     <!-- Add Member Form (Hidden until Admin Login) -->
@@ -53,15 +56,15 @@
       <h2>Add Member</h2>
       <form id="addMemberForm">
         <label for="name">Member Name</label>
-        <input type="text" id="name" name="name" required />
+        <input type="text" id="name" name="name" placeholder="Enter member name" required />
 
         <label for="address">Address</label>
-        <input type="text" id="address" name="address" required />
+        <input type="text" id="address" name="address" placeholder="Enter address" required />
 
         <label for="photo">Upload Photo</label>
         <input type="file" id="photo" name="photo" accept="image/*" required />
 
-        <button type="submit">Add Member</button>
+        <button type="submit" class="addBtn">Add Member</button>
       </form>
     </div>
   </main>
@@ -70,8 +73,13 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { 
-      getAuth, GoogleAuthProvider, signInWithPopup, 
-      setPersistence, browserLocalPersistence, onAuthStateChanged, signOut 
+      getAuth, 
+      GoogleAuthProvider, 
+      signInWithPopup, 
+      setPersistence, 
+      browserLocalPersistence, 
+      onAuthStateChanged,
+      signOut
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
     import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
@@ -91,16 +99,18 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    const authBtn = document.getElementById("authBtn");
-    const welcomeMsg = document.getElementById("welcomeMsg");
+    const membersList = document.getElementById("membersList");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
     const formContainer = document.getElementById("formContainer");
     const addMemberForm = document.getElementById("addMemberForm");
-    const membersList = document.getElementById("membersList");
+    const welcomeMsg = document.getElementById("welcomeMsg");
 
-    // ✅ Admin Emails
+    // ✅ Only these emails are admin
     const adminEmails = ["zaradigitalseva@gmail.com"];
     let isAdmin = false;
 
+    // ✅ Persist login
     setPersistence(auth, browserLocalPersistence);
 
     // ✅ Load Members
@@ -114,7 +124,8 @@
           const deleteBtn = isAdmin 
             ? `<button onclick="deleteMember('${child.key}')">Delete</button>` 
             : ``;
-          membersList.innerHTML += `
+
+          const row = `
             <tr>
               <td>${count++}</td>
               <td>${data.name}</td>
@@ -123,9 +134,11 @@
               <td>${deleteBtn}</td>
             </tr>
           `;
+          membersList.innerHTML += row;
         });
       });
     }
+    loadMembers();
 
     // ✅ Add Member
     addMemberForm.addEventListener("submit", async (e) => {
@@ -134,35 +147,50 @@
       const address = document.getElementById("address").value;
       const photoFile = document.getElementById("photo").files[0];
 
-      // Upload to imgbb
-      const formData = new FormData();
-      formData.append("image", photoFile);
-      const res = await fetch("https://api.imgbb.com/1/upload?key=d12c2e4a8650157b2b6b9fe85336ea43", {
-        method: "POST",
-        body: formData
-      });
-      const data = await res.json();
-      const photoUrl = data.data.url;
+      if (!photoFile) {
+        alert("⚠️ Please select a photo");
+        return;
+      }
 
-      push(ref(db, "members"), { name, address, photo: photoUrl });
-      addMemberForm.reset();
-      alert("✅ Member Added!");
+      try {
+        // Upload to imgbb
+        const formData = new FormData();
+        formData.append("image", photoFile);
+
+        const res = await fetch("https://api.imgbb.com/1/upload?key=d12c2e4a8650157b2b6b9fe85336ea43", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error("Image upload failed");
+
+        const photoUrl = data.data.url;
+
+        // Save to Firebase
+        const dbRef = ref(db, "members");
+        push(dbRef, { name, address, photo: photoUrl });
+
+        addMemberForm.reset();
+        alert("✅ Member Added!");
+      } catch (err) {
+        alert("❌ Upload Failed: " + err.message);
+      }
     });
 
-    // ✅ Delete Member
+    // ✅ Delete Member (Admin Only)
     window.deleteMember = function (id) {
       if (isAdmin && confirm("Delete this member?")) {
         remove(ref(db, "members/" + id));
       }
     };
 
-    // ✅ Track Auth State
+    // ✅ Track login state
     onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        // ❌ login नहीं → redirect
-        window.location.href = "login.html";
-      } else {
-        welcomeMsg.textContent = "Welcome, " + user.email;
+      if (user) {
+        welcomeMsg.textContent = "Welcome, " + user.displayName;
+        logoutBtn.style.display = "inline-block";
+        loginBtn.style.display = "none";
+
         if (adminEmails.includes(user.email)) {
           isAdmin = true;
           formContainer.style.display = "block";
@@ -170,24 +198,30 @@
           isAdmin = false;
           formContainer.style.display = "none";
         }
-        authBtn.textContent = "Logout";
+        loadMembers();
+      } else {
+        welcomeMsg.textContent = "";
+        logoutBtn.style.display = "none";
+        loginBtn.style.display = "inline-block";
+        isAdmin = false;
+        formContainer.style.display = "none";
         loadMembers();
       }
     });
 
-    // ✅ Login / Logout Toggle
-    authBtn.addEventListener("click", () => {
-      if (auth.currentUser) {
-        signOut(auth);
-      } else {
-        const provider = new GoogleAuthProvider();
-        signInWithPopup(auth, provider).catch(err => alert("Login Failed: " + err.message));
-      }
+    // ✅ Google Login
+    loginBtn.addEventListener("click", () => {
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(auth, provider).catch((error) => {
+        alert("Login Failed: " + error.message);
+      });
     });
 
-    // ✅ Home Button
-    document.getElementById("homeBtn").addEventListener("click", () => {
-      window.location.href = "index.html";
+    // ✅ Logout
+    logoutBtn.addEventListener("click", () => {
+      signOut(auth).catch((error) => {
+        alert("Logout Failed: " + error.message);
+      });
     });
   </script>
 </body>
