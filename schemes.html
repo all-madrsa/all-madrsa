@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AIMPLB Members</title>
+  <title>Minorities Development Department, Maharashtra</title>
   <style>
     body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
     header { background:#004080; color:white; text-align:center; padding:15px; }
-    header img { height:70px; }
+    header h1 { margin:0; font-size:22px; }
     main { max-width:900px; margin:auto; padding:20px; }
     .member-card {
       display:flex; align-items:center;
@@ -27,29 +27,24 @@
       background:#004080; color:white; border:none;
       padding:10px; cursor:pointer; border-radius:5px;
     }
-    #login {
-      margin:20px; background:white; padding:20px; border-radius:8px;
+    #loginBtn {
+      margin:20px auto; display:block; background:#db4437; color:white;
+      padding:10px 20px; border:none; border-radius:5px; cursor:pointer;
+      font-size:16px;
     }
-    #login input { margin:5px 0; padding:8px; width:100%; }
   </style>
 </head>
 <body>
   <header>
-    <img src="44dff43b-72b0-46b1-b596-164d8bbbcf01.png" alt="Logo">
-    <h1>All India Muslim Personal Law Board – Members</h1>
+    <h1>Minorities Development Department, Maharashtra</h1>
   </header>
 
   <main>
     <h2>Members List</h2>
     <div id="members"></div>
 
-    <!-- Login Form -->
-    <div id="login">
-      <h3>Admin Login</h3>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
-      <button onclick="login()">Login</button>
-    </div>
+    <!-- Google Login Button -->
+    <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
 
     <!-- Add Member Form -->
     <form id="memberForm">
@@ -66,7 +61,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
   <script>
-    // ✅ Firebase Config (your project)
+    // ✅ Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
       authDomain: "all-madrasa.firebaseapp.com",
@@ -85,7 +80,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Load Members (सबको दिखेगा)
+    // Load Members
     function loadMembers() {
       db.collection("members").orderBy("name").get().then(snapshot => {
         let container = document.getElementById("members");
@@ -102,13 +97,12 @@
     }
     loadMembers();
 
-    // Admin Login
-    function login() {
-      let email = document.getElementById("email").value;
-      let password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password)
+    // Google Login
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
         .then(() => {
-          document.getElementById("login").style.display = "none";
+          document.getElementById("loginBtn").style.display = "none";
           document.getElementById("memberForm").style.display = "block";
         })
         .catch(err => alert("Login Failed: " + err.message));
@@ -126,17 +120,16 @@
       return data.data.url;
     }
 
-    // Add Member (सिर्फ admin कर सकता है)
+    // Add Member
     async function addMember() {
       let name = document.getElementById("name").value;
       let file = document.getElementById("photoFile").files[0];
-
       if (!file) { alert("कृपया फोटो चुनें"); return; }
 
-      // 1. Upload image to imgbb
+      // Upload to imgbb
       let photoUrl = await uploadImage(file);
 
-      // 2. Save to Firestore
+      // Save to Firestore
       db.collection("members").add({ name, photo: photoUrl })
         .then(() => {
           loadMembers();
