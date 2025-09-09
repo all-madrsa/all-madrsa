@@ -45,59 +45,14 @@
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
+
 <!-- Header -->
 <header id="header" class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
-  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between px-3 py-2">    
-
-      
-
-
-<script>
-
-  const qiblaBtn = document.getElementById("qiblaBtn");
-  const qiblaCompass = document.getElementById("qiblaCompass");
-
-  // Toggle compass show/hide
-  qiblaBtn.addEventListener("click", () => {
-    qiblaCompass.classList.toggle("hidden");
-  });
-
-  // ✅ Compass Needle Movement
-  const QIBLA_DIRECTION = 292; // Mumbai approx
-  const needle = document.getElementById("needle");
-
-  if (window.DeviceOrientationEvent) {
-    window.addEventListener("deviceorientationabsolute", handler, true);
-    window.addEventListener("deviceorientation", handler, true);
-  }
-
-  function handler(e) {
-    let heading = e.alpha;
-    if (typeof e.webkitCompassHeading !== "undefined") {
-      heading = e.webkitCompassHeading; // iOS
-    }
-    if (heading == null) return;
-    const rotation = QIBLA_DIRECTION - heading;
-    needle.style.transform = `rotate(${rotation}deg)`;
-  }
-
-
-
-  // ✅ Salat Times API (Aladhan)
-  async function loadPrayerTimes(){
-    try {
-      const res = await fetch("https://api.aladhan.com/v1/timingsByCity?city=Mumbai&country=India&method=2");
-      const data = await res.json();
-      const t = data.data.timings;
-      document.getElementById("prayer-times").innerHTML =
-        `Fajr: ${t.Fajr} | Dhuhr: ${t.Dhuhr} | Asr: ${t.Asr} | Maghrib: ${t.Maghrib} | Isha: ${t.Isha}`;
-    } catch(err){
-      document.getElementById("prayer-times").textContent = "❌ Error loading prayer times";
-    }
-  }
-  loadPrayerTimes();
-</script>
-
+  <div class="max-w-6xl mx-auto flex flex-col px-3">    
+    <!-- Logo -->
+    <div class="flex justify-center py-2">
+      <div class="title-3d text-center">Talimi Ittehad</div>
+    </div>
     <!-- Menu -->
     <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
       <div class="dropdown relative">
