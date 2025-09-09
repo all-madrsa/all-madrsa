@@ -22,7 +22,7 @@
 </head>
 <body>
   <header>
-  ALL INDIA MUSLIM PERSONAL BOARD
+    Minorities Development Department, Maharashtra – Members
   </header>
 
   <main>
@@ -93,6 +93,7 @@
 
     // ✅ Only these emails are admin
     const adminEmails = ["zaradigitalseva@gmail.com"];
+    let isAdmin = false;
 
     // ✅ Load Members
     function loadMembers() {
@@ -102,13 +103,17 @@
         let count = 1;
         snapshot.forEach((child) => {
           const data = child.val();
+          const deleteBtn = isAdmin 
+            ? `<button onclick="deleteMember('${child.key}')">Delete</button>` 
+            : ``;
+
           const row = `
             <tr>
               <td>${count++}</td>
               <td>${data.name}</td>
               <td><img src="${data.photo}" width="60"/></td>
               <td>${data.address}</td>
-              <td><button onclick="deleteMember('${child.key}')">Delete</button></td>
+              <td>${deleteBtn}</td>
             </tr>
           `;
           membersList.innerHTML += row;
@@ -143,9 +148,9 @@
       alert("✅ Member Added!");
     });
 
-    // ✅ Delete Member
+    // ✅ Delete Member (Admin Only)
     window.deleteMember = function (id) {
-      if (confirm("Delete this member?")) {
+      if (isAdmin && confirm("Delete this member?")) {
         remove(ref(db, "members/" + id));
       }
     };
@@ -157,10 +162,12 @@
         .then((result) => {
           const user = result.user;
           if (adminEmails.includes(user.email)) {
+            isAdmin = true;
             formContainer.style.display = "block";
             loginBtn.style.display = "none";
+            loadMembers();  // 🔄 reload so delete buttons appear
           } else {
-            alert("❌ You are not an Admin. Only Admin can add members.");
+            alert("❌ आप Admin नहीं हैं। आप केवल list देख सकते हैं।");
           }
         })
         .catch((error) => {
