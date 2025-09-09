@@ -3,102 +3,150 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AIMPLB Members</title>
+  <title>Minorities Development Department, Maharashtra</title>
   <style>
     body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
     header { background:#004080; color:white; text-align:center; padding:15px; }
-    header img { height:70px; }
-    main { max-width:900px; margin:auto; padding:20px; }
-    .member-card { display:flex; align-items:center; background:white; margin:10px 0; padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-    .member-card img { width:80px; height:80px; border-radius:50%; margin-right:15px; object-fit:cover; }
-    form { display:none; background:white; padding:20px; border-radius:8px; margin-top:20px; }
-    form input { width:100%; margin:8px 0; padding:10px; }
-    form button { background:#004080; color:white; border:none; padding:10px; cursor:pointer; border-radius:5px; }
-    #login { margin:20px; background:white; padding:20px; border-radius:8px; }
-    #login input { margin:5px 0; padding:8px; width:100%; }
+    header h1 { margin:0; font-size:22px; }
+    main { max-width:1000px; margin:auto; padding:20px; }
+
+    table { width:100%; border-collapse: collapse; margin-top:20px; background:white; }
+    th, td { border:1px solid #ccc; padding:10px; text-align:center; }
+    th { background:#004080; color:white; }
+    img { width:60px; height:60px; object-fit:cover; border-radius:6px; }
+
+    .deleteBtn {
+      background:red; color:white; border:none; padding:6px 10px;
+      cursor:pointer; border-radius:5px; font-size:14px;
+    }
+
+    form {
+      display:none; background:white; padding:20px;
+      border-radius:8px; margin-top:20px;
+    }
+    form input, form textarea { width:100%; margin:8px 0; padding:10px; }
+    form button {
+      background:#004080; color:white; border:none;
+      padding:10px; cursor:pointer; border-radius:5px;
+    }
+
+    #loginBtn {
+      margin:20px auto; display:block; background:#db4437; color:white;
+      padding:10px 20px; border:none; border-radius:5px; cursor:pointer;
+      font-size:16px;
+    }
   </style>
 </head>
 <body>
   <header>
-    <img src="44dff43b-72b0-46b1-b596-164d8bbbcf01.png" alt="Logo">
-    <h1>All India Muslim Personal Law Board – Members</h1>
+    <h1>Minorities Development Department, Maharashtra</h1>
   </header>
 
   <main>
     <h2>Members List</h2>
-    <div id="members"></div>
+    <table id="membersTable">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Name</th>
+          <th>Photo</th>
+          <th>Address</th>
+          <th id="actionHeader" style="display:none;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="membersBody"></tbody>
+    </table>
 
-    <!-- Login Form -->
-    <div id="login">
-      <h3>Admin Login</h3>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
-      <button onclick="login()">Login</button>
-    </div>
+    <!-- Google Login Button -->
+    <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
 
-    <!-- Add Member Form -->
+    <!-- Add Member Form (Admin Only) -->
     <form id="memberForm">
       <h3>Add Member</h3>
       <input type="text" id="name" placeholder="Member Name" required>
+      <textarea id="address" placeholder="Address" required></textarea>
       <input type="file" id="photoFile" accept="image/*" required>
       <button type="button" onclick="addMember()">Add Member</button>
     </form>
   </main>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <!-- ✅ Firebase v8 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
-    // 🔹 Firebase Config
+    // ✅ Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-      authDomain: "all-madrsa.firebaseapp.com",
+      authDomain: "all-madrasa.firebaseapp.com",
+      databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
       projectId: "all-madrsa",
       storageBucket: "all-madrsa.appspot.com",
       messagingSenderId: "619313835874",
       appId: "1:619313835874:web:e387e1297663f11fc2463b"
     };
 
-    // 🔹 imgbb API Key
+    // ✅ imgbb API Key
     const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
 
     // Init Firebase
-    const app = firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Load Members
+    // ✅ Allowed Admin Emails
+    const adminEmails = ["youradmin@gmail.com"];
+
+    let currentUser = null;
+    let isAdmin = false;
+
+    // 🔹 Load Members (Realtime)
     function loadMembers() {
-      db.collection("members").get().then(snapshot => {
-        let container = document.getElementById("members");
-        container.innerHTML = "";
+      db.collection("members").orderBy("sno").onSnapshot(snapshot => {
+        let tbody = document.getElementById("membersBody");
+        tbody.innerHTML = "";
         snapshot.forEach(doc => {
           let m = doc.data();
-          container.innerHTML += `
-            <div class="member-card">
-              <img src="${m.photo}" alt="${m.name}">
-              <span>${m.name}</span>
-            </div>`;
+          let deleteBtn = (isAdmin) ? `<button class="deleteBtn" onclick="deleteMember('${doc.id}')">Delete</button>` : "";
+          let actionCol = (isAdmin) ? `<td>${deleteBtn}</td>` : "";
+          tbody.innerHTML += `
+            <tr>
+              <td>${m.sno}</td>
+              <td>${m.name}</td>
+              <td><img src="${m.photo}" alt="${m.name}"></td>
+              <td>${m.address}</td>
+              ${actionCol}
+            </tr>`;
         });
       });
     }
     loadMembers();
 
-    // Login
-    function login() {
-      let email = document.getElementById("email").value;
-      let password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          document.getElementById("login").style.display = "none";
-          document.getElementById("memberForm").style.display = "block";
-        })
-        .catch(err => alert(err.message));
+    // 🔹 Auth state check
+    auth.onAuthStateChanged(user => {
+      currentUser = user;
+      if (user && adminEmails.includes(user.email)) {
+        isAdmin = true;
+        document.getElementById("loginBtn").style.display = "none";
+        document.getElementById("memberForm").style.display = "block";
+        document.getElementById("actionHeader").style.display = "table-cell";
+      } else {
+        isAdmin = false;
+        document.getElementById("loginBtn").style.display = "block";
+        document.getElementById("memberForm").style.display = "none";
+        document.getElementById("actionHeader").style.display = "none";
+      }
+      loadMembers();
+    });
+
+    // 🔹 Google Login
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(err => alert("Login Failed: " + err.message));
     }
 
-    // Upload to imgbb
+    // 🔹 Upload to imgbb
     async function uploadImage(file) {
       let formData = new FormData();
       formData.append("image", file);
@@ -110,23 +158,36 @@
       return data.data.url;
     }
 
-    // Add Member
+    // 🔹 Get Next S.No
+    async function getNextSno() {
+      let snapshot = await db.collection("members").orderBy("sno", "desc").limit(1).get();
+      if (snapshot.empty) return 1;
+      return snapshot.docs[0].data().sno + 1;
+    }
+
+    // 🔹 Add Member
     async function addMember() {
       let name = document.getElementById("name").value;
+      let address = document.getElementById("address").value;
       let file = document.getElementById("photoFile").files[0];
+      if (!file) { alert("कृपया फोटो चुनें"); return; }
 
-      if (!file) { alert("Please select a photo"); return; }
-
-      // Upload image to imgbb
+      let sno = await getNextSno();
       let photoUrl = await uploadImage(file);
 
-      // Save to Firestore
-      db.collection("members").add({ name, photo: photoUrl })
+      db.collection("members").add({ sno, name, address, photo: photoUrl })
         .then(() => {
-          loadMembers();
           document.getElementById("memberForm").reset();
         })
-        .catch(err => alert(err.message));
+        .catch(err => alert("Error: " + err.message));
+    }
+
+    // 🔹 Delete Member (Admin Only)
+    function deleteMember(id) {
+      if (!isAdmin) return;
+      if (confirm("क्या आप इस member को delete करना चाहते हैं?")) {
+        db.collection("members").doc(id).delete().catch(err => alert("Error: " + err.message));
+      }
     }
   </script>
 </body>
