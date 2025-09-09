@@ -3,83 +3,77 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Minorities Development Department, Maharashtra</title>
+  <title>Minorities Development Department, Maharashtra – Members</title>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
-    header { background:#004080; color:white; text-align:center; padding:15px; }
-    header h1 { margin:0; font-size:22px; }
-    main { max-width:1000px; margin:auto; padding:20px; }
-
-    table { width:100%; border-collapse: collapse; margin-top:20px; background:white; }
-    th, td { border:1px solid #ccc; padding:10px; text-align:center; }
-    th { background:#004080; color:white; }
-    img { width:60px; height:60px; object-fit:cover; border-radius:6px; }
-
-    .deleteBtn {
-      background:red; color:white; border:none; padding:6px 10px;
-      cursor:pointer; border-radius:5px; font-size:14px;
-    }
-
-    form {
-      display:none; background:white; padding:20px;
-      border-radius:8px; margin-top:20px;
-    }
-    form input, form textarea { width:100%; margin:8px 0; padding:10px; }
-    form button {
-      background:#004080; color:white; border:none;
-      padding:10px; cursor:pointer; border-radius:5px;
-    }
-
-    #loginBtn {
-      margin:20px auto; display:block; background:#db4437; color:white;
-      padding:10px 20px; border:none; border-radius:5px; cursor:pointer;
-      font-size:16px;
-    }
+    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
+    header { background: darkblue; color: white; padding: 15px; text-align: center; font-size: 20px; font-weight: bold; }
+    main { padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 10px; text-align: center; }
+    th { background: #333; color: white; }
+    form { background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px; max-width: 400px; margin: auto; }
+    label { display: block; margin: 10px 0 5px; font-weight: bold; }
+    input[type="text"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    button { background: darkblue; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+    button:hover { background: navy; }
+    #loginBtn { display: block; margin: 20px auto; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Minorities Development Department, Maharashtra</h1>
+    Minorities Development Department, Maharashtra – Members
   </header>
 
   <main>
+    <!-- Members Table -->
     <h2>Members List</h2>
-    <table id="membersTable">
+    <table>
       <thead>
         <tr>
           <th>S.No</th>
           <th>Name</th>
           <th>Photo</th>
           <th>Address</th>
-          <th id="actionHeader" style="display:none;">Action</th>
+          <th>Action</th>
         </tr>
       </thead>
-      <tbody id="membersBody"></tbody>
+      <tbody id="membersList">
+        <!-- Data Firebase से आएगा -->
+      </tbody>
     </table>
 
     <!-- Google Login Button -->
-    <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
+    <button id="loginBtn">Login with Google (Admin only)</button>
 
-    <!-- Add Member Form (Admin Only) -->
-    <form id="memberForm">
-      <h3>Add Member</h3>
-      <input type="text" id="name" placeholder="Member Name" required>
-      <textarea id="address" placeholder="Address" required></textarea>
-      <input type="file" id="photoFile" accept="image/*" required>
-      <button type="button" onclick="addMember()">Add Member</button>
-    </form>
+    <!-- Add Member Form (Hidden until Admin Login) -->
+    <div id="formContainer" style="display:none;">
+      <h2>Add Member</h2>
+      <form id="addMemberForm">
+        <label for="name">Member Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter member name" required />
+
+        <label for="address">Address</label>
+        <input type="text" id="address" name="address" placeholder="Enter address" required />
+
+        <label for="photo">Upload Photo</label>
+        <input type="file" id="photo" name="photo" accept="image/*" required />
+
+        <button type="submit">Add Member</button>
+      </form>
+    </div>
   </main>
 
-  <!-- ✅ Firebase v8 SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Firebase + Script -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
 
   <script>
-    // ✅ Firebase Config
+    // ✅ Your Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-      authDomain: "all-madrsa.firebaseapp.com",  // ⚠️ Firebase console से confirm करें
+      authDomain: "all-madrsa.firebaseapp.com",
       databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
       projectId: "all-madrsa",
       storageBucket: "all-madrsa.appspot.com",
@@ -87,106 +81,88 @@
       appId: "1:619313835874:web:e387e1297663f11fc2463b"
     };
 
-    // ✅ imgbb API Key
-    const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
-
-    // Init Firebase
-    firebase.initializeApp(firebaseConfig);
+    // ✅ Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
+    const db = firebase.database();
 
-    // ✅ Allowed Admin Emails
-    const adminEmails = ["zaradigitalseva@gmail.com"]; // अपना Gmail डालें
+    const membersList = document.getElementById("membersList");
+    const loginBtn = document.getElementById("loginBtn");
+    const formContainer = document.getElementById("formContainer");
+    const addMemberForm = document.getElementById("addMemberForm");
 
-    let isAdmin = false;
+    // ✅ Only this email can add members
+    const adminEmails = ["zaradigitalseva@gmail.com"];
 
-    // 🔹 Load Members (Realtime)
+    // ✅ Load Members
     function loadMembers() {
-      db.collection("members").orderBy("sno").onSnapshot(snapshot => {
-        let tbody = document.getElementById("membersBody");
-        tbody.innerHTML = "";
-        snapshot.forEach(doc => {
-          let m = doc.data();
-          let deleteBtn = (isAdmin) ? `<button class="deleteBtn" onclick="deleteMember('${doc.id}')">Delete</button>` : "";
-          let actionCol = (isAdmin) ? `<td>${deleteBtn}</td>` : "";
-          tbody.innerHTML += `
+      db.ref("members").on("value", (snapshot) => {
+        membersList.innerHTML = "";
+        let count = 1;
+        snapshot.forEach((child) => {
+          const data = child.val();
+          const row = `
             <tr>
-              <td>${m.sno}</td>
-              <td>${m.name}</td>
-              <td><img src="${m.photo}" alt="${m.name}"></td>
-              <td>${m.address}</td>
-              ${actionCol}
-            </tr>`;
+              <td>${count++}</td>
+              <td>${data.name}</td>
+              <td><img src="${data.photo}" width="60"/></td>
+              <td>${data.address}</td>
+              <td><button onclick="deleteMember('${child.key}')">Delete</button></td>
+            </tr>
+          `;
+          membersList.innerHTML += row;
         });
       });
     }
+
     loadMembers();
 
-    // 🔹 Auth state check
-    auth.onAuthStateChanged(user => {
-      if (user && adminEmails.includes(user.email)) {
-        isAdmin = true;
-        document.getElementById("loginBtn").style.display = "none";
-        document.getElementById("memberForm").style.display = "block";
-        document.getElementById("actionHeader").style.display = "table-cell";
-      } else {
-        isAdmin = false;
-        document.getElementById("memberForm").style.display = "none";
-        document.getElementById("actionHeader").style.display = "none";
-        document.getElementById("loginBtn").style.display = user ? "none" : "block";
-      }
-      loadMembers();
-    });
+    // ✅ Add Member (Admin Only)
+    addMemberForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const address = document.getElementById("address").value;
+      const photoFile = document.getElementById("photo").files[0];
 
-    // 🔹 Google Login
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).catch(err => alert("Login Failed: " + err.message));
-    }
+      // Upload to imgbb
+      const formData = new FormData();
+      formData.append("image", photoFile);
 
-    // 🔹 Upload to imgbb
-    async function uploadImage(file) {
-      let formData = new FormData();
-      formData.append("image", file);
-      let res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
+      const res = await fetch("https://api.imgbb.com/1/upload?key=d12c2e4a8650157b2b6b9fe85336ea43", {
         method: "POST",
         body: formData
       });
-      let data = await res.json();
-      return data.data.url;
-    }
+      const data = await res.json();
+      const photoUrl = data.data.url;
 
-    // 🔹 Get Next S.No
-    async function getNextSno() {
-      let snapshot = await db.collection("members").orderBy("sno", "desc").limit(1).get();
-      if (snapshot.empty) return 1;
-      return snapshot.docs[0].data().sno + 1;
-    }
+      // Save to Firebase
+      db.ref("members").push({ name, address, photo: photoUrl });
 
-    // 🔹 Add Member
-    async function addMember() {
-      let name = document.getElementById("name").value;
-      let address = document.getElementById("address").value;
-      let file = document.getElementById("photoFile").files[0];
-      if (!file) { alert("कृपया फोटो चुनें"); return; }
+      addMemberForm.reset();
+      alert("✅ Member Added!");
+    });
 
-      let sno = await getNextSno();
-      let photoUrl = await uploadImage(file);
-
-      db.collection("members").add({ sno, name, address, photo: photoUrl })
-        .then(() => {
-          document.getElementById("memberForm").reset();
-        })
-        .catch(err => alert("Error: " + err.message));
-    }
-
-    // 🔹 Delete Member (Admin Only)
+    // ✅ Delete Member
     function deleteMember(id) {
-      if (!isAdmin) return;
-      if (confirm("क्या आप इस member को delete करना चाहते हैं?")) {
-        db.collection("members").doc(id).delete().catch(err => alert("Error: " + err.message));
+      if (confirm("Delete this member?")) {
+        db.ref("members/" + id).remove();
       }
     }
+    window.deleteMember = deleteMember;
+
+    // ✅ Google Login
+    loginBtn.addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then((result) => {
+        const user = result.user;
+        if (adminEmails.includes(user.email)) {
+          formContainer.style.display = "block";
+          loginBtn.style.display = "none";
+        } else {
+          alert("❌ You are not an Admin. Only Admin can add members.");
+        }
+      }).catch(err => alert(err.message));
+    });
   </script>
 </body>
 </html>
