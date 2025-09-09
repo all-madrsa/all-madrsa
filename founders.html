@@ -64,12 +64,12 @@
     </div>
   </main>
 
-  <!-- Firebase + Script -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+  <!-- Firebase v9 Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-  <script>
     // ✅ Your Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -81,22 +81,23 @@
       appId: "1:619313835874:web:e387e1297663f11fc2463b"
     };
 
-    // ✅ Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+    // ✅ Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
     const membersList = document.getElementById("membersList");
     const loginBtn = document.getElementById("loginBtn");
     const formContainer = document.getElementById("formContainer");
     const addMemberForm = document.getElementById("addMemberForm");
 
-    // ✅ Only this email can add members
+    // ✅ Only these emails are admin
     const adminEmails = ["zaradigitalseva@gmail.com"];
 
     // ✅ Load Members
     function loadMembers() {
-      db.ref("members").on("value", (snapshot) => {
+      const dbRef = ref(db, "members");
+      onValue(dbRef, (snapshot) => {
         membersList.innerHTML = "";
         let count = 1;
         snapshot.forEach((child) => {
@@ -114,10 +115,9 @@
         });
       });
     }
-
     loadMembers();
 
-    // ✅ Add Member (Admin Only)
+    // ✅ Add Member
     addMemberForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("name").value;
@@ -136,32 +136,36 @@
       const photoUrl = data.data.url;
 
       // Save to Firebase
-      db.ref("members").push({ name, address, photo: photoUrl });
+      const dbRef = ref(db, "members");
+      push(dbRef, { name, address, photo: photoUrl });
 
       addMemberForm.reset();
       alert("✅ Member Added!");
     });
 
     // ✅ Delete Member
-    function deleteMember(id) {
+    window.deleteMember = function (id) {
       if (confirm("Delete this member?")) {
-        db.ref("members/" + id).remove();
+        remove(ref(db, "members/" + id));
       }
-    }
-    window.deleteMember = deleteMember;
+    };
 
     // ✅ Google Login
     loginBtn.addEventListener("click", () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).then((result) => {
-        const user = result.user;
-        if (adminEmails.includes(user.email)) {
-          formContainer.style.display = "block";
-          loginBtn.style.display = "none";
-        } else {
-          alert("❌ You are not an Admin. Only Admin can add members.");
-        }
-      }).catch(err => alert(err.message));
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          const user = result.user;
+          if (adminEmails.includes(user.email)) {
+            formContainer.style.display = "block";
+            loginBtn.style.display = "none";
+          } else {
+            alert("❌ You are not an Admin. Only Admin can add members.");
+          }
+        })
+        .catch((error) => {
+          alert("Login Failed: " + error.message);
+        });
     });
   </script>
 </body>
