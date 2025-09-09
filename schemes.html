@@ -32,6 +32,7 @@
       padding:10px 20px; border:none; border-radius:5px; cursor:pointer;
       font-size:16px;
     }
+    #msg { color:red; margin-top:10px; text-align:center; }
   </style>
 </head>
 <body>
@@ -45,6 +46,7 @@
 
     <!-- Google Login Button -->
     <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
+    <p id="msg"></p>
 
     <!-- Add Member Form -->
     <form id="memberForm">
@@ -80,6 +82,9 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // ✅ Allowed Admin Emails
+    const adminEmails = ["youradmin@gmail.com", "secondadmin@gmail.com"];
+
     // 🔹 Load Members (Realtime)
     function loadMembers() {
       db.collection("members").orderBy("name").onSnapshot(snapshot => {
@@ -100,11 +105,20 @@
     // 🔹 Auth state check
     auth.onAuthStateChanged(user => {
       if (user) {
-        document.getElementById("loginBtn").style.display = "none";
-        document.getElementById("memberForm").style.display = "block";
+        // check admin
+        if (adminEmails.includes(user.email)) {
+          document.getElementById("loginBtn").style.display = "none";
+          document.getElementById("memberForm").style.display = "block";
+          document.getElementById("msg").innerText = "";
+        } else {
+          document.getElementById("loginBtn").style.display = "none";
+          document.getElementById("memberForm").style.display = "none";
+          document.getElementById("msg").innerText = "आपको Members add करने की अनुमति नहीं है।";
+        }
       } else {
         document.getElementById("loginBtn").style.display = "block";
         document.getElementById("memberForm").style.display = "none";
+        document.getElementById("msg").innerText = "";
       }
     });
 
