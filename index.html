@@ -54,6 +54,48 @@
 <!-- Header -->
 <header id="header" class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between px-3 py-2">    
+
+
+<!-- Qibla Compass Widget -->
+<div id="qiblaCompass" class="relative w-20 h-20 rounded-full border-4 border-green-600 flex items-center justify-center bg-white shadow-md">
+  <!-- North Pointer -->
+  <div class="absolute top-1 left-1/2 transform -translate-x-1/2 text-red-600 font-bold text-xs">N</div>
+  
+  <!-- Needle -->
+  <div id="needle" class="w-1 h-8 bg-red-600 absolute top-2 origin-bottom rounded"></div>
+  
+  <!-- Kaaba Icon -->
+  <div class="absolute text-xl">🕋</div>
+</div>
+
+<script>
+  // Qibla angle for Mecca from India (approx) → 292°
+  const QIBLA_DIRECTION = 292; 
+
+  const needle = document.getElementById("needle");
+
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener("deviceorientationabsolute", handler, true);
+    window.addEventListener("deviceorientation", handler, true);
+  } else {
+    alert("❌ Compass not supported in this device.");
+  }
+
+  function handler(e) {
+    let heading = e.alpha;
+    if (typeof e.webkitCompassHeading !== "undefined") {
+      heading = e.webkitCompassHeading; // iOS
+    }
+    if (heading == null) return;
+
+    // Calculate rotation
+    const rotation = QIBLA_DIRECTION - heading;
+    needle.style.transform = `rotate(${rotation}deg)`;
+  }
+</script>
+
+
+
     
     <!-- Logo + Compass + Salat Times -->
     <div class="flex items-center gap-4">
@@ -61,7 +103,7 @@
       <div class="title-3d">Talimi Ittehad</div>
 
       <!-- Qibla Compass (placeholder icon) -->
-      <button id="qiblaBtn" class="btn-3d">🧭 Qibla</button>
+    
 
       <!-- Salat Times -->
       <div id="prayer-times" class="text-xs md:text-sm bg-green-800 text-white px-2 py-1 rounded-lg shadow">
@@ -106,45 +148,13 @@
 </header>
 
 
-<header class="bg-green-700 text-white p-4 flex flex-col md:flex-row md:items-center md:justify-between">
-
-  <div class="flex items-center space-x-4">
-
-  
-  </div>
-
-  <!-- Salat Times Widget -->
-  <div id="prayer-times" class="mt-2 md:mt-0 text-xs md:text-sm bg-green-800 px-3 py-1 rounded-lg shadow w-full md:w-auto text-center">
-    🕌 Loading Salat Times...
-  </div>
 
 
-</header>
 
-<script>
-  async function getPrayerTimes() {
-    try {
-      let city = "Mumbai";   // 🔹 Apna city
-      let country = "India"; // 🔹 Apna country
-      let url = `https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`;
 
-      let res = await fetch(url);
-      if (!res.ok) throw new Error("API error");
 
-      let data = await res.json();
-      let t = data.data.timings;
 
-      document.getElementById("prayer-times").innerHTML = `
-        🌅 Fajr: ${t.Fajr} | ☀️ Dhuhr: ${t.Dhuhr} | 🌇 Asr: ${t.Asr} | 🌆 Maghrib: ${t.Maghrib} | 🌙 Isha: ${t.Isha}
-      `;
-    } catch (err) {
-      document.getElementById("prayer-times").innerText = "⚠️ Error loading Salat Times";
-      console.error(err);
-    }
-  }
 
-  getPrayerTimes();
-</script>
 
 
 
