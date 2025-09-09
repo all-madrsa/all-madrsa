@@ -79,7 +79,7 @@
     // ✅ Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-      authDomain: "all-madrsa.firebaseapp.com",
+      authDomain: "all-madrsa.firebaseapp.com",  // ⚠️ Firebase console से confirm करें
       databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
       projectId: "all-madrsa",
       storageBucket: "all-madrsa.appspot.com",
@@ -96,9 +96,8 @@
     const db = firebase.firestore();
 
     // ✅ Allowed Admin Emails
-    const adminEmails = ["youradmin@gmail.com"];
+    const adminEmails = ["youradmin@gmail.com"]; // अपना Gmail डालें
 
-    let currentUser = null;
     let isAdmin = false;
 
     // 🔹 Load Members (Realtime)
@@ -125,7 +124,6 @@
 
     // 🔹 Auth state check
     auth.onAuthStateChanged(user => {
-      currentUser = user;
       if (user && adminEmails.includes(user.email)) {
         isAdmin = true;
         document.getElementById("loginBtn").style.display = "none";
@@ -133,9 +131,9 @@
         document.getElementById("actionHeader").style.display = "table-cell";
       } else {
         isAdmin = false;
-        document.getElementById("loginBtn").style.display = "block";
         document.getElementById("memberForm").style.display = "none";
         document.getElementById("actionHeader").style.display = "none";
+        document.getElementById("loginBtn").style.display = user ? "none" : "block";
       }
       loadMembers();
     });
