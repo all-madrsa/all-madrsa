@@ -6,7 +6,10 @@
   <title>Minorities Development Department, Maharashtra – Members</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
-    header { background: darkblue; color: white; padding: 15px; text-align: center; font-size: 20px; font-weight: bold; }
+    header { background: darkblue; color: white; padding: 15px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 20px; }
+    header button { background: white; color: darkblue; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    header button:hover { background: #f1f1f1; }
     main { padding: 20px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white; }
     table, th, td { border: 1px solid #ccc; }
@@ -17,12 +20,13 @@
     input[type="text"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
     button { background: darkblue; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
     button:hover { background: navy; }
-    #loginBtn { display: block; margin: 20px auto; }
   </style>
 </head>
 <body>
   <header>
-    Minorities Development Department, Maharashtra – Members
+    <h1>Minorities Development Department, Maharashtra – Members</h1>
+    <!-- Login Button in Header -->
+    <button id="loginBtn">Login with Google</button>
   </header>
 
   <main>
@@ -42,9 +46,6 @@
         <!-- Data Firebase से आएगा -->
       </tbody>
     </table>
-
-    <!-- Google Login Button -->
-    <button id="loginBtn">Login with Google (Admin only)</button>
 
     <!-- Add Member Form (Hidden until Admin Login) -->
     <div id="formContainer" style="display:none;">
