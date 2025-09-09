@@ -68,7 +68,14 @@
   <!-- Firebase v9 Modular SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { 
+      getAuth, 
+      GoogleAuthProvider, 
+      signInWithPopup, 
+      setPersistence, 
+      browserLocalPersistence, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
     import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
     // ✅ Your Firebase Config
@@ -95,6 +102,9 @@
     // ✅ Only these emails are admin
     const adminEmails = ["zaradigitalseva@gmail.com"];
     let isAdmin = false;
+
+    // ✅ Persist login (refresh पर भी login रहे)
+    setPersistence(auth, browserLocalPersistence);
 
     // ✅ Load Members
     function loadMembers() {
@@ -156,24 +166,34 @@
       }
     };
 
+    // ✅ Track login state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        if (adminEmails.includes(user.email)) {
+          isAdmin = true;
+          formContainer.style.display = "block";
+          loginBtn.style.display = "none";
+          loadMembers();
+        } else {
+          isAdmin = false;
+          formContainer.style.display = "none";
+          loginBtn.style.display = "none";
+          loadMembers();
+        }
+      } else {
+        isAdmin = false;
+        formContainer.style.display = "none";
+        loginBtn.style.display = "block";
+        loadMembers();
+      }
+    });
+
     // ✅ Google Login
     loginBtn.addEventListener("click", () => {
       const provider = new GoogleAuthProvider();
-      signInWithPopup(auth, provider)
-        .then((result) => {
-          const user = result.user;
-          if (adminEmails.includes(user.email)) {
-            isAdmin = true;
-            formContainer.style.display = "block";
-            loginBtn.style.display = "none";
-            loadMembers();  // 🔄 reload so delete buttons appear
-          } else {
-            alert("❌ आप Admin नहीं हैं। आप केवल list देख सकते हैं।");
-          }
-        })
-        .catch((error) => {
-          alert("Login Failed: " + error.message);
-        });
+      signInWithPopup(auth, provider).catch((error) => {
+        alert("Login Failed: " + error.message);
+      });
     });
   </script>
 </body>
