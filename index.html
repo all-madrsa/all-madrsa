@@ -53,49 +53,6 @@
     <div class="flex justify-center py-2">
       <div class="title-3d text-center">Talimi Ittehad</div>
     </div>
-
-
-<script>
-  // Qibla toggle
-  const qiblaBtn = document.getElementById("qiblaBtn");
-  const qiblaCompass = document.getElementById("qiblaCompass");
-  const needle = document.getElementById("needle");
-
-  qiblaBtn.addEventListener("click", () => {
-    qiblaCompass.classList.toggle("hidden");
-  });
-
-  // Device orientation
-  if (window.DeviceOrientationEvent) {
-    window.addEventListener("deviceorientationabsolute", (event) => {
-      if (event.alpha !== null) {
-        const qiblaDirection = 292; // India → Kaaba bearing
-        const heading = event.alpha;
-        const rotation = qiblaDirection - heading;
-        needle.style.transform = `rotate(${rotation}deg)`;
-      }
-    });
-  }
-
-  // Prayer times (Aladhan API)
-  async function loadPrayerTimes() {
-    try {
-      const res = await fetch("https://api.aladhan.com/v1/timingsByCity?city=Mumbai&country=India&method=2");
-      const data = await res.json();
-      const t = data.data.timings;
-      document.getElementById("prayer-times").innerHTML = `
-        🌅 Fajr: ${t.Fajr} | ☀ Dhuhr: ${t.Dhuhr} | 🌇 Asr: ${t.Asr} | 🌆 Maghrib: ${t.Maghrib} | 🌙 Isha: ${t.Isha}
-      `;
-    } catch (e) {
-      document.getElementById("prayer-times").textContent = "Error loading Salat times";
-    }
-  }
-  loadPrayerTimes();
-</script>
-
-
-
-    
     <!-- Menu -->
     <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
       <div class="dropdown relative">
