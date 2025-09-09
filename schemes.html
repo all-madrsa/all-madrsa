@@ -80,9 +80,9 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Load Members
+    // 🔹 Load Members (Realtime)
     function loadMembers() {
-      db.collection("members").orderBy("name").get().then(snapshot => {
+      db.collection("members").orderBy("name").onSnapshot(snapshot => {
         let container = document.getElementById("members");
         container.innerHTML = "";
         snapshot.forEach(doc => {
@@ -97,18 +97,24 @@
     }
     loadMembers();
 
-    // Google Login
+    // 🔹 Auth state check
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("loginBtn").style.display = "none";
+        document.getElementById("memberForm").style.display = "block";
+      } else {
+        document.getElementById("loginBtn").style.display = "block";
+        document.getElementById("memberForm").style.display = "none";
+      }
+    });
+
+    // 🔹 Google Login
     function googleLogin() {
       const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(() => {
-          document.getElementById("loginBtn").style.display = "none";
-          document.getElementById("memberForm").style.display = "block";
-        })
-        .catch(err => alert("Login Failed: " + err.message));
+      auth.signInWithPopup(provider).catch(err => alert("Login Failed: " + err.message));
     }
 
-    // Upload to imgbb
+    // 🔹 Upload to imgbb
     async function uploadImage(file) {
       let formData = new FormData();
       formData.append("image", file);
@@ -120,19 +126,16 @@
       return data.data.url;
     }
 
-    // Add Member
+    // 🔹 Add Member
     async function addMember() {
       let name = document.getElementById("name").value;
       let file = document.getElementById("photoFile").files[0];
       if (!file) { alert("कृपया फोटो चुनें"); return; }
 
-      // Upload to imgbb
       let photoUrl = await uploadImage(file);
 
-      // Save to Firestore
       db.collection("members").add({ name, photo: photoUrl })
         .then(() => {
-          loadMembers();
           document.getElementById("memberForm").reset();
         })
         .catch(err => alert("Error: " + err.message));
