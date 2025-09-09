@@ -53,6 +53,48 @@
     <div class="flex justify-center py-2">
       <div class="title-3d text-center">Talimi Ittehad</div>
     </div>
+
+
+<!-- Header -->
+<header id="header" class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
+  <div class="max-w-6xl mx-auto flex flex-col px-3">    
+    <!-- Logo -->
+    <div class="flex justify-center py-2">
+      <div class="title-3d text-center">Talimi Ittehad</div>
+    </div>
+    <!-- Menu -->
+    <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
+      <!-- ... aapke menu buttons yahan hain ... -->
+    </div>
+  </div>
+</header>
+
+<!-- 🔹 Salat Times + Qibla Compass -->
+<div class="bg-green-900 text-white text-xs sm:text-sm py-2 shadow-md">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between px-3 gap-3">
+    
+    <!-- Salat Times -->
+    <div id="prayer-times" class="bg-green-700 px-2 py-1 rounded shadow w-full md:w-auto text-center">
+      🕌 Loading...
+    </div>
+
+    <!-- Qibla -->
+    <div class="relative w-full md:w-auto text-center">
+      <button id="qiblaBtn" class="btn-3d">🧭 Show Qibla</button>
+      <div id="qiblaCompass" class="hidden absolute top-12 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full border-4 border-green-600 flex items-center justify-center bg-white shadow-md">
+        <!-- North pointer -->
+        <div class="absolute top-1 left-1/2 transform -translate-x-1/2 text-red-600 font-bold text-xs">N</div>
+        <!-- Needle -->
+        <div id="needle" class="w-1 h-14 bg-red-600 absolute top-3 origin-bottom rounded"></div>
+        <!-- Kaaba -->
+        <div class="absolute text-xl">🕋</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    
     <!-- Menu -->
     <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
       <div class="dropdown relative">
