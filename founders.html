@@ -7,7 +7,7 @@
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
     header { background: darkblue; color: white; padding: 15px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { margin: 0; font-size: 20px; }
+    header h1 { margin: 0; font-size: 20px; flex: 1; text-align: center; }
     header button { background: white; color: darkblue; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     header button:hover { background: #f1f1f1; }
     main { padding: 20px; }
@@ -23,17 +23,14 @@
   </style>
 </head>
 <body>
- <header>
-  <button id="homeBtn" style="background:white; color:darkblue; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:10px;">
-    Home
-  </button>
-  <h1 style="flex:1; text-align:center; margin:0;">Minorities Development Department, Maharashtra – Members</h1>
-  <div>
-    <span id="welcomeMsg" style="margin-right:10px; font-size:14px;"></span>
-    <button id="authBtn">Login with Google</button>
-  </div>
-</header>
-
+  <header>
+    <button id="homeBtn">Home</button>
+    <h1>Minorities Development Department, Maharashtra – Members</h1>
+    <div>
+      <span id="welcomeMsg" style="margin-right:10px; font-size:14px;"></span>
+      <button id="authBtn">Login with Google</button>
+    </div>
+  </header>
 
   <main>
     <!-- Members Table -->
@@ -48,9 +45,7 @@
           <th>Action</th>
         </tr>
       </thead>
-      <tbody id="membersList">
-        <!-- Data Firebase से आएगा -->
-      </tbody>
+      <tbody id="membersList"></tbody>
     </table>
 
     <!-- Add Member Form (Hidden until Admin Login) -->
@@ -58,10 +53,10 @@
       <h2>Add Member</h2>
       <form id="addMemberForm">
         <label for="name">Member Name</label>
-        <input type="text" id="name" name="name" placeholder="Enter member name" required />
+        <input type="text" id="name" name="name" required />
 
         <label for="address">Address</label>
-        <input type="text" id="address" name="address" placeholder="Enter address" required />
+        <input type="text" id="address" name="address" required />
 
         <label for="photo">Upload Photo</label>
         <input type="file" id="photo" name="photo" accept="image/*" required />
@@ -75,16 +70,12 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { 
-      getAuth, 
-      GoogleAuthProvider, 
-      signInWithPopup, 
-      setPersistence, 
-      browserLocalPersistence, 
-      onAuthStateChanged 
+      getAuth, GoogleAuthProvider, signInWithPopup, 
+      setPersistence, browserLocalPersistence, onAuthStateChanged, signOut 
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
     import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    // ✅ Your Firebase Config
+    // ✅ Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
       authDomain: "all-madrsa.firebaseapp.com",
@@ -100,16 +91,16 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    const membersList = document.getElementById("membersList");
-    const loginBtn = document.getElementById("loginBtn");
+    const authBtn = document.getElementById("authBtn");
+    const welcomeMsg = document.getElementById("welcomeMsg");
     const formContainer = document.getElementById("formContainer");
     const addMemberForm = document.getElementById("addMemberForm");
+    const membersList = document.getElementById("membersList");
 
-    // ✅ Only these emails are admin
+    // ✅ Admin Emails
     const adminEmails = ["zaradigitalseva@gmail.com"];
     let isAdmin = false;
 
-    // ✅ Persist login (refresh पर भी login रहे)
     setPersistence(auth, browserLocalPersistence);
 
     // ✅ Load Members
@@ -123,8 +114,7 @@
           const deleteBtn = isAdmin 
             ? `<button onclick="deleteMember('${child.key}')">Delete</button>` 
             : ``;
-
-          const row = `
+          membersList.innerHTML += `
             <tr>
               <td>${count++}</td>
               <td>${data.name}</td>
@@ -133,11 +123,9 @@
               <td>${deleteBtn}</td>
             </tr>
           `;
-          membersList.innerHTML += row;
         });
       });
     }
-    loadMembers();
 
     // ✅ Add Member
     addMemberForm.addEventListener("submit", async (e) => {
@@ -149,7 +137,6 @@
       // Upload to imgbb
       const formData = new FormData();
       formData.append("image", photoFile);
-
       const res = await fetch("https://api.imgbb.com/1/upload?key=d12c2e4a8650157b2b6b9fe85336ea43", {
         method: "POST",
         body: formData
@@ -157,49 +144,50 @@
       const data = await res.json();
       const photoUrl = data.data.url;
 
-      // Save to Firebase
-      const dbRef = ref(db, "members");
-      push(dbRef, { name, address, photo: photoUrl });
-
+      push(ref(db, "members"), { name, address, photo: photoUrl });
       addMemberForm.reset();
       alert("✅ Member Added!");
     });
 
-    // ✅ Delete Member (Admin Only)
+    // ✅ Delete Member
     window.deleteMember = function (id) {
       if (isAdmin && confirm("Delete this member?")) {
         remove(ref(db, "members/" + id));
       }
     };
 
-    // ✅ Track login state
+    // ✅ Track Auth State
     onAuthStateChanged(auth, (user) => {
-      if (user) {
+      if (!user) {
+        // ❌ login नहीं → redirect
+        window.location.href = "login.html";
+      } else {
+        welcomeMsg.textContent = "Welcome, " + user.email;
         if (adminEmails.includes(user.email)) {
           isAdmin = true;
           formContainer.style.display = "block";
-          loginBtn.style.display = "none";
-          loadMembers();
         } else {
           isAdmin = false;
           formContainer.style.display = "none";
-          loginBtn.style.display = "none";
-          loadMembers();
         }
-      } else {
-        isAdmin = false;
-        formContainer.style.display = "none";
-        loginBtn.style.display = "block";
+        authBtn.textContent = "Logout";
         loadMembers();
       }
     });
 
-    // ✅ Google Login
-    loginBtn.addEventListener("click", () => {
-      const provider = new GoogleAuthProvider();
-      signInWithPopup(auth, provider).catch((error) => {
-        alert("Login Failed: " + error.message);
-      });
+    // ✅ Login / Logout Toggle
+    authBtn.addEventListener("click", () => {
+      if (auth.currentUser) {
+        signOut(auth);
+      } else {
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider).catch(err => alert("Login Failed: " + err.message));
+      }
+    });
+
+    // ✅ Home Button
+    document.getElementById("homeBtn").addEventListener("click", () => {
+      window.location.href = "index.html";
     });
   </script>
 </body>
