@@ -46,15 +46,17 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-<!-- Logo + Namaz Times -->
+<!-- Header Top Row -->
 <div class="flex flex-col sm:flex-row justify-between items-center py-2">
+  
   <!-- Logo -->
   <div class="title-3d text-center sm:text-left">
     Talimi Ittehad
   </div>
 
-  <!-- Namaz Times -->
-  <div id="prayer-times" class="bg-green-700 text-white text-xs sm:text-sm px-3 py-2 rounded shadow text-left leading-5 mt-2 sm:mt-0 sm:ml-4">
+  <!-- Namaz Times Box -->
+  <div id="prayer-times" 
+       class="bg-green-700 text-white text-xs sm:text-sm px-3 py-2 rounded shadow text-left leading-5 mt-2 sm:mt-0 sm:ml-4">
     🕌 Loading...
   </div>
 </div>
@@ -62,7 +64,7 @@
 <script>
 async function loadPrayerTimes() {
   try {
-    // ✅ Change city & country according to your location
+    // ✅ Change city & country if needed
     const url = "https://api.aladhan.com/v1/timingsByCity?city=Mumbai&country=India&method=2";
     const res = await fetch(url);
     const data = await res.json();
@@ -70,10 +72,10 @@ async function loadPrayerTimes() {
     if (data.code === 200) {
       const t = data.data.timings;
       document.getElementById("prayer-times").innerHTML = `
-        🌅 Fajr: ${t.Fajr} <br>
-        ☀ Dhuhr: ${t.Dhuhr} <br>
-        🌇 Asr: ${t.Asr} <br>
-        🌆 Maghrib: ${t.Maghrib} <br>
+        🌅 Fajr: ${t.Fajr} &nbsp;|&nbsp;
+        ☀ Dhuhr: ${t.Dhuhr} &nbsp;|&nbsp;
+        🌇 Asr: ${t.Asr} &nbsp;|&nbsp;
+        🌆 Maghrib: ${t.Maghrib} &nbsp;|&nbsp;
         🌙 Isha: ${t.Isha}
       `;
     } else {
@@ -84,7 +86,6 @@ async function loadPrayerTimes() {
   }
 }
 
-// Call function after page load
 document.addEventListener("DOMContentLoaded", loadPrayerTimes);
 </script>
 
