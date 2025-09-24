@@ -420,13 +420,14 @@ document.addEventListener("DOMContentLoaded", loadPrayerTimes);
       card.className = "border rounded-lg shadow bg-white p-3";
 
       card.innerHTML = `
-        ${d.images && d.images.length ? `
-          <div class="carousel mb-2">
-            <div class="carousel-track">
-              ${d.images.map(u=>`<img src="${u}" alt="image"/>`).join("")}
-            </div>
-          </div>
-        ` : ""}
+  ${d.images && d.images.length ? `
+  <div class="grid grid-cols-2 gap-2 mb-2">
+    ${d.images.map(u=>`
+      <img src="${u}" class="w-full h-28 object-cover rounded" alt="image"/>
+    `).join("")}
+  </div>
+` : ""}
+
         <h2 class="font-bold text-lg">${d.name||''}</h2>
         <p class="text-sm text-gray-600">${d.address||''}</p>
         ${d.status==="rejected"?`<p class="text-red-600 font-semibold">❌ Rejected</p>`:""}
