@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", loadPrayerTimes);
       <input id="mcourses" placeholder="Courses (comma separated)" class="w-full border p-2 rounded" />
       <textarea id="mabout" placeholder="About Madarsa" rows="3" class="w-full border p-2 rounded"></textarea>
       <div>
-        <label class="block text-sm text-indigo-600">Upload Images (1-5)</label>
+        <label class="block text-sm text-indigo-600">Upload Images (1-6)</label>
         <input id="mimages" type="file" accept="image/*" multiple required />
       </div>
       <div>
@@ -328,8 +328,8 @@ document.addEventListener("DOMContentLoaded", loadPrayerTimes);
       const imgFiles = document.getElementById("mimages").files;
       const upiFile = document.getElementById("mupi").files[0];
 
-      if(imgFiles.length < 1 || imgFiles.length > 5){
-        alert("Please upload between 1 to 5 images.");
+      if(imgFiles.length < 1 || imgFiles.length > 6){
+        alert("Please upload between 1 to 6 images.");
         submitBtn.disabled = false;
         submitBtn.textContent = "Submit";
         return;
