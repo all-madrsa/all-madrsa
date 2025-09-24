@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", loadPrayerTimes);
            <a href="#Youtube">Youtube</a>
            <a href="#Facbook">Facbook</a>
           <a href="#Instagrm">Instagrm</a>
-
+ 
           
 
           
@@ -116,7 +116,9 @@ document.addEventListener("DOMContentLoaded", loadPrayerTimes);
       <div class="dropdown relative">
         <button class="btn-3d">More ⬇</button>
         <div class="dropdown-menu">
-          <a href="https://all-madrsa.netlify.app/Calendar.html">Calendar.html</a>
+          <a href="https://all-madrsa.netlify.app/Calendar.html">Calendar</a>
+
+           <a href="https://all-madrsa.netlify.app/founders.html">ALL INDIA MUSLIM PERSONAL BOARD</a>
           <a href="#faq">FAQ</a>
         </div>
       </div>
@@ -418,13 +420,14 @@ document.addEventListener("DOMContentLoaded", loadPrayerTimes);
       card.className = "border rounded-lg shadow bg-white p-3";
 
       card.innerHTML = `
-        ${d.images && d.images.length ? `
-          <div class="carousel mb-2">
-            <div class="carousel-track">
-              ${d.images.map(u=>`<img src="${u}" alt="image"/>`).join("")}
-            </div>
-          </div>
-        ` : ""}
+  ${d.images && d.images.length ? `
+  <div class="grid grid-cols-2 gap-2 mb-2">
+    ${d.images.map(u=>`
+      <img src="${u}" class="w-full h-28 object-cover rounded" alt="image"/>
+    `).join("")}
+  </div>
+` : ""}
+
         <h2 class="font-bold text-lg">${d.name||''}</h2>
         <p class="text-sm text-gray-600">${d.address||''}</p>
         ${d.status==="rejected"?`<p class="text-red-600 font-semibold">❌ Rejected</p>`:""}
