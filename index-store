@@ -62,39 +62,7 @@
 
 
 
-  <script>
-async function loadPrayerTimes() {
-  const box = document.getElementById("prayer-times");
-  if (!box) return; // agar div missing hai
-
-  try {
- const url = "https://api.aladhan.com/v1/timingsByCity?city=Mumbai&country=India&method=1&school=1";
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Network error");
-
-    const data = await res.json();
-    if (data.code === 200 && data.data?.timings) {
-      const t = data.data.timings;
-      box.innerHTML = `
-        🌅 Fajr: ${t.Fajr} &nbsp;|&nbsp;
-        ☀ Dhuhr: ${t.Dhuhr} &nbsp;|&nbsp;
-        🌇 Asr: ${t.Asr} &nbsp;|&nbsp;
-        🌆 Maghrib: ${t.Maghrib} &nbsp;|&nbsp;
-        🌙 Isha: ${t.Isha}
-      `;
-    } else {
-      box.textContent = "❌ Error loading times";
-    }
-  } catch (err) {
-    console.error(err);
-    document.getElementById("prayer-times").textContent = "❌ Failed to load";
-  }
-}
-
-document.addEventListener("DOMContentLoaded", loadPrayerTimes);
-</script>
-
+ 
 
 
 
