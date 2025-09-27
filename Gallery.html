@@ -38,19 +38,19 @@
 </main>
 
 <!-- Image Modal -->
-<div id="imgModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-0">
-  <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl z-50 p-1 hover:bg-white/20 rounded">✖</button>
-  <div class="flex flex-col items-center max-h-[95vh] max-w-[95vw] overflow-hidden">
-    <img id="modalImg" class="max-h-[85vh] max-w-[95vw] object-contain rounded shadow-lg mb-2"/>
-    <p id="modalText" class="text-white text-center max-w-[95vw] mb-2 overflow-auto"></p>
+<div id="imgModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center">
+  <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl z-50 p-2 hover:bg-white/20 rounded">✖</button>
+  <button id="prevBtn" class="absolute left-2 top-1/2 transform -translate-y-1/2 text-white text-3xl p-2 hover:bg-white/20 rounded">⟨</button>
+  <div class="flex flex-col items-center justify-center max-h-[95vh] max-w-[95vw] overflow-auto">
+    <img id="modalImg" class="max-h-[calc(100vh-120px)] max-w-[95vw] object-contain rounded shadow-lg mb-2"/>
+    <p id="modalText" class="text-white text-center max-w-[95vw] max-h-[20vh] overflow-auto mb-2"></p>
   </div>
-  <button id="prevBtn" class="absolute left-4 text-white text-3xl p-1 hover:bg-white/20 rounded">⟨</button>
-  <button id="nextBtn" class="absolute right-4 text-white text-3xl p-1 hover:bg-white/20 rounded">⟩</button>
+  <button id="nextBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-white text-3xl p-2 hover:bg-white/20 rounded">⟩</button>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -65,8 +65,6 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
-
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
@@ -88,15 +86,13 @@
   let galleryItems = [];
   let currentIndex = 0;
 
-  // Check Admin
   onAuthStateChanged(auth, (user)=>{
     currentUser = user;
-    if(user && user.email === ADMIN_EMAIL){
+    if(user && user.email===ADMIN_EMAIL){
       uploadSection.classList.remove("hidden");
     }
   });
 
-  // ImgBB upload
   async function uploadImage(file){
     const fd = new FormData();
     fd.append("image", file);
@@ -110,28 +106,24 @@
     if(!imgInput.files.length) return alert("Select image first!");
     const file = imgInput.files[0];
     const text = imgText.value.trim();
-    uploadBtn.disabled = true; uploadBtn.textContent = "Uploading...";
+    uploadBtn.disabled=true; uploadBtn.textContent="Uploading...";
     try{
       const url = await uploadImage(file);
-      await addDoc(collection(db,"gallery"),{
-        url, text, createdAt: serverTimestamp(), uid: currentUser.uid
-      });
+      await addDoc(collection(db,"gallery"),{ url, text, createdAt: serverTimestamp(), uid: currentUser.uid });
       imgInput.value=""; imgText.value="";
       alert("✅ Image uploaded");
     }catch(err){ alert("❌ "+err.message); }
     finally{ uploadBtn.disabled=false; uploadBtn.textContent="Upload"; }
   };
 
-  // Load gallery live
   const qRef = query(collection(db,"gallery"), orderBy("createdAt","desc"));
   onSnapshot(qRef, snap=>{
-    galleryItems = [];
-    galleryDiv.innerHTML="";
+    galleryItems=[]; galleryDiv.innerHTML="";
     if(snap.empty){ loadingMsg.textContent="No images yet."; return; }
     loadingMsg.classList.add("hidden");
-    snap.forEach(docSnap=>{ galleryItems.push({id:docSnap.id, ...docSnap.data()}); });
+    snap.forEach(docSnap=>{ galleryItems.push({id:docSnap.id,...docSnap.data()}); });
     galleryItems.forEach((d,i)=>{
-      const box = document.createElement("div");
+      const box=document.createElement("div");
       box.className="relative group";
       box.innerHTML=`
         <img src="${d.url}" class="gallery-img w-full h-40 object-cover shadow" data-index="${i}"/>
@@ -140,15 +132,12 @@
       `;
       box.querySelector("img").onclick=()=>{ openModal(i); };
       if(currentUser?.email===ADMIN_EMAIL){
-        box.querySelector(".deleteBtn").onclick=async()=>{
-          if(confirm("Delete image?")) await deleteDoc(doc(db,"gallery",d.id));
-        };
+        box.querySelector(".deleteBtn").onclick=async()=>{ if(confirm("Delete image?")) await deleteDoc(doc(db,"gallery",d.id)); };
       }
       galleryDiv.appendChild(box);
     });
   });
 
-  // Modal functions
   function openModal(index){
     currentIndex=index;
     const item=galleryItems[index];
