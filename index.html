@@ -46,22 +46,30 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-<!-- Header with Logo -->
+<!-- Header with Logo only -->
 <header class="bg-blue-600">
-  <div class="flex justify-between items-center py-2 px-4">
+  <div class="flex justify-between items-center py-2 px-4 max-w-6xl mx-auto">
+    
     <!-- Left: Makka -->
     <div class="flex items-center">
       <img src="makka.png" alt="Makka" class="h-10 w-10 object-cover rounded-full mr-2">
-    
+      <span class="text-white font-semibold">Makka</span>
     </div>
 
-  
+    <!-- Center: Logo / Title -->
+    <div class="flex flex-col items-center">
+      <img src="logo.png" alt="Talimi Ittehad Logo" class="h-12 w-12 object-cover mb-1">
+      <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">
+        Talimi Ittehad
+      </div>
+    </div>
 
     <!-- Right: Madina -->
     <div class="flex items-center">
-    
+      <span class="text-white font-semibold mr-2">Madina</span>
       <img src="madina.png" alt="Madina" class="h-10 w-10 object-cover rounded-full">
     </div>
+
   </div>
 </header>
 
