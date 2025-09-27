@@ -19,42 +19,33 @@
   </a>
 </header>
 
-
 <main class="flex-1 max-w-6xl mx-auto p-4">
-  <!-- Upload Section (only for Admin) -->
+  <!-- Upload Section (Admin only) -->
   <div id="uploadSection" class="hidden mb-6 space-y-2">
-    <input type="file" id="imgInput" accept="image/*" class="block"/>
+    <input type="file" id="imgInput" accept="image/*" class="block w-full"/>
     <textarea id="imgText" placeholder="Enter description..." class="border p-2 w-full rounded"></textarea>
     <button id="uploadBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Upload</button>
   </div>
 
   <!-- Gallery Grid -->
-<div id="imgModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-2 overflow-auto">
+  <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+
+  <!-- Loading -->
+  <p id="loadingMsg" class="text-center text-gray-500 mt-4">Loading gallery…</p>
+</main>
+
+<!-- Image Modal -->
+<div id="imgModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center flex-col p-2 overflow-auto">
   <button id="closeModal" class="absolute top-2 right-2 text-white text-2xl z-50">✖</button>
   <img id="modalImg" class="max-h-[90vh] max-w-full object-contain rounded shadow-lg mb-2"/>
-  <p id="modalText" class="text-white text-center max-w-xl"></p>
+  <p id="modalText" class="text-white text-center max-w-xl mb-2"></p>
   <button id="prevBtn" class="absolute left-2 text-white text-3xl">⟨</button>
   <button id="nextBtn" class="absolute right-2 text-white text-3xl">⟩</button>
 </div>
 
-
-  <!-- Loading Spinner -->
-  <p id="loadingMsg" class="text-center text-gray-500 mt-4">Loading gallery…</p>
-</main>
-
-<!-- Image Modal with Slider -->
-<div id="imgModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 flex-col">
-  <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl">✖</button>
-  <img id="modalImg" class="max-h-[80%] max-w-[90%] rounded shadow-lg mb-3"/>
-  <p id="modalText" class="text-white text-center max-w-xl"></p>
-  <button id="prevBtn" class="absolute left-4 text-white text-3xl">⟨</button>
-  <button id="nextBtn" class="absolute right-4 text-white text-3xl">⟩</button>
-</div>
-
-<!-- Firebase + JS -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -70,7 +61,6 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
-
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
@@ -79,36 +69,32 @@
   const imgInput = document.getElementById("imgInput");
   const imgText = document.getElementById("imgText");
   const galleryDiv = document.getElementById("gallery");
+  const loadingMsg = document.getElementById("loadingMsg");
+
   const imgModal = document.getElementById("imgModal");
   const modalImg = document.getElementById("modalImg");
   const modalText = document.getElementById("modalText");
-  const loadingMsg = document.getElementById("loadingMsg");
+  const closeModalBtn = document.getElementById("closeModal");
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
-  const closeModal = document.getElementById("closeModal");
 
   let currentUser = null;
   let galleryItems = [];
   let currentIndex = 0;
 
-  // 🔑 Auth
-onAuthStateChanged(auth, (user)=>{
-  currentUser = user;
-  if(user && user.email === ADMIN_EMAIL){
-    uploadSection.classList.remove("hidden"); // सिर्फ admin को upload दिखेगा
-  }
-});
+  // 🔑 Check Admin
+  onAuthStateChanged(auth, (user)=>{
+    currentUser = user;
+    if(user && user.email === ADMIN_EMAIL){
+      uploadSection.classList.remove("hidden");
+    }
+  });
 
-// Auto login हटा दो
-
-
-  // 🖼️ Upload Image
+  // 🖼 Upload function
   async function uploadImage(file){
     const fd = new FormData();
     fd.append("image", file);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{
-      method:"POST", body:fd
-    });
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:"POST", body:fd });
     const data = await res.json();
     if(data.success) return data.data.url;
     else throw new Error(data?.error?.message || "ImgBB upload failed");
@@ -121,19 +107,17 @@ onAuthStateChanged(auth, (user)=>{
     uploadBtn.disabled = true; uploadBtn.textContent = "Uploading...";
     try{
       const url = await uploadImage(file);
-      await addDoc(collection(db,"gallery"),{
-        url, text, createdAt: serverTimestamp(), uid: currentUser.uid
-      });
-      imgInput.value = ""; imgText.value="";
+      await addDoc(collection(db,"gallery"), { url, text, createdAt: serverTimestamp(), uid: currentUser.uid });
+      imgInput.value=""; imgText.value="";
       alert("✅ Image uploaded");
     }catch(err){
       alert("❌ "+err.message);
     }finally{
-      uploadBtn.disabled = false; uploadBtn.textContent = "Upload";
+      uploadBtn.disabled=false; uploadBtn.textContent="Upload";
     }
   };
 
-  // 📂 Live Gallery
+  // 📂 Live gallery
   const qRef = query(collection(db,"gallery"), orderBy("createdAt","desc"));
   onSnapshot(qRef, (snap)=>{
     galleryItems = [];
@@ -143,7 +127,6 @@ onAuthStateChanged(auth, (user)=>{
       return;
     }
     loadingMsg.classList.add("hidden");
-
     snap.forEach(docSnap=>{
       const d = docSnap.data();
       galleryItems.push({id:docSnap.id, ...d});
@@ -152,7 +135,6 @@ onAuthStateChanged(auth, (user)=>{
     galleryItems.forEach((d,i)=>{
       const box = document.createElement("div");
       box.className="relative group";
-
       box.innerHTML=`
         <img src="${d.url}" class="gallery-img w-full h-40 object-cover rounded shadow" data-index="${i}"/>
         ${d.text ? `<p class="text-xs mt-1 text-gray-700">${d.text}</p>`:""}
@@ -160,24 +142,16 @@ onAuthStateChanged(auth, (user)=>{
           <button class="deleteBtn absolute top-1 right-1 bg-red-600 text-white rounded px-2 py-1 text-xs">❌</button>
         `:""}
       `;
-
-      // zoom modal
-      box.querySelector("img").onclick=()=>{
-        openModal(i);
-      };
-
-      // delete (admin only)
+      box.querySelector("img").onclick=()=>{ openModal(i); };
       if(currentUser?.email===ADMIN_EMAIL){
-        box.querySelector(".deleteBtn").onclick=async()=>{
-          if(confirm("Delete image?")) await deleteDoc(doc(db,"gallery",d.id));
-        };
+        const btn = box.querySelector(".deleteBtn");
+        if(btn) btn.onclick=async()=>{ if(confirm("Delete image?")) await deleteDoc(doc(db,"gallery",d.id)); };
       }
-
       galleryDiv.appendChild(box);
     });
   });
 
-  // 📸 Modal Functions
+  // 📸 Modal functions
   function openModal(index){
     currentIndex = index;
     const item = galleryItems[index];
@@ -186,21 +160,13 @@ onAuthStateChanged(auth, (user)=>{
     imgModal.classList.remove("hidden");
     imgModal.classList.add("flex");
   }
-  function closeImgModal(){
-    imgModal.classList.add("hidden");
-  }
-  function showNext(){
-    currentIndex = (currentIndex+1) % galleryItems.length;
-    openModal(currentIndex);
-  }
-  function showPrev(){
-    currentIndex = (currentIndex-1+galleryItems.length) % galleryItems.length;
-    openModal(currentIndex);
-  }
+  function closeImgModal(){ imgModal.classList.add("hidden"); }
+  function showNext(){ openModal((currentIndex+1)%galleryItems.length); }
+  function showPrev(){ openModal((currentIndex-1+galleryItems.length)%galleryItems.length); }
 
   nextBtn.onclick=showNext;
   prevBtn.onclick=showPrev;
-  closeModal.onclick=closeImgModal;
+  closeModalBtn.onclick=closeImgModal;
   document.addEventListener("keydown",(e)=>{
     if(imgModal.classList.contains("hidden")) return;
     if(e.key==="Escape") closeImgModal();
