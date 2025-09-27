@@ -86,7 +86,8 @@
 async function loadPrayerTimes() {
   try {
     // ✅ Change city & country if needed
-    const url = "https://api.aladhan.com/v1/timingsByCity?city=Mumbai&country=India&method=2";
+   https://api.aladhan.com/v1/timings?latitude=26.8467&longitude=80.9462&method=1&school=1
+
     const res = await fetch(url);
     const data = await res.json();
 
