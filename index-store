@@ -46,14 +46,62 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-<!-- Header Top Row -->
-<div class="flex flex-col sm:flex-row justify-between items-center py-2">
-  
-  <!-- Logo -->
-  <div class="title-3d text-center sm:text-left">
-    Talimi Ittehad
-  </div>
+<!-- Header with Logo only -->
+<header class="bg-blue-600">
+  <div class="flex justify-between items-center py-2 px-4 max-w-6xl mx-auto">
+    
+    <!-- Left: Makka -->
+    <div class="flex items-center">
+      <img src="makka.png" alt="Makka" class="h-10 w-10 object-cover rounded-full mr-2">
+     
+    </div>
 
+    <!-- Center: Logo / Title -->
+    <div class="flex flex-col items-center">
+    
+      <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">
+        Talimi Ittehad
+      </div>
+    </div>
+
+    <!-- Right: Madina -->
+    <div class="flex items-center">
+     
+      <img src="madina.png" alt="Madina" class="h-10 w-10 object-cover rounded-full">
+    </div>
+
+  </div>
+</header>
+
+
+
+<!-- Namaz Times Box -->
+<div id="prayer-times" 
+     class="bg-green-700 text-white text-xs sm:text-sm px-3 py-2 rounded shadow text-left leading-5 mt-2 sm:mt-0 sm:ml-4">
+  🕌 Loading...
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // ✅ Tumhara fixed timetable
+  const timings = {
+    "Fajr": "05:10",
+    "Dhuhr": "12:20",
+    "Asr": "04:00",
+    "Maghrib": "06:15",
+    "Isha": "07:45"
+  };
+
+  // ✅ Show times
+  document.getElementById("prayer-times").innerHTML = `
+    🌅 Fajr: ${timings.Fajr} &nbsp;|&nbsp;
+    ☀ Dhuhr: ${timings.Dhuhr} &nbsp;|&nbsp;
+    🌇 Asr: ${timings.Asr} &nbsp;|&nbsp;
+    🌆 Maghrib: ${timings.Maghrib} &nbsp;|&nbsp;
+    🌙 Isha: ${timings.Isha}
+  `;
+});
+</script>
 
 
   
@@ -103,15 +151,27 @@
   </div>
 </header>
 
+
+
+
+
+
+
+  
 <!-- Notice Bar -->
 <div id="noticeBar" class="w-full">
-  <marquee id="noticeText">📢 Welcome to Talimi Ittehad!</marquee>
+  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">
+    📢 Welcome to Talimi Ittehad!
+  </marquee>
 </div>
+
 <!-- Admin Notice Editor (admin only) -->
 <div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
   <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
   <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
 </div>
+
+
 
 <!-- Search -->
 <div class="max-w-6xl mx-auto px-4 mt-2">
@@ -154,7 +214,7 @@
 </div>
 
 <!-- Floating Donate -->
-<a href="#donate" class="btn-3d floating-donate">Donate</a>
+<a href="https://all-madrsa.netlify.app/upi" class="btn-3d floating-donate">Donate</a>
 
 <!-- Footer -->
 <footer class="bg-gray-100 text-center py-4 mt-6">
