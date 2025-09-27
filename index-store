@@ -54,24 +54,28 @@
     Talimi Ittehad
   </div>
 
-  <!-- Namaz Times Box -->
-  <div id="prayer-times" 
-       class="bg-green-700 text-white text-xs sm:text-sm px-3 py-2 rounded shadow text-left leading-5 mt-2 sm:mt-0 sm:ml-4">
-    🕌 Loading...
-  </div>
-</div>
 
-<script>
+
+
+
+
+
+
+
+  <script>
 async function loadPrayerTimes() {
-  try {
-    // ✅ Change city & country if needed
-    const url = "https://api.aladhan.com/v1/timingsByCity?city=Mumbai&country=India&method=2";
-    const res = await fetch(url);
-    const data = await res.json();
+  const box = document.getElementById("prayer-times");
+  if (!box) return; // agar div missing hai
 
-    if (data.code === 200) {
+  try {
+    const url = "https://api.aladhan.com/v1/timingsByCity?city=Mumbai&country=India&method=2&school=1";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Network error");
+
+    const data = await res.json();
+    if (data.code === 200 && data.data?.timings) {
       const t = data.data.timings;
-      document.getElementById("prayer-times").innerHTML = `
+      box.innerHTML = `
         🌅 Fajr: ${t.Fajr} &nbsp;|&nbsp;
         ☀ Dhuhr: ${t.Dhuhr} &nbsp;|&nbsp;
         🌇 Asr: ${t.Asr} &nbsp;|&nbsp;
@@ -79,15 +83,21 @@ async function loadPrayerTimes() {
         🌙 Isha: ${t.Isha}
       `;
     } else {
-      document.getElementById("prayer-times").textContent = "❌ Error loading times";
+      box.textContent = "❌ Error loading times";
     }
   } catch (err) {
+    console.error(err);
     document.getElementById("prayer-times").textContent = "❌ Failed to load";
   }
 }
 
 document.addEventListener("DOMContentLoaded", loadPrayerTimes);
 </script>
+
+
+
+
+
 
   
     <!-- Menu -->
