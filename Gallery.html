@@ -1,14 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Gallery | Talimi Ittehad</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .gallery-img{cursor:pointer; transition:.3s;}
-    .gallery-img:hover{transform:scale(1.03);}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Gallery | Talimi Ittehad</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  .gallery-img{cursor:pointer; transition:.3s; border-radius:6px;}
+  .gallery-img:hover{transform:scale(1.03);}
+  /* Responsive grid for mobile: 1 image per row */
+  @media (max-width: 640px) {
+    #gallery { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+  }
+</style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
@@ -20,33 +24,33 @@
 </header>
 
 <main class="flex-1 max-w-6xl mx-auto p-4">
+
   <!-- Upload Section (Admin only) -->
   <div id="uploadSection" class="hidden mb-6 space-y-2">
-    <input type="file" id="imgInput" accept="image/*" class="block w-full"/>
+    <input type="file" id="imgInput" accept="image/*" class="block"/>
     <textarea id="imgText" placeholder="Enter description..." class="border p-2 w-full rounded"></textarea>
     <button id="uploadBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Upload</button>
   </div>
 
   <!-- Gallery Grid -->
-  <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
-
-  <!-- Loading -->
+  <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
   <p id="loadingMsg" class="text-center text-gray-500 mt-4">Loading gallery…</p>
 </main>
 
 <!-- Image Modal -->
-<div id="imgModal" class="fixed inset-0 bg-black/90 hidden z-50 flex flex-col items-center justify-center p-2 overflow-auto">
-  <button id="closeModal" class="absolute top-2 right-2 text-white text-2xl z-50 p-1 hover:bg-white/20 rounded">✖</button>
-  <img id="modalImg" class="max-h-[90vh] max-w-[95%] object-contain rounded shadow-lg mb-2"/>
-  <p id="modalText" class="text-white text-center max-w-[90%] mb-2"></p>
-  <button id="prevBtn" class="absolute left-2 md:left-4 text-white text-3xl p-1 hover:bg-white/20 rounded">⟨</button>
-  <button id="nextBtn" class="absolute right-2 md:right-4 text-white text-3xl p-1 hover:bg-white/20 rounded">⟩</button>
+<div id="imgModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-2">
+  <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl z-50 p-1 hover:bg-white/20 rounded">✖</button>
+  <div class="flex flex-col items-center max-h-[95vh] max-w-[95vw] overflow-hidden">
+    <img id="modalImg" class="max-h-[85vh] max-w-[95vw] object-contain rounded shadow-lg mb-2"/>
+    <p id="modalText" class="text-white text-center max-w-[95vw] mb-2 overflow-auto"></p>
+  </div>
+  <button id="prevBtn" class="absolute left-4 text-white text-3xl p-1 hover:bg-white/20 rounded">⟨</button>
+  <button id="nextBtn" class="absolute right-4 text-white text-3xl p-1 hover:bg-white/20 rounded">⟩</button>
 </div>
-
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -62,6 +66,7 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
+
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
@@ -75,7 +80,7 @@
   const imgModal = document.getElementById("imgModal");
   const modalImg = document.getElementById("modalImg");
   const modalText = document.getElementById("modalText");
-  const closeModalBtn = document.getElementById("closeModal");
+  const closeModal = document.getElementById("closeModal");
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
 
@@ -83,7 +88,7 @@
   let galleryItems = [];
   let currentIndex = 0;
 
-  // 🔑 Check Admin
+  // Check Admin
   onAuthStateChanged(auth, (user)=>{
     currentUser = user;
     if(user && user.email === ADMIN_EMAIL){
@@ -91,7 +96,7 @@
     }
   });
 
-  // 🖼 Upload function
+  // ImgBB upload
   async function uploadImage(file){
     const fd = new FormData();
     fd.append("image", file);
@@ -108,72 +113,63 @@
     uploadBtn.disabled = true; uploadBtn.textContent = "Uploading...";
     try{
       const url = await uploadImage(file);
-      await addDoc(collection(db,"gallery"), { url, text, createdAt: serverTimestamp(), uid: currentUser.uid });
+      await addDoc(collection(db,"gallery"),{
+        url, text, createdAt: serverTimestamp(), uid: currentUser.uid
+      });
       imgInput.value=""; imgText.value="";
       alert("✅ Image uploaded");
-    }catch(err){
-      alert("❌ "+err.message);
-    }finally{
-      uploadBtn.disabled=false; uploadBtn.textContent="Upload";
-    }
+    }catch(err){ alert("❌ "+err.message); }
+    finally{ uploadBtn.disabled=false; uploadBtn.textContent="Upload"; }
   };
 
-  // 📂 Live gallery
+  // Load gallery live
   const qRef = query(collection(db,"gallery"), orderBy("createdAt","desc"));
-  onSnapshot(qRef, (snap)=>{
+  onSnapshot(qRef, snap=>{
     galleryItems = [];
-    galleryDiv.innerHTML = "";
-    if(snap.empty){
-      loadingMsg.textContent = "No images yet.";
-      return;
-    }
+    galleryDiv.innerHTML="";
+    if(snap.empty){ loadingMsg.textContent="No images yet."; return; }
     loadingMsg.classList.add("hidden");
-    snap.forEach(docSnap=>{
-      const d = docSnap.data();
-      galleryItems.push({id:docSnap.id, ...d});
-    });
-
+    snap.forEach(docSnap=>{ galleryItems.push({id:docSnap.id, ...docSnap.data()}); });
     galleryItems.forEach((d,i)=>{
       const box = document.createElement("div");
       box.className="relative group";
       box.innerHTML=`
-        <img src="${d.url}" class="gallery-img w-full h-40 object-cover rounded shadow" data-index="${i}"/>
+        <img src="${d.url}" class="gallery-img w-full h-40 object-cover shadow" data-index="${i}"/>
         ${d.text ? `<p class="text-xs mt-1 text-gray-700">${d.text}</p>`:""}
-        ${currentUser?.email===ADMIN_EMAIL?`
-          <button class="deleteBtn absolute top-1 right-1 bg-red-600 text-white rounded px-2 py-1 text-xs">❌</button>
-        `:""}
+        ${currentUser?.email===ADMIN_EMAIL?`<button class="deleteBtn absolute top-1 right-1 bg-red-600 text-white rounded px-2 py-1 text-xs">❌</button>`:""}
       `;
       box.querySelector("img").onclick=()=>{ openModal(i); };
       if(currentUser?.email===ADMIN_EMAIL){
-        const btn = box.querySelector(".deleteBtn");
-        if(btn) btn.onclick=async()=>{ if(confirm("Delete image?")) await deleteDoc(doc(db,"gallery",d.id)); };
+        box.querySelector(".deleteBtn").onclick=async()=>{
+          if(confirm("Delete image?")) await deleteDoc(doc(db,"gallery",d.id));
+        };
       }
       galleryDiv.appendChild(box);
     });
   });
 
-  // 📸 Modal functions
+  // Modal functions
   function openModal(index){
-    currentIndex = index;
-    const item = galleryItems[index];
-    modalImg.src = item.url;
-    modalText.textContent = item.text || "";
-    imgModal.classList.remove("hidden");
-    imgModal.classList.add("flex");
+    currentIndex=index;
+    const item=galleryItems[index];
+    modalImg.src=item.url;
+    modalText.textContent=item.text||"";
+    imgModal.classList.remove("hidden"); imgModal.classList.add("flex");
   }
   function closeImgModal(){ imgModal.classList.add("hidden"); }
-  function showNext(){ openModal((currentIndex+1)%galleryItems.length); }
-  function showPrev(){ openModal((currentIndex-1+galleryItems.length)%galleryItems.length); }
+  function showNext(){ currentIndex=(currentIndex+1)%galleryItems.length; openModal(currentIndex); }
+  function showPrev(){ currentIndex=(currentIndex-1+galleryItems.length)%galleryItems.length; openModal(currentIndex); }
 
   nextBtn.onclick=showNext;
   prevBtn.onclick=showPrev;
-  closeModalBtn.onclick=closeImgModal;
-  document.addEventListener("keydown",(e)=>{
+  closeModal.onclick=closeImgModal;
+  document.addEventListener("keydown", e=>{
     if(imgModal.classList.contains("hidden")) return;
     if(e.key==="Escape") closeImgModal();
     if(e.key==="ArrowRight") showNext();
     if(e.key==="ArrowLeft") showPrev();
   });
 </script>
+
 </body>
 </html>
