@@ -6,11 +6,20 @@
 <title>Gallery | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  .gallery-img{cursor:pointer; transition:.3s; border-radius:6px;}
-  .gallery-img:hover{transform:scale(1.03);}
-  /* Responsive grid for mobile: 1 image per row */
-  @media (max-width: 640px) {
-    #gallery { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+  .gallery-img {
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 6px;
+  }
+  .gallery-img:hover { transform: scale(1.03); }
+
+  #gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  @media (max-width: 640px) { #gallery { grid-template-columns: 1fr !important; } }
+
+  /* Modal arrows */
+  #prevBtn, #nextBtn {
+    top: 50%;
+    transform: translateY(-50%);
   }
 </style>
 </head>
@@ -33,24 +42,25 @@
   </div>
 
   <!-- Gallery Grid -->
-  <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+  <div id="gallery"></div>
   <p id="loadingMsg" class="text-center text-gray-500 mt-4">Loading gallery…</p>
 </main>
 
-<!-- Image Modal -->
-<div id="imgModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center">
-  <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl z-50 p-2 hover:bg-white/20 rounded">✖</button>
-  <button id="prevBtn" class="absolute left-2 top-1/2 transform -translate-y-1/2 text-white text-3xl p-2 hover:bg-white/20 rounded">⟨</button>
-  <div class="flex flex-col items-center justify-center max-h-[95vh] max-w-[95vw] overflow-auto">
-    <img id="modalImg" class="max-h-[calc(100vh-120px)] max-w-[95vw] object-contain rounded shadow-lg mb-2"/>
-    <p id="modalText" class="text-white text-center max-w-[95vw] max-h-[20vh] overflow-auto mb-2"></p>
+<!-- Modal -->
+<div id="imgModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4">
+  <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl z-50 p-1 hover:bg-white/20 rounded">✖</button>
+  
+  <div class="relative flex items-center justify-center max-h-[95vh] max-w-[95vw]">
+    <button id="prevBtn" class="absolute left-2 text-white text-3xl p-1 hover:bg-white/20 rounded">⟨</button>
+    <img id="modalImg" class="max-h-[90vh] max-w-[90vw] object-contain rounded shadow-lg"/>
+    <button id="nextBtn" class="absolute right-2 text-white text-3xl p-1 hover:bg-white/20 rounded">⟩</button>
   </div>
-  <button id="nextBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-white text-3xl p-2 hover:bg-white/20 rounded">⟩</button>
+  <p id="modalText" class="text-white text-center max-w-[95vw] mt-2 overflow-auto"></p>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -65,6 +75,8 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
   const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
   const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 
@@ -86,11 +98,10 @@
   let galleryItems = [];
   let currentIndex = 0;
 
+  // Check Admin
   onAuthStateChanged(auth, (user)=>{
     currentUser = user;
-    if(user && user.email===ADMIN_EMAIL){
-      uploadSection.classList.remove("hidden");
-    }
+    if(user && user.email === ADMIN_EMAIL) uploadSection.classList.remove("hidden");
   });
 
   async function uploadImage(file){
@@ -99,7 +110,7 @@
     const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:"POST", body:fd });
     const data = await res.json();
     if(data.success) return data.data.url;
-    else throw new Error(data?.error?.message || "ImgBB upload failed");
+    throw new Error(data?.error?.message || "ImgBB upload failed");
   }
 
   uploadBtn.onclick = async ()=>{
@@ -109,30 +120,34 @@
     uploadBtn.disabled=true; uploadBtn.textContent="Uploading...";
     try{
       const url = await uploadImage(file);
-      await addDoc(collection(db,"gallery"),{ url, text, createdAt: serverTimestamp(), uid: currentUser.uid });
+      await addDoc(collection(db,"gallery"), { url, text, createdAt: serverTimestamp(), uid: currentUser.uid });
       imgInput.value=""; imgText.value="";
       alert("✅ Image uploaded");
     }catch(err){ alert("❌ "+err.message); }
     finally{ uploadBtn.disabled=false; uploadBtn.textContent="Upload"; }
   };
 
+  // Load gallery live
   const qRef = query(collection(db,"gallery"), orderBy("createdAt","desc"));
   onSnapshot(qRef, snap=>{
-    galleryItems=[]; galleryDiv.innerHTML="";
+    galleryItems=[];
+    galleryDiv.innerHTML="";
     if(snap.empty){ loadingMsg.textContent="No images yet."; return; }
     loadingMsg.classList.add("hidden");
-    snap.forEach(docSnap=>{ galleryItems.push({id:docSnap.id,...docSnap.data()}); });
+    snap.forEach(docSnap=>{ galleryItems.push({id:docSnap.id, ...docSnap.data()}); });
     galleryItems.forEach((d,i)=>{
       const box=document.createElement("div");
       box.className="relative group";
       box.innerHTML=`
         <img src="${d.url}" class="gallery-img w-full h-40 object-cover shadow" data-index="${i}"/>
-        ${d.text ? `<p class="text-xs mt-1 text-gray-700">${d.text}</p>`:""}
+        ${d.text?`<p class="text-xs mt-1 text-gray-700">${d.text}</p>`:""}
         ${currentUser?.email===ADMIN_EMAIL?`<button class="deleteBtn absolute top-1 right-1 bg-red-600 text-white rounded px-2 py-1 text-xs">❌</button>`:""}
       `;
       box.querySelector("img").onclick=()=>{ openModal(i); };
       if(currentUser?.email===ADMIN_EMAIL){
-        box.querySelector(".deleteBtn").onclick=async()=>{ if(confirm("Delete image?")) await deleteDoc(doc(db,"gallery",d.id)); };
+        box.querySelector(".deleteBtn").onclick=async()=>{
+          if(confirm("Delete image?")) await deleteDoc(doc(db,"gallery",d.id));
+        };
       }
       galleryDiv.appendChild(box);
     });
