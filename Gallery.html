@@ -85,13 +85,15 @@
   let currentIndex = 0;
 
   // 🔑 Auth
-  onAuthStateChanged(auth, async (user)=>{
-    currentUser = user;
-    if(!user){ await signInWithPopup(auth, provider); return; }
-    if(user.email === ADMIN_EMAIL){
-      uploadSection.classList.remove("hidden");
-    }
-  });
+onAuthStateChanged(auth, (user)=>{
+  currentUser = user;
+  if(user && user.email === ADMIN_EMAIL){
+    uploadSection.classList.remove("hidden"); // सिर्फ admin को upload दिखेगा
+  }
+});
+
+// Auto login हटा दो
+
 
   // 🖼️ Upload Image
   async function uploadImage(file){
