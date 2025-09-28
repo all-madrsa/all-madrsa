@@ -1,244 +1,178 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hadees Board | Talimi Ittehad</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      background: url('madina-bg.jpg') center/cover no-repeat;
-    }
-    .btn-3d {
-      color: #fff;
-      font-weight: 700;
-      border-radius: 10px;
-      box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
-      transition: transform .12s ease, box-shadow .12s ease;
-      padding: 0.5rem 1rem;
-    }
-    .btn-3d:active {
-      transform: translateY(3px);
-      box-shadow: 0 3px 0 rgba(0,0,0,.25);
-    }
-    .post-card {
-      background: rgba(255,255,255,0.9);
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      cursor: pointer;
-    }
-    .popup {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
-      padding: 1rem;
-    }
-    .popup-content {
-      background: white;
-      max-width: 600px;
-      width: 100%;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      max-height: 90vh;
-      overflow-y: auto;
-      position: relative;
-    }
-    .popup-content button {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hadees | Talimi Ittehad</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: url('madina-bg.jpg') no-repeat center center fixed; background-size: cover; }
+  .card { background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); border-radius: 0.5rem; padding:1rem; }
+  .btn-3d { font-weight:700; border-radius:0.5rem; box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 12px rgba(0,0,0,.2); transition: transform .12s ease; }
+  .btn-3d:active { transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.25); }
+  #popup { position: fixed; inset:0; background: rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:50; }
+  #popupContent { background: #fff; max-width: 90%; max-height: 80%; overflow-y:auto; border-radius:0.5rem; padding:1rem; position: relative; }
+  #popupClose, #popupPrev, #popupNext { position: absolute; top: 10px; font-size:1.2rem; cursor:pointer; padding:0.5rem; background:#fff; border-radius:50%; }
+  #popupClose { right:10px; }
+  #popupPrev { left:10px; }
+  #popupNext { right:50px; }
+</style>
 </head>
-<body class="min-h-screen flex flex-col items-center px-4 py-4">
+<body class="min-h-screen flex flex-col items-center p-4">
 
-  <h1 class="text-2xl font-bold text-white text-center mb-4">Talimi Ittehad - Hadees Board</h1>
+<!-- Login / Add Post -->
+<div class="flex flex-col items-center gap-2 mb-4">
+  <button id="loginBtn" class="btn-3d px-4 py-2">Login with Google</button>
+  <button id="addBtn" class="btn-3d px-4 py-2 hidden">Add Hadees</button>
+</div>
 
-  <!-- Login / Logout -->
-  <div class="mb-4">
-    <button id="authBtn" class="btn-3d">Login</button>
+<!-- Hadees List -->
+<div id="postsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full"></div>
+
+<!-- Popup -->
+<div id="popup" class="flex">
+  <div id="popupContent">
+    <span id="popupClose">✖</span>
+    <span id="popupPrev">◀</span>
+    <span id="popupNext">▶</span>
+    <div id="popupText" class="mt-4"></div>
   </div>
+</div>
 
-  <!-- Post Hadees Button (visible only after login) -->
-  <div id="postHadeesDiv" class="mb-4 hidden">
-    <button id="addPostBtn" class="btn-3d">📝 Post Hadees</button>
-  </div>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  <!-- List of Hadees -->
-  <div id="hadeesList" class="w-full max-w-xl"></div>
+const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-  <!-- Popup for full Hadees -->
-  <div id="popup" class="popup">
-    <div class="popup-content">
-      <button onclick="closePopup()" class="btn-3d">Close</button>
-      <div id="popupContent" class="mt-6"></div>
-      <div class="flex justify-between mt-4">
-        <button id="prevBtn" class="btn-3d">Prev</button>
-        <button id="nextBtn" class="btn-3d">Next</button>
-      </div>
-    </div>
-  </div>
+const loginBtn = document.getElementById("loginBtn");
+const addBtn = document.getElementById("addBtn");
+const postsList = document.getElementById("postsList");
+let currentUser=null;
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+let allPosts=[];
 
-  <!-- Post Modal -->
-  <div id="postModal" class="popup">
-    <div class="popup-content">
-      <button onclick="closePostModal()" class="btn-3d">Close</button>
-      <h2 class="text-lg font-bold mb-2">Post Hadees</h2>
-      <textarea id="postText" rows="5" class="w-full border p-2 rounded mb-2" placeholder="Apni Hadees likhein"></textarea>
-      <div class="flex justify-end gap-2">
-        <button onclick="submitPost()" class="btn-3d">Submit</button>
-      </div>
-    </div>
-  </div>
+// Popup logic
+let popupIndex=0;
+const popup=document.getElementById("popup");
+const popupText=document.getElementById("popupText");
+const popupClose=document.getElementById("popupClose");
+const popupPrev=document.getElementById("popupPrev");
+const popupNext=document.getElementById("popupNext");
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+popupClose.onclick=()=>popup.style.display="none";
+popupPrev.onclick=()=>{
+  if(popupIndex>0){ popupIndex--; showPopup(popupIndex); }
+};
+popupNext.onclick=()=>{
+  if(popupIndex<allPosts.length-1){ popupIndex++; showPopup(popupIndex); }
+};
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-      authDomain: "all-madrsa.firebaseapp.com",
-      projectId: "all-madrsa",
-      storageBucket: "all-madrsa.appspot.com",
-      messagingSenderId: "619313835874",
-      appId: "1:619313835874:web:e387e1297663f11fc2463b"
-    };
+function showPopup(index){
+  const post = allPosts[index];
+  popupText.innerHTML=`<h2 class="font-bold text-lg">${post.userName}</h2>
+                       <p class="mt-2">${post.hadees}</p>`;
+  popup.style.display="flex";
+}
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
+// Auth
+loginBtn.onclick=async ()=>{
+  if(!auth.currentUser) await signInWithPopup(auth, provider);
+  else await signOut(auth);
+};
 
-    const authBtn = document.getElementById("authBtn");
-    const postHadeesDiv = document.getElementById("postHadeesDiv");
-    const addPostBtn = document.getElementById("addPostBtn");
-    const postModal = document.getElementById("postModal");
-    const postText = document.getElementById("postText");
-    const hadeesList = document.getElementById("hadeesList");
-    const popup = document.getElementById("popup");
-    const popupContent = document.getElementById("popupContent");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
+onAuthStateChanged(auth, user=>{
+  currentUser=user;
+  if(user){
+    loginBtn.textContent="Logout";
+    addBtn.classList.remove("hidden");
+  } else{
+    loginBtn.textContent="Login with Google";
+    addBtn.classList.add("hidden");
+  }
+});
 
-    let currentUser = null;
-    let posts = [];
-    let currentIndex = 0;
+// Add Hadees
+addBtn.onclick=async ()=>{
+  const hadees=prompt("Enter Hadees text:");
+  if(!hadees) return;
+  await addDoc(collection(db,"hadees"),{
+    hadees,
+    uid: currentUser.uid,
+    userName: currentUser.displayName||currentUser.email,
+    approved:false,
+    createdAt:serverTimestamp()
+  });
+  alert("Submitted for admin approval!");
+};
 
-    authBtn.onclick = async () => {
-      if(!auth.currentUser){
-        await signInWithPopup(auth, provider);
-      } else {
-        await signOut(auth);
+// Load posts
+onSnapshot(collection(db,"hadees"),snap=>{
+  allPosts=[];
+  snap.forEach(docSnap=>{
+    const d=docSnap.data();
+    d.id=docSnap.id;
+    allPosts.push(d);
+  });
+  renderPosts();
+});
+
+function renderPosts(){
+  postsList.innerHTML="";
+  const visiblePosts = allPosts.filter(p=>p.approved || (currentUser && (currentUser.uid===p.uid || currentUser.email===ADMIN_EMAIL)));
+  visiblePosts.forEach((post,index)=>{
+    const div=document.createElement("div");
+    div.className="card cursor-pointer";
+    div.innerHTML=`<p class="truncate">${post.hadees}</p>`;
+    div.onclick=()=>{ popupIndex=index; showPopup(index); };
+    
+    if(currentUser){
+      if(currentUser.uid===post.uid || currentUser.email===ADMIN_EMAIL){
+        const del=document.createElement("button");
+        del.textContent="Delete";
+        del.className="btn-3d mt-2 px-2 py-1";
+        del.onclick=async (e)=>{ 
+          e.stopPropagation(); 
+          if(confirm("Delete post?")) await deleteDoc(doc(db,"hadees",post.id));
+        };
+        div.appendChild(del);
+      }
+      if(currentUser.email===ADMIN_EMAIL && !post.approved){
+        const approve=document.createElement("button");
+        approve.textContent="Approve";
+        approve.className="btn-3d mt-2 px-2 py-1";
+        approve.onclick=async (e)=>{
+          e.stopPropagation();
+          await updateDoc(doc(db,"hadees",post.id),{approved:true});
+        };
+        div.appendChild(approve);
+
+        const reject=document.createElement("button");
+        reject.textContent="Reject";
+        reject.className="btn-3d mt-2 px-2 py-1";
+        reject.onclick=async (e)=>{
+          e.stopPropagation();
+          await deleteDoc(doc(db,"hadees",post.id));
+        };
+        div.appendChild(reject);
       }
     }
-
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      if(user){
-        authBtn.textContent = "Logout";
-        postHadeesDiv.classList.remove("hidden");
-      } else {
-        authBtn.textContent = "Login";
-        postHadeesDiv.classList.add("hidden");
-      }
-      loadPosts();
-    });
-
-    addPostBtn.onclick = () => {
-      postModal.style.display = "flex";
-    }
-
-    window.closePostModal = () => {
-      postModal.style.display = "none";
-      postText.value = "";
-    }
-
-    async function submitPost(){
-      if(!postText.value.trim()) return alert("Hadees likhein");
-      await addDoc(collection(db,"hadees"),{
-        text: postText.value.trim(),
-        uid: currentUser.uid,
-        email: currentUser.email,
-        createdAt: serverTimestamp(),
-        status: "pending"
-      });
-      closePostModal();
-    }
-
-    function loadPosts(){
-      const q = collection(db,"hadees");
-      onSnapshot(q, snapshot => {
-        posts = [];
-        hadeesList.innerHTML = "";
-        snapshot.forEach(docSnap => {
-          const d = docSnap.data();
-          posts.push({id:docSnap.id,...d});
-        });
-        renderPosts();
-      });
-    }
-
-    function renderPosts(){
-      hadeesList.innerHTML = "";
-      posts.forEach((p,i)=>{
-        if(p.status!=="approved" && p.uid !== currentUser?.uid && currentUser?.email !== "admin@example.com") return;
-        const card = document.createElement("div");
-        card.className = "post-card";
-        card.innerHTML = `
-          <p class="line-clamp-3">${p.text}</p>
-          <div class="flex justify-end gap-2 mt-2">
-            ${(currentUser && currentUser.uid===p.uid) ? `<button class="btn-3d deleteBtn">Delete</button>` : ""}
-            ${(currentUser && currentUser.email==="admin@example.com") ? `
-              <button class="btn-3d approveBtn">✅ Approve</button>
-              <button class="btn-3d rejectBtn">❌ Reject</button>
-              <button class="btn-3d deleteBtn">🗑 Delete</button>
-            `:""}
-          </div>
-        `;
-        hadeesList.appendChild(card);
-
-        card.onclick = (e)=>{
-          if(e.target.tagName==="BUTTON") return; // don't open popup if button clicked
-          openPopup(i);
-        }
-
-        const approveBtn = card.querySelector(".approveBtn");
-        if(approveBtn) approveBtn.onclick = async()=> await updateDoc(doc(db,"hadees",p.id),{status:"approved"});
-        const rejectBtn = card.querySelector(".rejectBtn");
-        if(rejectBtn) rejectBtn.onclick = async()=> await updateDoc(doc(db,"hadees",p.id),{status:"rejected"});
-        const deleteBtn = card.querySelector(".deleteBtn");
-        if(deleteBtn) deleteBtn.onclick = async()=> await deleteDoc(doc(db,"hadees",p.id));
-      });
-    }
-
-    function openPopup(index){
-      currentIndex = index;
-      showPopup();
-      popup.style.display = "flex";
-    }
-    function showPopup(){
-      const p = posts[currentIndex];
-      if(!p) return;
-      popupContent.innerHTML = `<p>${p.text}</p>`;
-    }
-    window.closePopup = () => popup.style.display = "none";
-
-    prevBtn.onclick = ()=>{
-      if(currentIndex>0) currentIndex--;
-      showPopup();
-    }
-    nextBtn.onclick = ()=>{
-      if(currentIndex<posts.length-1) currentIndex++;
-      showPopup();
-    }
-
-  </script>
+    postsList.appendChild(div);
+  });
+}
+</script>
 </body>
 </html>
