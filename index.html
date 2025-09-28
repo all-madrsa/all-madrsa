@@ -53,64 +53,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-<header class="bg-gray-800 text-white p-3 flex justify-between items-center max-w-6xl mx-auto">
-  <!-- Left: Rishtey text -->
-  <div class="text-lg font-semibold">Rishtey</div>
 
-  <!-- Center: Auto-scrolling PNG slider -->
-  <div class="flex-1 mx-4 overflow-hidden relative h-10">
-    <div id="imageSlider" class="flex gap-4 absolute">
-      <img src="https://i.ibb.co/YB24x9Wx/icon-192-png.jpg" class="h-10 w-10 object-contain" alt="img1">
-      <img src="" class="h-10 w-10 object-contain" alt="img2">
-      <img src="img3.png" class="h-10 w-10 object-contain" alt="img3">
-      <img src="img4.png" class="h-10 w-10 object-contain" alt="img4">
-      <img src="img5.png" class="h-10 w-10 object-contain" alt="img5">
-      <img src="img6.png" class="h-10 w-10 object-contain" alt="img6">
-      <img src="img7.png" class="h-10 w-10 object-contain" alt="img7">
-      <img src="img8.png" class="h-10 w-10 object-contain" alt="img8">
-      <img src="img9.png" class="h-10 w-10 object-contain" alt="img9">
-      <img src="img10.png" class="h-10 w-10 object-contain" alt="img10">
-    </div>
-  </div>
-
-  <!-- Right: Nikah button -->
-  <div>
-    <button class="btn-3d-lg">💍 Nikah</button>
-  </div>
-</header>
-
-<style>
-.btn-3d-lg{
-  background: linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
-  box-shadow:0 6px 0 rgba(0,0,0,.25), 0 8px 16px rgba(0,0,0,.2);
-  font-size: 1rem;
-  padding: .6rem 1.2rem;
-  border-radius: 8px;
-  font-weight: 600;
-  color: #fff;
-  white-space: nowrap;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.btn-3d-lg:active{
-  transform: translateY(2px);
-  box-shadow:0 3px 0 rgba(0,0,0,.25);
-}
-
-/* Slider animation */
-#imageSlider{
-  animation: slide 20s linear infinite;
-}
-@keyframes slide {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); } /* adjust according to number of images */
-}
-</style>
-
-<script>
-// Duplicate images for infinite scroll effect
-const slider = document.getElementById("imageSlider");
-slider.innerHTML += slider.innerHTML; // duplicate for seamless scrolling
-</script>
 
 
 
