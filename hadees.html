@@ -1,171 +1,188 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hadees Page | Talimi Ittehad</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  body {
-    background: url('madina-bg.jpg') no-repeat center center fixed;
-    background-size: cover;
-  }
-  .btn-3d {
-    color:#fff; font-weight:700; border-radius:10px;
-    box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);
-    transition: transform .12s ease, box-shadow .12s ease;
-  }
-  .btn-3d:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
-  .post-card { border-radius:12px; padding:12px; color:#fff; cursor:pointer; }
-  .popup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-           background:rgba(0,0,0,.7); justify-content:center; align-items:center; z-index:50; }
-  .popup-content { background:#fff; color:#000; padding:20px; border-radius:10px; max-width:90%; max-height:90%; overflow:auto; position:relative; }
-  .close-btn { position:absolute; top:10px; right:15px; font-weight:bold; cursor:pointer; font-size:1.2rem; }
-</style>
-</head>
-<body class="min-h-screen">
-
-<!-- Header -->
-<header class="bg-blue-600 p-4 flex justify-between items-center">
-  <div><img src="makka.png" class="h-12 w-12 rounded-full"></div>
-  <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">Talimi Ittehad</div>
-  <div><img src="madina.png" class="h-12 w-12 rounded-full"></div>
-</header>
-
-<!-- Login/Post Controls -->
-<div class="max-w-3xl mx-auto mt-4 flex justify-center gap-2">
-  <button id="loginBtn" class="btn-3d px-4 py-2" style="background:#4d94ff;">Login</button>
-  <button id="postBtn" class="btn-3d px-4 py-2" style="background:#4dffb8; display:none;">Post Hadees</button>
-</div>
-
-<!-- Post Counter -->
-<div class="max-w-3xl mx-auto mt-2 text-center text-white font-semibold">
-  Total Approved Hadees: <span id="postCounter">0</span>
-</div>
-
-<!-- Post List -->
-<div id="postList" class="max-w-3xl mx-auto mt-4 flex flex-col gap-3"></div>
-
-<!-- Pagination -->
-<div class="max-w-3xl mx-auto mt-2 flex justify-center gap-2">
-  <button id="prevPage" class="btn-3d px-3 py-1" style="background:#ff4d4d;">Previous</button>
-  <button id="nextPage" class="btn-3d px-3 py-1" style="background:#d24dff;">Next</button>
-</div>
-
-<!-- Hadees Popup -->
-<div id="popup" class="popup flex">
-  <div class="popup-content">
-    <span class="close-btn" id="popupClose">X</span>
-    <div id="popupText" class="text-lg"></div>
-  </div>
-</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
-
-  const loginBtn = document.getElementById("loginBtn");
-  const postBtn = document.getElementById("postBtn");
-  const postList = document.getElementById("postList");
-  const postCounter = document.getElementById("postCounter");
-  const popup = document.getElementById("popup");
-  const popupText = document.getElementById("popupText");
-  const popupClose = document.getElementById("popupClose");
-  const prevPageBtn = document.getElementById("prevPage");
-  const nextPageBtn = document.getElementById("nextPage");
-
-  let currentUser = null;
-  let posts = [];
-  let currentPage = 1;
-  const postsPerPage = 5;
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-
-  loginBtn.onclick = async ()=>{
-    if(!auth.currentUser) await signInWithPopup(auth, provider);
-    else await signOut(auth);
-  };
-
-  onAuthStateChanged(auth, user=>{
-    currentUser = user;
-    if(user){
-      loginBtn.style.display = "none";
-      postBtn.style.display = "inline-block";
-    }else{
-      loginBtn.style.display = "inline-block";
-      postBtn.style.display = "none";
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hadees | Talimi Ittehad</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: url('madina-bg.jpg') center/cover no-repeat;
+      min-height:100vh;
     }
-  });
+    .btn-3d {
+      font-weight:600;
+      color:#fff;
+      border-radius:8px;
+      padding:.4rem .8rem;
+      box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);
+      transition: transform .1s ease, box-shadow .1s ease;
+    }
+    .btn-3d:active {
+      transform: translateY(2px);
+      box-shadow:0 2px 0 rgba(0,0,0,.25);
+    }
+    .post-card {
+      border-radius:12px;
+      padding:1rem;
+      color:#fff;
+      position:relative;
+    }
+    .post-popup {
+      position:fixed; inset:0;
+      background:rgba(0,0,0,0.7);
+      display:none;
+      justify-content:center; align-items:center;
+      z-index:100;
+    }
+    .post-popup-content {
+      background:#fff; color:#000;
+      max-width:600px; width:90%;
+      max-height:80vh;
+      overflow-y:auto;
+      padding:1rem;
+      border-radius:10px;
+      position:relative;
+    }
+    .close-popup {
+      position:absolute; top:.5rem; right:.5rem; cursor:pointer;
+      font-weight:bold; font-size:1.2rem;
+    }
+    .next-popup {
+      position:absolute; bottom:.5rem; right:.5rem; cursor:pointer;
+      font-weight:bold; font-size:1rem;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center py-4">
 
-  postBtn.onclick = async ()=>{
-    const text = prompt("Enter Hadees:");
-    if(!text) return;
-    await addDoc(collection(db,"hadees"),{
-      text, ownerUid:currentUser.uid, ownerEmail:currentUser.email,
-      status: currentUser.email===ADMIN_EMAIL ? "approved" : "pending",
-      createdAt: serverTimestamp()
-    });
-    alert("Hadees submitted!");
-  };
+  <h1 class="text-3xl font-bold text-center text-white mb-4 drop-shadow-lg">📜 Hadees</h1>
 
-  function renderPostsPage(){
-    postList.innerHTML = "";
-    const approvedPosts = posts.filter(p=>p.status==="approved");
-    postCounter.textContent = approvedPosts.length;
-    const start = (currentPage-1)*postsPerPage;
-    const end = start+postsPerPage;
-    const pagePosts = approvedPosts.slice(start,end);
-    pagePosts.forEach((p,i)=>{
-      const colors = ["#ff4d4d","#4dffb8","#4d94ff","#d24dff","#ff914d"];
-      const card = document.createElement("div");
-      card.className="post-card";
-      card.style.background = colors[i%colors.length];
-      card.textContent = p.text.slice(0,60)+"...";
-      card.onclick = ()=>{ popupText.textContent = p.text; popup.style.display="flex"; };
-      // Admin/Post Delete
-      if(currentUser && (currentUser.email===ADMIN_EMAIL || currentUser.uid===p.ownerUid)){
-        const delBtn = document.createElement("button");
-        delBtn.textContent="Delete";
-        delBtn.className="btn-3d px-2 py-1 ml-2";
-        delBtn.onclick = async (e)=>{
-          e.stopPropagation();
-          if(confirm("Delete this Hadees?")) await deleteDoc(doc(db,"hadees",p.id));
-        };
-        card.appendChild(delBtn);
+  <!-- Post Button -->
+  <button id="postBtn" class="btn-3d mb-4 bg-green-500 hidden">➕ Post Hadees</button>
+
+  <!-- Posts Container -->
+  <div id="postsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl px-2"></div>
+
+  <!-- Post Popup -->
+  <div id="postPopup" class="post-popup flex">
+    <div class="post-popup-content">
+      <span class="close-popup">✖</span>
+      <div id="popupContent" class="mt-4"></div>
+      <span class="next-popup btn-3d bg-blue-600 mt-2">Next ➡</span>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+   const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const postBtn = document.getElementById("postBtn");
+    const postsContainer = document.getElementById("postsContainer");
+    const postPopup = document.getElementById("postPopup");
+    const popupContent = document.getElementById("popupContent");
+
+    let currentUser = null;
+    let allPosts = [];
+    const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
+    // Check login
+    onAuthStateChanged(auth, user=>{
+      currentUser = user;
+      if(user){
+        postBtn.classList.remove("hidden");
+      }else{
+        postBtn.classList.add("hidden");
       }
-      postList.appendChild(card);
     });
-  }
 
-  prevPageBtn.onclick = ()=>{ if(currentPage>1){ currentPage--; renderPostsPage(); }};
-  nextPageBtn.onclick = ()=>{
-    const totalPages = Math.ceil(posts.filter(p=>p.status==="approved").length/postsPerPage);
-    if(currentPage<totalPages){ currentPage++; renderPostsPage(); }
-  };
-
-  popupClose.onclick = ()=>{ popup.style.display="none"; };
-
-  // Load Hadees realtime
-  onSnapshot(collection(db,"hadees"), snapshot=>{
-    posts = [];
-    snapshot.forEach(docSnap=>{
-      const d = docSnap.data(); d.id = docSnap.id; posts.push(d);
+    // Login redirect
+    postBtn.addEventListener("click", async()=>{
+      if(!currentUser){
+        await signInWithPopup(auth, provider);
+      }else{
+        const text = prompt("Hadees likhe:");
+        if(text && text.trim()){
+          await addDoc(collection(db,"hadees"),{
+            text:text.trim(),
+            authorUid:currentUser.uid,
+            authorEmail:currentUser.email,
+            approved:false,
+            createdAt: serverTimestamp()
+          });
+        }
+      }
     });
-    renderPostsPage();
-  });
-</script>
+
+    // Render posts
+    onSnapshot(collection(db,"hadees"), snapshot=>{
+      allPosts=[];
+      snapshot.forEach(docSnap=>{
+        const data = {id:docSnap.id, ...docSnap.data()};
+        allPosts.push(data);
+      });
+      renderPosts();
+    });
+
+    function renderPosts(){
+      postsContainer.innerHTML="";
+      allPosts.forEach((p,i)=>{
+        if(!p.approved && currentUser?.email!==ADMIN_EMAIL) return;
+        const card = document.createElement("div");
+        card.className="post-card";
+        card.style.backgroundColor = `hsl(${i*50%360}, 70%, 50%)`;
+
+        card.innerHTML=`
+          <p class="truncate">${p.text}</p>
+          <div class="mt-2 flex gap-2">
+            ${currentUser && (p.authorUid===currentUser.uid || currentUser.email===ADMIN_EMAIL) ? `<button class="btn-3d bg-red-600 deleteBtn">Delete</button>`:""}
+            ${currentUser && currentUser.email===ADMIN_EMAIL && !p.approved ? `<button class="btn-3d bg-green-600 approveBtn">Approve</button>`:""}
+            ${currentUser && currentUser.email===ADMIN_EMAIL && !p.approved ? `<button class="btn-3d bg-gray-600 rejectBtn">Reject</button>`:""}
+          </div>
+        `;
+        postsContainer.appendChild(card);
+
+        // Delete
+        const delBtn = card.querySelector(".deleteBtn");
+        if(delBtn){
+          delBtn.onclick=async()=>{ await deleteDoc(doc(db,"hadees",p.id)); };
+        }
+
+        // Approve / Reject
+        const appBtn = card.querySelector(".approveBtn");
+        if(appBtn){
+          appBtn.onclick=async()=>{ await updateDoc(doc(db,"hadees",p.id),{approved:true}); };
+        }
+        const rejBtn = card.querySelector(".rejectBtn");
+        if(rejBtn){
+          rejBtn.onclick=async()=>{ await deleteDoc(doc(db,"hadees",p.id)); };
+        }
+
+        // Popup
+        card.addEventListener("click", ()=>{
+          popupContent.textContent = p.text;
+          postPopup.style.display="flex";
+        });
+      });
+    }
+
+    // Popup controls
+    document.querySelector(".close-popup").onclick = ()=>{ postPopup.style.display="none"; };
+  </script>
 </body>
 </html>
