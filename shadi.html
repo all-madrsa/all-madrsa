@@ -3,65 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💍 Shaadi Listing</title>
+<title>Shaadi Posts</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { background: #f3f4f6; }
-.card-text { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-.popup { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index:50; }
-.popup-content { background: #fff; padding: 20px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+body { background:#f0f0f0; }
+.card-text { overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
+.popup { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; overflow:auto; }
+.popup-content { background:white; padding:20px; border-radius:12px; max-width:500px; width:90%; text-align:left; position:relative; color:black; }
 </style>
 </head>
 <body>
 
-<header class="bg-blue-600 text-white p-4 flex justify-between items-center">
-  <h1 class="text-2xl font-bold">💍 Shaadi Listing</h1>
+<header class="bg-purple-700 p-4 text-white flex justify-between items-center">
+  <h1 class="text-xl font-bold">Shaadi Posts</h1>
   <div>
     <button id="loginBtn" class="bg-green-600 px-3 py-1 rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post</button>
+    <button id="postBtn" class="bg-blue-600 px-3 py-1 rounded hidden">➕ Post</button>
   </div>
 </header>
 
-<section id="postSection" class="hidden p-4 bg-white rounded shadow m-4">
-  <h2 class="text-lg font-bold mb-2">Post Your Details</h2>
-  <input id="name" class="border p-2 w-full rounded mb-2" placeholder="Full Name" />
-  <select id="gender" class="border p-2 w-full rounded mb-2">
+<section id="postSection" class="hidden p-4">
+  <textarea id="postInput" class="w-full p-2 rounded" rows="3" placeholder="Enter your details..."></textarea>
+  <input type="text" id="name" placeholder="Full Name" class="w-full p-2 mt-2 rounded"/>
+  <input type="number" id="age" placeholder="Age" class="w-full p-2 mt-2 rounded"/>
+  <input type="text" id="address" placeholder="Address" class="w-full p-2 mt-2 rounded"/>
+  <input type="text" id="whatsapp" placeholder="WhatsApp Number" class="w-full p-2 mt-2 rounded"/>
+  <select id="gender" class="w-full p-2 mt-2 rounded">
     <option value="">Select Gender</option>
     <option value="Male">Male</option>
     <option value="Female">Female</option>
   </select>
-  <input id="age" type="number" class="border p-2 w-full rounded mb-2" placeholder="Age" />
-  <input id="address" class="border p-2 w-full rounded mb-2" placeholder="Full Address" />
-  <input id="whatsapp" class="border p-2 w-full rounded mb-2" placeholder="WhatsApp Number" />
-  <input id="mobile" class="border p-2 w-full rounded mb-2" placeholder="Mobile Number" />
-  <select id="status" class="border p-2 w-full rounded mb-2">
-    <option value="">Select Status</option>
+  <select id="status" class="w-full p-2 mt-2 rounded">
+    <option value="">Marital Status</option>
     <option value="Single">Single</option>
     <option value="Married">Married</option>
     <option value="Divorced">Divorced</option>
     <option value="Widowed">Widowed</option>
   </select>
-  <input id="children" class="border p-2 w-full rounded mb-2" placeholder="Number of Children (if any)" />
-  <input id="education" class="border p-2 w-full rounded mb-2" placeholder="Education" />
-  <input id="income" class="border p-2 w-full rounded mb-2" placeholder="Income" />
-  <input id="occupation" class="border p-2 w-full rounded mb-2" placeholder="Occupation" />
-  <input id="family" class="border p-2 w-full rounded mb-2" placeholder="Family Details" />
-  <input id="desc" class="border p-2 w-full rounded mb-2" placeholder="Additional Details" />
-  <input id="aadhaar" type="file" accept="image/*" class="border p-2 w-full rounded mb-2" />
-  <button id="submitPost" class="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
+  <input type="number" id="children" placeholder="Number of Children (if any)" class="w-full p-2 mt-2 rounded"/>
+  <input type="file" id="adhar" class="w-full mt-2"/>
+  <button id="submitPost" class="bg-purple-600 px-4 py-2 rounded mt-2 text-white">Submit</button>
 </section>
 
-<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3"></main>
+<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
 <div id="popup" class="popup hidden">
   <div class="popup-content">
-    <h3 id="popupName" class="text-xl font-bold mb-2"></h3>
-    <div id="popupDetails" class="text-sm text-gray-800"></div>
-    <p id="popupStatus" class="mt-2 font-semibold"></p>
-    <a id="popupWhatsapp" href="#" target="_blank" class="bg-green-500 text-white px-3 py-1 rounded inline-block mt-2">WhatsApp</a>
+    <p id="popupText" class="font-bold"></p>
+    <p id="popupMeta" class="mt-2 text-sm text-gray-600"></p>
+    <p id="popupStatus" class="mt-1 font-semibold"></p>
+    <p id="popupAadhaar" class="mt-2"></p>
     <div class="mt-4">
       <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white">❌ Close</button>
     </div>
@@ -71,17 +65,9 @@ body { background: #f3f4f6; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
+const firebaseConfig = { apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng", authDomain:"all-madrsa.firebaseapp.com", projectId:"all-madrsa", storageBucket:"all-madrsa.appspot.com", messagingSenderId:"619313835874", appId:"1:619313835874:web:e387e1297663b" };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
@@ -93,162 +79,103 @@ const submitPost = document.getElementById("submitPost");
 const postsList = document.getElementById("postsList");
 
 let currentUser = null;
-let aadhaarFile = null;
 
 loginBtn.addEventListener("click", async ()=>{
   const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
+  await signInWithPopup(auth,provider);
 });
 
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth, (user)=>{
   currentUser = user;
   if(user){
     loginBtn.classList.add("hidden");
     postBtn.classList.remove("hidden");
-  } else {
+  }else{
     loginBtn.classList.remove("hidden");
     postBtn.classList.add("hidden");
     postSection.classList.add("hidden");
   }
 });
 
-postBtn.addEventListener("click", ()=>postSection.classList.toggle("hidden"));
-
-// Listen file input
-document.getElementById("aadhaar").addEventListener("change", e=>{
-  aadhaarFile = e.target.files[0];
-});
+postBtn.addEventListener("click", ()=>{ if(currentUser) postSection.classList.toggle("hidden"); else alert("Login required"); });
 
 submitPost.addEventListener("click", async ()=>{
-  if(!currentUser) return alert("Login required");
-  const data = {
-    name: document.getElementById("name").value,
-    gender: document.getElementById("gender").value,
-    age: document.getElementById("age").value,
-    address: document.getElementById("address").value,
-    whatsapp: document.getElementById("whatsapp").value,
-    mobile: document.getElementById("mobile").value,
-    status: document.getElementById("status").value,
-    children: document.getElementById("children").value,
-    education: document.getElementById("education").value,
-    income: document.getElementById("income").value,
-    occupation: document.getElementById("occupation").value,
-    family: document.getElementById("family").value,
-    desc: document.getElementById("desc").value,
-    uid: currentUser.uid,
-    email: currentUser.email,
-    approved: false,
-    created: serverTimestamp(),
-    aadhaarUrl: "" // temp
-  };
+  const text = document.getElementById("postInput").value;
+  const name = document.getElementById("name").value;
+  const age = document.getElementById("age").value;
+  const address = document.getElementById("address").value;
+  const whatsapp = document.getElementById("whatsapp").value;
+  const gender = document.getElementById("gender").value;
+  const status = document.getElementById("status").value;
+  const children = document.getElementById("children").value;
+  const aadhaarFile = document.getElementById("adhar").files[0];
 
-  // Upload Aadhaar to imgbb
+  if(!text || !name || !age || !address || !whatsapp || !gender || !status) return alert("Fill all fields");
+
+  // Convert Aadhaar file to Base64 for simplicity
+  let aadhaarBase64 = "";
   if(aadhaarFile){
-    const formData = new FormData();
-    formData.append("image", aadhaarFile);
-    const imgbbApi = "https://api.imgbb.com/1/upload?key=3701b37092582c6aa3b6f8d1d3dcd00d";
-    const res = await fetch(imgbbApi, {method:"POST", body:formData});
-    const result = await res.json();
-    if(result.success) data.aadhaarUrl = result.data.url;
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      aadhaarBase64 = reader.result;
+      await addDoc(collection(db,"shaadi_posts"),{
+        uid:currentUser.uid, email:currentUser.email, text, name, age, address, whatsapp, gender, status, children, aadhaar:aadhaarBase64, approved:false, created:serverTimestamp()
+      });
+      alert("Submitted for approval");
+    }
+    reader.readAsDataURL(aadhaarFile);
+  }else{
+    await addDoc(collection(db,"shaadi_posts"),{
+      uid:currentUser.uid, email:currentUser.email, text, name, age, address, whatsapp, gender, status, children, aadhaar:"", approved:false, created:serverTimestamp()
+    });
+    alert("Submitted for approval");
   }
-
-  await addDoc(collection(db,"shaadi"), data);
-  alert("✅ Submitted! Wait for approval.");
-  postSection.reset;
 });
 
 // Load posts
-const q=query(collection(db,"shaadi"), orderBy("created","desc"));
-onSnapshot(q, snapshot=>{
+const q = query(collection(db,"shaadi_posts"),orderBy("created","desc"));
+onSnapshot(q,snapshot=>{
   postsList.innerHTML="";
   snapshot.forEach(docSnap=>{
     const data = docSnap.data();
     const postId = docSnap.id;
 
-    // Only approved posts visible to others
-    if(!data.approved && !(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com"))) return;
+    // Visibility
+    if(currentUser?.email === "zaradigitalseva@gmail.com") { /* admin sees all */ }
+    else if(currentUser && currentUser.uid===data.uid) { /* poster sees own */ }
+    else if(!data.approved) return; // others see only approved
 
     const card = document.createElement("div");
-    card.className="p-4 rounded shadow cursor-pointer h-60 overflow-hidden flex flex-col justify-between bg-white";
+    card.className="p-4 rounded shadow cursor-pointer h-44 overflow-hidden flex flex-col justify-between bg-white";
+    card.innerHTML=`<p class="font-bold card-text">${data.name}</p><p>${data.gender}, ${data.age} yrs</p><p>${data.status}</p>`;
 
-    const detailsText = `
-Name: ${data.name}
-Gender: ${data.gender}
-Age: ${data.age}
-Address: ${data.address}
-WhatsApp: ${data.whatsapp}
-Status: ${data.status}
-Children: ${data.children || 'N/A'}
-Education: ${data.education || 'N/A'}
-Income: ${data.income || 'N/A'}
-Occupation: ${data.occupation || 'N/A'}
-Family: ${data.family || 'N/A'}
-`;
-    card.innerHTML = `<p class="font-bold card-text">${detailsText.replace(/\n/g,"<br>")}</p>`;
+    // Admin delete / approve
+    if(currentUser?.email==="zaradigitalseva@gmail.com"){
+      const approveBtn = document.createElement("button");
+      approveBtn.textContent="✅ Approve"; approveBtn.className="bg-green-500 px-2 py-1 rounded mt-1";
+      approveBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"shaadi_posts",postId),{approved:true}); }
+      const rejectBtn = document.createElement("button");
+      rejectBtn.textContent="❌ Reject"; rejectBtn.className="bg-gray-500 px-2 py-1 rounded mt-1";
+      rejectBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"shaadi_posts",postId),{approved:false}); }
+      const delBtn = document.createElement("button");
+      delBtn.textContent="🗑️ Delete"; delBtn.className="bg-red-500 px-2 py-1 rounded mt-1";
+      delBtn.onclick=async e=>{ e.stopPropagation(); await deleteDoc(doc(db,"shaadi_posts",postId)); }
+      card.appendChild(approveBtn); card.appendChild(rejectBtn); card.appendChild(delBtn);
+    }
 
-    // Admin / poster delete
-    if(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com")){
-      const delBtn=document.createElement("button");
-      delBtn.textContent="🗑️ Delete";
-      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2 self-start";
-      delBtn.onclick=async e=>{
-        e.stopPropagation();
-        await deleteDoc(doc(db,"shaadi",postId));
-      };
+    // Poster delete
+    if(currentUser && currentUser.uid===data.uid && currentUser?.email!=="zaradigitalseva@gmail.com"){
+      const delBtn = document.createElement("button");
+      delBtn.textContent="🗑️ Delete"; delBtn.className="bg-red-500 px-2 py-1 rounded mt-1";
+      delBtn.onclick=async e=>{ e.stopPropagation(); await deleteDoc(doc(db,"shaadi_posts",postId)); }
       card.appendChild(delBtn);
     }
 
-    // Admin approve/reject
-    if(currentUser && currentUser.email==="zaradigitalseva@gmail.com" && !data.approved){
-      const approveBtn=document.createElement("button");
-      approveBtn.textContent="✅ Approve";
-      approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
-      approveBtn.onclick=async e=>{
-        e.stopPropagation();
-        await updateDoc(doc(db,"shaadi",postId),{approved:true});
-      };
-      const rejectBtn=document.createElement("button");
-      rejectBtn.textContent="❌ Reject";
-      rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
-      rejectBtn.onclick=async e=>{
-        e.stopPropagation();
-        await updateDoc(doc(db,"shaadi",postId),{approved:false});
-      };
-      card.appendChild(approveBtn);
-      card.appendChild(rejectBtn);
-    }
-
-    // Card click -> popup
-    card.addEventListener("click", ()=>{
-      document.getElementById("popupName").textContent = data.name;
-      let details = `
-Gender: ${data.gender}
-Age: ${data.age}
-Address: ${data.address}
-WhatsApp: ${data.whatsapp}
-Mobile: ${data.mobile}
-Status: ${data.status}
-Children: ${data.children || 'N/A'}
-Education: ${data.education || 'N/A'}
-Income: ${data.income || 'N/A'}
-Occupation: ${data.occupation || 'N/A'}
-Family: ${data.family || 'N/A'}
-Additional: ${data.desc || 'N/A'}
-`;
-      const popupDetails = document.getElementById("popupDetails");
-      popupDetails.innerHTML = details.replace(/\n/g,"<br>");
-
-      // Admin sees Aadhaar
-      if(currentUser?.email==="zaradigitalseva@gmail.com" && data.aadhaarUrl){
-        const img = document.createElement("img");
-        img.src = data.aadhaarUrl;
-        img.className = "mt-2 w-full rounded";
-        popupDetails.appendChild(img);
-      }
-
-      const statusLabel = data.approved?"✅ Approved":"⏳ Pending";
-      document.getElementById("popupStatus").textContent = statusLabel;
-      document.getElementById("popupWhatsapp").href = `https://wa.me/9112170192?text=Hi ${data.name}`;
+    card.addEventListener("click",()=>{
+      document.getElementById("popupText").textContent=data.text;
+      document.getElementById("popupMeta").textContent=`✍️ ${data.email}`;
+      document.getElementById("popupStatus").textContent=data.approved?"✅ Approved":"⏳ Pending / Rejected";
+      document.getElementById("popupAadhaar").textContent=currentUser?.email==="zaradigitalseva@gmail.com"?`Aadhaar: ${data.aadhaar?"Uploaded":"Not Uploaded"}`:"";
       document.getElementById("popup").classList.remove("hidden");
     });
 
@@ -256,8 +183,7 @@ Additional: ${data.desc || 'N/A'}
   });
 });
 
-document.getElementById("closePopup").addEventListener("click", ()=>document.getElementById("popup").classList.add("hidden"));
-
+document.getElementById("closePopup").addEventListener("click",()=>{ document.getElementById("popup").classList.add("hidden"); });
 </script>
 </body>
 </html>
