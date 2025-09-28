@@ -13,6 +13,13 @@ body {
   background: url('madina.png') no-repeat center center fixed;
   background-size: cover;
 }
+.card-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* number of lines to show */
+  -webkit-box-orient: vertical;
+}
 .popup {
   position: fixed;
   top:0; left:0; right:0; bottom:0;
@@ -64,7 +71,7 @@ body {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -130,7 +137,6 @@ function getContrastYIQ(hexcolor){
   const yiq = ((r*299)+(g*587)+(b*114))/1000;
   return (yiq>=128) ? "black":"white";
 }
-
 function bgColorToHex(hsl){
   const sep=hsl.indexOf(",")>-1?",":" ";
   const hslArr=hsl.substr(4).split(")")[0].split(sep);
@@ -181,37 +187,48 @@ onSnapshot(q,(snapshot)=>{
     else statusLabel="⏳ Pending";
 
     const card=document.createElement("div");
-    card.className="p-4 rounded shadow cursor-pointer";
+    card.className="p-4 rounded shadow cursor-pointer h-40 overflow-hidden flex flex-col justify-between";
     card.style.background=bgColor;
     card.style.color=textColor;
     card.innerHTML=`
-      <p class="font-bold text-lg">${data.text}</p>
+      <p class="font-bold text-lg card-text">${data.text}</p>
       <p class="text-xs mt-2">✍️ ${data.email}</p>
       <p class="text-xs">${formattedTime}</p>
       <p class="text-sm font-semibold mt-1">${statusLabel}</p>
     `;
 
+    // Admin/poster delete
+    if(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com")){
+      const delBtn=document.createElement("button");
+      delBtn.textContent="🗑️ Delete";
+      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2 self-start";
+      delBtn.onclick=async e=>{
+        e.stopPropagation();
+        await deleteDoc(doc(db,"hadees",postId));
+      };
+      card.appendChild(delBtn);
+    }
+
     // Admin approve/reject
     if(currentUser && currentUser.email==="zaradigitalseva@gmail.com" && !data.approved){
       const approveBtn=document.createElement("button");
       approveBtn.textContent="✅ Approve";
-      approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 mr-2";
+      approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
       approveBtn.onclick=async e=>{
         e.stopPropagation();
         await updateDoc(doc(db,"hadees",postId),{approved:true});
       };
       const rejectBtn=document.createElement("button");
       rejectBtn.textContent="❌ Reject";
-      rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded mt-2";
+      rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
       rejectBtn.onclick=async e=>{
         e.stopPropagation();
-        await updateDoc(doc(db,"hadees",postId),{approved:false});
+        await updateDoc(doc(db,"hadees",postId), {approved:false});
       };
       card.appendChild(approveBtn);
       card.appendChild(rejectBtn);
     }
 
-    // Card click popup
     card.addEventListener("click",()=>{
       document.getElementById("popupText").textContent = data.text;
       document.getElementById("popupMeta").textContent = `✍️ ${data.email} | ${formattedTime}`;
@@ -223,9 +240,9 @@ onSnapshot(q,(snapshot)=>{
   });
 });
 
-// Popup close
-document.getElementById("closePopup").addEventListener("click",()=>document.getElementById("popup").classList.add("hidden"));
-
+document.getElementById("closePopup").addEventListener("click",()=>{
+  document.getElementById("popup").classList.add("hidden");
+});
 </script>
 </body>
 </html>
