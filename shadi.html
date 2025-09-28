@@ -3,52 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💍 Nikah Portal</title>
+<title>📜 Nikah Page</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { background: #f0f4f8; font-family: sans-serif; }
-.card-text { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-.popup { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; }
-.popup-content { background:white; padding:20px; border-radius:12px; max-width:500px; width:90%; text-align:center; position:relative; overflow-y:auto; max-height:80%; }
-.whatsapp-btn { background:#25D366; color:white; padding:10px 20px; border-radius:12px; text-decoration:none; display:inline-block; font-weight:bold; transition: transform 0.2s; }
-.whatsapp-btn:hover { transform: translateY(-3px); box-shadow:0 5px 15px rgba(0,0,0,0.3); }
+body {background: #fdf6e3;}
+.card-text {overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;}
+.popup {position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index:50; overflow-y: auto;}
+.popup-content {background: white; padding: 20px; border-radius: 12px; max-width: 500px; width: 90%; text-align: center; position: relative;}
 </style>
 </head>
-<body class="text-gray-800">
+<body class="text-black">
 
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
-  <h1 class="text-2xl font-bold">💍 Nikah Portal</h1>
+  <h1 class="text-2xl font-bold">Nikah Portal</h1>
   <div>
     <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post</button>
+    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post Profile</button>
   </div>
 </header>
 
-<section id="postSection" class="hidden p-4 bg-white rounded m-4 shadow">
-  <h2 class="font-bold text-lg mb-2">Post Your Profile</h2>
-  <input id="name" class="w-full p-2 border rounded mb-2" placeholder="Full Name"/>
-  <input id="age" type="number" class="w-full p-2 border rounded mb-2" placeholder="Age"/>
-  <input id="gender" class="w-full p-2 border rounded mb-2" placeholder="Male/Female"/>
-  <input id="address" class="w-full p-2 border rounded mb-2" placeholder="Full Address"/>
-  <input id="education" class="w-full p-2 border rounded mb-2" placeholder="Education"/>
-  <input id="profession" class="w-full p-2 border rounded mb-2" placeholder="Profession"/>
-  <select id="status" class="w-full p-2 border rounded mb-2">
+<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
+  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
+  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="genderInput" placeholder="Gender" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="addressInput" placeholder="Full Address" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded mb-2 border">
+  <input type="number" id="incomeInput" placeholder="Income" class="w-full p-2 rounded mb-2 border">
+  <select id="statusInput" class="w-full p-2 rounded mb-2 border">
     <option value="">Marital Status</option>
     <option value="Single">Single</option>
     <option value="Married">Married</option>
     <option value="Divorced">Divorced</option>
     <option value="Widowed">Widowed</option>
   </select>
-  <input id="children" class="w-full p-2 border rounded mb-2" placeholder="Number of Children (if any)"/>
-  <input id="family" class="w-full p-2 border rounded mb-2" placeholder="Family Details"/>
-  <input id="income" class="w-full p-2 border rounded mb-2" placeholder="Income"/>
-  <input id="mobile" class="w-full p-2 border rounded mb-2" placeholder="WhatsApp Number"/>
-  <input id="photo" type="file" class="w-full p-2 border rounded mb-2"/>
-  <input id="aadhaar" type="file" class="w-full p-2 border rounded mb-2"/>
-  <button id="submitPost" class="bg-purple-600 px-4 py-2 rounded text-white">Submit Profile</button>
+  <input type="number" id="childrenInput" placeholder="Number of Children" class="w-full p-2 rounded mb-2 border">
+  <input type="file" id="photoInput" class="w-full p-2 mb-2">
+  <input type="file" id="aadhaarInput" class="w-full p-2 mb-2">
+  <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
+</section>
+
+<section class="p-4 mx-4">
+  <input type="text" id="searchInput" placeholder="Search by Name, City, Gender..." class="w-full p-2 rounded border mb-4">
 </section>
 
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
@@ -56,11 +56,12 @@ body { background: #f0f4f8; font-family: sans-serif; }
 <div id="popup" class="popup hidden">
   <div class="popup-content">
     <p id="popupText" class="font-bold text-lg mb-2"></p>
-    <p id="popupMeta" class="text-sm mb-1"></p>
+    <p id="popupMeta" class="text-sm text-gray-600 mb-2"></p>
     <p id="popupStatus" class="text-sm font-semibold mb-2"></p>
-    <p id="popupDetails" class="text-sm mb-2"></p>
-    <a id="popupWhatsapp" href="#" target="_blank" class="whatsapp-btn">WhatsApp</a>
-    <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white mt-2">❌ Close</button>
+    <button id="popupWhatsApp" class="bg-green-500 px-4 py-2 rounded text-white mb-2">WhatsApp</button>
+    <div>
+      <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white">❌ Close</button>
+    </div>
   </div>
 </div>
 
@@ -86,145 +87,135 @@ const postBtn=document.getElementById("postBtn");
 const postSection=document.getElementById("postSection");
 const submitPost=document.getElementById("submitPost");
 const postsList=document.getElementById("postsList");
+const searchInput=document.getElementById("searchInput");
 
 let currentUser=null;
 const adminEmail="zaradigitalseva@gmail.com";
-const imgbbKey="d12c2e4a8650157b2b6b9fe85336ea43";
+const whatsappNumber="9112170192";
 
-loginBtn.addEventListener("click",async()=>{
+loginBtn.addEventListener("click",async ()=>{
   const provider=new GoogleAuthProvider();
   await signInWithPopup(auth,provider);
 });
 
 onAuthStateChanged(auth,user=>{
   currentUser=user;
-  if(user){
-    loginBtn.classList.add("hidden");
-    postBtn.classList.remove("hidden");
-  } else {
-    loginBtn.classList.remove("hidden");
-    postBtn.classList.add("hidden");
-    postSection.classList.add("hidden");
-  }
+  if(user){ loginBtn.classList.add("hidden"); postBtn.classList.remove("hidden"); } 
+  else { loginBtn.classList.remove("hidden"); postBtn.classList.add("hidden"); postSection.classList.add("hidden"); }
 });
 
 postBtn.addEventListener("click",()=>{
-  if(currentUser) postSection.classList.toggle("hidden");
-  else alert("⚠️ Please login!");
+  if(currentUser) postSection.classList.toggle("hidden"); 
+  else alert("⚠️ Please login to post!");
 });
 
-async function uploadImage(file){
-  if(!file) return "";
+async function uploadToImgbb(file){
+  const key="d12c2e4a8650157b2b6b9fe85336ea43";
   const formData=new FormData();
   formData.append("image",file);
-  const res=await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`,{
-    method:"POST",
-    body:formData
-  });
+  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
   const data=await res.json();
   return data.data.url;
 }
 
-submitPost.addEventListener("click",async()=>{
-  const name=document.getElementById("name").value.trim();
-  const age=document.getElementById("age").value.trim();
-  const gender=document.getElementById("gender").value.trim();
-  const address=document.getElementById("address").value.trim();
-  const education=document.getElementById("education").value.trim();
-  const profession=document.getElementById("profession").value.trim();
-  const status=document.getElementById("status").value.trim();
-  const children=document.getElementById("children").value.trim();
-  const family=document.getElementById("family").value.trim();
-  const income=document.getElementById("income").value.trim();
-  const mobile=document.getElementById("mobile").value.trim();
-  const photo=document.getElementById("photo").files[0];
-  const aadhaar=document.getElementById("aadhaar").files[0];
+submitPost.addEventListener("click",async ()=>{
+  const name=document.getElementById("nameInput").value.trim();
+  const age=document.getElementById("ageInput").value.trim();
+  const gender=document.getElementById("genderInput").value.trim();
+  const city=document.getElementById("cityInput").value.trim();
+  const address=document.getElementById("addressInput").value.trim();
+  const education=document.getElementById("educationInput").value.trim();
+  const profession=document.getElementById("professionInput").value.trim();
+  const income=document.getElementById("incomeInput").value.trim();
+  const status=document.getElementById("statusInput").value;
+  const children=document.getElementById("childrenInput").value.trim();
+  const photo=document.getElementById("photoInput").files[0];
+  const aadhaar=document.getElementById("aadhaarInput").files[0];
 
-  if(!name||!age||!gender) return alert("Name, Age, Gender required!");
+  if(!name||!age||!gender||!city||!address||!education||!profession||!income||!status||!photo) return alert("❌ Fill all required fields!");
 
-  const photoUrl=await uploadImage(photo);
-  const aadhaarUrl=await uploadImage(aadhaar);
+  const photoUrl=await uploadToImgbb(photo);
+  const aadhaarUrl=aadhaar?await uploadToImgbb(aadhaar):"";
 
   await addDoc(collection(db,"profiles"),{
-    name, age, gender, address, education, profession, status, children, family, income, mobile,
-    photoUrl, aadhaarUrl,
-    uid:currentUser.uid, email:currentUser.email, approved:false,
-    created:serverTimestamp()
+    name,age,gender,city,address,education,profession,income,status,children,photoUrl,aadhaarUrl,
+    uid:currentUser.uid,email:currentUser.email,approved:false,created:serverTimestamp()
   });
 
-  alert("✅ Submitted! Wait for admin approval.");
+  alert("✅ Submitted for approval! Wait for admin approval.");
 });
 
+const popup=document.getElementById("popup");
+const popupText=document.getElementById("popupText");
+const popupMeta=document.getElementById("popupMeta");
+const popupStatus=document.getElementById("popupStatus");
+const popupWhatsApp=document.getElementById("popupWhatsApp");
+document.getElementById("closePopup").addEventListener("click",()=>popup.classList.add("hidden"));
+
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
-onSnapshot(q,(snapshot)=>{
+onSnapshot(q,snapshot=>{
   postsList.innerHTML="";
   snapshot.forEach(docSnap=>{
     const data=docSnap.data();
     const postId=docSnap.id;
 
-    if(!data.approved && !(currentUser && (currentUser.email===data.email || currentUser.email===adminEmail))) return;
+    if(!data.approved && !(currentUser&&(currentUser.email===data.email||currentUser.email===adminEmail))) return;
 
     const card=document.createElement("div");
-    card.className="p-4 rounded shadow cursor-pointer bg-white flex flex-col justify-between";
-    card.style.border="2px solid #"+Math.floor(Math.random()*16777215).toString(16);
+    card.className="p-4 rounded shadow cursor-pointer h-64 overflow-hidden flex flex-col justify-between bg-gradient-to-r from-purple-200 via-pink-200 to-yellow-100";
+
     card.innerHTML=`
-      <p class="font-bold text-lg card-text">${data.name} (${data.age})</p>
-      <p class="text-sm">${data.gender} | ${data.address}</p>
-      <p class="text-xs">Status: ${data.status} | Children: ${data.children}</p>
+      <img src="${data.photoUrl}" class="w-full h-32 object-cover rounded mb-2">
+      <p class="font-bold text-lg card-text">${data.name}, ${data.age}</p>
+      <p class="text-sm">City: ${data.city}</p>
+      <p class="text-sm">Gender: ${data.gender}</p>
+      <p class="text-sm font-semibold">${data.approved? "✅ Approved":"⏳ Pending"}</p>
     `;
 
-    if(currentUser && (currentUser.email===data.email || currentUser.email===adminEmail)){
-      const delBtn=document.createElement("button");
-      delBtn.textContent="🗑️ Delete";
-      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2 self-start";
-      delBtn.onclick=async e=>{
-        e.stopPropagation();
-        await updateDoc(doc(db,"profiles",postId),{approved:false});
-      };
-      card.appendChild(delBtn);
-    }
-
-    if(currentUser && currentUser.email===adminEmail && !data.approved){
+    // Admin approve/reject
+    if(currentUser&&currentUser.email===adminEmail&&!data.approved){
       const approveBtn=document.createElement("button");
       approveBtn.textContent="✅ Approve";
       approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
-      approveBtn.onclick=async e=>{
-        e.stopPropagation();
-        await updateDoc(doc(db,"profiles",postId),{approved:true});
-      };
+      approveBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",postId),{approved:true}); };
       const rejectBtn=document.createElement("button");
       rejectBtn.textContent="❌ Reject";
       rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
-      rejectBtn.onclick=async e=>{
-        e.stopPropagation();
-        await updateDoc(doc(db,"profiles",postId),{approved:false});
-      };
-      card.appendChild(approveBtn);
-      card.appendChild(rejectBtn);
+      rejectBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",postId),{approved:false}); };
+      card.appendChild(approveBtn); card.appendChild(rejectBtn);
     }
 
     card.addEventListener("click",()=>{
-      document.getElementById("popupText").textContent=data.name+" ("+data.age+")";
-      document.getElementById("popupMeta").textContent=`${data.gender} | ${data.address}`;
-      document.getElementById("popupStatus").textContent=data.approved?"✅ Approved":"⏳ Pending";
-      document.getElementById("popupDetails").innerHTML=`
-        <p>Education: ${data.education}</p>
-        <p>Profession: ${data.profession}</p>
-        <p>Status: ${data.status}</p>
-        <p>Children: ${data.children}</p>
-        <p>Family: ${data.family}</p>
-        <p>Income: ${data.income}</p>
-        <p>Mobile: <a href="https://wa.me/9112170192" target="_blank" class="whatsapp-btn">WhatsApp</a></p>
+      popupText.innerHTML=`
+        <img src="${data.photoUrl}" class="w-32 h-32 object-cover rounded mb-2 mx-auto">
+        <strong>${data.name}, ${data.age}</strong><br>
+        <span>Gender: ${data.gender}</span><br>
+        <span>City: ${data.city}</span><br>
+        <span>Address: ${data.address}</span><br>
+        <span>Education: ${data.education}</span><br>
+        <span>Profession: ${data.profession}</span><br>
+        <span>Income: ${data.income}</span><br>
+        <span>Status: ${data.status}</span><br>
+        <span>Children: ${data.children||0}</span>
       `;
-      document.getElementById("popup").classList.remove("hidden");
+      popupMeta.textContent=`Email: ${data.email}`;
+      popupStatus.textContent=data.approved?"✅ Approved":"⏳ Pending";
+
+      popupWhatsApp.onclick=()=> window.open(`https://wa.me/${whatsappNumber}?text=Hello%20Admin%20from%20${data.name}`);
+      popup.classList.remove("hidden");
     });
 
     postsList.appendChild(card);
   });
 });
 
-document.getElementById("closePopup").addEventListener("click",()=>{
-  document.getElementById("popup").classList.add("hidden");
+searchInput.addEventListener("input",()=>{
+  const term=searchInput.value.toLowerCase();
+  Array.from(postsList.children).forEach(card=>{
+    const name=card.querySelector(".card-text").textContent.toLowerCase();
+    if(name.includes(term)) card.style.display="block";
+    else card.style.display="none";
+  });
 });
 </script>
 </body>
