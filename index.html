@@ -53,18 +53,18 @@
 
     <!-- Top: 3D Buttons -->
     <div class="flex justify-center gap-4 mb-4">
-      <button class="btn-3d-special" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
-      <button class="btn-3d-special" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
-      <button class="btn-3d-special" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
+      <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
+      <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
+      <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
     </div>
 
     <!-- Middle: Logo and Side Images -->
     <div class="flex justify-between items-center relative h-28">
 
       <!-- Left: Makka -->
-     <div class="flex items-center">
-  <img src="makka.png" alt="Makka" class="header-png">
-</div>
+      <div class="flex items-center">
+        <img src="makka.png" alt="Makka" class="header-png">
+      </div>
 
       <!-- Center: Logo / Title -->
       <div class="flex flex-col items-center justify-center h-full">
@@ -74,9 +74,9 @@
       </div>
 
       <!-- Right: Madina -->
-     <div class="flex items-center">
-  <img src="madina.png" alt="Madina" class="header-png">
-</div>
+      <div class="flex items-center">
+        <img src="madina.png" alt="Madina" class="header-png">
+      </div>
 
     </div>
   </div>
@@ -97,13 +97,21 @@
   box-shadow: 0 3px 0 rgba(0,0,0,.25);
 }
 
-/* 🔹 Small variant for top header */
+/* 🔹 Small variant for top header buttons */
 .btn-small {
-  font-size: 0.8rem;       /* chhota text */
-  padding: 0.4rem 0.8rem;  /* chhota padding */
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
+
+/* 🔹 Header PNG images */
+.header-png {
+  height: 60px;           /* image height */
+  width: 60px;            /* image width */
+  object-fit: cover;
+  border-radius: 50%;
+  transform: translateY(4px); /* thoda niche kare */
 }
 </style>
-
 
 
 
