@@ -3,124 +3,233 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💍 Shadi Profile Submit</title>
+<title>💍 Shadi Portal</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #fefefe; }
+  .card-text { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  .popup { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; }
+  .popup-content { background:white; padding:20px; border-radius:12px; max-width:500px; width:90%; max-height:90%; overflow-y:auto; position:relative; }
+  .whatsapp-btn { background:#25D366; color:white; padding:10px 15px; border-radius:12px; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.3); display:inline-block; margin-top:10px; text-decoration:none; }
+</style>
 </head>
-<body class="bg-gray-100">
+<body class="p-4">
 
-<section class="p-4 max-w-xl mx-auto bg-white rounded shadow mt-4">
-<h2 class="text-xl font-bold mb-2 text-purple-700">Add Marriage Profile</h2>
-<form id="profileForm" class="flex flex-col gap-2">
-  <input id="nameInput" type="text" placeholder="Full Name" class="p-2 border rounded" required>
-  <select id="genderInput" class="p-2 border rounded" required>
-    <option value="">Select Gender</option>
-    <option value="Male">Male</option>
-    <option value="Female">Female</option>
-  </select>
-  <input id="ageInput" type="number" placeholder="Age" class="p-2 border rounded" required>
-  <input id="educationInput" type="text" placeholder="Education" class="p-2 border rounded">
-  <input id="occupationInput" type="text" placeholder="Occupation" class="p-2 border rounded">
-  <input id="incomeInput" type="text" placeholder="Income" class="p-2 border rounded">
-  <input id="addressInput" type="text" placeholder="Full Address" class="p-2 border rounded">
-  <input id="mobileInput" type="text" placeholder="Mobile / WhatsApp Number" class="p-2 border rounded">
-  <select id="maritalStatusInput" class="p-2 border rounded">
-    <option value="">Marital Status</option>
-    <option value="Single">Single</option>
-    <option value="Married">Married</option>
-    <option value="Divorced">Divorced</option>
-    <option value="Widowed">Widowed</option>
-  </select>
-  <input id="childrenInput" type="text" placeholder="Children Info (if any)" class="p-2 border rounded">
-  <input id="familyInfoInput" type="text" placeholder="Family Info" class="p-2 border rounded">
-  <label class="text-sm font-semibold">Photo</label>
-  <input id="photoInput" type="file" class="p-2 border rounded" required>
-  <label class="text-sm font-semibold">Aadhaar Card</label>
-  <input id="aadhaarInput" type="file" class="p-2 border rounded" required>
-  <button type="submit" class="bg-purple-600 text-white p-2 rounded mt-2">Submit Profile</button>
-</form>
+<header class="flex justify-between items-center mb-4">
+  <h1 class="text-2xl font-bold">💍 Shadi Portal</h1>
+  <div>
+    <button id="loginBtn" class="bg-green-600 px-3 py-1 rounded">Login</button>
+    <button id="postBtn" class="bg-blue-600 px-3 py-1 rounded hidden">➕ Post Profile</button>
+  </div>
+</header>
+
+<section id="postSection" class="hidden p-4 bg-gray-100 rounded mb-4">
+  <form id="profileForm">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <input type="text" id="name" placeholder="Full Name" required class="p-2 border rounded"/>
+      <input type="number" id="age" placeholder="Age" required class="p-2 border rounded"/>
+      <select id="gender" required class="p-2 border rounded">
+        <option value="">Select Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+      <input type="text" id="address" placeholder="Full Address" required class="p-2 border rounded"/>
+      <select id="maritalStatus" required class="p-2 border rounded">
+        <option value="">Marital Status</option>
+        <option value="Single">Single</option>
+        <option value="Married">Married</option>
+        <option value="Divorced">Divorced</option>
+        <option value="Widowed">Widowed</option>
+      </select>
+      <input type="number" id="children" placeholder="No. of Children" class="p-2 border rounded"/>
+      <input type="text" id="education" placeholder="Education" class="p-2 border rounded"/>
+      <input type="text" id="occupation" placeholder="Occupation" class="p-2 border rounded"/>
+      <input type="number" id="income" placeholder="Income (Annual)" class="p-2 border rounded"/>
+      <input type="text" id="familyInfo" placeholder="Family Info" class="p-2 border rounded"/>
+      <input type="text" id="whatsapp" placeholder="WhatsApp Number" class="p-2 border rounded" value="9112170192" required/>
+      <input type="file" id="photo" accept="image/*" required class="p-2 border rounded"/>
+      <input type="file" id="aadhaar" accept="image/*" required class="p-2 border rounded"/>
+    </div>
+    <button type="submit" class="bg-purple-600 px-4 py-2 rounded mt-2 text-white">Submit Profile</button>
+  </form>
 </section>
+
+<input type="text" id="searchInput" placeholder="Search by Name or Address..." class="p-2 border rounded w-full mb-4"/>
+
+<main id="profilesList" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
+
+<div id="popup" class="popup hidden">
+  <div class="popup-content">
+    <p id="popupText" class="font-bold text-lg mb-2"></p>
+    <p id="popupMeta" class="text-sm mb-1"></p>
+    <p id="popupStatus" class="text-sm font-semibold mb-2"></p>
+    <img id="popupPhoto" class="w-40 h-40 object-cover rounded mb-2 mx-auto"/>
+    <p id="popupAadhaar" class="text-xs text-red-600 mb-2"></p>
+    <a id="popupWhatsApp" class="whatsapp-btn" target="_blank">WhatsApp</a>
+    <div class="mt-4">
+      <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white">❌ Close</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
   projectId: "all-madrsa",
   storageBucket: "all-madrsa.appspot.com",
   messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463f11"
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
+const loginBtn = document.getElementById("loginBtn");
+const postBtn = document.getElementById("postBtn");
+const postSection = document.getElementById("postSection");
 const profileForm = document.getElementById("profileForm");
-let currentUser = null;
+const profilesList = document.getElementById("profilesList");
 
-// Login silently or add login button
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  if(!user) alert("Please login with Google to post profile!");
+let currentUser = null;
+const adminEmail = "zaradigitalseva@gmail.com";
+const imgbbAPI = "3701b37092582c6aa3b6f8d1d3dcd00d";
+
+loginBtn.addEventListener("click", async ()=>{
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
 });
 
-// IMGBB upload function
-async function uploadToImgbb(file) {
-  const apiKey = "3701b37092582c6aa3b6f8d1d3dcd00d";
+onAuthStateChanged(auth, (user)=>{
+  currentUser = user;
+  if(user){
+    loginBtn.classList.add("hidden");
+    postBtn.classList.remove("hidden");
+  } else {
+    loginBtn.classList.remove("hidden");
+    postBtn.classList.add("hidden");
+    postSection.classList.add("hidden");
+  }
+});
+
+postBtn.addEventListener("click", ()=>{ if(currentUser) postSection.classList.toggle("hidden"); else alert("⚠️ Login required"); });
+
+// Upload to IMGBB
+async function uploadToImgbb(file){
   const formData = new FormData();
   formData.append("image", file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-    method: "POST",
-    body: formData
-  });
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbAPI}`, {method:"POST", body:formData});
   const data = await res.json();
   return data.data.url;
 }
 
-// Form submit
+// Submit Profile
 profileForm.addEventListener("submit", async (e)=>{
   e.preventDefault();
-  if(!currentUser) return alert("Login required!");
+  const photoFile = document.getElementById("photo").files[0];
+  const aadhaarFile = document.getElementById("aadhaar").files[0];
+  if(!photoFile || !aadhaarFile) return alert("Upload both Photo & Aadhaar");
 
-  const name = document.getElementById("nameInput").value;
-  const gender = document.getElementById("genderInput").value;
-  const age = document.getElementById("ageInput").value;
-  const education = document.getElementById("educationInput").value;
-  const occupation = document.getElementById("occupationInput").value;
-  const income = document.getElementById("incomeInput").value;
-  const address = document.getElementById("addressInput").value;
-  const mobile = document.getElementById("mobileInput").value;
-  const maritalStatus = document.getElementById("maritalStatusInput").value;
-  const children = document.getElementById("childrenInput").value;
-  const familyInfo = document.getElementById("familyInfoInput").value;
-  const photoFile = document.getElementById("photoInput").files[0];
-  const aadhaarFile = document.getElementById("aadhaarInput").files[0];
+  const photoURL = await uploadToImgbb(photoFile);
+  const aadhaarURL = await uploadToImgbb(aadhaarFile);
 
-  if(!photoFile || !aadhaarFile) return alert("Photo and Aadhaar required!");
-
-  // Upload both files
-  const photoUrl = await uploadToImgbb(photoFile);
-  const aadhaarUrl = await uploadToImgbb(aadhaarFile);
-
-  // Submit to Firestore
   await addDoc(collection(db,"profiles"),{
-    name, gender, age, education, occupation, income, address, mobile,
-    maritalStatus, children, familyInfo, photoUrl, aadhaarUrl,
+    name: document.getElementById("name").value,
+    age: document.getElementById("age").value,
+    gender: document.getElementById("gender").value,
+    address: document.getElementById("address").value,
+    maritalStatus: document.getElementById("maritalStatus").value,
+    children: document.getElementById("children").value,
+    education: document.getElementById("education").value,
+    occupation: document.getElementById("occupation").value,
+    income: document.getElementById("income").value,
+    familyInfo: document.getElementById("familyInfo").value,
+    whatsapp: document.getElementById("whatsapp").value,
+    photoURL,
+    aadhaarURL,
+    approved:false,
     uid: currentUser.uid,
     email: currentUser.email,
-    approved: false,
     created: serverTimestamp()
   });
-
-  alert("✅ Profile submitted, waiting for admin approval!");
   profileForm.reset();
+  alert("✅ Submitted! Wait for admin approval");
 });
+
+// Load profiles
+const q = query(collection(db,"profiles"), orderBy("created","desc"));
+onSnapshot(q, (snapshot)=>{
+  profilesList.innerHTML="";
+  const searchText = document.getElementById("searchInput").value.toLowerCase();
+
+  snapshot.forEach((docSnap)=>{
+    const data = docSnap.data();
+    const id = docSnap.id;
+
+    // Visibility
+    if(!data.approved && !(currentUser && (currentUser.email===data.email || currentUser.email===adminEmail))) return;
+    if(searchText && !data.name.toLowerCase().includes(searchText) && !data.address.toLowerCase().includes(searchText)) return;
+
+    const card = document.createElement("div");
+    card.className="p-4 rounded shadow cursor-pointer flex flex-col justify-between bg-gradient-to-r from-purple-400 to-pink-400 text-white";
+    card.style.minHeight="180px";
+    card.innerHTML=`
+      <p class="font-bold card-text">${data.name}</p>
+      <p class="text-xs">✍️ ${data.email}</p>
+      <p class="text-sm font-semibold">${data.approved? "✅ Approved" : "⏳ Pending"}</p>
+    `;
+
+    // Admin approve/reject buttons
+    if(currentUser && currentUser.email===adminEmail && !data.approved){
+      const approveBtn=document.createElement("button");
+      approveBtn.textContent="✅ Approve";
+      approveBtn.className="bg-green-500 px-2 py-1 rounded mt-2";
+      approveBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",id),{approved:true}); };
+      const rejectBtn=document.createElement("button");
+      rejectBtn.textContent="❌ Reject";
+      rejectBtn.className="bg-gray-500 px-2 py-1 rounded mt-2";
+      rejectBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",id),{approved:false}); };
+      card.appendChild(approveBtn);
+      card.appendChild(rejectBtn);
+    }
+
+    // Delete button
+    if(currentUser && (currentUser.email===data.email || currentUser.email===adminEmail)){
+      const delBtn=document.createElement("button");
+      delBtn.textContent="🗑️ Delete";
+      delBtn.className="bg-red-600 px-2 py-1 rounded mt-2";
+      delBtn.onclick=async e=>{ e.stopPropagation(); await deleteDoc(doc(db,"profiles",id)); };
+      card.appendChild(delBtn);
+    }
+
+    // Card click -> Popup
+    card.addEventListener("click", ()=>{
+      document.getElementById("popupText").textContent = `${data.name}, ${data.age} years, ${data.gender}`;
+      document.getElementById("popupMeta").textContent = `Address: ${data.address}, Marital Status: ${data.maritalStatus}, Children: ${data.children}`;
+      document.getElementById("popupStatus").textContent = data.approved? "✅ Approved" : "⏳ Pending";
+      document.getElementById("popupPhoto").src = data.photoURL;
+      document.getElementById("popupAadhaar").textContent = (currentUser && currentUser.email===adminEmail)? `Aadhaar: ${data.aadhaarURL}`:"";
+      document.getElementById("popupWhatsApp").href = `https://api.whatsapp.com/send?phone=${data.whatsapp}&text=Hello, I am interested in your profile.`;
+      document.getElementById("popup").classList.remove("hidden");
+    });
+
+    profilesList.appendChild(card);
+  });
+});
+
+document.getElementById("closePopup").addEventListener("click", ()=>{ document.getElementById("popup").classList.add("hidden"); });
+
+// Search
+document.getElementById("searchInput").addEventListener("input", ()=>{ q; });
+
 </script>
 </body>
 </html>
