@@ -35,7 +35,6 @@ body {
 </head>
 <body class="text-white">
 
-<!-- Header -->
 <header class="bg-black bg-opacity-60 p-4 flex justify-between items-center">
   <h1 class="text-2xl font-bold">📜 Hadees</h1>
   <div>
@@ -44,16 +43,13 @@ body {
   </div>
 </header>
 
-<!-- Post Form -->
 <section id="postSection" class="hidden p-4">
   <textarea id="hadeesInput" class="w-full p-2 text-black rounded" rows="3" placeholder="✍️ Write Hadees..."></textarea>
   <button id="submitPost" class="bg-purple-600 px-4 py-2 rounded mt-2">Post Hadees</button>
 </section>
 
-<!-- Posts List -->
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
-<!-- Popup -->
 <div id="popup" class="popup hidden">
   <div class="popup-content">
     <p id="popupText" class="font-bold text-lg"></p>
@@ -68,9 +64,8 @@ body {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -92,14 +87,12 @@ const postsList = document.getElementById("postsList");
 
 let currentUser = null;
 
-// Login
 loginBtn.addEventListener("click", async () => {
   const provider = new GoogleAuthProvider();
   await signInWithPopup(auth, provider);
 });
 
-// User State Change
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, (user)=>{
   currentUser = user;
   if(user){
     loginBtn.classList.add("hidden");
@@ -111,27 +104,24 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Show Post Form
 postBtn.addEventListener("click", () => {
   if(currentUser) postSection.classList.toggle("hidden");
   else alert("⚠️ Please login to post!");
 });
 
-// Submit Post
-submitPost.addEventListener("click", async () => {
+submitPost.addEventListener("click", async ()=>{
   if(hadeesInput.value.trim()==="") return alert("❌ Write something");
   await addDoc(collection(db,"hadees"),{
-    text: hadeesInput.value,
-    uid: currentUser.uid,
-    email: currentUser.email,
-    approved: false,
-    created: new Date()
+    text:hadeesInput.value,
+    uid:currentUser.uid,
+    email:currentUser.email,
+    approved:false,
+    created:serverTimestamp()
   });
   hadeesInput.value="";
   alert("✅ Submitted for approval!");
 });
 
-// Auto contrast
 function getContrastYIQ(hexcolor){
   hexcolor = hexcolor.replace("#","");
   const r=parseInt(hexcolor.substr(0,2),16);
@@ -142,10 +132,10 @@ function getContrastYIQ(hexcolor){
 }
 
 function bgColorToHex(hsl){
-  const sep = hsl.indexOf(",")>-1?",":" ";
-  const hslArr = hsl.substr(4).split(")")[0].split(sep);
+  const sep=hsl.indexOf(",")>-1?",":" ";
+  const hslArr=hsl.substr(4).split(")")[0].split(sep);
   let h=hslArr[0], s=hslArr[1].replace('%',''), l=hslArr[2].replace('%','');
-  h/=360; s/=100; l/=100;
+  h/=360;s/=100;l/=100;
   let r,g,b;
   if(s===0){r=g=b=l;}
   else{
@@ -167,27 +157,28 @@ function bgColorToHex(hsl){
   return "#"+toHex(r)+toHex(g)+toHex(b);
 }
 
-// Load Posts
+// Load posts
 const q=query(collection(db,"hadees"),orderBy("created","desc"));
 onSnapshot(q,(snapshot)=>{
   postsList.innerHTML="";
   snapshot.forEach((docSnap)=>{
     const data=docSnap.data();
     const postId=docSnap.id;
+
+    // Visibility check
+    if(!data.approved && !(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com"))) return;
+
     const bgColor=`hsl(${Math.random()*360},70%,70%)`;
     const hex=bgColorToHex(bgColor);
     const textColor=getContrastYIQ(hex);
 
-    const time=data.created?.toDate ? data.created.toDate() : new Date();
-    const formattedTime=time.toLocaleString();
+    const time = data.created?.toDate ? data.created.toDate() : new Date();
+    const formattedTime = time.toLocaleString();
 
     let statusLabel="";
     if(data.approved===true) statusLabel="✅ Approved";
-    else if(data.approved===false && currentUser?.email==="zaradigitalseva@gmail.com") statusLabel="❌ Rejected / Pending";
+    else if(data.approved===false && currentUser?.email==="zaradigitalseva@gmail.com") statusLabel="⏳ Pending / Rejected";
     else statusLabel="⏳ Pending";
-
-    // User visibility: only approved posts for non-admin/poster
-    if(!data.approved && !(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com"))) return;
 
     const card=document.createElement("div");
     card.className="p-4 rounded shadow cursor-pointer";
@@ -200,8 +191,8 @@ onSnapshot(q,(snapshot)=>{
       <p class="text-sm font-semibold mt-1">${statusLabel}</p>
     `;
 
-    // Admin approve/reject buttons
-    if(currentUser && currentUser.email==="zaradigitalseva@gmail.com" && data.approved===false){
+    // Admin approve/reject
+    if(currentUser && currentUser.email==="zaradigitalseva@gmail.com" && !data.approved){
       const approveBtn=document.createElement("button");
       approveBtn.textContent="✅ Approve";
       approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 mr-2";
@@ -220,23 +211,11 @@ onSnapshot(q,(snapshot)=>{
       card.appendChild(rejectBtn);
     }
 
-    // Poster delete button
-    if(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com")){
-      const delBtn=document.createElement("button");
-      delBtn.textContent="🗑️ Delete";
-      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2 ml-2";
-      delBtn.onclick=async e=>{
-        e.stopPropagation();
-        await updateDoc(doc(db,"hadees",postId),{approved:false});
-      };
-      card.appendChild(delBtn);
-    }
-
     // Card click popup
     card.addEventListener("click",()=>{
-      popupText.textContent=data.text;
-      popupMeta.textContent=`✍️ ${data.email} | ${formattedTime}`;
-      document.getElementById("popupStatus").textContent=statusLabel;
+      document.getElementById("popupText").textContent = data.text;
+      document.getElementById("popupMeta").textContent = `✍️ ${data.email} | ${formattedTime}`;
+      document.getElementById("popupStatus").textContent = statusLabel;
       document.getElementById("popup").classList.remove("hidden");
     });
 
@@ -244,10 +223,9 @@ onSnapshot(q,(snapshot)=>{
   });
 });
 
-// Popup
-const popup=document.getElementById("popup");
-const closePopup=document.getElementById("closePopup");
-closePopup.addEventListener("click",()=>popup.classList.add("hidden"));
+// Popup close
+document.getElementById("closePopup").addEventListener("click",()=>document.getElementById("popup").classList.add("hidden"));
+
 </script>
 </body>
 </html>
