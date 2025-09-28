@@ -1,129 +1,244 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Talimi Ittehad | Hadees</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-/* 3D Button */
-.btn-3d {
-  background: linear-gradient(90deg,#4d94ff,#4dffb8,#d24dff);
-  color: #fff; font-weight:700;
-  padding:0.5rem 1rem; border-radius:10px;
-  box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 12px rgba(0,0,0,.2);
-  transition: transform .12s ease, box-shadow .12s ease;
-  text-align:center;
-}
-.btn-3d:active {
-  transform: translateY(2px);
-  box-shadow:0 2px 0 rgba(0,0,0,.25);
-}
-
-/* Hadees Card */
-.card {
-  background:#fff; padding:1rem; border-radius:0.5rem;
-  box-shadow:0 2px 6px rgba(0,0,0,.1); word-break: break-word;
-  cursor:pointer;
-  transition: transform .1s ease;
-}
-.card:hover { transform: translateY(-2px); }
-
-/* Modal */
-.modal-bg {
-  position:fixed; inset:0; background:rgba(0,0,0,0.5);
-  display:none; justify-content:center; align-items:center;
-  z-index:50; padding:1rem;
-}
-.modal {
-  background:#fff; padding:1.5rem; border-radius:0.5rem;
-  max-width:600px; width:100%; max-height:80vh; overflow-y:auto;
-}
-.modal-close, .modal-next {
-  cursor:pointer; font-weight:bold; font-size:1rem; margin-left:0.5rem;
-}
-.modal-header {
-  display:flex; justify-content:flex-end; margin-bottom:1rem;
-  gap:0.5rem;
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hadees Board | Talimi Ittehad</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: url('madina-bg.jpg') center/cover no-repeat;
+    }
+    .btn-3d {
+      color: #fff;
+      font-weight: 700;
+      border-radius: 10px;
+      box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+      transition: transform .12s ease, box-shadow .12s ease;
+      padding: 0.5rem 1rem;
+    }
+    .btn-3d:active {
+      transform: translateY(3px);
+      box-shadow: 0 3px 0 rgba(0,0,0,.25);
+    }
+    .post-card {
+      background: rgba(255,255,255,0.9);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+    }
+    .popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      padding: 1rem;
+    }
+    .popup-content {
+      background: white;
+      max-width: 600px;
+      width: 100%;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .popup-content button {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="min-h-screen flex flex-col items-center px-4 py-4">
 
-<div class="max-w-4xl mx-auto p-4">
+  <h1 class="text-2xl font-bold text-white text-center mb-4">Talimi Ittehad - Hadees Board</h1>
 
-  <!-- Title -->
-  <h1 class="text-3xl font-bold text-center mb-6">📜 Hadees</h1>
-
-  <!-- Buttons -->
-  <div class="flex flex-col sm:flex-row justify-center gap-4 mb-6">
-    <a href="https://forms.gle/YOUR_GOOGLE_FORM_LINK" target="_blank">
-      <button class="btn-3d w-full sm:w-auto">Submit Hadees</button>
-    </a>
-    <a href="https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit" target="_blank">
-      <button class="btn-3d w-full sm:w-auto">Admin Approve</button>
-    </a>
+  <!-- Login / Logout -->
+  <div class="mb-4">
+    <button id="authBtn" class="btn-3d">Login</button>
   </div>
 
-  <!-- Hadees List -->
-  <div id="hadeesList" class="grid gap-4">
-    <div class="card" data-hadees="सच्चाई और ईमानदारी सबसे बड़ा धर्म है।">
-      📖 हदीस 1: सच्चाई और ईमानदारी सबसे बड़ा धर्म है।
-      <p class="text-xs text-gray-500 mt-1">— Approved by Admin</p>
-    </div>
-    <div class="card" data-hadees="नमाज़ से दिल को सुकून मिलता है।">
-      📖 हदीस 2: नमाज़ से दिल को सुकून मिलता है।
-      <p class="text-xs text-gray-500 mt-1">— Approved by Admin</p>
-    </div>
-    <div class="card" data-hadees="अच्छे व्यवहार से इंसान की पहचान बनती है।">
-      📖 हदीस 3: अच्छे व्यवहार से इंसान की पहचान बनती है।
-      <p class="text-xs text-gray-500 mt-1">— Approved by Admin</p>
+  <!-- Post Hadees Button (visible only after login) -->
+  <div id="postHadeesDiv" class="mb-4 hidden">
+    <button id="addPostBtn" class="btn-3d">📝 Post Hadees</button>
+  </div>
+
+  <!-- List of Hadees -->
+  <div id="hadeesList" class="w-full max-w-xl"></div>
+
+  <!-- Popup for full Hadees -->
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <button onclick="closePopup()" class="btn-3d">Close</button>
+      <div id="popupContent" class="mt-6"></div>
+      <div class="flex justify-between mt-4">
+        <button id="prevBtn" class="btn-3d">Prev</button>
+        <button id="nextBtn" class="btn-3d">Next</button>
+      </div>
     </div>
   </div>
 
-</div>
-
-<!-- Modal -->
-<div id="modal" class="modal-bg flex">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-close">❌ Close</span>
-      <span class="modal-next">➡ Next</span>
+  <!-- Post Modal -->
+  <div id="postModal" class="popup">
+    <div class="popup-content">
+      <button onclick="closePostModal()" class="btn-3d">Close</button>
+      <h2 class="text-lg font-bold mb-2">Post Hadees</h2>
+      <textarea id="postText" rows="5" class="w-full border p-2 rounded mb-2" placeholder="Apni Hadees likhein"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="submitPost()" class="btn-3d">Submit</button>
+      </div>
     </div>
-    <p id="modalContent" class="text-lg"></p>
   </div>
-</div>
 
-<script>
-const modal = document.getElementById("modal");
-const modalContent = document.getElementById("modalContent");
-const closeBtn = document.querySelector(".modal-close");
-const nextBtn = document.querySelector(".modal-next");
-const cards = document.querySelectorAll(".card");
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-let currentIndex = 0;
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+      authDomain: "all-madrsa.firebaseapp.com",
+      projectId: "all-madrsa",
+      storageBucket: "all-madrsa.appspot.com",
+      messagingSenderId: "619313835874",
+      appId: "1:619313835874:web:e387e1297663f11fc2463b"
+    };
 
-function openModal(index){
-  currentIndex = index;
-  modalContent.textContent = cards[currentIndex].dataset.hadees;
-  modal.style.display = "flex";
-}
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
 
-cards.forEach((card,i)=>{
-  card.addEventListener("click", ()=> openModal(i));
-});
+    const authBtn = document.getElementById("authBtn");
+    const postHadeesDiv = document.getElementById("postHadeesDiv");
+    const addPostBtn = document.getElementById("addPostBtn");
+    const postModal = document.getElementById("postModal");
+    const postText = document.getElementById("postText");
+    const hadeesList = document.getElementById("hadeesList");
+    const popup = document.getElementById("popup");
+    const popupContent = document.getElementById("popupContent");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
 
-closeBtn.addEventListener("click", ()=> modal.style.display = "none");
+    let currentUser = null;
+    let posts = [];
+    let currentIndex = 0;
 
-modal.addEventListener("click", e => {
-  if(e.target === modal) modal.style.display = "none";
-});
+    authBtn.onclick = async () => {
+      if(!auth.currentUser){
+        await signInWithPopup(auth, provider);
+      } else {
+        await signOut(auth);
+      }
+    }
 
-nextBtn.addEventListener("click", ()=>{
-  currentIndex = (currentIndex + 1) % cards.length;
-  modalContent.textContent = cards[currentIndex].dataset.hadees;
-});
-</script>
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      if(user){
+        authBtn.textContent = "Logout";
+        postHadeesDiv.classList.remove("hidden");
+      } else {
+        authBtn.textContent = "Login";
+        postHadeesDiv.classList.add("hidden");
+      }
+      loadPosts();
+    });
 
+    addPostBtn.onclick = () => {
+      postModal.style.display = "flex";
+    }
+
+    window.closePostModal = () => {
+      postModal.style.display = "none";
+      postText.value = "";
+    }
+
+    async function submitPost(){
+      if(!postText.value.trim()) return alert("Hadees likhein");
+      await addDoc(collection(db,"hadees"),{
+        text: postText.value.trim(),
+        uid: currentUser.uid,
+        email: currentUser.email,
+        createdAt: serverTimestamp(),
+        status: "pending"
+      });
+      closePostModal();
+    }
+
+    function loadPosts(){
+      const q = collection(db,"hadees");
+      onSnapshot(q, snapshot => {
+        posts = [];
+        hadeesList.innerHTML = "";
+        snapshot.forEach(docSnap => {
+          const d = docSnap.data();
+          posts.push({id:docSnap.id,...d});
+        });
+        renderPosts();
+      });
+    }
+
+    function renderPosts(){
+      hadeesList.innerHTML = "";
+      posts.forEach((p,i)=>{
+        if(p.status!=="approved" && p.uid !== currentUser?.uid && currentUser?.email !== "admin@example.com") return;
+        const card = document.createElement("div");
+        card.className = "post-card";
+        card.innerHTML = `
+          <p class="line-clamp-3">${p.text}</p>
+          <div class="flex justify-end gap-2 mt-2">
+            ${(currentUser && currentUser.uid===p.uid) ? `<button class="btn-3d deleteBtn">Delete</button>` : ""}
+            ${(currentUser && currentUser.email==="admin@example.com") ? `
+              <button class="btn-3d approveBtn">✅ Approve</button>
+              <button class="btn-3d rejectBtn">❌ Reject</button>
+              <button class="btn-3d deleteBtn">🗑 Delete</button>
+            `:""}
+          </div>
+        `;
+        hadeesList.appendChild(card);
+
+        card.onclick = (e)=>{
+          if(e.target.tagName==="BUTTON") return; // don't open popup if button clicked
+          openPopup(i);
+        }
+
+        const approveBtn = card.querySelector(".approveBtn");
+        if(approveBtn) approveBtn.onclick = async()=> await updateDoc(doc(db,"hadees",p.id),{status:"approved"});
+        const rejectBtn = card.querySelector(".rejectBtn");
+        if(rejectBtn) rejectBtn.onclick = async()=> await updateDoc(doc(db,"hadees",p.id),{status:"rejected"});
+        const deleteBtn = card.querySelector(".deleteBtn");
+        if(deleteBtn) deleteBtn.onclick = async()=> await deleteDoc(doc(db,"hadees",p.id));
+      });
+    }
+
+    function openPopup(index){
+      currentIndex = index;
+      showPopup();
+      popup.style.display = "flex";
+    }
+    function showPopup(){
+      const p = posts[currentIndex];
+      if(!p) return;
+      popupContent.innerHTML = `<p>${p.text}</p>`;
+    }
+    window.closePopup = () => popup.style.display = "none";
+
+    prevBtn.onclick = ()=>{
+      if(currentIndex>0) currentIndex--;
+      showPopup();
+    }
+    nextBtn.onclick = ()=>{
+      if(currentIndex<posts.length-1) currentIndex++;
+      showPopup();
+    }
+
+  </script>
 </body>
 </html>
