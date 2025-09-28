@@ -52,7 +52,7 @@
   <div class="max-w-6xl mx-auto px-4 py-6">
 
     <!-- Top: 3D Buttons -->
-    <div class="flex justify-center gap-4 mb-2">
+    <div class="flex justify-center gap-4 mb-4">
       <button class="btn-3d-special" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
       <button class="btn-3d-special" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
       <button class="btn-3d-special" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
@@ -62,7 +62,7 @@
     <div class="flex justify-between items-center relative h-28">
 
       <!-- Left: Makka -->
-      <div class="flex items-center -mt-8"> <!-- PNG aur upar -->
+      <div class="flex items-center -mt-8">
         <img src="makka.png" alt="Makka" class="h-28 w-28 object-cover rounded-full mr-4">
       </div>
 
@@ -74,13 +74,31 @@
       </div>
 
       <!-- Right: Madina -->
-      <div class="flex items-center -mt-8"> <!-- PNG aur upar -->
+      <div class="flex items-center -mt-8">
         <img src="madina.png" alt="Madina" class="h-28 w-28 object-cover rounded-full ml-4">
       </div>
 
     </div>
   </div>
 </header>
+
+<!-- 3D Button Style -->
+<style>
+.btn-3d-special {
+  font-size: 1rem;
+  padding: 0.7rem 1.3rem;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-3d-special:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+</style>
+
 
 
 
