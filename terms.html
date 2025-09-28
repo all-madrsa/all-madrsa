@@ -3,14 +3,209 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Terms & Conditions | Talimi Ittehad</title>
+  <title>Talimi Ittehad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .title-3d{font-weight:700;font-size:2rem;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,.9)}
-    .nav-link{padding:.35rem .6rem;border-radius:.5rem}
-    .nav-active{background:#ffffff22}
+    .title-3d{
+      font-weight:700; font-size:2rem; color:#fff;
+      text-shadow:2px 2px 8px rgba(0,0,0,.9);
+    }
+    .dropdown:hover .dropdown-menu{display:block;}
+    .dropdown-menu{
+      display:none; position:absolute; background:#fff;
+      box-shadow:0 2px 6px rgba(0,0,0,.2); border-radius:.5rem;
+      min-width:160px; z-index:50;
+    }
+    .dropdown-menu a{display:block; padding:6px 12px; font-size:14px; color:#333;}
+    .dropdown-menu a:hover{background:#f3f4f6;}
+    .btn-3d{
+      background:linear-gradient(90deg,#ff4d4d,#4dffb8,#4d94ff,#d24dff);
+      box-shadow:0 4px 0 rgba(0,0,0,.25), 0 6px 12px rgba(0,0,0,.2);
+      transition:transform .12s ease, box-shadow .12s ease;
+      font-size:.75rem; padding:.25rem .6rem; color:#fff; font-weight:600; border-radius:6px;
+      white-space:nowrap;
+    }
+    .btn-3d:active{transform:translateY(1px); box-shadow:0 2px 0 rgba(0,0,0,.25);}
+    .carousel{position:relative; overflow:hidden; border-radius:.5rem;}
+    .carousel-track{display:flex; transition:transform .6s ease-in-out;}
+    .carousel img{width:100%; height:160px; object-fit:cover; flex-shrink:0;}
+    marquee{background:#fff3cd; color:#856404; padding:6px; font-size:14px; border-bottom:1px solid #fcd34d;}
+    .floating-donate {
+      position: fixed;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 60;
+      border-radius: 9999px;
+      padding: .55rem .9rem;
+    }
+    /* Hide Google branding */
+    .goog-logo-link, .goog-te-gadget span { display:none !important; }
+    .goog-te-gadget { font-size:0 !important; }
   </style>
 </head>
+<body class="bg-slate-50 min-h-screen">
+
+
+<!-- Header with Logo and 3D Buttons -->
+<header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
+  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
+
+    <!-- Top: 3D Buttons -->
+   <div class="flex justify-center gap-4">
+  <a href="nikah.html">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
+  </a>
+  <a href="https://chatgpt.com/c/68d7e738-0a40-8325-9c70-1bf4977a00bf">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
+  </a>
+  <a href="hadees.html">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
+  </a>
+</div>
+
+
+    <!-- Middle: Logo and Side Images -->
+    <div class="flex justify-between items-center h-full mt-1">
+
+      <!-- Left: Makka -->
+      <div class="flex items-center">
+        <img src="makka.png" alt="Makka" class="header-png">
+      </div>
+
+    <!-- Center: Logo / Title -->
+<div class="flex flex-col items-center justify-center h-full">
+  <div class="text-white font-bold text-2xl" 
+       style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform: translateY(-8px);">
+    Talimi Ittehad
+  </div>
+</div>
+
+
+      <!-- Right: Madina -->
+      <div class="flex items-center">
+        <img src="madina.png" alt="Madina" class="header-png">
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<style>
+/* 3D Buttons Base */
+.btn-3d-special {
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-3d-special:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+
+/* Small variant for top header buttons */
+.btn-small {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
+
+/* Header PNG images */
+.header-png {
+  height: 70px;           /* image height */
+  width: 70px;            /* image width */
+  object-fit: cover;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+
+
+
+
+
+
+
+
+<!-- Namaz Times Box -->
+<div id="prayer-times" 
+     class="bg-green-700 text-white text-xs sm:text-sm px-3 py-2 rounded shadow text-left leading-5 mt-2 sm:mt-0 sm:ml-4">
+  🕌 Loading...
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // ✅ Tumhara fixed timetable
+  const timings = {
+    "Fajr": "05:10",
+    "Dhuhr": "12:20",
+    "Asr": "04:00",
+    "Maghrib": "06:15",
+    "Isha": "07:45"
+  };
+
+  // ✅ Show times
+  document.getElementById("prayer-times").innerHTML = `
+    🌅 Fajr: ${timings.Fajr} &nbsp;|&nbsp;
+    ☀ Dhuhr: ${timings.Dhuhr} &nbsp;|&nbsp;
+    🌇 Asr: ${timings.Asr} &nbsp;|&nbsp;
+    🌆 Maghrib: ${timings.Maghrib} &nbsp;|&nbsp;
+    🌙 Isha: ${timings.Isha}
+  `;
+});
+</script>
+
+
+  
+    <!-- Menu -->
+    <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
+      <div class="dropdown relative">
+        <button class="btn-3d">About ⬇</button>
+        <div class="dropdown-menu">
+
+          
+          <a href="https://all-madrsa.netlify.app/about.html">About us</a>
+          <a href="https://all-madrsa.netlify.app/mission.html">Mission</a>
+          <a href="https://all-madrsa.netlify.app/contact.html">Contect</a>
+          <a href="https://all-madrsa.netlify.app/privacy.html">Privacy policy</a>
+           <a href="https://all-madrsa.netlify.app/gallery.html">Gallery</a>
+          <a href="https://all-madrsa.netlify.app/terms.html">Terms & Conditions</a>
+
+           <a href="#Youtube">Youtube</a>
+           <a href="#Facbook">Facbook</a>
+          <a href="#Instagrm">Instagrm</a>
+ 
+          
+
+          
+        </div>
+      </div>
+      <div class="dropdown relative">
+        <button class="btn-3d">More ⬇</button>
+        <div class="dropdown-menu">
+          <a href="https://all-madrsa.netlify.app/Calendar.html">Calendar</a>
+
+           <a href="https://all-madrsa.netlify.app/founders.html">ALL INDIA MUSLIM PERSONAL BOARD</a>
+          <a href="#faq">FAQ</a>
+        </div>
+      </div>
+
+      <!-- 🌐 Translate Button -->
+      <div class="relative flex flex-col items-center">
+        <button id="langBtn" class="btn-3d">🌐 Select Language</button>
+        <div id="google_translate_element" class="absolute top-full mt-2 hidden bg-white rounded shadow p-1 z-50 w-40 text-center"></div>
+      </div>
+
+      <!-- Auth + Add Button -->
+      <button id="authBtn" class="btn-3d">Login</button>
+      <button id="addBtn" class="btn-3d hidden">➕ Add Madarsa</button>
+    </div>
+  </div>
+</header>
+
 <body class="bg-slate-50 min-h-screen">
 <header class="bg-gradient-to-r from-purple-700 via-pink-600 to-yellow-500 shadow sticky top-0 z-40">
   <div class="max-w-6xl mx-auto px-3 py-3 flex items-center justify-between">
