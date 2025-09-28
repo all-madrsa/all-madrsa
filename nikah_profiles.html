@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💍 Nikah Profiles</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { background:#f8fafc; }
+.card-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+.popup { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; }
+.popup-content { background:white; padding:20px; border-radius:12px; max-width:500px; width:90%; text-align:center; position:relative; max-height:80vh; overflow-y:auto; }
+</style>
+</head>
+<body class="text-gray-900">
+
+<!-- Header -->
+<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
+  <h1 class="text-2xl font-bold">💍 Nikah Profiles</h1>
+  <div>
+    <input id="searchInput" type="text" placeholder="Search by name/city..." class="p-1 rounded mr-2"/>
+    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
+    <button id="postBtn" class="bg-yellow-400 px-3 py-1 rounded hidden">➕ Post</button>
+  </div>
+</header>
+
+<!-- Post Form -->
+<section id="postSection" class="hidden p-4 bg-white shadow m-4 rounded">
+  <h2 class="text-lg font-bold mb-2">Add Profile for Marriage</h2>
+  <input id="nameInput" class="w-full p-2 border rounded mb-2" placeholder="Full Name"/>
+  <input id="ageInput" class="w-full p-2 border rounded mb-2" placeholder="Age" type="number"/>
+  <input id="cityInput" class="w-full p-2 border rounded mb-2" placeholder="City"/>
+  <input id="familyInput" class="w-full p-2 border rounded mb-2" placeholder="Family Details"/>
+  <input id="sageInput" class="w-full p-2 border rounded mb-2" placeholder="Sage/Religion"/>
+  <textarea id="bioInput" class="w-full p-2 border rounded mb-2" placeholder="Additional Info"></textarea>
+  <input type="file" id="adharInput" class="mb-2"/>
+  <button id="submitPost" class="bg-blue-600 px-4 py-2 rounded text-white">Submit Profile</button>
+  <p id="waitMsg" class="text-sm text-gray-600 mt-2 hidden">⏳ Wait for admin approval...</p>
+</section>
+
+<!-- Profiles List -->
+<main id="profilesList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
+
+<!-- Popup -->
+<div id="popup" class="popup hidden">
+  <div class="popup-content">
+    <p id="popupText" class="font-bold text-lg"></p>
+    <p id="popupMeta" class="text-sm text-gray-600 mt-2"></p>
+    <p id="popupBio" class="text-sm mt-2"></p>
+    <p id="popupStatus" class="text-sm font-semibold mt-2"></p>
+    <button id="popupWhatsapp" class="bg-green-500 text-white px-3 py-1 rounded mt-2">WhatsApp</button>
+    <div class="mt-4">
+      <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white">❌ Close</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
+
+// Elements
+const loginBtn = document.getElementById("loginBtn");
+const postBtn = document.getElementById("postBtn");
+const postSection = document.getElementById("postSection");
+const submitPost = document.getElementById("submitPost");
+const profilesList = document.getElementById("profilesList");
+const searchInput = document.getElementById("searchInput");
+const waitMsg = document.getElementById("waitMsg");
+
+let currentUser = null;
+const adminEmail = "zaradigitalseva@gmail.com";
+const whatsappNumber = "9112170192";
+let allProfiles = [];
+
+// Login
+loginBtn.addEventListener("click", async () => {
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
+});
+
+// Auth State
+onAuthStateChanged(auth, (user)=>{
+  currentUser = user;
+  if(user){
+    loginBtn.classList.add("hidden");
+    postBtn.classList.remove("hidden");
+  } else {
+    loginBtn.classList.remove("hidden");
+    postBtn.classList.add("hidden");
+    postSection.classList.add("hidden");
+  }
+});
+
+// Show Post Form
+postBtn.addEventListener("click", () => { if(currentUser) postSection.classList.toggle("hidden"); });
+
+// Submit Post
+submitPost.addEventListener("click", async ()=>{
+  const name = document.getElementById("nameInput").value.trim();
+  const age = document.getElementById("ageInput").value.trim();
+  const city = document.getElementById("cityInput").value.trim();
+  const family = document.getElementById("familyInput").value.trim();
+  const sage = document.getElementById("sageInput").value.trim();
+  const bio = document.getElementById("bioInput").value.trim();
+  const adharFile = document.getElementById("adharInput").files[0];
+
+  if(!name || !age || !city || !family || !sage || !bio || !adharFile) return alert("❌ Please fill all fields and upload Adhar!");
+
+  // Upload Adhar to imgBB
+  const formData = new FormData();
+  formData.append("image", adharFile);
+  formData.append("key", "3701b37092582c6aa3b6f8d1d3dcd00d");
+  const res = await fetch("https://api.imgbb.com/1/upload", { method:"POST", body:formData });
+  const imgData = await res.json();
+  const adharUrl = imgData.data.url;
+
+  await addDoc(collection(db,"profiles"),{
+    name, age, city, family, sage, bio, adharUrl,
+    uid: currentUser.uid, email:currentUser.email,
+    approved:false, created:serverTimestamp()
+  });
+
+  waitMsg.classList.remove("hidden");
+  setTimeout(()=>{waitMsg.classList.add("hidden"); postSection.classList.add("hidden");},2000);
+});
+
+// Load Profiles
+const q = query(collection(db,"profiles"), orderBy("created","desc"));
+onSnapshot(q,(snapshot)=>{
+  allProfiles = [];
+  snapshot.forEach(docSnap=>{
+    const data = docSnap.data();
+    data.id = docSnap.id;
+    allProfiles.push(data);
+  });
+  renderProfiles();
+});
+
+function renderProfiles(){
+  const searchTerm = searchInput.value.toLowerCase();
+  profilesList.innerHTML = "";
+  allProfiles.forEach(data=>{
+    if(!data.approved && !(currentUser && (currentUser.email===data.email || currentUser.email===adminEmail))) return;
+    if(searchTerm && !(data.name.toLowerCase().includes(searchTerm) || data.city.toLowerCase().includes(searchTerm))) return;
+
+    const bgColor = `hsl(${Math.random()*360},70%,85%)`;
+    const card = document.createElement("div");
+    card.className="p-4 rounded shadow cursor-pointer h-56 flex flex-col justify-between bg-white";
+    card.style.background=bgColor;
+    card.innerHTML=`
+      <p class="font-bold text-lg card-text">${data.name}</p>
+      <p class="text-xs mt-1">Age: ${data.age}, City: ${data.city}</p>
+      <p class="text-sm font-semibold mt-1">${data.approved? "✅ Approved" : (currentUser?.email===adminEmail ? "⏳ Pending/Rejected" : "⏳ Pending")}</p>
+    `;
+
+    // Delete button
+    if(currentUser && (currentUser.email===data.email || currentUser.email===adminEmail)){
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "🗑️ Delete";
+      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2 self-start";
+      delBtn.onclick = async e=>{ e.stopPropagation(); await deleteDoc(doc(db,"profiles",data.id)); };
+      card.appendChild(delBtn);
+    }
+
+    // Admin approve/reject
+    if(currentUser && currentUser.email===adminEmail && !data.approved){
+      const approveBtn = document.createElement("button");
+      approveBtn.textContent="✅ Approve";
+      approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
+      approveBtn.onclick = async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",data.id),{approved:true}); };
+      const rejectBtn = document.createElement("button");
+      rejectBtn.textContent="❌ Reject";
+      rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
+      rejectBtn.onclick = async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",data.id),{approved:false}); };
+      card.appendChild(approveBtn); card.appendChild(rejectBtn);
+    }
+
+    // Card click = popup
+    card.addEventListener("click",()=>{
+      document.getElementById("popupText").textContent = data.name;
+      document.getElementById("popupMeta").textContent = `Age: ${data.age}, City: ${data.city}, Family: ${data.family}, Sage: ${data.sage}`;
+      document.getElementById("popupBio").textContent = data.bio;
+      document.getElementById("popupStatus").textContent = data.approved? "✅ Approved" : (currentUser?.email===adminEmail? "⏳ Pending/Rejected":"⏳ Pending");
+      document.getElementById("popup").classList.remove("hidden");
+
+      document.getElementById("popupWhatsapp").onclick = ()=>{
+        window.location.href = `https://wa.me/${whatsappNumber}?text=Profile%20Name:%20${encodeURIComponent(data.name)}`;
+      };
+    });
+
+    profilesList.appendChild(card);
+  });
+}
+
+// Search
+searchInput.addEventListener("input", renderProfiles);
+
+// Close popup
+document.getElementById("closePopup").addEventListener("click",()=>{ document.getElementById("popup").classList.add("hidden"); });
+</script>
+</body>
+</html>
