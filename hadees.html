@@ -1,201 +1,236 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>📜 Hadees Page</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      background: url('madina.jpg') no-repeat center center fixed;
+      background: url('madina.png') no-repeat center center fixed;
       background-size: cover;
     }
-    .card {
-      border-radius: 12px;
-      padding: 1rem;
-      margin: 0.5rem 0;
-      color: white;
-      font-weight: 500;
-    }
     .popup {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: none; justify-content: center; align-items: center;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
     }
     .popup-content {
-      background: white; padding: 20px; border-radius: 10px;
-      max-width: 500px; width: 90%;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      position: relative;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="text-white">
 
-  <!-- 🔹 Header -->
-  <header class="bg-blue-700 text-white py-3 px-4 flex justify-between">
-    <h1 class="text-xl font-bold">📜 Hadees</h1>
+  <!-- Header -->
+  <header class="bg-black bg-opacity-60 p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold">📜 Hadees</h1>
     <div>
-      <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
-      <button id="logoutBtn" class="bg-red-500 px-3 py-1 rounded hidden">Logout</button>
+      <button id="loginBtn" class="bg-green-600 px-3 py-1 rounded">Login</button>
+      <button id="logoutBtn" class="bg-red-600 px-3 py-1 rounded hidden">Logout</button>
+      <button id="postBtn" class="bg-blue-600 px-3 py-1 rounded hidden">➕ Post</button>
     </div>
   </header>
 
-  <!-- 🔹 Post Box (only after login) -->
-  <div id="postBox" class="hidden bg-white p-4 m-4 rounded shadow">
-    <textarea id="hadeesInput" placeholder="अपनी हदीस लिखें..." 
-      class="w-full p-2 border rounded"></textarea>
-    <button id="postBtn" 
-      class="mt-2 px-4 py-2 bg-green-600 text-white rounded">📩 Post</button>
-  </div>
+  <!-- Post Form -->
+  <section id="postSection" class="hidden p-4">
+    <textarea id="hadeesInput" class="w-full p-2 text-black rounded" rows="3" placeholder="✍️ Write Hadees..."></textarea>
+    <button id="submitPost" class="bg-purple-600 px-4 py-2 rounded mt-2">Post Hadees</button>
+  </section>
 
-  <!-- 🔹 Posts List -->
-  <main id="postsList" class="flex-1 p-4"></main>
+  <!-- Posts List -->
+  <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
-  <!-- 🔹 Popup -->
-  <div id="popup" class="popup">
+  <!-- Popup -->
+  <div id="popup" class="popup hidden">
     <div class="popup-content">
       <p id="popupText"></p>
-      <div class="flex justify-between mt-4">
-        <button id="closePopup" class="bg-gray-500 text-white px-3 py-1 rounded">❌ Close</button>
-        <button id="nextPopup" class="bg-blue-500 text-white px-3 py-1 rounded">➡️ Next</button>
+      <div class="mt-4 flex justify-between">
+        <button id="closePopup" class="bg-red-500 px-3 py-1 rounded">❌ Close</button>
+        <button id="nextPopup" class="bg-green-500 px-3 py-1 rounded">➡️ Next</button>
       </div>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp }
-      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // 🔹 Firebase Config (apna config lagao)
-   const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  // 🔹 Firebase Config (अपना config यहां भरो)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const postBox = document.getElementById("postBox");
-    const postBtn = document.getElementById("postBtn");
-    const hadeesInput = document.getElementById("hadeesInput");
-    const postsList = document.getElementById("postsList");
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const db = getFirestore();
 
-    const popup = document.getElementById("popup");
-    const popupText = document.getElementById("popupText");
-    const closePopup = document.getElementById("closePopup");
-    const nextPopup = document.getElementById("nextPopup");
-    let popupPosts = [];
-    let popupIndex = 0;
+  const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const postBtn = document.getElementById("postBtn");
+  const postSection = document.getElementById("postSection");
+  const submitPost = document.getElementById("submitPost");
+  const hadeesInput = document.getElementById("hadeesInput");
+  const postsList = document.getElementById("postsList");
 
-    const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+  let currentUser = null;
 
-    // 🔹 Login
-    loginBtn.addEventListener("click", async () => {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+  // Login
+  loginBtn.addEventListener("click", async () => {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  });
+
+  // Logout
+  logoutBtn.addEventListener("click", () => signOut(auth));
+
+  // User State Change
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (user) {
+      loginBtn.classList.add("hidden");
+      logoutBtn.classList.remove("hidden");
+      postBtn.classList.remove("hidden");
+    } else {
+      loginBtn.classList.remove("hidden");
+      logoutBtn.classList.add("hidden");
+      postBtn.classList.add("hidden");
+      postSection.classList.add("hidden");
+    }
+  });
+
+  // Show Post Form
+  postBtn.addEventListener("click", () => {
+    if (currentUser) {
+      postSection.classList.toggle("hidden");
+    } else {
+      alert("⚠️ Please login to post!");
+    }
+  });
+
+  // Submit Post
+  submitPost.addEventListener("click", async () => {
+    if (hadeesInput.value.trim() === "") return alert("❌ Write something");
+    await addDoc(collection(db, "hadees"), {
+      text: hadeesInput.value,
+      uid: currentUser.uid,
+      email: currentUser.email,
+      approved: false,
+      created: new Date()
     });
+    hadeesInput.value = "";
+    alert("✅ Submitted for approval!");
+  });
 
-    // 🔹 Logout
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
+  // Load Posts
+  const q = query(collection(db, "hadees"), orderBy("created", "desc"));
+  onSnapshot(q, (snapshot) => {
+    postsList.innerHTML = "";
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const postId = docSnap.id;
+
+      // Reject posts public में नहीं दिखेंगे
+      if (data.approved === false && data.email !== "zaradigitalseva@gmail.com") return;
+
+      const card = document.createElement("div");
+      card.className = "p-4 rounded shadow text-black";
+      card.style.background = `hsl(${Math.random()*360},70%,80%)`;
+
+      card.innerHTML = `
+        <p class="font-bold">${data.text}</p>
+        <p class="text-xs mt-2">✍️ ${data.email}</p>
+      `;
+
+      // Poster & Admin delete button
+      if (currentUser && (currentUser.email === data.email || currentUser.email === "zaradigitalseva@gmail.com")) {
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "🗑️ Delete";
+        delBtn.className = "bg-red-500 text-white px-2 py-1 rounded mt-2";
+        delBtn.onclick = async () => {
+          await deleteDoc(doc(db, "hadees", postId));
+        };
+        card.appendChild(delBtn);
+      }
+
+      // Admin controls
+      if (currentUser && currentUser.email === "zaradigitalseva@gmail.com") {
+        if (!data.approved) {
+          const approveBtn = document.createElement("button");
+          approveBtn.textContent = "✅ Approve";
+          approveBtn.className = "bg-green-500 text-white px-2 py-1 rounded ml-2";
+          approveBtn.onclick = async () => {
+            await updateDoc(doc(db, "hadees", postId), { approved: true });
+          };
+
+          const rejectBtn = document.createElement("button");
+          rejectBtn.textContent = "❌ Reject";
+          rejectBtn.className = "bg-gray-500 text-white px-2 py-1 rounded ml-2";
+          rejectBtn.onclick = async () => {
+            await deleteDoc(doc(db, "hadees", postId));
+          };
+
+          card.appendChild(approveBtn);
+          card.appendChild(rejectBtn);
+        }
+      }
+
+      postsList.appendChild(card);
     });
+  });
 
-    // 🔹 Auth State
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loginBtn.classList.add("hidden");
-        logoutBtn.classList.remove("hidden");
-        postBox.classList.remove("hidden");
-      } else {
-        loginBtn.classList.remove("hidden");
-        logoutBtn.classList.add("hidden");
-        postBox.classList.add("hidden");
+  // 🔹 Popup Logic (Approved posts only)
+  const popup = document.getElementById("popup");
+  const popupText = document.getElementById("popupText");
+  const closePopup = document.getElementById("closePopup");
+  const nextPopup = document.getElementById("nextPopup");
+
+  let approvedPosts = [];
+  let currentIndex = 0;
+
+  onSnapshot(q, (snapshot) => {
+    approvedPosts = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.approved) {
+        approvedPosts.push(data.text);
       }
     });
+    if (approvedPosts.length > 0) {
+      currentIndex = 0;
+      showPopup();
+    }
+  });
 
-    // 🔹 Post Hadees
-    postBtn.addEventListener("click", async () => {
-      const user = auth.currentUser;
-      if (!user) { alert("⚠️ पहले login करें!"); return; }
+  function showPopup() {
+    popupText.textContent = approvedPosts[currentIndex];
+    popup.classList.remove("hidden");
+  }
 
-      const text = hadeesInput.value.trim();
-      if (!text) return alert("❌ खाली नहीं हो सकता!");
-
-      await addDoc(collection(db, "hadees"), {
-        text, uid: user.uid, email: user.email,
-        approved: false, createdAt: serverTimestamp()
-      });
-      hadeesInput.value = "";
-      alert("✅ Review के लिए भेज दिया गया!");
-    });
-
-    // 🔹 Load Posts
-    onSnapshot(collection(db, "hadees"), (snapshot) => {
-      postsList.innerHTML = "";
-      popupPosts = [];
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const id = docSnap.id;
-        const color = ["bg-red-500","bg-green-500","bg-blue-500","bg-purple-500","bg-pink-500"];
-        const randomColor = color[Math.floor(Math.random()*color.length)];
-
-        if (data.approved || (auth.currentUser && auth.currentUser.email===ADMIN_EMAIL)) {
-          const card = document.createElement("div");
-          card.className = `card ${randomColor} cursor-pointer`;
-          card.innerText = data.text.substring(0,50) + "...";
-          card.addEventListener("click", () => {
-            popup.style.display="flex";
-            popupText.innerText = data.text;
-            popupPosts = snapshot.docs.filter(d=>d.data().approved).map(d=>d.data().text);
-            popupIndex = popupPosts.indexOf(data.text);
-          });
-
-          // admin options
-          if (auth.currentUser && auth.currentUser.email===ADMIN_EMAIL) {
-            const btns = document.createElement("div");
-            btns.className="mt-2 flex gap-2";
-            if (!data.approved) {
-              const approveBtn = document.createElement("button");
-              approveBtn.innerText="✅ Approve";
-              approveBtn.className="bg-green-700 px-2 py-1 rounded";
-              approveBtn.onclick=()=>updateDoc(doc(db,"hadees",id),{approved:true});
-              btns.appendChild(approveBtn);
-            }
-            const rejectBtn = document.createElement("button");
-            rejectBtn.innerText="🚫 Reject";
-            rejectBtn.className="bg-yellow-700 px-2 py-1 rounded";
-            rejectBtn.onclick=()=>updateDoc(doc(db,"hadees",id),{approved:false});
-            btns.appendChild(rejectBtn);
-
-            const delBtn = document.createElement("button");
-            delBtn.innerText="🗑 Delete";
-            delBtn.className="bg-red-700 px-2 py-1 rounded";
-            delBtn.onclick=()=>deleteDoc(doc(db,"hadees",id));
-            btns.appendChild(delBtn);
-
-            card.appendChild(btns);
-          }
-
-          postsList.appendChild(card);
-        }
-      });
-    });
-
-    // 🔹 Popup controls
-    closePopup.addEventListener("click", ()=>popup.style.display="none");
-    nextPopup.addEventListener("click", ()=>{
-      popupIndex = (popupIndex+1) % popupPosts.length;
-      popupText.innerText = popupPosts[popupIndex];
-    });
-  </script>
+  closePopup.addEventListener("click", () => popup.classList.add("hidden"));
+  nextPopup.addEventListener("click", () => {
+    currentIndex = (currentIndex + 1) % approvedPosts.length;
+    showPopup();
+  });
+</script>
 </body>
 </html>
