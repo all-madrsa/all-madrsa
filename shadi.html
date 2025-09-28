@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📜 Nikah Page</title>
+<title>📜 Nikah Portal</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
@@ -28,7 +28,12 @@ body {background: #fdf6e3;}
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
   <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
   <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="genderInput" placeholder="Gender" class="w-full p-2 rounded mb-2 border">
+  <select id="genderInput" class="w-full p-2 rounded mb-2 border">
+    <option value="">Select Gender</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+    <option value="Other">Other</option>
+  </select>
   <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="addressInput" placeholder="Full Address" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded mb-2 border">
@@ -68,7 +73,7 @@ body {background: #fdf6e3;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, doc, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -104,24 +109,24 @@ onAuthStateChanged(auth,user=>{
   else { loginBtn.classList.remove("hidden"); postBtn.classList.add("hidden"); postSection.classList.add("hidden"); }
 });
 
-postBtn.addEventListener("click",()=>{
-  if(currentUser) postSection.classList.toggle("hidden"); 
-  else alert("⚠️ Please login to post!");
-});
+postBtn.addEventListener("click",()=>{ if(currentUser) postSection.classList.toggle("hidden"); else alert("⚠️ Please login to post!"); });
 
 async function uploadToImgbb(file){
-  const key="d12c2e4a8650157b2b6b9fe85336ea43";
-  const formData=new FormData();
-  formData.append("image",file);
-  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
-  const data=await res.json();
-  return data.data.url;
+  try {
+    const key="d12c2e4a8650157b2b6b9fe85336ea43";
+    const formData=new FormData();
+    formData.append("image",file);
+    const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
+    const data=await res.json();
+    if(data.success) return data.data.url;
+    else throw new Error("Upload failed");
+  } catch(e) { alert("❌ Image upload failed: "+e.message); throw e; }
 }
 
 submitPost.addEventListener("click",async ()=>{
   const name=document.getElementById("nameInput").value.trim();
   const age=document.getElementById("ageInput").value.trim();
-  const gender=document.getElementById("genderInput").value.trim();
+  const gender=document.getElementById("genderInput").value;
   const city=document.getElementById("cityInput").value.trim();
   const address=document.getElementById("addressInput").value.trim();
   const education=document.getElementById("educationInput").value.trim();
@@ -133,13 +138,12 @@ submitPost.addEventListener("click",async ()=>{
   const aadhaar=document.getElementById("aadhaarInput").files[0];
 
   if(!name||!age||!gender||!city||!address||!education||!profession||!income||!status||!photo) return alert("❌ Fill all required fields!");
-
   const photoUrl=await uploadToImgbb(photo);
   const aadhaarUrl=aadhaar?await uploadToImgbb(aadhaar):"";
 
   await addDoc(collection(db,"profiles"),{
     name,age,gender,city,address,education,profession,income,status,children,photoUrl,aadhaarUrl,
-    uid:currentUser.uid,email:currentUser.email,approved:false,created:serverTimestamp()
+    uid:currentUser.uid,email:currentUser.email,approved:false,rejected:false,created:serverTimestamp()
   });
 
   alert("✅ Submitted for approval! Wait for admin approval.");
@@ -158,7 +162,6 @@ onSnapshot(q,snapshot=>{
   snapshot.forEach(docSnap=>{
     const data=docSnap.data();
     const postId=docSnap.id;
-
     if(!data.approved && !(currentUser&&(currentUser.email===data.email||currentUser.email===adminEmail))) return;
 
     const card=document.createElement("div");
@@ -169,19 +172,18 @@ onSnapshot(q,snapshot=>{
       <p class="font-bold text-lg card-text">${data.name}, ${data.age}</p>
       <p class="text-sm">City: ${data.city}</p>
       <p class="text-sm">Gender: ${data.gender}</p>
-      <p class="text-sm font-semibold">${data.approved? "✅ Approved":"⏳ Pending"}</p>
+      <p class="text-sm font-semibold">${data.approved? "✅ Approved":data.rejected?"❌ Rejected":"⏳ Pending"}</p>
     `;
 
-    // Admin approve/reject
-    if(currentUser&&currentUser.email===adminEmail&&!data.approved){
+    if(currentUser && currentUser.email===adminEmail && !data.approved){
       const approveBtn=document.createElement("button");
       approveBtn.textContent="✅ Approve";
       approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
-      approveBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",postId),{approved:true}); };
+      approveBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",postId),{approved:true,rejected:false}); };
       const rejectBtn=document.createElement("button");
       rejectBtn.textContent="❌ Reject";
       rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
-      rejectBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",postId),{approved:false}); };
+      rejectBtn.onclick=async e=>{ e.stopPropagation(); await updateDoc(doc(db,"profiles",postId),{approved:false,rejected:true}); };
       card.appendChild(approveBtn); card.appendChild(rejectBtn);
     }
 
@@ -199,8 +201,7 @@ onSnapshot(q,snapshot=>{
         <span>Children: ${data.children||0}</span>
       `;
       popupMeta.textContent=`Email: ${data.email}`;
-      popupStatus.textContent=data.approved?"✅ Approved":"⏳ Pending";
-
+      popupStatus.textContent=data.approved?"✅ Approved":data.rejected?"❌ Rejected":"⏳ Pending";
       popupWhatsApp.onclick=()=> window.open(`https://wa.me/${whatsappNumber}?text=Hello%20Admin%20from%20${data.name}`);
       popup.classList.remove("hidden");
     });
@@ -213,7 +214,9 @@ searchInput.addEventListener("input",()=>{
   const term=searchInput.value.toLowerCase();
   Array.from(postsList.children).forEach(card=>{
     const name=card.querySelector(".card-text").textContent.toLowerCase();
-    if(name.includes(term)) card.style.display="block";
+    const city=card.querySelector("p:nth-child(3)").textContent.toLowerCase();
+    const gender=card.querySelector("p:nth-child(4)").textContent.toLowerCase();
+    if(name.includes(term) || city.includes(term) || gender.includes(term)) card.style.display="block";
     else card.style.display="none";
   });
 });
