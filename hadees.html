@@ -57,10 +57,10 @@
   <!-- Popup -->
   <div id="popup" class="popup hidden">
     <div class="popup-content">
-      <p id="popupText"></p>
-      <div class="mt-4 flex justify-between">
-        <button id="closePopup" class="bg-red-500 px-3 py-1 rounded">❌ Close</button>
-        <button id="nextPopup" class="bg-green-500 px-3 py-1 rounded">➡️ Next</button>
+      <p id="popupText" class="font-bold text-lg"></p>
+      <p id="popupMeta" class="text-sm text-gray-600 mt-2"></p>
+      <div class="mt-4">
+        <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white">❌ Close</button>
       </div>
     </div>
   </div>
@@ -70,15 +70,15 @@
   import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  // 🔹 Firebase Config (अपना config यहां भरो)
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
+  // 🔹 Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
   const app = initializeApp(firebaseConfig);
   const auth = getAuth();
   const db = getFirestore();
@@ -140,7 +140,17 @@ const firebaseConfig = {
     alert("✅ Submitted for approval!");
   });
 
-  // Load Posts
+  // Utility: auto contrast
+  function getContrastYIQ(hexcolor) {
+    hexcolor = hexcolor.replace("#", "");
+    const r = parseInt(hexcolor.substr(0,2),16);
+    const g = parseInt(hexcolor.substr(2,2),16);
+    const b = parseInt(hexcolor.substr(4,2),16);
+    const yiq = ((r*299)+(g*587)+(b*114))/1000;
+    return (yiq >= 128) ? "black" : "white";
+  }
+
+  // Load Posts (only approved)
   const q = query(collection(db, "hadees"), orderBy("created", "desc"));
   onSnapshot(q, (snapshot) => {
     postsList.innerHTML = "";
@@ -148,16 +158,25 @@ const firebaseConfig = {
       const data = docSnap.data();
       const postId = docSnap.id;
 
-      // Reject posts public में नहीं दिखेंगे
-      if (data.approved === false && data.email !== "zaradigitalseva@gmail.com") return;
+      // सिर्फ approved posts दिखेंगे
+      if (!data.approved) return;
+
+      const bgColor = `hsl(${Math.random()*360},70%,70%)`;
+      const hex = bgColorToHex(bgColor);
+      const textColor = getContrastYIQ(hex);
 
       const card = document.createElement("div");
-      card.className = "p-4 rounded shadow text-black";
-      card.style.background = `hsl(${Math.random()*360},70%,80%)`;
+      card.className = "p-4 rounded shadow cursor-pointer";
+      card.style.background = bgColor;
+      card.style.color = textColor;
+
+      const time = data.created?.toDate ? data.created.toDate() : new Date();
+      const formattedTime = time.toLocaleString();
 
       card.innerHTML = `
-        <p class="font-bold">${data.text}</p>
+        <p class="font-bold text-lg">${data.text}</p>
         <p class="text-xs mt-2">✍️ ${data.email}</p>
+        <p class="text-xs">${formattedTime}</p>
       `;
 
       // Poster & Admin delete button
@@ -165,71 +184,79 @@ const firebaseConfig = {
         const delBtn = document.createElement("button");
         delBtn.textContent = "🗑️ Delete";
         delBtn.className = "bg-red-500 text-white px-2 py-1 rounded mt-2";
-        delBtn.onclick = async () => {
+        delBtn.onclick = async (e) => {
+          e.stopPropagation();
           await deleteDoc(doc(db, "hadees", postId));
         };
         card.appendChild(delBtn);
       }
 
       // Admin controls
-      if (currentUser && currentUser.email === "zaradigitalseva@gmail.com") {
-        if (!data.approved) {
-          const approveBtn = document.createElement("button");
-          approveBtn.textContent = "✅ Approve";
-          approveBtn.className = "bg-green-500 text-white px-2 py-1 rounded ml-2";
-          approveBtn.onclick = async () => {
-            await updateDoc(doc(db, "hadees", postId), { approved: true });
-          };
+      if (currentUser && currentUser.email === "zaradigitalseva@gmail.com" && !data.approved) {
+        const approveBtn = document.createElement("button");
+        approveBtn.textContent = "✅ Approve";
+        approveBtn.className = "bg-green-500 text-white px-2 py-1 rounded ml-2";
+        approveBtn.onclick = async (e) => {
+          e.stopPropagation();
+          await updateDoc(doc(db, "hadees", postId), { approved: true });
+        };
 
-          const rejectBtn = document.createElement("button");
-          rejectBtn.textContent = "❌ Reject";
-          rejectBtn.className = "bg-gray-500 text-white px-2 py-1 rounded ml-2";
-          rejectBtn.onclick = async () => {
-            await deleteDoc(doc(db, "hadees", postId));
-          };
+        const rejectBtn = document.createElement("button");
+        rejectBtn.textContent = "❌ Reject";
+        rejectBtn.className = "bg-gray-500 text-white px-2 py-1 rounded ml-2";
+        rejectBtn.onclick = async (e) => {
+          e.stopPropagation();
+          await updateDoc(doc(db, "hadees", postId), { approved: false });
+        };
 
-          card.appendChild(approveBtn);
-          card.appendChild(rejectBtn);
-        }
+        card.appendChild(approveBtn);
+        card.appendChild(rejectBtn);
       }
+
+      // Card click = popup
+      card.addEventListener("click", () => {
+        popupText.textContent = data.text;
+        popupMeta.textContent = `✍️ ${data.email} | ${formattedTime}`;
+        popup.classList.remove("hidden");
+      });
 
       postsList.appendChild(card);
     });
   });
 
-  // 🔹 Popup Logic (Approved posts only)
+  // Popup
   const popup = document.getElementById("popup");
   const popupText = document.getElementById("popupText");
+  const popupMeta = document.getElementById("popupMeta");
   const closePopup = document.getElementById("closePopup");
-  const nextPopup = document.getElementById("nextPopup");
-
-  let approvedPosts = [];
-  let currentIndex = 0;
-
-  onSnapshot(q, (snapshot) => {
-    approvedPosts = [];
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (data.approved) {
-        approvedPosts.push(data.text);
-      }
-    });
-    if (approvedPosts.length > 0) {
-      currentIndex = 0;
-      showPopup();
-    }
-  });
-
-  function showPopup() {
-    popupText.textContent = approvedPosts[currentIndex];
-    popup.classList.remove("hidden");
-  }
-
   closePopup.addEventListener("click", () => popup.classList.add("hidden"));
-  nextPopup.addEventListener("click", () => {
-    currentIndex = (currentIndex + 1) % approvedPosts.length;
-    showPopup();
-  });
+
+  // Convert HSL to HEX for contrast check
+  function bgColorToHex(hsl) {
+    const sep = hsl.indexOf(",") > -1 ? "," : " ";
+    const hslArr = hsl.substr(4).split(")")[0].split(sep);
+    let h = hslArr[0], s = hslArr[1].replace('%',''), l = hslArr[2].replace('%','');
+    h /= 360; s /= 100; l /= 100;
+    let r, g, b;
+    if(s === 0){ r = g = b = l; }
+    else {
+      const hue2rgb = (p, q, t) => {
+        if(t < 0) t += 1;
+        if(t > 1) t -= 1;
+        if(t < 1/6) return p + (q - p) * 6 * t;
+        if(t < 1/2) return q;
+        if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    const toHex = x => ("0" + Math.round(x * 255).toString(16)).slice(-2);
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+  }
 </script>
 </body>
 </html>
