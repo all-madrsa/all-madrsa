@@ -58,6 +58,7 @@
     <div class="popup-content">
       <p id="popupText" class="font-bold text-lg"></p>
       <p id="popupMeta" class="text-sm text-gray-600 mt-2"></p>
+      <div id="popupButtons" class="mt-4 flex justify-center gap-2"></div>
       <div class="mt-4">
         <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white">❌ Close</button>
       </div>
@@ -69,14 +70,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// 🔹 Firebase Config
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
   projectId: "all-madrsa",
   storageBucket: "all-madrsa.appspot.com",
   messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  appId: "1:619313835874:web:e387e1297663b"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
@@ -97,10 +98,10 @@ loginBtn.addEventListener("click", async () => {
   await signInWithPopup(auth, provider);
 });
 
-// User State Change
+// User state
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
-  if (user) {
+  if(user){
     loginBtn.classList.add("hidden");
     postBtn.classList.remove("hidden");
   } else {
@@ -110,96 +111,122 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Show Post Form
-postBtn.addEventListener("click", () => {
-  if (currentUser) {
+// Show post form
+postBtn.addEventListener("click", ()=>{
+  if(currentUser){
     postSection.classList.toggle("hidden");
   } else {
     alert("⚠️ Please login to post!");
   }
 });
 
-// Submit Post
-submitPost.addEventListener("click", async () => {
-  if (hadeesInput.value.trim() === "") return alert("❌ Write something");
-  await addDoc(collection(db, "hadees"), {
-    text: hadeesInput.value,
+// Submit post
+submitPost.addEventListener("click", async ()=>{
+  if(hadeesInput.value.trim()==="") return alert("❌ Write something");
+  await addDoc(collection(db,"hadees"),{
+    text:hadeesInput.value,
     uid: currentUser.uid,
     email: currentUser.email,
-    approved: false,
-    created: new Date()
+    approved:false,
+    created:new Date()
   });
-  hadeesInput.value = "";
+  hadeesInput.value="";
   alert("✅ Submitted for approval!");
 });
 
-// Utility: auto contrast
-function getContrastYIQ(hexcolor) {
-  hexcolor = hexcolor.replace("#", "");
-  const r = parseInt(hexcolor.substr(0,2),16);
-  const g = parseInt(hexcolor.substr(2,2),16);
-  const b = parseInt(hexcolor.substr(4,2),16);
-  const yiq = ((r*299)+(g*587)+(b*114))/1000;
-  return (yiq >= 128) ? "black" : "white";
+// Auto-contrast
+function getContrastYIQ(hexcolor){
+  hexcolor = hexcolor.replace("#","");
+  const r=parseInt(hexcolor.substr(0,2),16);
+  const g=parseInt(hexcolor.substr(2,2),16);
+  const b=parseInt(hexcolor.substr(4,2),16);
+  const yiq=((r*299)+(g*587)+(b*114))/1000;
+  return (yiq>=128)?"black":"white";
 }
 
-// Load Posts
-const q = query(collection(db, "hadees"), orderBy("created", "desc"));
-onSnapshot(q, (snapshot) => {
-  postsList.innerHTML = "";
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const postId = docSnap.id;
+// Convert HSL to HEX
+function bgColorToHex(hsl){
+  const sep = hsl.indexOf(",")>-1? ",":" ";
+  const hslArr=hsl.substr(4).split(")")[0].split(sep);
+  let h=hslArr[0],s=hslArr[1].replace('%',''),l=hslArr[2].replace('%','');
+  h/=360;s/=100;l/=100;
+  let r,g,b;
+  if(s===0){r=g=b=l;}else{
+    const hue2rgb=(p,q,t)=>{
+      if(t<0)t+=1;
+      if(t>1)t-=1;
+      if(t<1/6)return p+(q-p)*6*t;
+      if(t<1/2)return q;
+      if(t<2/3)return p+(q-p)*(2/3-t)*6;
+      return p;
+    };
+    const q = l<0.5? l*(1+s):l+s-l*s;
+    const p = 2*l-q;
+    r=hue2rgb(p,q,h+1/3);
+    g=hue2rgb(p,q,h);
+    b=hue2rgb(p,q,h-1/3);
+  }
+  const toHex=x=>("0"+Math.round(x*255).toString(16)).slice(-2);
+  return "#"+toHex(r)+toHex(g)+toHex(b);
+}
 
-    // Public users -> only approved posts
-    if (!data.approved && (!currentUser || currentUser.email !== "zaradigitalseva@gmail.com")) return;
+// Load posts
+const q=query(collection(db,"hadees"),orderBy("created","desc"));
+onSnapshot(q,(snapshot)=>{
+  postsList.innerHTML="";
+  snapshot.forEach((docSnap)=>{
+    const data=docSnap.data();
+    const postId=docSnap.id;
 
-    const bgColor = `hsl(${Math.random()*360},70%,70%)`;
-    const hex = bgColorToHex(bgColor);
-    const textColor = getContrastYIQ(hex);
+    // Normal users see only approved posts
+    if(!data.approved && (!currentUser || currentUser.email!=="zaradigitalseva@gmail.com")) return;
 
-    const card = document.createElement("div");
-    card.className = "p-4 rounded shadow cursor-pointer";
-    card.style.background = bgColor;
-    card.style.color = textColor;
+    const bgColor=`hsl(${Math.random()*360},70%,70%)`;
+    const hex=bgColorToHex(bgColor);
+    const textColor=getContrastYIQ(hex);
+
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow cursor-pointer";
+    card.style.background=bgColor;
+    card.style.color=textColor;
 
     const time = data.created?.toDate ? data.created.toDate() : new Date();
     const formattedTime = time.toLocaleString();
 
-    card.innerHTML = `
+    card.innerHTML=`
       <p class="font-bold text-lg">${data.text}</p>
       <p class="text-xs mt-2">✍️ ${data.email}</p>
       <p class="text-xs">${formattedTime}</p>
     `;
 
     // Poster & Admin delete button
-    if (currentUser && (currentUser.email === data.email || currentUser.email === "zaradigitalseva@gmail.com")) {
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "🗑️ Delete";
-      delBtn.className = "bg-red-500 text-white px-2 py-1 rounded mt-2";
-      delBtn.onclick = async (e) => {
+    if(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com")){
+      const delBtn=document.createElement("button");
+      delBtn.textContent="🗑️ Delete";
+      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2";
+      delBtn.onclick=async (e)=>{
         e.stopPropagation();
-        await deleteDoc(doc(db, "hadees", postId));
+        await deleteDoc(doc(db,"hadees",postId));
       };
       card.appendChild(delBtn);
     }
 
-    // Admin controls for unapproved posts
-    if (currentUser && currentUser.email === "zaradigitalseva@gmail.com" && !data.approved) {
-      const approveBtn = document.createElement("button");
-      approveBtn.textContent = "✅ Approve";
-      approveBtn.className = "bg-green-500 text-white px-2 py-1 rounded ml-2";
-      approveBtn.onclick = async (e) => {
+    // Admin controls (approve/reject visible always)
+    if(currentUser && currentUser.email==="zaradigitalseva@gmail.com"){
+      const approveBtn=document.createElement("button");
+      approveBtn.textContent="✅ Approve";
+      approveBtn.className="bg-green-500 text-white px-2 py-1 rounded ml-2";
+      approveBtn.onclick=async (e)=>{
         e.stopPropagation();
-        await updateDoc(doc(db, "hadees", postId), { approved: true });
+        await updateDoc(doc(db,"hadees",postId),{approved:true});
       };
 
-      const rejectBtn = document.createElement("button");
-      rejectBtn.textContent = "❌ Reject";
-      rejectBtn.className = "bg-gray-500 text-white px-2 py-1 rounded ml-2";
-      rejectBtn.onclick = async (e) => {
+      const rejectBtn=document.createElement("button");
+      rejectBtn.textContent="❌ Reject";
+      rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded ml-2";
+      rejectBtn.onclick=async (e)=>{
         e.stopPropagation();
-        await updateDoc(doc(db, "hadees", postId), { approved: false });
+        await updateDoc(doc(db,"hadees",postId),{approved:false});
       };
 
       card.appendChild(approveBtn);
@@ -207,9 +234,9 @@ onSnapshot(q, (snapshot) => {
     }
 
     // Card click -> popup
-    card.addEventListener("click", () => {
-      popupText.textContent = data.text;
-      popupMeta.textContent = `✍️ ${data.email} | ${formattedTime}`;
+    card.addEventListener("click",()=>{
+      popupText.textContent=data.text;
+      popupMeta.textContent=`✍️ ${data.email} | ${formattedTime}`;
       popup.classList.remove("hidden");
     });
 
@@ -218,38 +245,11 @@ onSnapshot(q, (snapshot) => {
 });
 
 // Popup
-const popup = document.getElementById("popup");
-const popupText = document.getElementById("popupText");
-const popupMeta = document.getElementById("popupMeta");
-const closePopup = document.getElementById("closePopup");
-closePopup.addEventListener("click", () => popup.classList.add("hidden"));
-
-// Convert HSL to HEX for contrast check
-function bgColorToHex(hsl) {
-  const sep = hsl.indexOf(",") > -1 ? "," : " ";
-  const hslArr = hsl.substr(4).split(")")[0].split(sep);
-  let h = hslArr[0], s = hslArr[1].replace('%',''), l = hslArr[2].replace('%','');
-  h /= 360; s /= 100; l /= 100;
-  let r, g, b;
-  if(s === 0){ r = g = b = l; }
-  else {
-    const hue2rgb = (p, q, t) => {
-      if(t < 0) t += 1;
-      if(t > 1) t -= 1;
-      if(t < 1/6) return p + (q - p) * 6 * t;
-      if(t < 1/2) return q;
-      if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-    };
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1/3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
-  }
-  const toHex = x => ("0" + Math.round(x * 255).toString(16)).slice(-2);
-  return "#" + toHex(r) + toHex(g) + toHex(b);
-}
+const popup=document.getElementById("popup");
+const popupText=document.getElementById("popupText");
+const popupMeta=document.getElementById("popupMeta");
+const closePopup=document.getElementById("closePopup");
+closePopup.addEventListener("click",()=>popup.classList.add("hidden"));
 </script>
 </body>
 </html>
