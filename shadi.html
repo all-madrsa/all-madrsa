@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nikah Portal</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {background:#fdf6e3;font-family:sans-serif;}
-    .card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nikah Portal</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {background:#fdf6e3; font-family:sans-serif;}
+.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+</style>
 </head>
 <body class="text-black">
 
@@ -150,48 +150,56 @@ onSnapshot(q,snapshot=>{
   if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
-// Render Public Profiles (only approved fields)
-function renderProfiles(data){
+// Render Public Profiles in Form Style
+function renderProfiles(profiles){
   postsList.innerHTML="";
-  data.forEach(p=>{
+  profiles.forEach(p=>{
     if(!p.approvals) return;
     const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
     if(approvedFields.length===0) return;
 
-    let html=`<div class="p-4 bg-white rounded shadow">`;
-    if(p.approvals.photoUrl) html+=`<img src="${p.photoUrl}" class="w-full h-40 object-cover rounded mb-2">`;
-    if(p.approvals.name) html+=`<p><b>${p.name}</b></p>`;
-    if(p.approvals.age) html+=`<p>Age: ${p.age}</p>`;
-    if(p.approvals.gender) html+=`<p>Gender: ${p.gender}</p>`;
-    if(p.approvals.education) html+=`<p>Education: ${p.education}</p>`;
-    if(p.approvals.profession) html+=`<p>Profession: ${p.profession}</p>`;
-    if(p.approvals.income) html+=`<p>Income: ${p.income}</p>`;
-    if(p.approvals.marital) html+=`<p>Status: ${p.marital}</p>`;
-    if(p.approvals.religion) html+=`<p>Religion: ${p.religion}</p>`;
-    if(p.approvals.caste) html+=`<p>Caste: ${p.caste}</p>`;
-    if(p.approvals.city) html+=`<p>City: ${p.city}</p>`;
-    html+=`</div>`;
-    postsList.innerHTML+=html;
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow bg-white";
+
+    let html = `<div class="space-y-2">`;
+    if(p.approvals.photoUrl && p.photoUrl) html += `<div><img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2"></div>`;
+    if(p.approvals.name) html += `<p><strong>👤 Name:</strong> ${p.name}</p>`;
+    if(p.approvals.age) html += `<p><strong>🎂 Age:</strong> ${p.age}</p>`;
+    if(p.approvals.gender) html += `<p><strong>🚻 Gender:</strong> ${p.gender}</p>`;
+    if(p.approvals.education) html += `<p><strong>🎓 Education:</strong> ${p.education}</p>`;
+    if(p.approvals.profession) html += `<p><strong>💼 Profession:</strong> ${p.profession}</p>`;
+    if(p.approvals.income) html += `<p><strong>💰 Income:</strong> ${p.income}</p>`;
+    if(p.approvals.marital) html += `<p><strong>📌 Marital Status:</strong> ${p.marital}</p>`;
+    if(p.approvals.religion) html += `<p><strong>🕌 Religion:</strong> ${p.religion}</p>`;
+    if(p.approvals.caste) html += `<p><strong>🪧 Caste:</strong> ${p.caste}</p>`;
+    if(p.approvals.city) html += `<p><strong>🏙️ City:</strong> ${p.city}</p>`;
+    if(p.approvals.email) html += `<p><strong>📧 Email:</strong> ${p.email}</p>`;
+    html += `</div>`;
+
+    card.innerHTML = html;
+    postsList.appendChild(card);
   });
 }
 
-// Render Admin Panel
-function renderAdmin(data){
+// Admin Panel
+function renderAdmin(profiles){
   adminList.innerHTML="";
-  data.forEach(p=>{
+  profiles.forEach(p=>{
     let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
-    html+=`<img src="${p.photoUrl}" class="w-full h-32 object-cover rounded mb-2">`;
-    const fields=["name","age","gender","education","profession","income","marital","religion","caste","city","photoUrl"];
+    html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
+
+    const fields=["photoUrl","name","age","gender","education","profession","income","marital","religion","caste","city","email"];
     fields.forEach(f=>{
       html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals&&p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
     });
+
     html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
     html+=`<button class="bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn" data-id="${p.id}">🗑 Delete</button>`;
     html+=`</div>`;
     adminList.innerHTML+=html;
   });
 
-  // Save Button
+  // Save button
   document.querySelectorAll(".saveBtn").forEach(btn=>{
     btn.onclick=async ()=>{
       const id=btn.dataset.id;
@@ -199,16 +207,15 @@ function renderAdmin(data){
       let approvals={};
       checkboxes.forEach(cb=>{ approvals[cb.dataset.field]=cb.checked; });
       await updateDoc(doc(db,"profiles",id),{approvals});
-      alert("✅ Approvals updated!");
+      alert("✅ Approvals Updated");
     };
   });
 
-  // Delete Button
+  // Delete button
   document.querySelectorAll(".deleteBtn").forEach(btn=>{
     btn.onclick=async ()=>{
-      if(confirm("Delete this profile?")){
-        await deleteDoc(doc(db,"profiles",btn.dataset.id));
-      }
+      const id=btn.dataset.id;
+      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
     };
   });
 }
