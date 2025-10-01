@@ -10,11 +10,10 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-.card {transition: transform 0.3s; cursor:pointer;}
-.card:hover {transform: translateY(-5px) scale(1.02); box-shadow:0 8px 20px rgba(0,0,0,0.3);}
-.popup {position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:50;overflow-y:auto;}
-.popup-content {background:#fff;padding:20px;border-radius:12px;max-width:600px;width:90%;text-align:center;position:relative;}
+.card {transition: transform 0.3s; cursor: pointer;}
+.card:hover {transform: translateY(-5px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.3);}
+.popup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; overflow-y:auto;}
+.popup-content {background:#fff; padding:20px; border-radius:12px; max-width:600px; width:90%; text-align:center; position:relative;}
 </style>
 </head>
 <body class="text-black">
@@ -27,6 +26,7 @@ body {background:#fdf6e3; font-family:sans-serif;}
   </div>
 </header>
 
+<!-- Post Form -->
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
   <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
   <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
@@ -42,13 +42,16 @@ body {background:#fdf6e3; font-family:sans-serif;}
   <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
 </section>
 
+<!-- Profiles List -->
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
+<!-- Admin Panel -->
 <section id="adminPanel" class="hidden p-4">
   <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
   <div id="adminList" class="grid gap-4"></div>
 </section>
 
+<!-- Popup for Likes -->
 <div id="likePopup" class="popup hidden">
   <div class="popup-content">
     <h3 class="text-lg font-bold mb-2">Send Your Details</h3>
@@ -65,129 +68,148 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-const firebaseConfig = { apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng", authDomain:"all-madrsa.firebaseapp.com", projectId:"all-madrsa", storageBucket:"all-madrsa.appspot.com", messagingSenderId:"619313835874", appId:"1:619313835874:web:e387e1297663f11fc2463b" };
+// Firebase Config
+const firebaseConfig = { apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng", authDomain: "all-madrsa.firebaseapp.com", projectId: "all-madrsa", storageBucket: "all-madrsa.appspot.com", messagingSenderId: "619313835874", appId: "1:619313835874:web:e387e1297663b11fc2463f11fc2463b" };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-const loginBtn = document.getElementById("loginBtn");
-const postBtn = document.getElementById("postBtn");
-const postSection = document.getElementById("postSection");
-const submitPost = document.getElementById("submitPost");
-const postsList = document.getElementById("postsList");
-const adminPanel = document.getElementById("adminPanel");
-const adminList = document.getElementById("adminList");
-const likePopup = document.getElementById("likePopup");
-const submitLike = document.getElementById("submitLike");
-const closeLikePopup = document.getElementById("closeLikePopup");
-const likeNameInput = document.getElementById("likeNameInput");
-const likeWhatsAppInput = document.getElementById("likeWhatsAppInput");
-const likeAddressInput = document.getElementById("likeAddressInput");
+// Elements
+const loginBtn=document.getElementById("loginBtn");
+const postBtn=document.getElementById("postBtn");
+const postSection=document.getElementById("postSection");
+const submitPost=document.getElementById("submitPost");
+const postsList=document.getElementById("postsList");
+const adminPanel=document.getElementById("adminPanel");
+const adminList=document.getElementById("adminList");
+const likePopup=document.getElementById("likePopup");
+const submitLike=document.getElementById("submitLike");
+const closeLikePopup=document.getElementById("closeLikePopup");
+const likeNameInput=document.getElementById("likeNameInput");
+const likeWhatsAppInput=document.getElementById("likeWhatsAppInput");
+const likeAddressInput=document.getElementById("likeAddressInput");
 
-let currentUser = null;
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-let currentLikeProfileId = null;
+let currentUser=null;
+const ADMIN_EMAIL="zaradigitalseva@gmail.com";
+let currentLikeProfileId=null;
 
 // Login
-loginBtn.addEventListener("click", async()=>{ const provider = new GoogleAuthProvider(); await signInWithPopup(auth,provider); });
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  if(user){ loginBtn.classList.add("hidden"); postBtn.classList.remove("hidden"); if(user.email === ADMIN_EMAIL) adminPanel.classList.remove("hidden"); }
-  else{ loginBtn.classList.remove("hidden"); postBtn.classList.add("hidden"); postSection.classList.add("hidden"); adminPanel.classList.add("hidden"); }
+loginBtn.addEventListener("click", async()=>{ const provider=new GoogleAuthProvider(); await signInWithPopup(auth,provider); });
+onAuthStateChanged(auth,user=>{
+  currentUser=user;
+  if(user){
+    loginBtn.classList.add("hidden");
+    postBtn.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
+  } else {
+    loginBtn.classList.remove("hidden");
+    postBtn.classList.add("hidden");
+    postSection.classList.add("hidden");
+    adminPanel.classList.add("hidden");
+  }
 });
-postBtn.addEventListener("click", ()=> postSection.classList.toggle("hidden"));
+postBtn.addEventListener("click",()=>postSection.classList.toggle("hidden"));
 
 // Upload Image
-async function uploadToImgbb(file){ const key="d12c2e4a8650157b2b6b9fe85336ea43"; const formData = new FormData(); formData.append("image", file); const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {method:"POST", body:formData}); const data = await res.json(); return data.data.url; }
+async function uploadToImgbb(file){
+  const key="d12c2e4a8650157b2b6b9fe85336ea43";
+  const formData=new FormData();
+  formData.append("image",file);
+  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
+  const data=await res.json();
+  return data.data.url;
+}
 
 // Submit Profile
-submitPost.addEventListener("click", async ()=>{
-  const name = document.getElementById("nameInput").value.trim();
-  const age = document.getElementById("ageInput").value.trim();
-  const birthDate = document.getElementById("birthDateInput").value;
-  const postDate = document.getElementById("postDateInput").value;
-  const gender = document.getElementById("genderInput").value;
-  const city = document.getElementById("cityInput").value.trim();
-  const photo = document.getElementById("photoInput").files[0];
+submitPost.addEventListener("click", async()=>{
+  const name=document.getElementById("nameInput").value.trim();
+  const age=document.getElementById("ageInput").value.trim();
+  const birthDate=document.getElementById("birthDateInput").value;
+  const postDate=document.getElementById("postDateInput").value;
+  const gender=document.getElementById("genderInput").value;
+  const city=document.getElementById("cityInput").value.trim();
+  const photo=document.getElementById("photoInput").files[0];
   if(!name||!age||!gender||!city||!photo) return alert("Fill all required fields");
-  const photoUrl = await uploadToImgbb(photo);
-  await addDoc(collection(db,"profiles"),{name,age,birthDate,postDate,gender,city,photoUrl,uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()});
+  const photoUrl=await uploadToImgbb(photo);
+  await addDoc(collection(db,"profiles"), {name,age,birthDate,postDate,gender,city,photoUrl,uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()});
   alert("✅ Submitted! Wait for admin approval.");
 });
 
 // Fetch Profiles
-const q = query(collection(db,"profiles"),orderBy("created","desc"));
+const q=query(collection(db,"profiles"),orderBy("created","desc"));
 onSnapshot(q,snapshot=>{
   const profiles=[];
-  snapshot.forEach(docSnap=>{ let data=docSnap.data(); data.id = docSnap.id; profiles.push(data); });
-  renderProfiles(profiles); if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
+  snapshot.forEach(docSnap=>{ let data=docSnap.data(); data.id=docSnap.id; profiles.push(data); });
+  renderProfiles(profiles); if(currentUser&&currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
 // Render Profiles
-function randomGradient(){ const colors=[['from-pink-200','via-yellow-200','to-green-200'],['from-purple-200','via-pink-200','to-yellow-100'],['from-blue-200','via-green-200','to-pink-200']]; const choice = colors[Math.floor(Math.random()*colors.length)]; return `bg-gradient-to-r ${choice.join(' ')}`; }
+function randomGradient(){ const colors=[['from-pink-200','via-yellow-200','to-green-200'],['from-purple-200','via-pink-200','to-yellow-100'],['from-blue-200','via-green-200','to-pink-200']]; const choice=colors[Math.floor(Math.random()*colors.length)]; return `bg-gradient-to-r ${choice.join(' ')}`; }
 
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
     if(!p.approvals) return;
-    const approvedFields = Object.keys(p.approvals).filter(f=>p.approvals[f]);
+    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
     if(approvedFields.length===0) return;
-    const card = document.createElement("div"); card.className="p-4 rounded shadow card "+randomGradient();
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow card "+randomGradient();
     let html=`<div class='space-y-1'>`;
     if(p.approvals.photoUrl) html+=`<img src='${p.photoUrl}' class='w-40 h-48 object-cover rounded border mb-2'>`;
     approvedFields.forEach(f=>{ html+=`<p><strong>${f}:</strong> ${p[f]}</p>`; });
     html+=`</div>`;
     html+=`<button class='bg-red-500 text-white px-3 py-1 mt-2 rounded likeBtn'>❤️ Like</button>`;
     card.innerHTML=html; postsList.appendChild(card);
-    const likeBtn = card.querySelector('.likeBtn');
+    const likeBtn=card.querySelector('.likeBtn');
     likeBtn.addEventListener('click',()=>{ currentLikeProfileId=p.id; likePopup.classList.remove('hidden'); });
   });
 }
 
-// Like Popup Actions
-submitLike.addEventListener('click',async ()=>{
-  const name = likeNameInput.value.trim();
-  const whatsapp = likeWhatsAppInput.value.trim();
-  const address = likeAddressInput.value.trim();
+// Like Popup Submit
+submitLike.addEventListener('click', async()=>{
+  const name=likeNameInput.value.trim();
+  const whatsapp=likeWhatsAppInput.value.trim();
+  const address=likeAddressInput.value.trim();
   if(!name||!whatsapp) return alert("Name & WhatsApp required");
+  if(!currentLikeProfileId) return alert("No profile selected.");
   await updateDoc(doc(db,"profiles",currentLikeProfileId), {likes: arrayUnion({name,whatsapp,address,timestamp:serverTimestamp()})});
   likeNameInput.value=''; likeWhatsAppInput.value=''; likeAddressInput.value='';
-  likePopup.classList.add('hidden'); alert('✅ Like Submitted!');
+  likePopup.classList.add('hidden');
+  alert("✅ Like Submitted!");
 });
-closeLikePopup.addEventListener('click', ()=> likePopup.classList.add('hidden'));
+closeLikePopup.addEventListener('click',()=>likePopup.classList.add('hidden'));
 
-// Admin Panel
+// Admin Render
 function renderAdmin(profiles){
   adminList.innerHTML="";
   profiles.forEach(p=>{
-    const card=document.createElement("div"); card.className="p-4 rounded shadow bg-white space-y-1 border";
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow bg-white space-y-1 border";
     card.innerHTML=`<strong>${p.name}, ${p.age}</strong><br>`;
     const fields=['name','age','birthDate','postDate','gender','city','photoUrl'];
     fields.forEach(f=>{
       const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=p.approvals && p.approvals[f]; cb.id=`${p.id}_${f}`;
-      const label=document.createElement("label"); label.textContent=f; label.prepend(cb); card.appendChild(label); card.appendChild(document.createElement("br"));
+      const label=document.createElement("label"); label.textContent=f; label.prepend(cb);
+      card.appendChild(label); card.appendChild(document.createElement("br"));
     });
     const saveBtn=document.createElement("button"); saveBtn.textContent="✅ Save Approvals"; saveBtn.className="bg-green-500 text-white px-3 py-1 rounded mt-1";
-    saveBtn.onclick=async ()=>{ const approvals={}; fields.forEach(f=>approvals[f]=document.getElementById(`${p.id}_${f}`).checked); await updateDoc(doc(db,"profiles",p.id),{approvals}); alert("✅ Approvals Updated"); };
+    saveBtn.onclick=async()=>{ const approvals={}; fields.forEach(f=>approvals[f]=document.getElementById(`${p.id}_${f}`).checked); await updateDoc(doc(db,"profiles",p.id),{approvals}); alert("✅ Approvals Updated"); };
     card.appendChild(saveBtn);
-
-    // Likes List with WhatsApp
     if(p.likes && p.likes.length>0){
       const likeDiv=document.createElement("div"); likeDiv.className="mt-2";
       p.likes.forEach(l=>{
         const lDiv=document.createElement("div");
-        lDiv.innerHTML=`❤️ ${l.name} <button class="bg-green-500 px-2 py-1 rounded text-white">WhatsApp</button>`;
-        const wBtn = lDiv.querySelector("button");
+        lDiv.innerHTML=`❤️ ${l.name} (${l.address}) <button class="bg-green-500 px-2 py-1 rounded text-white">WhatsApp</button>`;
+        const wBtn=lDiv.querySelector("button");
         wBtn.onclick=()=> window.open(`https://wa.me/${l.whatsapp}`);
         likeDiv.appendChild(lDiv);
       });
       card.appendChild(likeDiv);
     }
-
-    const delBtn=document.createElement("button"); delBtn.textContent="🗑 Delete"; delBtn.className="bg-red-600 text-white px-3 py-1 rounded mt-1";
-    delBtn.onclick=async ()=>{ if(confirm(`Delete ${p.name}?`)) await deleteDoc(doc(db,"profiles",p.id)); };
+    const delBtn=document.createElement("button");
+    delBtn.textContent="🗑 Delete"; delBtn.className="bg-red-600 text-white px-3 py-1 rounded mt-1";
+    delBtn.onclick=async()=>{ if(confirm(`Delete ${p.name}?`)) await deleteDoc(doc(db,"profiles",p.id)); };
     card.appendChild(delBtn);
-
     adminList.appendChild(card);
   });
 }
