@@ -11,9 +11,6 @@
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
 .card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-.popup {position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:50;overflow-y:auto;}
-.popup-content {background:#fff;padding:20px;border-radius:12px;max-width:600px;width:90%;text-align:center;position:relative;}
-.popup-content img {max-width:200px;max-height:200px;margin-bottom:10px;border-radius:12px;}
 </style>
 </head>
 <body class="text-black">
@@ -26,7 +23,6 @@ body {background:#fdf6e3; font-family:sans-serif;}
   </div>
 </header>
 
-<!-- Post Form -->
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
   <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
   <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
@@ -48,10 +44,8 @@ body {background:#fdf6e3; font-family:sans-serif;}
   <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
 </section>
 
-<!-- User Profiles -->
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
-<!-- Admin Panel -->
 <section id="adminPanel" class="hidden p-4">
   <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
   <div id="adminList" class="grid gap-4"></div>
@@ -62,7 +56,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -75,7 +68,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-// Elements
 const loginBtn=document.getElementById("loginBtn");
 const postBtn=document.getElementById("postBtn");
 const postSection=document.getElementById("postSection");
@@ -86,9 +78,7 @@ const adminList=document.getElementById("adminList");
 
 let currentUser=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
-const whatsappNumber="9112170192";
 
-// Login
 loginBtn.addEventListener("click",async ()=>{
   const provider=new GoogleAuthProvider();
   await signInWithPopup(auth,provider);
@@ -110,7 +100,6 @@ onAuthStateChanged(auth,user=>{
 
 postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
 
-// Upload Image
 async function uploadToImgbb(file){
   const key="d12c2e4a8650157b2b6b9fe85336ea43";
   const formData=new FormData();
@@ -120,7 +109,6 @@ async function uploadToImgbb(file){
   return data.data.url;
 }
 
-// Submit Post
 submitPost.addEventListener("click",async ()=>{
   const name=document.getElementById("nameInput").value.trim();
   const age=document.getElementById("ageInput").value.trim();
@@ -145,27 +133,23 @@ submitPost.addEventListener("click",async ()=>{
   alert("✅ Submitted! Wait for Admin Approval");
 });
 
-// Fetch Profiles
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
 onSnapshot(q,snapshot=>{
   const profiles=[];
   snapshot.forEach(docSnap=>{
-    let data=docSnap.data();
-    data.id=docSnap.id;
+    let data=docSnap.data(); data.id=docSnap.id;
     profiles.push(data);
   });
   renderProfiles(profiles);
   if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
-// Random gradient
 function randomGradient(){
   const colors=[['from-pink-200','via-yellow-200','to-green-200'],['from-purple-200','via-pink-200','to-yellow-100'],['from-blue-200','via-green-200','to-pink-200']];
   const choice=colors[Math.floor(Math.random()*colors.length)];
   return `bg-gradient-to-r ${choice.join(' ')}`;
 }
 
-// Render Public Profiles
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
@@ -175,28 +159,31 @@ function renderProfiles(profiles){
 
     const card=document.createElement("div");
     card.className="p-4 rounded shadow transition-all "+randomGradient();
-    let html="<div class='space-y-2'>";
+
+    let html = `<div class="space-y-2">`;
+    if(p.approvals.photoUrl && p.photoUrl) html += `<div><img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2"></div>`;
     approvedFields.forEach(f=>{
-      if(f==="photoUrl") html += `<div><img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2"></div>`;
-      else html += `<p><strong>${f}:</strong> ${p[f]}</p>`;
+      html += `<p><strong>${f}:</strong> ${p[f]}</p>`;
     });
-    html+="</div>";
+    html += `</div>`;
+
     html += `<button class="bg-red-500 text-white px-3 py-1 mt-2 rounded likeBtn">❤️ Like</button>`;
     card.innerHTML=html;
     postsList.appendChild(card);
 
     const likeBtn=card.querySelector(".likeBtn");
-    likeBtn.addEventListener("click",()=>{
-      const likeName=prompt("Enter Your Name:");
-      const likeWhats=prompt("Enter WhatsApp Number:");
-      if(!likeName || !likeWhats) return alert("Name & WhatsApp required!");
-      updateDoc(doc(db,"profiles",p.id),{likes:arrayUnion({name:likeName,whatsapp:likeWhats,timestamp:serverTimestamp()})});
+    likeBtn.addEventListener("click",async ()=>{
+      const likerName=prompt("Enter Your Name:");
+      const likerWhats=prompt("Enter WhatsApp Number:");
+      if(!likerName||!likerWhats) return alert("Name & WhatsApp required!");
+      await updateDoc(doc(db,"profiles",p.id),{
+        likes:arrayUnion({name:likerName,whatsapp:likerWhats,timestamp:serverTimestamp()})
+      });
       alert("✅ Like Submitted!");
     });
   });
 }
 
-// Admin Panel Render
 function renderAdmin(profiles){
   adminList.innerHTML="";
   profiles.forEach(p=>{
@@ -204,10 +191,10 @@ function renderAdmin(profiles){
     card.className="p-4 rounded shadow bg-white space-y-1 border";
 
     card.innerHTML=`<strong>${p.name}, ${p.age}</strong><br>`;
+
     const fields=['name','age','birthDate','postDate','gender','education','profession','income','marital','religion','caste','city','photoUrl'];
     fields.forEach(f=>{
-      const cb=document.createElement("input");
-      cb.type="checkbox"; cb.checked=p.approvals && p.approvals[f];
+      const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=p.approvals && p.approvals[f];
       cb.id=`${p.id}_${f}`;
       const label=document.createElement("label"); label.textContent=f;
       label.prepend(cb);
