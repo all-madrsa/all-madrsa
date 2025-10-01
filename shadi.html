@@ -27,7 +27,6 @@ body {background:#fdf6e3; font-family:sans-serif;}
   </div>
 </header>
 
-<!-- Post Form -->
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
   <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
   <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
@@ -43,16 +42,13 @@ body {background:#fdf6e3; font-family:sans-serif;}
   <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
 </section>
 
-<!-- Profiles List -->
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
-<!-- Admin Panel -->
 <section id="adminPanel" class="hidden p-4">
   <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
   <div id="adminList" class="grid gap-4"></div>
 </section>
 
-<!-- Popup for Likes -->
 <div id="likePopup" class="popup hidden">
   <div class="popup-content">
     <h3 class="text-lg font-bold mb-2">Send Your Details</h3>
@@ -67,7 +63,7 @@ body {background:#fdf6e3; font-family:sans-serif;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // Firebase Config
 const firebaseConfig = { 
@@ -133,6 +129,7 @@ async function uploadToImgbb(file){
 
 // Submit Profile
 submitPost.addEventListener("click", async()=>{
+  if(!currentUser) return alert("Login required!");
   const name=document.getElementById("nameInput").value.trim();
   const age=document.getElementById("ageInput").value.trim();
   const birthDate=document.getElementById("birthDateInput").value;
@@ -153,18 +150,23 @@ submitPost.addEventListener("click", async()=>{
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
 onSnapshot(q,snapshot=>{
   const profiles=[];
-  snapshot.forEach(docSnap=>{ let data=docSnap.data(); data.id=docSnap.id; profiles.push(data); });
+  snapshot.forEach(docSnap=>{ 
+    let data=docSnap.data(); 
+    data.id=docSnap.id; 
+    profiles.push(data); 
+  });
   renderProfiles(profiles); 
   if(currentUser&&currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
+// Random Gradient
 function randomGradient(){ 
   const colors=[['from-pink-200','via-yellow-200','to-green-200'],['from-purple-200','via-pink-200','to-yellow-100'],['from-blue-200','via-green-200','to-pink-200']]; 
   const choice=colors[Math.floor(Math.random()*colors.length)]; 
   return `bg-gradient-to-r ${choice.join(' ')}`; 
 }
 
-// Render Public Profiles
+// Render Profiles
 function renderProfiles(profiles){ 
   postsList.innerHTML="";
   profiles.forEach(p=>{
@@ -174,7 +176,6 @@ function renderProfiles(profiles){
 
     const card=document.createElement("div");
     card.className="p-4 rounded shadow card "+randomGradient();
-
     let html=`<div class='space-y-1'>`;
     if(p.approvals.photoUrl) html+=`<img src='${p.photoUrl}' class='w-40 h-48 object-cover rounded border mb-2'>`;
     approvedFields.forEach(f=>{ html+=`<p><strong>${f}:</strong> ${p[f]}</p>`; });
@@ -185,6 +186,7 @@ function renderProfiles(profiles){
 
     const likeBtn=card.querySelector('.likeBtn');
     likeBtn.addEventListener('click',()=>{ 
+      if(!currentUser) return alert("Login required to like!");
       currentLikeProfileId=p.id; 
       likePopup.classList.remove('hidden'); 
     });
@@ -197,15 +199,17 @@ submitLike.addEventListener('click',async()=>{
   const whatsapp=likeWhatsAppInput.value.trim();
   const address=likeAddressInput.value.trim();
   if(!name||!whatsapp) return alert("Name & WhatsApp required");
+  if(!currentLikeProfileId) return alert("Select a profile!");
   await updateDoc(doc(db,"profiles",currentLikeProfileId),{
     likes:arrayUnion({name,whatsapp,address,timestamp:serverTimestamp()})
   });
   likeNameInput.value=''; likeWhatsAppInput.value=''; likeAddressInput.value='';
-  likePopup.classList.add('hidden'); alert('✅ Like Submitted!');
+  likePopup.classList.add('hidden'); 
+  alert('✅ Like Submitted!');
 });
 closeLikePopup.addEventListener('click',()=>{ likePopup.classList.add('hidden'); });
 
-// Admin Panel Render
+// Admin Panel
 function renderAdmin(profiles){
   adminList.innerHTML="";
   profiles.forEach(p=>{
@@ -221,7 +225,7 @@ function renderAdmin(profiles){
     approvedFields.forEach(f=>{ html+=`<p><strong>${f}:</strong> ${p[f]}</p>`; });
     html+=`</div>`;
 
-    if(p.likes.length>0){
+    if(p.likes && p.likes.length>0){
       html+=`<h3 class='font-semibold mt-2'>Likes:</h3>`;
       p.likes.forEach(l=>{
         html+=`<p><strong>Name:</strong> ${l.name}</p>`;
