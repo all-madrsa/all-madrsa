@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal</title>
+<title>Nikah Portal Advanced</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
@@ -16,7 +16,7 @@ body {background:#fdf6e3; font-family:sans-serif;}
 <body class="text-black">
 
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
-  <h1 class="text-2xl font-bold">Nikah Portal</h1>
+  <h1 class="text-2xl font-bold">Nikah Portal Advanced</h1>
   <div class="flex gap-2">
     <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
     <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post Profile</button>
@@ -27,6 +27,8 @@ body {background:#fdf6e3; font-family:sans-serif;}
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
   <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
   <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
+  <input type="date" id="birthDateInput" placeholder="Birth Date" class="w-full p-2 rounded mb-2 border">
+  <input type="date" id="postDateInput" placeholder="Posting Date" class="w-full p-2 rounded mb-2 border">
   <select id="genderInput" class="w-full p-2 rounded mb-2 border">
     <option value="">Gender</option>
     <option value="Male">Male</option>
@@ -55,7 +57,7 @@ body {background:#fdf6e3; font-family:sans-serif;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // Firebase Config
 const firebaseConfig = {
@@ -81,6 +83,7 @@ const adminList=document.getElementById("adminList");
 
 let currentUser=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
+const whatsappNumber="9112170192";
 
 // Login
 loginBtn.addEventListener("click",async ()=>{
@@ -118,6 +121,8 @@ async function uploadToImgbb(file){
 submitPost.addEventListener("click",async ()=>{
   const name=document.getElementById("nameInput").value.trim();
   const age=document.getElementById("ageInput").value.trim();
+  const birthDate=document.getElementById("birthDateInput").value;
+  const postDate=document.getElementById("postDateInput").value;
   const gender=document.getElementById("genderInput").value;
   const education=document.getElementById("educationInput").value.trim();
   const profession=document.getElementById("professionInput").value.trim();
@@ -131,8 +136,8 @@ submitPost.addEventListener("click",async ()=>{
   const photoUrl=await uploadToImgbb(photo);
 
   await addDoc(collection(db,"profiles"),{
-    name,age,gender,education,profession,income,marital,religion,caste,city,photoUrl,
-    uid:currentUser.uid,email:currentUser.email,approvals:{},created:serverTimestamp()
+    name,age,birthDate,postDate,gender,education,profession,income,marital,religion,caste,city,photoUrl,
+    uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
   });
   alert("✅ Submitted! Wait for Admin Approval");
 });
@@ -150,7 +155,14 @@ onSnapshot(q,snapshot=>{
   if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
-// Render Public Profiles in Form Style
+// Random color generator for cards
+function randomGradient(){
+  const colors=[['from-pink-200','via-yellow-200','to-green-200'],['from-purple-200','via-pink-200','to-yellow-100'],['from-blue-200','via-green-200','to-pink-200']];
+  const choice=colors[Math.floor(Math.random()*colors.length)];
+  return `bg-gradient-to-r ${choice.join(' ')}`;
+}
+
+// Render Public Profiles in Form Style + Like Button
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
@@ -159,64 +171,89 @@ function renderProfiles(profiles){
     if(approvedFields.length===0) return;
 
     const card=document.createElement("div");
-    card.className="p-4 rounded shadow bg-white";
+    card.className="p-4 rounded shadow transition-all "+randomGradient();
 
     let html = `<div class="space-y-2">`;
     if(p.approvals.photoUrl && p.photoUrl) html += `<div><img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2"></div>`;
     if(p.approvals.name) html += `<p><strong>👤 Name:</strong> ${p.name}</p>`;
     if(p.approvals.age) html += `<p><strong>🎂 Age:</strong> ${p.age}</p>`;
+    if(p.approvals.birthDate) html += `<p><strong>🎉 Birth Date:</strong> ${p.birthDate}</p>`;
+    if(p.approvals.postDate) html += `<p><strong>📅 Posting Date:</strong> ${p.postDate}</p>`;
     if(p.approvals.gender) html += `<p><strong>🚻 Gender:</strong> ${p.gender}</p>`;
     if(p.approvals.education) html += `<p><strong>🎓 Education:</strong> ${p.education}</p>`;
     if(p.approvals.profession) html += `<p><strong>💼 Profession:</strong> ${p.profession}</p>`;
     if(p.approvals.income) html += `<p><strong>💰 Income:</strong> ${p.income}</p>`;
-    if(p.approvals.marital) html += `<p><strong>📌 Marital Status:</strong> ${p.marital}</p>`;
+    if(p.approvals.marital) html += `<p><strong>💍 Marital:</strong> ${p.marital}</p>`;
     if(p.approvals.religion) html += `<p><strong>🕌 Religion:</strong> ${p.religion}</p>`;
-    if(p.approvals.caste) html += `<p><strong>🪧 Caste:</strong> ${p.caste}</p>`;
+    if(p.approvals.caste) html += `<p><strong>🏷️ Caste:</strong> ${p.caste}</p>`;
     if(p.approvals.city) html += `<p><strong>🏙️ City:</strong> ${p.city}</p>`;
-    if(p.approvals.email) html += `<p><strong>📧 Email:</strong> ${p.email}</p>`;
     html += `</div>`;
 
-    card.innerHTML = html;
+    // Like Button
+    html += `<button class="bg-red-500 text-white px-3 py-1 mt-2 rounded likeBtn">❤️ Like</button>`;
+    card.innerHTML=html;
     postsList.appendChild(card);
+
+    const likeBtn=card.querySelector(".likeBtn");
+    likeBtn.addEventListener("click",()=>{
+      const likeName=prompt("Enter Your Name:");
+      const likePhotoUrl=prompt("Enter Photo URL:");
+      if(!likeName) return alert("Name required!");
+      updateDoc(doc(db,"profiles",p.id),{likes:arrayUnion({name:likeName,photoUrl:likePhotoUrl,email:currentUser?currentUser.email:"",timestamp:serverTimestamp()})});
+      alert("✅ Like Submitted!");
+    });
   });
 }
 
-// Admin Panel
+// Admin Panel Render
 function renderAdmin(profiles){
   adminList.innerHTML="";
   profiles.forEach(p=>{
-    let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
-    html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow bg-white space-y-1 border";
 
-    const fields=["photoUrl","name","age","gender","education","profession","income","marital","religion","caste","city","email"];
+    card.innerHTML=`<strong>${p.name}, ${p.age}</strong><br>`;
+    // Approvals
+    const fields=['name','age','birthDate','postDate','gender','education','profession','income','marital','religion','caste','city','photoUrl'];
     fields.forEach(f=>{
-      html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals&&p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
+      const cb=document.createElement("input");
+      cb.type="checkbox"; cb.checked=p.approvals && p.approvals[f];
+      cb.id=`${p.id}_${f}`;
+      const label=document.createElement("label"); label.textContent=f;
+      label.prepend(cb);
+      card.appendChild(label); card.appendChild(document.createElement("br"));
     });
-
-    html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
-    html+=`<button class="bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn" data-id="${p.id}">🗑 Delete</button>`;
-    html+=`</div>`;
-    adminList.innerHTML+=html;
-  });
-
-  // Save button
-  document.querySelectorAll(".saveBtn").forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      const checkboxes=document.querySelectorAll(`.cb-${id}`);
-      let approvals={};
-      checkboxes.forEach(cb=>{ approvals[cb.dataset.field]=cb.checked; });
-      await updateDoc(doc(db,"profiles",id),{approvals});
+    // Save Approval
+    const saveBtn=document.createElement("button");
+    saveBtn.textContent="✅ Save Approvals"; saveBtn.className="bg-green-500 text-white px-3 py-1 rounded mt-1";
+    saveBtn.onclick=async ()=>{
+      const approvals={};
+      fields.forEach(f=>approvals[f]=document.getElementById(`${p.id}_${f}`).checked);
+      await updateDoc(doc(db,"profiles",p.id),{approvals});
       alert("✅ Approvals Updated");
     };
-  });
+    card.appendChild(saveBtn);
 
-  // Delete button
-  document.querySelectorAll(".deleteBtn").forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
-    };
+    // Likes List + WhatsApp
+    if(p.likes && p.likes.length>0){
+      const likeDiv=document.createElement("div"); likeDiv.className="mt-2";
+      p.likes.forEach(l=>{
+        const lDiv=document.createElement("div");
+        lDiv.innerHTML=`❤️ ${l.name} <button class="bg-green-500 px-2 py-1 rounded text-white">WhatsApp</button>`;
+        const wBtn=lDiv.querySelector("button");
+        wBtn.onclick=()=> window.open(`https://wa.me/${l.email?l.email:""}`); // or l.phone if stored
+        likeDiv.appendChild(lDiv);
+      });
+      card.appendChild(likeDiv);
+    }
+
+    // Delete
+    const delBtn=document.createElement("button");
+    delBtn.textContent="🗑 Delete"; delBtn.className="bg-red-600 text-white px-3 py-1 rounded mt-1";
+    delBtn.onclick=async ()=>{ if(confirm(`Delete ${p.name}?`)) await deleteDoc(doc(db,"profiles",p.id)); };
+    card.appendChild(delBtn);
+
+    adminList.appendChild(card);
   });
 }
 </script>
