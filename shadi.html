@@ -3,30 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal Full</title>
+<title>Nikah Portal Advanced</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body{background:#fdf6e3;font-family:sans-serif;}
-.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
-.popup{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:50;overflow-y:auto;}
-.popup-content{background:#fff;padding:20px;border-radius:12px;max-width:500px;width:90%;text-align:center;position:relative;perspective:1000px;}
-.popup-content img{max-width:150px;max-height:150px;margin-bottom:10px;border-radius:12px;}
-.whatsappBtn{background:#25D366;color:white;padding:8px 12px;border-radius:8px;transform:rotateX(20deg);box-shadow:0 5px 15px rgba(0,0,0,0.3);margin-left:5px;}
+body {background:#fdf6e3; font-family:sans-serif;}
+.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 </style>
 </head>
 <body class="text-black">
 
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
-  <h1 class="text-2xl font-bold">Nikah Portal Full</h1>
+  <h1 class="text-2xl font-bold">Nikah Portal Advanced</h1>
   <div class="flex gap-2">
     <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
     <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post Profile</button>
   </div>
 </header>
 
+<!-- Post Form -->
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
   <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
   <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
@@ -37,30 +34,26 @@ body{background:#fdf6e3;font-family:sans-serif;}
     <option value="Male">Male</option>
     <option value="Female">Female</option>
   </select>
+  <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded mb-2 border">
-  <input type="number" id="incomeInput" placeholder="Income" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="incomeInput" placeholder="Income" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="maritalInput" placeholder="Marital Status" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="religionInput" placeholder="Religion" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="addressInput" placeholder="Full Address" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="addressInput" placeholder="Address" class="w-full p-2 rounded mb-2 border">
   <input type="file" id="photoInput" class="w-full p-2 mb-2">
   <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
 </section>
 
+<!-- User Profiles -->
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
-<div id="popup" class="popup hidden">
-  <div class="popup-content">
-    <img id="popupPhoto" src="">
-    <p id="popupName" class="font-bold text-lg mb-1"></p>
-    <p id="popupAddress" class="mb-2"></p>
-    <button id="popupWhatsApp" class="whatsappBtn">📱 WhatsApp</button>
-    <div>
-      <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white mt-2">❌ Close</button>
-    </div>
-  </div>
-</div>
+<!-- Admin Panel -->
+<section id="adminPanel" class="hidden p-4">
+  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
+  <div id="adminList" class="grid gap-4"></div>
+</section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -86,12 +79,8 @@ const postBtn=document.getElementById("postBtn");
 const postSection=document.getElementById("postSection");
 const submitPost=document.getElementById("submitPost");
 const postsList=document.getElementById("postsList");
-const popup=document.getElementById("popup");
-const popupPhoto=document.getElementById("popupPhoto");
-const popupName=document.getElementById("popupName");
-const popupAddress=document.getElementById("popupAddress");
-const popupWhatsApp=document.getElementById("popupWhatsApp");
-document.getElementById("closePopup").addEventListener("click",()=>popup.classList.add("hidden"));
+const adminPanel=document.getElementById("adminPanel");
+const adminList=document.getElementById("adminList");
 
 let currentUser=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
@@ -104,8 +93,16 @@ loginBtn.addEventListener("click",async ()=>{
 
 onAuthStateChanged(auth,user=>{
   currentUser=user;
-  if(user){ loginBtn.classList.add("hidden"); postBtn.classList.remove("hidden"); } 
-  else { loginBtn.classList.remove("hidden"); postBtn.classList.add("hidden"); postSection.classList.add("hidden"); }
+  if(user){
+    loginBtn.classList.add("hidden");
+    postBtn.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
+  } else {
+    loginBtn.classList.remove("hidden");
+    postBtn.classList.add("hidden");
+    postSection.classList.add("hidden");
+    adminPanel.classList.add("hidden");
+  }
 });
 
 postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
@@ -127,6 +124,7 @@ submitPost.addEventListener("click",async ()=>{
   const birthDate=document.getElementById("birthDateInput").value;
   const postDate=document.getElementById("postDateInput").value;
   const gender=document.getElementById("genderInput").value;
+  const education=document.getElementById("educationInput").value.trim();
   const profession=document.getElementById("professionInput").value.trim();
   const income=document.getElementById("incomeInput").value.trim();
   const marital=document.getElementById("maritalInput").value.trim();
@@ -135,20 +133,17 @@ submitPost.addEventListener("click",async ()=>{
   const city=document.getElementById("cityInput").value.trim();
   const address=document.getElementById("addressInput").value.trim();
   const photo=document.getElementById("photoInput").files[0];
-
-  if(!name||!age||!birthDate||!postDate||!gender||!profession||!income||!marital||!religion||!caste||!city||!address||!photo) return alert("Fill all fields!");
-
+  if(!name||!age||!gender||!city||!photo||!address) return alert("❌ Fill required fields!");
   const photoUrl=await uploadToImgbb(photo);
+
   await addDoc(collection(db,"profiles"),{
-    name,age,birthDate,postDate,gender,profession,income,marital,religion,caste,city,address,photoUrl,
-    uid:currentUser.uid,email:currentUser.email,
-    approvals:{name:true,age:true,birthDate:true,postDate:true,gender:true,profession:true,income:true,marital:true,religion:true,caste:true,city:true,address:true,photoUrl:true},
-    likes:[],created:serverTimestamp()
+    name,age,birthDate,postDate,gender,education,profession,income,marital,religion,caste,city,address,photoUrl,
+    uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
   });
   alert("✅ Submitted! Wait for Admin Approval");
 });
 
-// Fetch Profiles & Render
+// Fetch Profiles
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
 onSnapshot(q,snapshot=>{
   const profiles=[];
@@ -158,74 +153,100 @@ onSnapshot(q,snapshot=>{
     profiles.push(data);
   });
   renderProfiles(profiles);
+  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
+// Random color generator
 function randomGradient(){
   const colors=[['from-pink-200','via-yellow-200','to-green-200'],['from-purple-200','via-pink-200','to-yellow-100'],['from-blue-200','via-green-200','to-pink-200']];
   const choice=colors[Math.floor(Math.random()*colors.length)];
   return `bg-gradient-to-r ${choice.join(' ')}`;
 }
 
+// Render Public Profiles + Like
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
-    if(!p.approvals || !p.approvals.name) return;
+    if(!p.approvals) return;
+    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
+    if(approvedFields.length===0) return;
 
     const card=document.createElement("div");
     card.className="p-4 rounded shadow transition-all "+randomGradient();
 
-    let html=`<img src="${p.photoUrl}" class="w-full h-48 object-cover rounded mb-2">
-              <p class="font-bold text-lg card-text">${p.name}, ${p.age}</p>
-              <p class="text-sm">City: ${p.city}</p>
-              <p class="text-sm">Gender: ${p.gender}</p>`;
-
+    let html = `<div class="space-y-2">`;
+    if(p.approvals.photoUrl && p.photoUrl) html += `<div><img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2"></div>`;
+    if(p.approvals.name) html += `<p><strong>👤 Name:</strong> ${p.name}</p>`;
+    if(p.approvals.age) html += `<p><strong>🎂 Age:</strong> ${p.age}</p>`;
+    if(p.approvals.city) html += `<p><strong>🏙️ City:</strong> ${p.city}</p>`;
+    html += `</div>`;
+    html += `<button class="bg-red-500 text-white px-3 py-1 mt-2 rounded likeBtn">❤️ Like</button>`;
     card.innerHTML=html;
-
-    // Like Button for Users
-    if(currentUser && currentUser.email!==ADMIN_EMAIL){
-      const likeBtn=document.createElement("button");
-      likeBtn.textContent="❤️ Like";
-      likeBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2";
-      likeBtn.onclick=async e=>{
-        e.stopPropagation();
-        const likerName=prompt("Enter your name:");
-        const likerPhoto=prompt("Enter your photo URL:");
-        if(!likerName||!likerPhoto) return alert("Fill name & photo");
-        await updateDoc(doc(db,"profiles",p.id),{likes:arrayUnion({name:likerName,photo:likerPhoto,email:currentUser.email})});
-        popupPhoto.src=p.photoUrl;
-        popupName.textContent=p.name;
-        popupAddress.textContent=p.address;
-        popupWhatsApp.onclick=()=> window.open(`https://wa.me/${currentUser.email}?text=Hello, I liked ${p.name}`);
-        popup.classList.remove("hidden");
-      };
-      card.appendChild(likeBtn);
-    }
-
-    // Admin View Likes
-    if(currentUser && currentUser.email===ADMIN_EMAIL){
-      const likesDiv=document.createElement("div");
-      likesDiv.className="mt-2 p-2 border rounded bg-white shadow-inner";
-      likesDiv.innerHTML="<strong>Likes:</strong>";
-      if(p.likes && p.likes.length>0){
-        p.likes.forEach(like=>{
-          const likeItem=document.createElement("div");
-          likeItem.className="flex items-center justify-between my-1 p-1 bg-gray-100 rounded";
-          likeItem.innerHTML=`<div class="flex items-center gap-2">
-                                <img src="${like.photo}" class="w-8 h-8 rounded-full object-cover">
-                                <span>${like.name}</span>
-                              </div>`;
-          const waBtn=document.createElement("button");
-          waBtn.textContent="📱 WhatsApp";
-          waBtn.className="whatsappBtn";
-          waBtn.onclick=()=> window.open(`https://wa.me/${like.email}?text=Hello ${like.name}, Admin here from Nikah Portal`);
-          likeItem.appendChild(waBtn);
-          likesDiv.appendChild(likeItem);
-        });
-      } else likesDiv.innerHTML+="<p>No likes yet</p>";
-      card.appendChild(likesDiv);
-    }
-
     postsList.appendChild(card);
+
+    const likeBtn=card.querySelector(".likeBtn");
+    likeBtn.addEventListener("click",async ()=>{
+      const likeName=prompt("Enter Your Name:");
+      const likeWhatsapp=prompt("Enter WhatsApp Number:");
+      const likeAddress=prompt("Enter Your Address:");
+      if(!likeName||!likeWhatsapp||!likeAddress) return alert("Fill all fields!");
+      await updateDoc(doc(db,"profiles",p.id),{
+        likes:arrayUnion({name:likeName,whatsapp:likeWhatsapp,address:likeAddress,timestamp:serverTimestamp()})
+      });
+      alert("✅ Like Submitted!");
+    });
+  });
+}
+
+// Admin Panel Render
+function renderAdmin(profiles){
+  adminList.innerHTML="";
+  profiles.forEach(p=>{
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow bg-white space-y-1 border";
+
+    card.innerHTML=`<strong>${p.name}, ${p.age}</strong><br>`;
+    // Approvals
+    const fields=['name','age','birthDate','postDate','gender','education','profession','income','marital','religion','caste','city','photoUrl'];
+    fields.forEach(f=>{
+      const cb=document.createElement("input");
+      cb.type="checkbox"; cb.checked=p.approvals && p.approvals[f];
+      cb.id=`${p.id}_${f}`;
+      const label=document.createElement("label"); label.textContent=f;
+      label.prepend(cb);
+      card.appendChild(label); card.appendChild(document.createElement("br"));
+    });
+    // Save Approval
+    const saveBtn=document.createElement("button");
+    saveBtn.textContent="✅ Save Approvals"; saveBtn.className="bg-green-500 text-white px-3 py-1 rounded mt-1";
+    saveBtn.onclick=async ()=>{
+      const approvals={};
+      fields.forEach(f=>approvals[f]=document.getElementById(`${p.id}_${f}`).checked);
+      await updateDoc(doc(db,"profiles",p.id),{approvals});
+      alert("✅ Approvals Updated");
+    };
+    card.appendChild(saveBtn);
+
+    // Likes List with WhatsApp
+    if(p.likes && p.likes.length>0){
+      const likeDiv=document.createElement("div"); likeDiv.className="mt-2";
+      p.likes.forEach(l=>{
+        const lDiv=document.createElement("div");
+        lDiv.innerHTML=`❤️ ${l.name} - ${l.address} <button class="bg-green-500 px-2 py-1 rounded text-white">WhatsApp</button>`;
+        const wBtn=lDiv.querySelector("button");
+        wBtn.onclick=()=> window.open(`https://wa.me/${l.whatsapp}`);
+        likeDiv.appendChild(lDiv);
+      });
+      card.appendChild(likeDiv);
+    }
+
+    // Delete
+    const delBtn=document.createElement("button");
+    delBtn.textContent="🗑 Delete"; delBtn.className="bg-red-600 text-white px-3 py-1 rounded mt-1";
+    delBtn.onclick=async ()=>{ if(confirm(`Delete ${p.name}?`)) await deleteDoc(doc(db,"profiles",p.id)); };
+    card.appendChild(delBtn);
+
+    adminList.appendChild(card);
   });
 }
 </script>
