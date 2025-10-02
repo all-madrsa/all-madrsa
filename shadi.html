@@ -1,101 +1,164 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Nikah Portal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nikah Portal</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {background:#fdf6e3; font-family:sans-serif;}
+.card {transition: transform 0.3s; cursor: pointer;}
+.card:hover {transform: translateY(-5px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.3);}
+.popup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50;}
+.popup-content {background:#fff; padding:20px; border-radius:12px; max-width:400px; width:90%; text-align:center;}
+</style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="text-black">
 
-<div class="max-w-6xl mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4 text-center">💍 Nikah Portal</h1>
+<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
+  <h1 class="text-2xl font-bold">Nikah Portal</h1>
+  <div class="flex gap-2">
+    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
+    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post Profile</button>
+  </div>
+</header>
 
-  <!-- User Form -->
-  <form id="profileForm" class="bg-white p-4 rounded shadow mb-6 space-y-2">
-    <h2 class="font-semibold">Submit Profile</h2>
-    <input name="name" placeholder="Full Name" class="border p-2 w-full rounded" required/>
-    <input name="age" type="number" placeholder="Age" class="border p-2 w-full rounded" required/>
-    <input name="birthdate" type="date" class="border p-2 w-full rounded"/>
-    <input name="postingDate" type="date" class="border p-2 w-full rounded"/>
-    <input name="address" placeholder="Address" class="border p-2 w-full rounded"/>
-    <input name="whatsapp" placeholder="WhatsApp Number" class="border p-2 w-full rounded"/>
-    <input type="file" id="photoInput" accept="image/*" class="border p-2 w-full rounded"/>
-    <button class="bg-green-500 text-white px-4 py-2 rounded">Submit</button>
-  </form>
+<!-- Post Form -->
+<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
+  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
+  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
+  <select id="genderInput" class="w-full p-2 rounded mb-2 border">
+    <option value="">Gender</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+  </select>
+  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
+  <input type="file" id="photoInput" class="w-full p-2 mb-2">
+  <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
+</section>
 
-  <!-- Public Posts -->
-  <div id="postsList" class="grid md:grid-cols-2 gap-4"></div>
+<!-- User Profiles -->
+<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
-  <!-- Admin Panel -->
-  <div id="adminPanel" class="mt-10">
-    <h2 class="text-xl font-bold mb-2">🛠 Admin Panel</h2>
-    <div id="adminList" class="space-y-4"></div>
+<!-- Admin Panel -->
+<section id="adminPanel" class="hidden p-4">
+  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
+  <div id="adminList" class="grid gap-4"></div>
+</section>
+
+<!-- Like Popup -->
+<div id="likePopup" class="popup hidden">
+  <div class="popup-content">
+    <h3 class="text-lg font-bold mb-2">Enter Your Details</h3>
+    <input type="text" id="likeName" placeholder="Your Name" class="w-full border p-2 mb-2 rounded">
+    <input type="text" id="likeWhatsApp" placeholder="WhatsApp Number" class="w-full border p-2 mb-2 rounded">
+    <input type="text" id="likeAddress" placeholder="Address" class="w-full border p-2 mb-2 rounded">
+    <button id="submitLike" class="bg-green-500 text-white px-3 py-2 rounded w-full">Submit Like</button>
+    <button id="closeLike" class="bg-red-500 text-white px-3 py-2 rounded w-full mt-2">Close</button>
   </div>
 </div>
 
-<!-- Firebase -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, onSnapshot, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+// Firebase Config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const auth = getAuth();
+const db = getFirestore();
 
-// Random gradient
-function randomGradient(){
-  const colors=[
-    "from-pink-200 via-purple-200 to-indigo-200",
-    "from-green-200 via-teal-200 to-blue-200",
-    "from-yellow-200 via-red-200 to-pink-200",
-    "from-indigo-200 via-purple-200 to-pink-200"
-  ];
-  return "bg-gradient-to-r "+colors[Math.floor(Math.random()*colors.length)];
-}
+const loginBtn=document.getElementById("loginBtn");
+const postBtn=document.getElementById("postBtn");
+const postSection=document.getElementById("postSection");
+const submitPost=document.getElementById("submitPost");
+const postsList=document.getElementById("postsList");
+const adminPanel=document.getElementById("adminPanel");
+const adminList=document.getElementById("adminList");
 
-// Image Upload to imgbb
-async function uploadImage(file){
-  const form=new FormData();
-  form.append("image",file);
-  const res=await fetch("https://api.imgbb.com/1/upload?key=YOUR_IMGBB_KEY",{method:"POST",body:form});
+const likePopup=document.getElementById("likePopup");
+const submitLike=document.getElementById("submitLike");
+const closeLike=document.getElementById("closeLike");
+const likeName=document.getElementById("likeName");
+const likeWhatsApp=document.getElementById("likeWhatsApp");
+const likeAddress=document.getElementById("likeAddress");
+
+let currentUser=null;
+const ADMIN_EMAIL="zaradigitalseva@gmail.com";
+let currentLikeProfileId=null;
+
+// Login
+loginBtn.addEventListener("click",async ()=>{
+  const provider=new GoogleAuthProvider();
+  await signInWithPopup(auth,provider);
+});
+onAuthStateChanged(auth,user=>{
+  currentUser=user;
+  if(user){
+    loginBtn.classList.add("hidden");
+    postBtn.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
+  } else {
+    loginBtn.classList.remove("hidden");
+    postBtn.classList.add("hidden");
+    postSection.classList.add("hidden");
+    adminPanel.classList.add("hidden");
+  }
+});
+postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
+
+// Upload Image
+async function uploadToImgbb(file){
+  const key="d12c2e4a8650157b2b6b9fe85336ea43";
+  const formData=new FormData();
+  formData.append("image",file);
+  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
   const data=await res.json();
-  return data.data.display_url;
+  return data.data.url;
 }
 
-// Profile Form Submit
-document.getElementById("profileForm").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const fd=new FormData(e.target);
-  const file=document.getElementById("photoInput").files[0];
-  let photoUrl="";
-  if(file) photoUrl=await uploadImage(file);
-
+// Submit Profile
+submitPost.addEventListener("click",async ()=>{
+  const name=document.getElementById("nameInput").value.trim();
+  const age=document.getElementById("ageInput").value.trim();
+  const gender=document.getElementById("genderInput").value;
+  const city=document.getElementById("cityInput").value.trim();
+  const photo=document.getElementById("photoInput").files[0];
+  if(!name||!age||!gender||!city||!photo) return alert("❌ Fill required fields");
+  const photoUrl=await uploadToImgbb(photo);
   await addDoc(collection(db,"profiles"),{
-    name:fd.get("name"),
-    age:fd.get("age"),
-    birthdate:fd.get("birthdate"),
-    postingDate:fd.get("postingDate"),
-    address:fd.get("address"),
-    whatsapp:fd.get("whatsapp"),
-    photoUrl,
-    approvals:{}, // Admin will approve
-    likes:[]
+    name,age,gender,city,photoUrl,
+    uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
   });
-  e.target.reset();
-  alert("✅ Profile submitted for approval!");
+  alert("✅ Submitted! Wait for Admin Approval");
+});
+
+// Fetch Profiles
+const q=query(collection(db,"profiles"),orderBy("created","desc"));
+onSnapshot(q,snapshot=>{
+  const profiles=[];
+  snapshot.forEach(docSnap=>{
+    let data=docSnap.data();
+    data.id=docSnap.id;
+    profiles.push(data);
+  });
+  renderProfiles(profiles);
+  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
 // Render Public Profiles
 function renderProfiles(profiles){
-  const postsList=document.getElementById("postsList");
   postsList.innerHTML="";
   profiles.forEach(p=>{
     if(!p.approvals) return;
@@ -103,80 +166,68 @@ function renderProfiles(profiles){
     if(approvedFields.length===0) return;
 
     const card=document.createElement("div");
-    card.className="p-4 rounded shadow "+randomGradient();
+    card.className="p-4 rounded shadow card bg-white";
 
     let html=`<div>`;
-    if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2">`;
+    if(p.approvals.photoUrl) html+=`<img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2">`;
     if(p.approvals.name) html+=`<p><strong>👤 Name:</strong> ${p.name}</p>`;
     if(p.approvals.age) html+=`<p><strong>🎂 Age:</strong> ${p.age}</p>`;
-    if(p.approvals.birthdate) html+=`<p><strong>📅 Birth Date:</strong> ${p.birthdate}</p>`;
-    if(p.approvals.postingDate) html+=`<p><strong>🗓 Posting Date:</strong> ${p.postingDate}</p>`;
-    if(p.approvals.address) html+=`<p><strong>🏠 Address:</strong> ${p.address}</p>`;
-    if(p.approvals.whatsapp) html+=`<p><strong>📱 WhatsApp:</strong> ${p.whatsapp}</p>`;
+    if(p.approvals.gender) html+=`<p><strong>🚻 Gender:</strong> ${p.gender}</p>`;
+    if(p.approvals.city) html+=`<p><strong>🏙 City:</strong> ${p.city}</p>`;
     html+=`</div>`;
-    html+=`<button class="bg-red-500 text-white px-3 py-1 mt-2 rounded likeBtn">❤️ Like & Contact</button>`;
+    html+=`<button class="likeBtn bg-red-500 text-white px-3 py-1 mt-2 rounded">❤️ Like</button>`;
     card.innerHTML=html;
     postsList.appendChild(card);
 
-    // Like Button Click
     card.querySelector(".likeBtn").addEventListener("click",()=>{
-      const likeName=prompt("Enter Your Name:");
-      if(!likeName) return;
-      updateDoc(doc(db,"profiles",p.id),{
-        likes:arrayUnion({name:likeName,timestamp:serverTimestamp()})
-      }).then(()=>{
-        const waUrl=`https://wa.me/9112170192?text=Hello,%20I%20liked%20your%20profile%20on%20Nikah%20Portal!`;
-        window.open(waUrl,"_blank");
-        alert("✅ Like submitted! WhatsApp opened.");
-      });
+      currentLikeProfileId=p.id;
+      likePopup.classList.remove("hidden");
     });
   });
 }
 
-// Render Admin Panel
+// Like Submit
+submitLike.addEventListener("click",async ()=>{
+  const name=likeName.value.trim();
+  const whatsapp=likeWhatsApp.value.trim();
+  const address=likeAddress.value.trim();
+  if(!name||!whatsapp) return alert("❌ Name & WhatsApp required");
+  await updateDoc(doc(db,"profiles",currentLikeProfileId),{
+    likes:arrayUnion({name,whatsapp,address,timestamp:serverTimestamp()})
+  });
+  likeName.value=""; likeWhatsApp.value=""; likeAddress.value="";
+  likePopup.classList.add("hidden");
+  alert("✅ Like Submitted!");
+});
+closeLike.addEventListener("click",()=> likePopup.classList.add("hidden"));
+
+// Admin Panel
 function renderAdmin(profiles){
-  const adminList=document.getElementById("adminList");
   adminList.innerHTML="";
   profiles.forEach(p=>{
-    const card=document.createElement("div");
-    card.className="bg-white p-4 rounded shadow";
-    let html=`<h3 class="font-semibold">Profile: ${p.name||""}</h3>`;
-    html+=`<img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2">`;
+    let html=`<div class="p-4 bg-gray-100 rounded shadow card">`;
+    html+=`<img src="${p.photoUrl}" class="w-32 h-32 object-cover rounded mb-2">`;
+    html+=`<p><strong>${p.name||""}</strong>, ${p.age||""}, ${p.gender||""}, ${p.city||""}</p>`;
 
-    ["name","age","birthdate","postingDate","address","whatsapp","photoUrl"].forEach(f=>{
-      const checked=p.approvals&&p.approvals[f];
-      html+=`<label class="block"><input type="checkbox" class="approveField" data-id="${p.id}" data-field="${f}" ${checked?"checked":""}/> ${f}: ${p[f]||""}</label>`;
-    });
-
+    // Show Likes
     if(p.likes && p.likes.length>0){
-      html+=`<div class="mt-2"><strong>Likes:</strong>`;
+      html+=`<div class="mt-3 p-2 bg-white rounded shadow">`;
+      html+=`<h4 class="font-semibold mb-1">❤️ Likes</h4>`;
       p.likes.forEach(l=>{
-        html+=`<p>👍 ${l.name||""} <a href="https://wa.me/9112170192" target="_blank" class="text-green-600 font-bold">WhatsApp</a></p>`;
+        html+=`
+          <div class="p-2 border rounded mb-2 card bg-gradient-to-r from-pink-200 via-yellow-200 to-green-200">
+            <p><strong>👤 Name:</strong> ${l.name}</p>
+            <p><strong>📱 WhatsApp:</strong> <a href="https://wa.me/${l.whatsapp}" target="_blank" class="text-green-600 font-bold">Chat</a></p>
+            <p><strong>🏠 Address:</strong> ${l.address||""}</p>
+          </div>
+        `;
       });
       html+=`</div>`;
     }
-
-    card.innerHTML=html;
-    adminList.appendChild(card);
-
-    card.querySelectorAll(".approveField").forEach(cb=>{
-      cb.addEventListener("change",async()=>{
-        const fid=cb.dataset.id;
-        const f=cb.dataset.field;
-        await updateDoc(doc(db,"profiles",fid),{
-          [`approvals.${f}`]:cb.checked
-        });
-      });
-    });
+    html+=`</div>`;
+    adminList.innerHTML+=html;
   });
 }
-
-// Live Snapshot
-onSnapshot(collection(db,"profiles"),snap=>{
-  const profiles=snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderProfiles(profiles);
-  renderAdmin(profiles);
-});
 </script>
 </body>
 </html>
