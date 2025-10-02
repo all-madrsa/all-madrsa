@@ -44,15 +44,12 @@
     .goog-te-gadget { font-size:0 !important; }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-
-
 
 <!-- Header with Logo and 3D Buttons -->
 <header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
   <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
 
-      <!-- Top: 3D Buttons -->
+    <!-- Top: 3D Buttons -->
    <div class="flex justify-center gap-4">
   <a href="nikah.html">
     <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
@@ -64,7 +61,6 @@
     <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
   </a>
 </div>
-
 
 
     <!-- Middle: Logo and Side Images -->
@@ -93,41 +89,37 @@
   </div>
 </header>
 
+<style>
 /* 3D Buttons Base */
 .btn-3d-special {
   color: #fff;
   font-weight: 700;
-  border-radius: 8px; /* थोड़ी छोटी radius */
-  box-shadow: 0 3px 0 rgba(0,0,0,.25), 0 4px 6px rgba(0,0,0,.2); /* shadow छोटा किया */
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
   transition: transform .12s ease, box-shadow .12s ease;
 }
 .btn-3d-special:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 rgba(0,0,0,.25);
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
 }
 
 /* Small variant for top header buttons */
 .btn-small {
-  font-size: 0.75rem;       /* font-size छोटा किया */
-  padding: 0.25rem 0.5rem;  /* padding कम किया */
-  line-height: 1rem;        /* compact height */
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
 }
-
 
 /* Header PNG images */
 .header-png {
   height: 70px;           /* image height */
   width: 70px;            /* image width */
-  object-fit: cover;line-height
-  
+  object-fit: cover;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 </style>
-
-
 
 
 
