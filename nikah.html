@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,56 +12,6 @@
 body {background:#fdf6e3; font-family:sans-serif;}
 button {transition:transform .2s;}
 button:hover {transform:scale(1.05);}
-</style>
-</head>
-<body class="text-black">
-
-
-
-
-  
-<!-- Notice Bar -->
-<div id="noticeBar" class="w-full">
-  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">
-    📢 Welcome to Talimi Ittehad!
-  </marquee>
-</div>
-
-<!-- Admin Notice Editor (admin only) -->
-<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
-  <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
-  <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
-</div>
-
-
- 
-
-  
-<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
-  <h1 class="text-2xl font-bold">Nikah Portal</h1>
-  <div class="flex gap-2">
-
-   <!-- Left: Home Button -->
-  <div>
- <a href="index.html" class="btn-3d-home px-1 py-0.5 text-xs rounded font-bold flex items-center justify-center">
-  🏠 Home
-</a>
-
-
-  </div>
-
-    
-    <button id="loginBtn" class="bg-green-500 px-2 py-0.5 text-xs rounded">Login</button>
-<button id="postBtn" class="bg-yellow-500 px-2 py-0.5 text-xs rounded hidden">➕ Post</button>
-
-  </div>
-
-</header>
-
-
-
-<style>
-/* 3D Button Style */
 .btn-3d-home {
   background: linear-gradient(90deg,#ff4d4d,#4d94ff);
   color: white;
@@ -74,30 +24,83 @@ button:hover {transform:scale(1.05);}
   box-shadow: 0 3px 0 rgba(0,0,0,0.25);
 }
 </style>
+</head>
+<body class="text-black">
 
-  
+<!-- Notice Bar -->
+<div id="noticeBar" class="w-full">
+  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">
+    📢 Welcome to Talimi Ittehad!
+  </marquee>
+</div>
+
+<!-- Admin Notice Editor -->
+<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
+  <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
+  <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
+</div>
+
+<!-- Header -->
+<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
+  <h1 class="text-2xl font-bold">Nikah Portal</h1>
+  <div class="flex gap-2">
+    <a href="index.html" class="btn-3d-home px-1 py-0.5 text-xs rounded font-bold flex items-center justify-center">🏠 Home</a>
+    <button id="loginBtn" class="bg-green-500 px-2 py-0.5 text-xs rounded">Login</button>
+    <button id="postBtn" class="bg-yellow-500 px-2 py-0.5 text-xs rounded hidden">➕ Post</button>
+  </div>
+</header>
 
 <!-- Post Form -->
-<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
-  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
-  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
-  <select id="genderInput" class="w-full p-2 rounded mb-2 border">
+<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4 space-y-2">
+
+  <h2 class="font-bold text-lg">Personal Details</h2>
+  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded border">
+  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded border">
+
+  <select id="genderInput" class="w-full p-2 rounded border">
     <option value="">Gender</option>
     <option value="Male">Male</option>
     <option value="Female">Female</option>
+    <option value="Other">Other</option>
   </select>
-  <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="incomeInput" placeholder="Income" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="maritalInput" placeholder="Marital Status" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="religionInput" placeholder="Religion" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
-  <input type="file" id="photoInput" class="w-full p-2 mb-2">
-  <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
+
+  <select id="maritalInput" class="w-full p-2 rounded border">
+    <option value="">Marital Status</option>
+    <option value="Single">Single</option>
+    <option value="Married">Married</option>
+    <option value="Divorced">Divorced</option>
+    <option value="Widowed">Widowed</option>
+  </select>
+
+  <input type="number" id="childrenInput" placeholder="Number of Children (if married)" class="w-full p-2 rounded border">
+
+  <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded border">
+  <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded border">
+  <input type="text" id="incomeInput" placeholder="Income" class="w-full p-2 rounded border">
+
+  <select id="religionInput" class="w-full p-2 rounded border">
+    <option value="">Religion</option>
+    <option value="Islam">Islam</option>
+    <option value="Hindu">Hindu</option>
+    <option value="Christian">Christian</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded border">
+  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded border">
+
+  <h2 class="font-bold text-lg mt-4">Relatives Info</h2>
+  <input type="text" id="fatherInput" placeholder="Father's Name" class="w-full p-2 rounded border">
+  <input type="text" id="motherInput" placeholder="Mother's Name" class="w-full p-2 rounded border">
+  <input type="text" id="brotherInput" placeholder="Brother(s) Name(s)" class="w-full p-2 rounded border">
+  <input type="text" id="sisterInput" placeholder="Sister(s) Name(s)" class="w-full p-2 rounded border">
+
+  <input type="file" id="photoInput" class="w-full p-2 rounded border">
+
+  <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full mt-2">Submit Profile</button>
 </section>
 
-<!-- User Profiles -->
+<!-- Public Profiles -->
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
 <!-- Like Popup -->
@@ -190,23 +193,32 @@ async function uploadToImgbb(file){
 }
 
 // Submit Post
-submitPost.addEventListener("click",async ()=>{
+submitPost.addEventListener("click", async () => {
   const name=document.getElementById("nameInput").value.trim();
   const age=document.getElementById("ageInput").value.trim();
   const gender=document.getElementById("genderInput").value;
+  const marital=document.getElementById("maritalInput").value;
+  const children=document.getElementById("childrenInput").value.trim();
   const education=document.getElementById("educationInput").value.trim();
   const profession=document.getElementById("professionInput").value.trim();
   const income=document.getElementById("incomeInput").value.trim();
-  const marital=document.getElementById("maritalInput").value.trim();
-  const religion=document.getElementById("religionInput").value.trim();
+  const religion=document.getElementById("religionInput").value;
   const caste=document.getElementById("casteInput").value.trim();
   const city=document.getElementById("cityInput").value.trim();
+  const father=document.getElementById("fatherInput").value.trim();
+  const mother=document.getElementById("motherInput").value.trim();
+  const brother=document.getElementById("brotherInput").value.trim();
+  const sister=document.getElementById("sisterInput").value.trim();
   const photo=document.getElementById("photoInput").files[0];
-  if(!name||!age||!gender||!city||!photo) return alert("❌ Fill required fields!");
+
+  if(!name||!age||!gender||!marital||!city||!photo) return alert("❌ Fill required fields!");
   const photoUrl=await uploadToImgbb(photo);
 
   await addDoc(collection(db,"profiles"),{
-    name,age,gender,education,profession,income,marital,religion,caste,city,photoUrl,
+    name,age,gender,marital,children,education,profession,income,
+    religion,caste,city,
+    relatives:{father,mother,brother,sister},
+    photoUrl,
     uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
   });
   alert("✅ Submitted! Wait for Admin Approval");
@@ -225,7 +237,7 @@ onSnapshot(q,snapshot=>{
   if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
-// Render Public Profiles
+// Render Profiles
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
@@ -238,42 +250,31 @@ function renderProfiles(profiles){
 
     let html=`<div class="space-y-1">`;
     if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2">`;
-    if(p.approvals.name) html+=`<p><b>👤 Name:</b> ${p.name}</p>`;
-    if(p.approvals.age) html+=`<p><b>🎂 Age:</b> ${p.age}</p>`;
-    if(p.approvals.gender) html+=`<p><b>🚻 Gender:</b> ${p.gender}</p>`;
-    if(p.approvals.education) html+=`<p><b>🎓 Education:</b> ${p.education}</p>`;
-    if(p.approvals.profession) html+=`<p><b>💼 Profession:</b> ${p.profession}</p>`;
-    if(p.approvals.income) html+=`<p><b>💰 Income:</b> ${p.income}</p>`;
-    if(p.approvals.marital) html+=`<p><b>📌 Marital:</b> ${p.marital}</p>`;
-    if(p.approvals.religion) html+=`<p><b>🕌 Religion:</b> ${p.religion}</p>`;
-    if(p.approvals.caste) html+=`<p><b>🪧 Caste:</b> ${p.caste}</p>`;
-    if(p.approvals.city) html+=`<p><b>🏙️ City:</b> ${p.city}</p>`;
+    ["name","age","gender","marital","children","education","profession","income","religion","caste","city"].forEach(f=>{
+      if(p.approvals[f]) html+=`<p><b>${f}:</b> ${p[f]}</p>`;
+    });
+    if(p.approvals.relatives){
+      html+=`<p><b>Relatives:</b> Father:${p.relatives?.father||"-"}, Mother:${p.relatives?.mother||"-"}, Brother:${p.relatives?.brother||"-"}, Sister:${p.relatives?.sister||"-"}</p>`;
+    }
     html+=`</div>`;
-
     html+=`<button class="like-btn bg-red-500 text-white px-3 py-1 rounded mt-2" data-id="${p.id}">❤️ Like</button>`;
-
     card.innerHTML=html;
     postsList.appendChild(card);
   });
 
   document.querySelectorAll(".like-btn").forEach(btn=>{
-    btn.onclick=()=>{
-      currentLikeProfile=btn.dataset.id;
-      likePopup.classList.remove("hidden");
-    };
+    btn.onclick=()=>{ currentLikeProfile=btn.dataset.id; likePopup.classList.remove("hidden"); };
   });
 }
 
-// Like Popup Submit
+// Like Popup
 likeSubmit.onclick=async ()=>{
   if(!currentUser) return alert("Login required!");
   const name=likeName.value.trim();
   const address=likeAddress.value.trim();
   const whatsapp=likeWhatsapp.value.trim();
   if(!name||!address||!whatsapp) return alert("Fill all fields!");
-  await updateDoc(doc(db,"profiles",currentLikeProfile),{
-    likes:arrayUnion({name,address,whatsapp})
-  });
+  await updateDoc(doc(db,"profiles",currentLikeProfile),{likes:arrayUnion({name,address,whatsapp})});
   alert("✅ Like submitted");
   likePopup.classList.add("hidden");
   likeName.value=likeAddress.value=likeWhatsapp.value="";
@@ -287,9 +288,9 @@ function renderAdmin(profiles){
     let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
     html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
 
-    const fields=["photoUrl","name","age","gender","education","profession","income","marital","religion","caste","city"];
+    const fields=["photoUrl","name","age","gender","marital","children","education","profession","income","religion","caste","city","relatives"];
     fields.forEach(f=>{
-      html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals&&p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
+      html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals&&p.approvals[f]?"checked":""}> ${f}</div>`;
     });
 
     html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
