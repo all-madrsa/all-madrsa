@@ -17,41 +17,28 @@ button:hover {transform:scale(1.05);}
   color: white;
   font-weight: 700;
   box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-.btn-3d-home:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 rgba(0,0,0,0.25);
 }
 </style>
 </head>
 <body class="text-black">
 
-<!-- Notice Bar -->
-<div id="noticeBar" class="w-full">
-  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">
-    📢 Welcome to Talimi Ittehad!
-  </marquee>
-</div>
-
-<!-- Admin Notice Editor -->
-<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
-  <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
-  <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
+<!-- Notice -->
+<div id="noticeBar" class="w-full bg-yellow-200 p-1 text-center font-bold">
+  📢 Welcome to Talimi Ittehad!
 </div>
 
 <!-- Header -->
-<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
-  <h1 class="text-2xl font-bold">Nikah Portal</h1>
+<header class="bg-blue-600 p-2 flex justify-between items-center text-white">
+  <h1 class="text-lg font-bold">Nikah Portal</h1>
   <div class="flex gap-2">
-    <a href="index.html" class="btn-3d-home px-1 py-0.5 text-xs rounded font-bold flex items-center justify-center">🏠 Home</a>
-    <button id="loginBtn" class="bg-green-500 px-2 py-0.5 text-xs rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-2 py-0.5 text-xs rounded hidden">➕ Post</button>
+    <a href="index.html" class="btn-3d-home px-2 py-1 text-xs rounded">🏠 Home</a>
+    <button id="loginBtn" class="bg-green-500 px-2 py-1 text-xs rounded">Login</button>
+    <button id="postBtn" class="bg-yellow-500 px-2 py-1 text-xs rounded hidden">➕ Post</button>
   </div>
 </header>
 
 <!-- Post Form -->
-<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4 space-y-2">
+<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-2 space-y-2">
 
   <h2 class="font-bold text-lg">Personal Details</h2>
   <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded border">
@@ -59,9 +46,7 @@ button:hover {transform:scale(1.05);}
 
   <select id="genderInput" class="w-full p-2 rounded border">
     <option value="">Gender</option>
-    <option value="Male">Male</option>
-    <option value="Female">Female</option>
-    <option value="Other">Other</option>
+    <option>Male</option><option>Female</option><option>Other</option>
   </select>
 
   <select id="maritalInput" class="w-full p-2 rounded border">
@@ -72,7 +57,17 @@ button:hover {transform:scale(1.05);}
     <option value="Widowed">Widowed</option>
   </select>
 
-  <input type="number" id="childrenInput" placeholder="Number of Children (if married)" class="w-full p-2 rounded border">
+  <!-- Children (only if married) -->
+  <div id="childrenDiv" class="hidden">
+    <label class="block text-sm font-bold">Number of Children</label>
+    <select id="childrenInput" class="w-full p-2 rounded border">
+      <option value="">Select</option>
+      <option value="0">0</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3+">3+</option>
+    </select>
+  </div>
 
   <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded border">
   <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded border">
@@ -80,10 +75,7 @@ button:hover {transform:scale(1.05);}
 
   <select id="religionInput" class="w-full p-2 rounded border">
     <option value="">Religion</option>
-    <option value="Islam">Islam</option>
-    <option value="Hindu">Hindu</option>
-    <option value="Christian">Christian</option>
-    <option value="Other">Other</option>
+    <option>Islam</option><option>Hindu</option><option>Christian</option><option>Other</option>
   </select>
 
   <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded border">
@@ -92,8 +84,34 @@ button:hover {transform:scale(1.05);}
   <h2 class="font-bold text-lg mt-4">Relatives Info</h2>
   <input type="text" id="fatherInput" placeholder="Father's Name" class="w-full p-2 rounded border">
   <input type="text" id="motherInput" placeholder="Mother's Name" class="w-full p-2 rounded border">
-  <input type="text" id="brotherInput" placeholder="Brother(s) Name(s)" class="w-full p-2 rounded border">
-  <input type="text" id="sisterInput" placeholder="Sister(s) Name(s)" class="w-full p-2 rounded border">
+
+  <!-- Brother -->
+  <select id="brotherHave" class="w-full p-2 rounded border">
+    <option value="">Brothers?</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+  <div id="brotherDiv" class="hidden">
+    <label class="block text-sm font-bold">Number of Brothers</label>
+    <select id="brotherCount" class="w-full p-2 rounded border">
+      <option value="1">1</option><option value="2">2</option>
+      <option value="3">3</option><option value="4+">4+</option>
+    </select>
+  </div>
+
+  <!-- Sister -->
+  <select id="sisterHave" class="w-full p-2 rounded border">
+    <option value="">Sisters?</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+  <div id="sisterDiv" class="hidden">
+    <label class="block text-sm font-bold">Number of Sisters</label>
+    <select id="sisterCount" class="w-full p-2 rounded border">
+      <option value="1">1</option><option value="2">2</option>
+      <option value="3">3</option><option value="4+">4+</option>
+    </select>
+  </div>
 
   <input type="file" id="photoInput" class="w-full p-2 rounded border">
 
@@ -182,7 +200,7 @@ onAuthStateChanged(auth,user=>{
 
 postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
 
-// Upload Image
+// Imgbb Upload
 async function uploadToImgbb(file){
   const key="d12c2e4a8650157b2b6b9fe85336ea43";
   const formData=new FormData();
@@ -192,13 +210,24 @@ async function uploadToImgbb(file){
   return data.data.url;
 }
 
+// Conditional Dropdowns
+document.getElementById("maritalInput").addEventListener("change",e=>{
+  document.getElementById("childrenDiv").classList.toggle("hidden",e.target.value!=="Married");
+});
+document.getElementById("brotherHave").addEventListener("change",e=>{
+  document.getElementById("brotherDiv").classList.toggle("hidden",e.target.value!=="Yes");
+});
+document.getElementById("sisterHave").addEventListener("change",e=>{
+  document.getElementById("sisterDiv").classList.toggle("hidden",e.target.value!=="Yes");
+});
+
 // Submit Post
 submitPost.addEventListener("click", async () => {
   const name=document.getElementById("nameInput").value.trim();
   const age=document.getElementById("ageInput").value.trim();
   const gender=document.getElementById("genderInput").value;
   const marital=document.getElementById("maritalInput").value;
-  const children=document.getElementById("childrenInput").value.trim();
+  const children=document.getElementById("childrenInput").value;
   const education=document.getElementById("educationInput").value.trim();
   const profession=document.getElementById("professionInput").value.trim();
   const income=document.getElementById("incomeInput").value.trim();
@@ -207,8 +236,10 @@ submitPost.addEventListener("click", async () => {
   const city=document.getElementById("cityInput").value.trim();
   const father=document.getElementById("fatherInput").value.trim();
   const mother=document.getElementById("motherInput").value.trim();
-  const brother=document.getElementById("brotherInput").value.trim();
-  const sister=document.getElementById("sisterInput").value.trim();
+  const brotherHave=document.getElementById("brotherHave").value;
+  const brotherCount=document.getElementById("brotherCount").value;
+  const sisterHave=document.getElementById("sisterHave").value;
+  const sisterCount=document.getElementById("sisterCount").value;
   const photo=document.getElementById("photoInput").files[0];
 
   if(!name||!age||!gender||!marital||!city||!photo) return alert("❌ Fill required fields!");
@@ -217,7 +248,7 @@ submitPost.addEventListener("click", async () => {
   await addDoc(collection(db,"profiles"),{
     name,age,gender,marital,children,education,profession,income,
     religion,caste,city,
-    relatives:{father,mother,brother,sister},
+    relatives:{father,mother,brotherHave,brotherCount,sisterHave,sisterCount},
     photoUrl,
     uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
   });
@@ -228,11 +259,7 @@ submitPost.addEventListener("click", async () => {
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
 onSnapshot(q,snapshot=>{
   const profiles=[];
-  snapshot.forEach(docSnap=>{
-    let data=docSnap.data();
-    data.id=docSnap.id;
-    profiles.push(data);
-  });
+  snapshot.forEach(docSnap=>{ let data=docSnap.data(); data.id=docSnap.id; profiles.push(data); });
   renderProfiles(profiles);
   if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
@@ -254,7 +281,7 @@ function renderProfiles(profiles){
       if(p.approvals[f]) html+=`<p><b>${f}:</b> ${p[f]}</p>`;
     });
     if(p.approvals.relatives){
-      html+=`<p><b>Relatives:</b> Father:${p.relatives?.father||"-"}, Mother:${p.relatives?.mother||"-"}, Brother:${p.relatives?.brother||"-"}, Sister:${p.relatives?.sister||"-"}</p>`;
+      html+=`<p><b>Relatives:</b> Father:${p.relatives?.father||"-"}, Mother:${p.relatives?.mother||"-"}, Brothers:${p.relatives?.brotherHave=="Yes"?p.relatives?.brotherCount:"0"}, Sisters:${p.relatives?.sisterHave=="Yes"?p.relatives?.sisterCount:"0"}</p>`;
     }
     html+=`</div>`;
     html+=`<button class="like-btn bg-red-500 text-white px-3 py-1 rounded mt-2" data-id="${p.id}">❤️ Like</button>`;
