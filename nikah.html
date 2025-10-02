@@ -55,6 +55,25 @@ button:hover {transform:scale(1.05);}
 
 </header>
 
+
+
+<style>
+/* 3D Button Style */
+.btn-3d-home {
+  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.btn-3d-home:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+}
+</style>
+
+  
+
 <!-- Post Form -->
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
   <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
