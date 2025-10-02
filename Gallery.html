@@ -17,6 +17,87 @@
     #adminLoginBtn{display:block; margin:10px auto; background:#db4437; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer;}
   </style>
 </head>
+
+
+
+  <body class="bg-slate-50 min-h-screen">
+
+
+<!-- Header with Logo and 3D Buttons -->
+<header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
+  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
+
+    <!-- Top: 3D Buttons -->
+   <div class="flex justify-center gap-4">
+  <a href="nikah.html">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
+  </a>
+  <a href="news.html">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
+  </a>
+  <a href="hadees.html">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
+  </a>
+</div>
+
+
+    <!-- Middle: Logo and Side Images -->
+    <div class="flex justify-between items-center h-full mt-1">
+
+      <!-- Left: Makka -->
+      <div class="flex items-center">
+        <img src="makka.png" alt="Makka" class="header-png">
+      </div>
+
+    <!-- Center: Logo / Title -->
+<div class="flex flex-col items-center justify-center h-full">
+  <div class="text-white font-bold text-2xl" 
+       style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform: translateY(-8px);">
+    Talimi Ittehad
+  </div>
+</div>
+
+
+      <!-- Right: Madina -->
+      <div class="flex items-center">
+        <img src="madina.png" alt="Madina" class="header-png">
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<style>
+/* 3D Buttons Base */
+.btn-3d-special {
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-3d-special:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+
+/* Small variant for top header buttons */
+.btn-small {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
+
+/* Header PNG images */
+.header-png {
+  height: 70px;           /* image height */
+  width: 70px;            /* image width */
+  object-fit: cover;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
 <body class="bg-slate-50 min-h-screen">
 
 <!-- Admin Login Button -->
