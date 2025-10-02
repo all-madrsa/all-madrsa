@@ -1,117 +1,70 @@
 <!doctype html>
 <html lang="hi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gallery | Talimi Ittehad</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .title-3d{font-weight:700;font-size:2rem;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,.9);}
-    .nav-link{padding:.35rem .6rem;border-radius:.5rem;}
-    .nav-active{background:#ffffff22;}
-    .gallery-img{cursor:pointer;transition:transform .2s;}
-    .gallery-img:hover{transform:scale(1.05);}
-    #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;align-items:center;justify-content:center;}
-    #lightbox img{max-height:90%;max-width:90%;border-radius:.5rem;box-shadow:0 0 20px rgba(0,0,0,.6);}
-    #lightbox button{position:absolute;top:20px;right:20px;background:#f44336;color:#fff;padding:6px 12px;border-radius:6px;}
-    #adminLoginBtn{display:block; margin:10px auto; background:#db4437; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer;}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Gallery | Talimi Ittehad</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
+
+.title-3d{font-weight:700;font-size:2rem;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,.9);}
+
+.btn-3d-special, .btn-3d-home {
+  color:#fff; font-weight:700; border-radius:12px;
+  box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s;
+  cursor:pointer;
+}
+.btn-3d-special:hover, .btn-3d-home:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow:0 8px 0 rgba(0,0,0,.25),0 10px 20px rgba(0,0,0,.25); }
+.btn-3d-special:active, .btn-3d-home:active { transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
+.btn-small{font-size:.85rem;padding:.4rem .9rem;}
+.btn-3d-home{background:linear-gradient(90deg,#ff4d4d,#4d94ff);}
+
+.header-png{height:70px;width:70px;border-radius:50%;object-fit:cover;}
+.gallery-img{cursor:pointer;transition:transform .2s;}
+.gallery-img:hover{transform:scale(1.05);}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;align-items:center;justify-content:center;}
+#lightbox img{max-height:90%;max-width:90%;border-radius:.5rem;box-shadow:0 0 20px rgba(0,0,0,.6);}
+#lightbox button{position:absolute;top:20px;right:20px;background:#f44336;color:#fff;padding:6px 12px;border-radius:6px;}
+#adminLoginBtn{display:block;margin:10px auto;background:#db4437;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;transition:all .15s;}
+#adminLoginBtn:hover{filter:brightness(1.1); transform:translateY(-2px);}
+</style>
 </head>
+<body>
 
+<!-- Header -->
+<header class="bg-blue-600 p-2">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
 
+    <!-- Buttons -->
+    <div class="flex gap-2 justify-center flex-wrap">
+      <a href="index.html"><button class="btn-3d-home px-3 py-1">🏠 Home</button></a>
+      <a href="nikah.html"><button class="btn-3d-special btn-small" style="background:linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button></a>
+      <a href="news.html"><button class="btn-3d-special btn-small" style="background:linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button></a>
+      <a href="hadees.html"><button class="btn-3d-special btn-small" style="background:linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button></a>
+    </div>
 
-  <body class="bg-slate-50 min-h-screen">
-
-
-<!-- Header with Logo and 3D Buttons -->
-<header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
-  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
-
-    <!-- Top: 3D Buttons -->
-   <div class="flex justify-center gap-4">
-  <a href="nikah.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
-  </a>
-  <a href="news.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
-  </a>
-  <a href="hadees.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
-  </a>
-</div>
-
-
-    <!-- Middle: Logo and Side Images -->
-    <div class="flex justify-between items-center h-full mt-1">
-
-      <!-- Left: Makka -->
-      <div class="flex items-center">
-        <img src="makka.png" alt="Makka" class="header-png">
-      </div>
-
-    <!-- Center: Logo / Title -->
-<div class="flex flex-col items-center justify-center h-full">
-  <div class="text-white font-bold text-2xl" 
-       style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform: translateY(-8px);">
-    Talimi Ittehad
-  </div>
-</div>
-
-
-      <!-- Right: Madina -->
-      <div class="flex items-center">
-        <img src="madina.png" alt="Madina" class="header-png">
-      </div>
-
+    <!-- Logo -->
+    <div class="flex items-center gap-4 mt-2 md:mt-0">
+      <img src="makka.png" alt="Makka" class="header-png">
+      <div class="text-white font-bold text-2xl title-3d">Talimi Ittehad</div>
+      <img src="madina.png" alt="Madina" class="header-png">
     </div>
   </div>
 </header>
 
-<style>
-/* 3D Buttons Base */
-.btn-3d-special {
-  color: #fff;
-  font-weight: 700;
-  border-radius: 10px;
-  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.btn-3d-special:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
-}
-
-/* Small variant for top header buttons */
-.btn-small {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
-}
-
-/* Header PNG images */
-.header-png {
-  height: 70px;           /* image height */
-  width: 70px;            /* image width */
-  object-fit: cover;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>
-<body class="bg-slate-50 min-h-screen">
-
-<!-- Admin Login Button -->
+<!-- Admin Login -->
 <button id="adminLoginBtn">Login as Admin</button>
 
-<!-- Main -->
 <main class="max-w-6xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">📸 Gallery</h1>
 
-  <!-- 🔑 Admin Upload Section -->
-  <div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow">
+  <!-- Admin Upload -->
+  <div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow max-w-md mx-auto">
     <h2 class="font-semibold mb-2">🖼 Upload New Gallery Images</h2>
-    <input id="galleryFiles" type="file" accept="image/*" multiple class="mb-2"/>
-    <button id="uploadBtn" class="bg-indigo-600 text-white px-4 py-2 rounded">Upload</button>
+    <input id="galleryFiles" type="file" accept="image/*" multiple class="mb-2 w-full rounded border p-1"/>
+    <button id="uploadBtn" class="btn-3d-special w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8);">Upload</button>
   </div>
 
   <!-- Gallery Grid -->
@@ -129,22 +82,21 @@
   <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
 </footer>
 
+<!-- Firebase + Script -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// 🔥 Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  databaseURL:"https://all-madrsa-default-rtdb.firebaseio.com",
+  projectId:"all-madrsa",
+  storageBucket:"all-madrsa.appspot.com",
+  messagingSenderId:"619313835874",
+  appId:"1:619313835874:web:e387e1297663b"
 };
-
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 
@@ -161,34 +113,14 @@ const adminLoginBtn = document.getElementById("adminLoginBtn");
 
 let currentUser = null;
 
-// Convert file → base64
-function toBase64(file){
-  return new Promise((resolve,reject)=>{
-    const reader = new FileReader();
-    reader.onload = ()=> resolve(reader.result.split(",")[1]);
-    reader.onerror = e => reject(e);
-    reader.readAsDataURL(file);
-  });
-}
+function toBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(",")[1]);reader.onerror=e=>reject(e);reader.readAsDataURL(file);});}
+async function uploadToImgBB(file){const base64=await toBase64(file);const fd=new FormData();fd.append("image",base64);const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd});const data=await res.json();if(data.success)return data.data.url;else throw new Error("ImgBB upload failed");}
 
-// Upload to ImgBB
-async function uploadToImgBB(file){
-  const base64 = await toBase64(file);
-  const fd = new FormData();
-  fd.append("image", base64);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd});
-  const data = await res.json();
-  if(data.success) return data.data.url;
-  else throw new Error("ImgBB upload failed");
-}
-
-// Load gallery
 async function loadGallery(){
   galleryDiv.innerHTML="";
   const snap = await getDocs(collection(db,"gallery"));
-  if(snap.empty){
-    emptyMsg.classList.remove("hidden");
-  } else {
+  if(snap.empty){ emptyMsg.classList.remove("hidden"); }
+  else {
     emptyMsg.classList.add("hidden");
     snap.forEach(docSnap=>{
       const d = docSnap.data();
@@ -198,21 +130,15 @@ async function loadGallery(){
 
         const img = document.createElement("img");
         img.src = d.url;
-        img.className = "gallery-img rounded shadow w-full";
+        img.className="gallery-img rounded shadow w-full";
         img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
         wrapper.appendChild(img);
 
-        // Delete button (admin only)
         if(currentUser?.email===ADMIN_EMAIL){
-          const delBtn = document.createElement("button");
+          const delBtn=document.createElement("button");
           delBtn.textContent="🗑";
-          delBtn.className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded";
-          delBtn.onclick=async()=>{
-            if(confirm("Delete this image?")){
-              await deleteDoc(doc(db,"gallery",docSnap.id));
-              loadGallery();
-            }
-          };
+          delBtn.className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded hidden group-hover:block";
+          delBtn.onclick=async()=>{ if(confirm("Delete this image?")){ await deleteDoc(doc(db,"gallery",docSnap.id)); loadGallery(); }};
           wrapper.appendChild(delBtn);
         }
 
@@ -222,47 +148,35 @@ async function loadGallery(){
   }
 }
 
-// Upload handler (admin only)
 uploadBtn.onclick = async ()=>{
-  const files = document.getElementById("galleryFiles").files;
-  if(!files.length) return alert("Select at least one file!");
+  const files=document.getElementById("galleryFiles").files;
+  if(!files.length)return alert("Select at least one file!");
   try{
     const uploads = Array.from(files).map(f=>uploadToImgBB(f));
     const urls = await Promise.all(uploads);
-    const addDocs = urls.map(url=>addDoc(collection(db,"gallery"), { url, createdAt: serverTimestamp() }));
+    const addDocs = urls.map(url=>addDoc(collection(db,"gallery"),{url,createdAt:serverTimestamp()}));
     await Promise.all(addDocs);
     document.getElementById("galleryFiles").value="";
     loadGallery();
   }catch(e){ alert("Upload failed: "+e.message); }
 };
 
-// Admin Login Button
-adminLoginBtn.onclick = ()=> signInWithPopup(auth, provider).catch(e=>alert("Login failed: "+e.message));
-
-// Auth state check
-onAuthStateChanged(auth, user=>{
-  currentUser = user;
-  if(user?.email===ADMIN_EMAIL){
-    adminBox.classList.remove("hidden");
-    adminLoginBtn.style.display="none";
-  } else {
-    adminBox.classList.add("hidden");
-    adminLoginBtn.style.display="block";
-  }
+adminLoginBtn.onclick=()=>signInWithPopup(auth,provider).catch(e=>alert("Login failed: "+e.message));
+onAuthStateChanged(auth,user=>{
+  currentUser=user;
+  if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); adminLoginBtn.style.display="none"; }
+  else{ adminBox.classList.add("hidden"); adminLoginBtn.style.display="block"; }
   loadGallery();
 });
 
-// Lightbox close
-document.getElementById("closeLightbox").onclick = ()=>{ document.getElementById("lightbox").style.display="none"; };
-document.getElementById("lightbox").onclick = (e)=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
+// Lightbox
+document.getElementById("closeLightbox").onclick=()=>document.getElementById("lightbox").style.display="none";
+document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
 </script>
 
 <!-- Fixed Donate Button -->
-<a href="https://all-madrsa.netlify.app/upi" 
-   class="fixed top-1/2 right-4 transform -translate-y-1/2 
-          bg-yellow-400 text-black font-bold px-5 py-3 
-          rounded-lg shadow-lg hover:bg-yellow-300 z-50">
-   💝 Donate
+<a href="https://all-madrsa.netlify.app/upi" class="fixed top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-black font-bold px-5 py-3 rounded-lg shadow-lg hover:bg-yellow-300 z-50">
+💝 Donate
 </a>
 
 </body>
