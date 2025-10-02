@@ -28,108 +28,39 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 #lightbox img { max-height:90%; max-width:90%; border-radius:.5rem; box-shadow:0 0 20px rgba(0,0,0,.6); }
 #lightbox button { position:absolute; top:20px; right:20px; background:#f44336; color:#fff; padding:6px 12px; border-radius:6px; }
 
-#adminLoginBtn { display:block; margin:10px auto; background:#db4437; color:white; padding:8px 16px; border:none; border-radius:6px; cursor:pointer; transition:all .15s; }
-#adminLoginBtn:hover { filter:brightness(1.1); transform:translateY(-2px); }
-
 .admin-btn { display:inline-block; margin:2px; padding:2px 6px; border-radius:5px; font-size:0.7rem; color:#fff; cursor:pointer; }
 .admin-edit { background:#1d4ed8; }  /* Blue */
 .admin-delete { background:#dc2626; } /* Red */
-
 </style>
 </head>
 <body>
 
-
-<!-- Header with Logo and 3D Buttons -->
-<header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
-  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
-
-    <!-- Top: 3D Buttons -->
-   <div class="flex justify-center gap-4">
-  <a href="nikah.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
-  </a>
-  <a href="news.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
-  </a>
-  <a href="hadees.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
-  </a>
-</div>
-
-
-    <!-- Middle: Logo and Side Images -->
-    <div class="flex justify-between items-center h-full mt-1">
-
-      <!-- Left: Makka -->
-      <div class="flex items-center">
-        <img src="makka.png" alt="Makka" class="header-png">
-      </div>
-
-    <!-- Center: Logo / Title -->
-<div class="flex flex-col items-center justify-center h-full">
-  <div class="text-white font-bold text-2xl" 
-       style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform: translateY(-8px);">
-    Talimi Ittehad
-  </div>
-</div>
-
-
-      <!-- Right: Madina -->
-      <div class="flex items-center">
-        <img src="madina.png" alt="Madina" class="header-png">
-      </div>
-
+<!-- Header -->
+<header class="bg-blue-600 p-2">
+  <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
+    <div class="flex flex-wrap gap-2 justify-center">
+      <a href="index.html"><button class="btn-3d">🏠 Home</button></a>
+      <a href="nikah.html"><button class="btn-3d" style="background:linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button></a>
+      <a href="news.html"><button class="btn-3d" style="background:linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button></a>
+      <a href="hadees.html"><button class="btn-3d" style="background:linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button></a>
+    </div>
+    <div class="flex items-center gap-3">
+      <img src="makka.png" alt="Makka" class="header-png">
+      <div class="text-white font-bold text-xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">Talimi Ittehad</div>
+      <img src="madina.png" alt="Madina" class="header-png">
     </div>
   </div>
 </header>
 
-<style>
-/* 3D Buttons Base */
-.btn-3d-special {
-  color: #fff;
-  font-weight: 700;
-  border-radius: 10px;
-  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.btn-3d-special:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
-}
-
-/* Small variant for top header buttons */
-.btn-small {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
-}
-
-/* Header PNG images */
-.header-png {
-  height: 70px;           /* image height */
-  width: 70px;            /* image width */
-  object-fit: cover;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>
-
-<!-- Admin Login -->
-<button id="adminLoginBtn">Login as Admin</button>
+<!-- Admin Upload -->
+<div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow max-w-md mx-auto">
+  <h2 class="font-semibold mb-2">🖼 Upload New Gallery Images</h2>
+  <input id="galleryFiles" type="file" accept="image/*" multiple class="mb-2 w-full rounded border p-1"/>
+  <button id="uploadBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8);">Upload</button>
+</div>
 
 <main class="max-w-6xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">📸 Gallery</h1>
-
-  <!-- Admin Upload -->
-  <div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow max-w-md mx-auto">
-    <h2 class="font-semibold mb-2">🖼 Upload New Gallery Images</h2>
-    <input id="galleryFiles" type="file" accept="image/*" multiple class="mb-2 w-full rounded border p-1"/>
-    <button id="uploadBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8);">Upload</button>
-  </div>
-
-  <!-- Gallery Grid -->
   <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
   <p id="emptyMsg" class="text-gray-500 text-sm mt-4 hidden">⚠️ No images uploaded yet.</p>
 </main>
@@ -156,7 +87,7 @@ const firebaseConfig = {
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b"
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
 };
 
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
@@ -171,7 +102,6 @@ const galleryDiv = document.getElementById("galleryGrid");
 const adminBox = document.getElementById("adminUpload");
 const uploadBtn = document.getElementById("uploadBtn");
 const emptyMsg = document.getElementById("emptyMsg");
-const adminLoginBtn = document.getElementById("adminLoginBtn");
 
 let currentUser = null;
 
@@ -250,14 +180,11 @@ uploadBtn.onclick = async ()=>{
   }catch(e){ alert("Upload failed: "+e.message); }
 };
 
-// Admin Login
-adminLoginBtn.onclick=()=>signInWithPopup(auth,provider).catch(e=>alert("Login failed: "+e.message));
-
 // Auth State
 onAuthStateChanged(auth,user=>{
   currentUser=user;
-  if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); adminLoginBtn.style.display="none"; }
-  else{ adminBox.classList.add("hidden"); adminLoginBtn.style.display="block"; }
+  if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
+  else{ adminBox.classList.add("hidden"); }
   loadGallery();
 });
 
