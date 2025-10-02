@@ -1,169 +1,101 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal Advanced</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-body {background:#fdf6e3; font-family:sans-serif;}
-.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Nikah Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="text-black">
+<body class="bg-gray-100 min-h-screen">
 
-<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
-  <h1 class="text-2xl font-bold">Nikah Portal Advanced</h1>
-  <div class="flex gap-2">
-    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post Profile</button>
+<div class="max-w-6xl mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-4 text-center">💍 Nikah Portal</h1>
+
+  <!-- User Form -->
+  <form id="profileForm" class="bg-white p-4 rounded shadow mb-6 space-y-2">
+    <h2 class="font-semibold">Submit Profile</h2>
+    <input name="name" placeholder="Full Name" class="border p-2 w-full rounded" required/>
+    <input name="age" type="number" placeholder="Age" class="border p-2 w-full rounded" required/>
+    <input name="birthdate" type="date" class="border p-2 w-full rounded"/>
+    <input name="postingDate" type="date" class="border p-2 w-full rounded"/>
+    <input name="address" placeholder="Address" class="border p-2 w-full rounded"/>
+    <input name="whatsapp" placeholder="WhatsApp Number" class="border p-2 w-full rounded"/>
+    <input type="file" id="photoInput" accept="image/*" class="border p-2 w-full rounded"/>
+    <button class="bg-green-500 text-white px-4 py-2 rounded">Submit</button>
+  </form>
+
+  <!-- Public Posts -->
+  <div id="postsList" class="grid md:grid-cols-2 gap-4"></div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="mt-10">
+    <h2 class="text-xl font-bold mb-2">🛠 Admin Panel</h2>
+    <div id="adminList" class="space-y-4"></div>
   </div>
-</header>
+</div>
 
-<!-- Post Form -->
-<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
-  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
-  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
-  <input type="date" id="birthDateInput" placeholder="Birth Date" class="w-full p-2 rounded mb-2 border">
-  <input type="date" id="postDateInput" placeholder="Posting Date" class="w-full p-2 rounded mb-2 border">
-  <select id="genderInput" class="w-full p-2 rounded mb-2 border">
-    <option value="">Gender</option>
-    <option value="Male">Male</option>
-    <option value="Female">Female</option>
-  </select>
-  <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="incomeInput" placeholder="Income" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="maritalInput" placeholder="Marital Status" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="religionInput" placeholder="Religion" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
-  <input type="file" id="photoInput" class="w-full p-2 mb-2">
-  <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
-</section>
-
-<!-- User Profiles -->
-<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
-
-<!-- Admin Panel -->
-<section id="adminPanel" class="hidden p-4">
-  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
-  <div id="adminList" class="grid gap-4"></div>
-</section>
-
+<!-- Firebase -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, onSnapshot, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER",
+  appId: "YOUR_APP_ID"
 };
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore();
+const db = getFirestore(app);
 
-// Elements
-const loginBtn=document.getElementById("loginBtn");
-const postBtn=document.getElementById("postBtn");
-const postSection=document.getElementById("postSection");
-const submitPost=document.getElementById("submitPost");
-const postsList=document.getElementById("postsList");
-const adminPanel=document.getElementById("adminPanel");
-const adminList=document.getElementById("adminList");
-
-let currentUser=null;
-const ADMIN_EMAIL="zaradigitalseva@gmail.com";
-const whatsappNumber="9112170192";
-
-// Login
-loginBtn.addEventListener("click",async ()=>{
-  const provider=new GoogleAuthProvider();
-  await signInWithPopup(auth,provider);
-});
-
-onAuthStateChanged(auth,user=>{
-  currentUser=user;
-  if(user){
-    loginBtn.classList.add("hidden");
-    postBtn.classList.remove("hidden");
-    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
-  } else {
-    loginBtn.classList.remove("hidden");
-    postBtn.classList.add("hidden");
-    postSection.classList.add("hidden");
-    adminPanel.classList.add("hidden");
-  }
-});
-
-postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
-
-// Upload Image
-async function uploadToImgbb(file){
-  const key="d12c2e4a8650157b2b6b9fe85336ea43";
-  const formData=new FormData();
-  formData.append("image",file);
-  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
-  const data=await res.json();
-  return data.data.url;
+// Random gradient
+function randomGradient(){
+  const colors=[
+    "from-pink-200 via-purple-200 to-indigo-200",
+    "from-green-200 via-teal-200 to-blue-200",
+    "from-yellow-200 via-red-200 to-pink-200",
+    "from-indigo-200 via-purple-200 to-pink-200"
+  ];
+  return "bg-gradient-to-r "+colors[Math.floor(Math.random()*colors.length)];
 }
 
-// Submit Post
-submitPost.addEventListener("click",async ()=>{
-  const name=document.getElementById("nameInput").value.trim();
-  const age=document.getElementById("ageInput").value.trim();
-  const birthDate=document.getElementById("birthDateInput").value;
-  const postDate=document.getElementById("postDateInput").value;
-  const gender=document.getElementById("genderInput").value;
-  const education=document.getElementById("educationInput").value.trim();
-  const profession=document.getElementById("professionInput").value.trim();
-  const income=document.getElementById("incomeInput").value.trim();
-  const marital=document.getElementById("maritalInput").value.trim();
-  const religion=document.getElementById("religionInput").value.trim();
-  const caste=document.getElementById("casteInput").value.trim();
-  const city=document.getElementById("cityInput").value.trim();
-  const photo=document.getElementById("photoInput").files[0];
-  if(!name||!age||!gender||!city||!photo) return alert("❌ Fill required fields!");
-  const photoUrl=await uploadToImgbb(photo);
+// Image Upload to imgbb
+async function uploadImage(file){
+  const form=new FormData();
+  form.append("image",file);
+  const res=await fetch("https://api.imgbb.com/1/upload?key=YOUR_IMGBB_KEY",{method:"POST",body:form});
+  const data=await res.json();
+  return data.data.display_url;
+}
+
+// Profile Form Submit
+document.getElementById("profileForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const file=document.getElementById("photoInput").files[0];
+  let photoUrl="";
+  if(file) photoUrl=await uploadImage(file);
 
   await addDoc(collection(db,"profiles"),{
-    name,age,birthDate,postDate,gender,education,profession,income,marital,religion,caste,city,photoUrl,
-    uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
+    name:fd.get("name"),
+    age:fd.get("age"),
+    birthdate:fd.get("birthdate"),
+    postingDate:fd.get("postingDate"),
+    address:fd.get("address"),
+    whatsapp:fd.get("whatsapp"),
+    photoUrl,
+    approvals:{}, // Admin will approve
+    likes:[]
   });
-  alert("✅ Submitted! Wait for Admin Approval");
+  e.target.reset();
+  alert("✅ Profile submitted for approval!");
 });
 
-// Fetch Profiles
-const q=query(collection(db,"profiles"),orderBy("created","desc"));
-onSnapshot(q,snapshot=>{
-  const profiles=[];
-  snapshot.forEach(docSnap=>{
-    let data=docSnap.data();
-    data.id=docSnap.id;
-    profiles.push(data);
-  });
-  renderProfiles(profiles);
-  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
-});
-
-// Random color generator for cards
-function randomGradient(){
-  const colors=[['from-pink-200','via-yellow-200','to-green-200'],['from-purple-200','via-pink-200','to-yellow-100'],['from-blue-200','via-green-200','to-pink-200']];
-  const choice=colors[Math.floor(Math.random()*colors.length)];
-  return `bg-gradient-to-r ${choice.join(' ')}`;
-}
-
-// Render Public Profiles in Form Style + Like Button
+// Render Public Profiles
 function renderProfiles(profiles){
+  const postsList=document.getElementById("postsList");
   postsList.innerHTML="";
   profiles.forEach(p=>{
     if(!p.approvals) return;
@@ -171,91 +103,80 @@ function renderProfiles(profiles){
     if(approvedFields.length===0) return;
 
     const card=document.createElement("div");
-    card.className="p-4 rounded shadow transition-all "+randomGradient();
+    card.className="p-4 rounded shadow "+randomGradient();
 
-    let html = `<div class="space-y-2">`;
-    if(p.approvals.photoUrl && p.photoUrl) html += `<div><img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2"></div>`;
-    if(p.approvals.name) html += `<p><strong>👤 Name:</strong> ${p.name}</p>`;
-    if(p.approvals.age) html += `<p><strong>🎂 Age:</strong> ${p.age}</p>`;
-    if(p.approvals.birthDate) html += `<p><strong>🎉 Birth Date:</strong> ${p.birthDate}</p>`;
-    if(p.approvals.postDate) html += `<p><strong>📅 Posting Date:</strong> ${p.postDate}</p>`;
-    if(p.approvals.gender) html += `<p><strong>🚻 Gender:</strong> ${p.gender}</p>`;
-    if(p.approvals.education) html += `<p><strong>🎓 Education:</strong> ${p.education}</p>`;
-    if(p.approvals.profession) html += `<p><strong>💼 Profession:</strong> ${p.profession}</p>`;
-    if(p.approvals.income) html += `<p><strong>💰 Income:</strong> ${p.income}</p>`;
-    if(p.approvals.marital) html += `<p><strong>💍 Marital:</strong> ${p.marital}</p>`;
-    if(p.approvals.religion) html += `<p><strong>🕌 Religion:</strong> ${p.religion}</p>`;
-    if(p.approvals.caste) html += `<p><strong>🏷️ Caste:</strong> ${p.caste}</p>`;
-    if(p.approvals.city) html += `<p><strong>🏙️ City:</strong> ${p.city}</p>`;
-    html += `</div>`;
-
-    // Like Button
-    html += `<button class="bg-red-500 text-white px-3 py-1 mt-2 rounded likeBtn">❤️ Like</button>`;
+    let html=`<div>`;
+    if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2">`;
+    if(p.approvals.name) html+=`<p><strong>👤 Name:</strong> ${p.name}</p>`;
+    if(p.approvals.age) html+=`<p><strong>🎂 Age:</strong> ${p.age}</p>`;
+    if(p.approvals.birthdate) html+=`<p><strong>📅 Birth Date:</strong> ${p.birthdate}</p>`;
+    if(p.approvals.postingDate) html+=`<p><strong>🗓 Posting Date:</strong> ${p.postingDate}</p>`;
+    if(p.approvals.address) html+=`<p><strong>🏠 Address:</strong> ${p.address}</p>`;
+    if(p.approvals.whatsapp) html+=`<p><strong>📱 WhatsApp:</strong> ${p.whatsapp}</p>`;
+    html+=`</div>`;
+    html+=`<button class="bg-red-500 text-white px-3 py-1 mt-2 rounded likeBtn">❤️ Like & Contact</button>`;
     card.innerHTML=html;
     postsList.appendChild(card);
 
-    const likeBtn=card.querySelector(".likeBtn");
-    likeBtn.addEventListener("click",()=>{
+    // Like Button Click
+    card.querySelector(".likeBtn").addEventListener("click",()=>{
       const likeName=prompt("Enter Your Name:");
-      const likePhotoUrl=prompt("Enter Photo URL:");
-      if(!likeName) return alert("Name required!");
-      updateDoc(doc(db,"profiles",p.id),{likes:arrayUnion({name:likeName,photoUrl:likePhotoUrl,email:currentUser?currentUser.email:"",timestamp:serverTimestamp()})});
-      alert("✅ Like Submitted!");
+      if(!likeName) return;
+      updateDoc(doc(db,"profiles",p.id),{
+        likes:arrayUnion({name:likeName,timestamp:serverTimestamp()})
+      }).then(()=>{
+        const waUrl=`https://wa.me/9112170192?text=Hello,%20I%20liked%20your%20profile%20on%20Nikah%20Portal!`;
+        window.open(waUrl,"_blank");
+        alert("✅ Like submitted! WhatsApp opened.");
+      });
     });
   });
 }
 
-// Admin Panel Render
+// Render Admin Panel
 function renderAdmin(profiles){
+  const adminList=document.getElementById("adminList");
   adminList.innerHTML="";
   profiles.forEach(p=>{
     const card=document.createElement("div");
-    card.className="p-4 rounded shadow bg-white space-y-1 border";
+    card.className="bg-white p-4 rounded shadow";
+    let html=`<h3 class="font-semibold">Profile: ${p.name||""}</h3>`;
+    html+=`<img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2">`;
 
-    card.innerHTML=`<strong>${p.name}, ${p.age}</strong><br>`;
-    // Approvals
-    const fields=['name','age','birthDate','postDate','gender','education','profession','income','marital','religion','caste','city','photoUrl'];
-    fields.forEach(f=>{
-      const cb=document.createElement("input");
-      cb.type="checkbox"; cb.checked=p.approvals && p.approvals[f];
-      cb.id=`${p.id}_${f}`;
-      const label=document.createElement("label"); label.textContent=f;
-      label.prepend(cb);
-      card.appendChild(label); card.appendChild(document.createElement("br"));
+    ["name","age","birthdate","postingDate","address","whatsapp","photoUrl"].forEach(f=>{
+      const checked=p.approvals&&p.approvals[f];
+      html+=`<label class="block"><input type="checkbox" class="approveField" data-id="${p.id}" data-field="${f}" ${checked?"checked":""}/> ${f}: ${p[f]||""}</label>`;
     });
-    // Save Approval
-    const saveBtn=document.createElement("button");
-    saveBtn.textContent="✅ Save Approvals"; saveBtn.className="bg-green-500 text-white px-3 py-1 rounded mt-1";
-    saveBtn.onclick=async ()=>{
-      const approvals={};
-      fields.forEach(f=>approvals[f]=document.getElementById(`${p.id}_${f}`).checked);
-      await updateDoc(doc(db,"profiles",p.id),{approvals});
-      alert("✅ Approvals Updated");
-    };
-    card.appendChild(saveBtn);
 
-    // Likes List + WhatsApp
     if(p.likes && p.likes.length>0){
-      const likeDiv=document.createElement("div"); likeDiv.className="mt-2";
+      html+=`<div class="mt-2"><strong>Likes:</strong>`;
       p.likes.forEach(l=>{
-        const lDiv=document.createElement("div");
-        lDiv.innerHTML=`❤️ ${l.name} <button class="bg-green-500 px-2 py-1 rounded text-white">WhatsApp</button>`;
-        const wBtn=lDiv.querySelector("button");
-        wBtn.onclick=()=> window.open(`https://wa.me/${l.email?l.email:""}`); // or l.phone if stored
-        likeDiv.appendChild(lDiv);
+        html+=`<p>👍 ${l.name||""} <a href="https://wa.me/9112170192" target="_blank" class="text-green-600 font-bold">WhatsApp</a></p>`;
       });
-      card.appendChild(likeDiv);
+      html+=`</div>`;
     }
 
-    // Delete
-    const delBtn=document.createElement("button");
-    delBtn.textContent="🗑 Delete"; delBtn.className="bg-red-600 text-white px-3 py-1 rounded mt-1";
-    delBtn.onclick=async ()=>{ if(confirm(`Delete ${p.name}?`)) await deleteDoc(doc(db,"profiles",p.id)); };
-    card.appendChild(delBtn);
-
+    card.innerHTML=html;
     adminList.appendChild(card);
+
+    card.querySelectorAll(".approveField").forEach(cb=>{
+      cb.addEventListener("change",async()=>{
+        const fid=cb.dataset.id;
+        const f=cb.dataset.field;
+        await updateDoc(doc(db,"profiles",fid),{
+          [`approvals.${f}`]:cb.checked
+        });
+      });
+    });
   });
 }
+
+// Live Snapshot
+onSnapshot(collection(db,"profiles"),snap=>{
+  const profiles=snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderProfiles(profiles);
+  renderAdmin(profiles);
+});
 </script>
 </body>
 </html>
