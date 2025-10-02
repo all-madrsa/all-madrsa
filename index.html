@@ -60,9 +60,7 @@
   <a href="news.html">
     <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
   </a>
-  <a href="news.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News2</button>
-  </a>
+ 
      
   <a href="hadees.html">
     <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
@@ -96,31 +94,33 @@
   </div>
 </header>
 
-<style>
 /* 3D Buttons Base */
 .btn-3d-special {
   color: #fff;
   font-weight: 700;
-  border-radius: 10px;
-  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+  border-radius: 8px; /* थोड़ी छोटी radius */
+  box-shadow: 0 3px 0 rgba(0,0,0,.25), 0 4px 6px rgba(0,0,0,.2); /* shadow छोटा किया */
   transition: transform .12s ease, box-shadow .12s ease;
 }
 .btn-3d-special:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0,0,0,.25);
 }
 
 /* Small variant for top header buttons */
 .btn-small {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
+  font-size: 0.75rem;       /* font-size छोटा किया */
+  padding: 0.25rem 0.5rem;  /* padding कम किया */
+  line-height: 1rem;        /* compact height */
 }
+
 
 /* Header PNG images */
 .header-png {
   height: 70px;           /* image height */
   width: 70px;            /* image width */
-  object-fit: cover;
+  object-fit: cover;line-height
+  
   border-radius: 50%;
   display: flex;
   align-items: center;
