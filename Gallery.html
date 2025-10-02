@@ -8,14 +8,14 @@
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 
-/* 3D Button Base */
-.btn-3d {
+/* 3D Buttons */
+.btn-3d, .btn-3d-home {
   color:#fff; font-weight:700; border-radius:10px; padding:.35rem .7rem; font-size:.85rem;
   box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);
   transition: transform .12s ease, box-shadow .12s ease, filter .12s; cursor:pointer;
 }
-.btn-3d:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);}
-.btn-3d:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
+.btn-3d:hover, .btn-3d-home:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);}
+.btn-3d:active, .btn-3d-home:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
 
 /* Header Images */
 .header-png { height:50px; width:50px; border-radius:50%; object-fit:cover; }
@@ -31,38 +31,37 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 .admin-btn { display:inline-block; margin:2px; padding:2px 6px; border-radius:5px; font-size:0.7rem; color:#fff; cursor:pointer; }
 .admin-edit { background:#1d4ed8; }  /* Blue */
 .admin-delete { background:#dc2626; } /* Red */
-.caption { text-sm text-gray-700 mt-1 text-center; }
 </style>
 </head>
 <body>
 
-<!-- Header with Logo and 3D Buttons -->
+<!-- Header -->
 <header class="bg-blue-600" style="height:100px;">
   <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
-    <div class="flex justify-center gap-4">
-      <a href="index.html"><button class="btn-3d btn-small" style="background: linear-gradient(90deg,#ff4d4d,#4d94ff);">🏠 Home</button></a>
-      <a href="nikah.html"><button class="btn-3d btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button></a>
-      <a href="news.html"><button class="btn-3d btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button></a>
-      <a href="hadees.html"><button class="btn-3d btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button></a>
+
+    <!-- Top Buttons -->
+    <div class="flex justify-center gap-2">
+      <a href="index.html"><button class="btn-3d-home">🏠 Home</button></a>
+      <a href="nikah.html"><button class="btn-3d" style="background:linear-gradient(90deg,#ff4d4d,#ff914d)">💍 Nikah</button></a>
+      <a href="news.html"><button class="btn-3d" style="background:linear-gradient(90deg,#4dffb8,#4d94ff)">📰 News</button></a>
+      <a href="hadees.html"><button class="btn-3d" style="background:linear-gradient(90deg,#d24dff,#ff4dd2)">📜 Hadees</button></a>
     </div>
+
+    <!-- Logo & Side Images -->
     <div class="flex justify-between items-center h-full mt-1">
-      <div class="flex items-center"><img src="makka.png" alt="Makka" class="header-png"></div>
-      <div class="flex flex-col items-center justify-center h-full">
-        <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform: translateY(-8px);">
-          Talimi Ittehad
-        </div>
-      </div>
-      <div class="flex items-center"><img src="madina.png" alt="Madina" class="header-png"></div>
+      <img src="makka.png" alt="Makka" class="header-png">
+      <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform:translateY(-8px);">Talimi Ittehad</div>
+      <img src="madina.png" alt="Madina" class="header-png">
     </div>
   </div>
 </header>
 
 <!-- Admin Upload Form -->
-<div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow max-w-md mx-auto mt-4">
-  <h2 class="font-semibold mb-2">🖼 Upload New Gallery Images</h2>
+<div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow max-w-md mx-auto">
+  <h2 class="font-semibold mb-2">🖼 Upload New Gallery Post</h2>
   <input id="galleryFiles" type="file" accept="image/*" multiple class="mb-2 w-full rounded border p-1"/>
-  <input id="galleryCaption" type="text" placeholder="Image caption / description" class="mb-2 w-full rounded border p-1"/>
-  <button id="uploadBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8);">Upload</button>
+  <input id="galleryText" type="text" placeholder="Post Caption" class="mb-2 w-full rounded border p-1"/>
+  <button id="uploadBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8)">Upload</button>
 </div>
 
 <main class="max-w-6xl mx-auto p-4">
@@ -83,8 +82,8 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -108,15 +107,16 @@ const galleryDiv = document.getElementById("galleryGrid");
 const adminBox = document.getElementById("adminUpload");
 const uploadBtn = document.getElementById("uploadBtn");
 const emptyMsg = document.getElementById("emptyMsg");
+const galleryText = document.getElementById("galleryText");
 
 let currentUser = null;
 
 // Convert file → base64
 function toBase64(file){
   return new Promise((resolve,reject)=>{
-    const reader = new FileReader();
-    reader.onload = ()=>resolve(reader.result.split(",")[1]);
-    reader.onerror = e=>reject(e);
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result.split(",")[1]);
+    reader.onerror=e=>reject(e);
     reader.readAsDataURL(file);
   });
 }
@@ -132,12 +132,13 @@ async function uploadToImgBB(file){
   else throw new Error("ImgBB upload failed");
 }
 
-// Load gallery
+// Load gallery with newest first
 async function loadGallery(){
   galleryDiv.innerHTML="";
-  const snap = await getDocs(collection(db,"gallery"));
+  const q = query(collection(db,"gallery"), orderBy("createdAt","desc"));
+  const snap = await getDocs(q);
   if(snap.empty){ emptyMsg.classList.remove("hidden"); }
-  else {
+  else{
     emptyMsg.classList.add("hidden");
     snap.forEach(docSnap=>{
       const d = docSnap.data();
@@ -152,30 +153,27 @@ async function loadGallery(){
         wrapper.appendChild(img);
 
         // Caption
-        const captionElem = document.createElement("div");
-        captionElem.textContent = d.caption || "";
-        captionElem.className = "caption";
-        wrapper.appendChild(captionElem);
+        if(d.text){
+          const caption = document.createElement("div");
+          caption.textContent = d.text;
+          caption.className = "text-center text-sm mt-1 text-gray-700";
+          wrapper.appendChild(caption);
+        }
 
         if(currentUser?.email===ADMIN_EMAIL){
-          // Edit Button
           const editBtn = document.createElement("button");
           editBtn.textContent="✏️";
           editBtn.className="admin-btn admin-edit absolute top-2 left-2 hidden group-hover:block";
           editBtn.onclick=async()=>{
             const newUrl = prompt("Enter new image URL:", d.url);
-            const newCaption = prompt("Enter new caption:", d.caption || "");
-            if(newUrl || newCaption!=null){
-              await updateDoc(doc(db,"gallery",docSnap.id),{
-                url: newUrl || d.url,
-                caption: newCaption || d.caption
-              });
+            const newText = prompt("Enter new caption:", d.text||"");
+            if(newUrl){
+              await updateDoc(doc(db,"gallery",docSnap.id),{url:newUrl, text:newText});
               loadGallery();
             }
           };
           wrapper.appendChild(editBtn);
 
-          // Delete Button
           const delBtn = document.createElement("button");
           delBtn.textContent="🗑";
           delBtn.className="admin-btn admin-delete absolute top-2 right-2 hidden group-hover:block";
@@ -190,26 +188,22 @@ async function loadGallery(){
 }
 
 // Upload handler
-uploadBtn.onclick = async ()=>{
-  const files = document.getElementById("galleryFiles").files;
-  const caption = document.getElementById("galleryCaption").value.trim();
+uploadBtn.onclick=async()=>{
+  const files=document.getElementById("galleryFiles").files;
+  const text = galleryText.value;
   if(!files.length) return alert("Select at least one file!");
   try{
     const uploads = Array.from(files).map(f=>uploadToImgBB(f));
     const urls = await Promise.all(uploads);
-    const addDocs = urls.map(url=>addDoc(collection(db,"gallery"),{
-      url,
-      caption: caption,
-      createdAt: serverTimestamp()
-    }));
+    const addDocs = urls.map(url=>addDoc(collection(db,"gallery"),{url,text,createdAt:serverTimestamp()}));
     await Promise.all(addDocs);
+    galleryText.value="";
     document.getElementById("galleryFiles").value="";
-    document.getElementById("galleryCaption").value="";
     loadGallery();
   }catch(e){ alert("Upload failed: "+e.message); }
 };
 
-// Auth State
+// Auth check
 onAuthStateChanged(auth,user=>{
   currentUser=user;
   if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
@@ -222,7 +216,7 @@ document.getElementById("closeLightbox").onclick=()=>document.getElementById("li
 document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
 </script>
 
-<!-- Fixed Donate Button -->
+<!-- Donate Button -->
 <a href="https://all-madrsa.netlify.app/upi" class="fixed top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-black font-bold px-5 py-3 rounded-lg shadow-lg hover:bg-yellow-300 z-50">💝 Donate</a>
 
 </body>
