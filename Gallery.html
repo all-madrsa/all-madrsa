@@ -10,24 +10,23 @@ body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
 
 .title-3d{font-weight:700;font-size:2rem;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,.9);}
 
-.btn-3d-special, .btn-3d-home {
-  color:#fff; font-weight:700; border-radius:12px;
-  box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);
-  transition: transform .15s ease, box-shadow .15s ease, filter .15s;
-  cursor:pointer;
+/* 3D Buttons */
+.btn-3d { color:#fff; font-weight:700; border-radius:10px; padding:.35rem .7rem; font-size:.85rem;
+  box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s; cursor:pointer;
 }
-.btn-3d-special:hover, .btn-3d-home:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow:0 8px 0 rgba(0,0,0,.25),0 10px 20px rgba(0,0,0,.25); }
-.btn-3d-special:active, .btn-3d-home:active { transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
-.btn-small{font-size:.85rem;padding:.4rem .9rem;}
-.btn-3d-home{background:linear-gradient(90deg,#ff4d4d,#4d94ff);}
+.btn-3d:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);}
+.btn-3d:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
 
-.header-png{height:70px;width:70px;border-radius:50%;object-fit:cover;}
+/* Header Images */
+.header-png { height:50px;width:50px;border-radius:50%;object-fit:cover; }
+
 .gallery-img{cursor:pointer;transition:transform .2s;}
 .gallery-img:hover{transform:scale(1.05);}
 #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;align-items:center;justify-content:center;}
 #lightbox img{max-height:90%;max-width:90%;border-radius:.5rem;box-shadow:0 0 20px rgba(0,0,0,.6);}
 #lightbox button{position:absolute;top:20px;right:20px;background:#f44336;color:#fff;padding:6px 12px;border-radius:6px;}
-#adminLoginBtn{display:block;margin:10px auto;background:#db4437;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;transition:all .15s;}
+#adminLoginBtn{display:block;margin:10px auto;background:#db4437;color:white;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;transition:all .15s;}
 #adminLoginBtn:hover{filter:brightness(1.1); transform:translateY(-2px);}
 </style>
 </head>
@@ -37,18 +36,18 @@ body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
 <header class="bg-blue-600 p-2">
   <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
 
-    <!-- Buttons -->
-    <div class="flex gap-2 justify-center flex-wrap">
-      <a href="index.html"><button class="btn-3d-home px-3 py-1">🏠 Home</button></a>
-      <a href="nikah.html"><button class="btn-3d-special btn-small" style="background:linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button></a>
-      <a href="news.html"><button class="btn-3d-special btn-small" style="background:linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button></a>
-      <a href="hadees.html"><button class="btn-3d-special btn-small" style="background:linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button></a>
+    <!-- Buttons in one line -->
+    <div class="flex gap-2 justify-center flex-wrap md:flex-nowrap">
+      <a href="index.html"><button class="btn-3d">🏠 Home</button></a>
+      <a href="nikah.html"><button class="btn-3d" style="background:linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button></a>
+      <a href="news.html"><button class="btn-3d" style="background:linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button></a>
+      <a href="hadees.html"><button class="btn-3d" style="background:linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button></a>
     </div>
 
     <!-- Logo -->
-    <div class="flex items-center gap-4 mt-2 md:mt-0">
+    <div class="flex items-center gap-3 mt-2 md:mt-0">
       <img src="makka.png" alt="Makka" class="header-png">
-      <div class="text-white font-bold text-2xl title-3d">Talimi Ittehad</div>
+      <div class="text-white font-bold text-xl title-3d">Talimi Ittehad</div>
       <img src="madina.png" alt="Madina" class="header-png">
     </div>
   </div>
@@ -64,7 +63,7 @@ body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
   <div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow max-w-md mx-auto">
     <h2 class="font-semibold mb-2">🖼 Upload New Gallery Images</h2>
     <input id="galleryFiles" type="file" accept="image/*" multiple class="mb-2 w-full rounded border p-1"/>
-    <button id="uploadBtn" class="btn-3d-special w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8);">Upload</button>
+    <button id="uploadBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8);">Upload</button>
   </div>
 
   <!-- Gallery Grid -->
