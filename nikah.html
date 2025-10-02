@@ -4,18 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nikah Portal | Talimi Ittehad</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body {
-    background: url('https://i.ibb.co/MkYyL7m/makkah-bg.jpg') no-repeat center center fixed;
-    background-size: cover;
-    font-family: sans-serif;
-}
-button {transition: transform .2s;}
-button:hover {transform: scale(1.05);}
+body {background:#fdf6e3; font-family:sans-serif;}
+button {transition:transform .2s;}
+button:hover {transform:scale(1.05);}
 .btn-3d-home {
   background: linear-gradient(90deg,#ff4d4d,#4d94ff);
   color: white;
@@ -27,89 +20,97 @@ button:hover {transform: scale(1.05);}
   transform: translateY(3px);
   box-shadow: 0 3px 0 rgba(0,0,0,0.25);
 }
-input, select {background:white;}
 </style>
 </head>
-<body class="text-black bg-opacity-70 backdrop-blur-sm">
+<body class="text-black">
 
 <!-- Notice Bar -->
-<div id="noticeBar" class="w-full bg-white/70">
-  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">
-    📢 Welcome to Talimi Ittehad!
-  </marquee>
+<div id="noticeBar" class="w-full bg-yellow-200 py-1">
+  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">📢 Welcome to Talimi Ittehad!</marquee>
+</div>
+
+<!-- Admin Notice Editor -->
+<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
+  <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
+  <button id="saveNotice" class="btn-3d mt-1 bg-blue-600 text-white px-4 py-2 rounded">💾 Save Notice</button>
 </div>
 
 <!-- Header -->
-<header class="bg-blue-600 bg-opacity-80 p-4 flex justify-between items-center text-white sticky top-0 z-50">
+<header class="bg-blue-600 p-4 flex flex-col sm:flex-row justify-between items-center text-white gap-2">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
   <div class="flex gap-2">
-    <a href="index.html" class="btn-3d-home px-1 py-0.5 text-xs rounded font-bold flex items-center justify-center">🏠 Home</a>
-    <button id="loginBtn" class="bg-green-500 px-2 py-0.5 text-xs rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-2 py-0.5 text-xs rounded hidden">➕ Post</button>
+    <a href="index.html" class="btn-3d-home px-2 py-1 text-sm rounded font-bold flex items-center justify-center">🏠 Home</a>
+    <button id="loginBtn" class="bg-green-500 px-2 py-1 text-sm rounded">Login</button>
+    <button id="postBtn" class="bg-yellow-500 px-2 py-1 text-sm rounded hidden">➕ Post</button>
   </div>
 </header>
 
 <!-- Post Form -->
-<section id="postSection" class="hidden p-4 bg-white/80 rounded shadow my-4 mx-4 space-y-2">
+<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-2 sm:mx-4 space-y-2">
 
-<h2 class="font-bold text-lg">Personal Details</h2>
-<input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded border">
-<input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded border">
+  <h2 class="font-bold text-lg">Personal Details</h2>
+  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded border">
+  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded border">
 
-<select id="genderInput" class="w-full p-2 rounded border">
+  <select id="genderInput" class="w-full p-2 rounded border">
     <option value="">Gender</option>
     <option value="Male">Male</option>
     <option value="Female">Female</option>
     <option value="Other">Other</option>
-</select>
+  </select>
 
-<select id="maritalInput" class="w-full p-2 rounded border">
+  <select id="maritalInput" class="w-full p-2 rounded border">
     <option value="">Marital Status</option>
     <option value="Single">Single</option>
     <option value="Married">Married</option>
     <option value="Divorced">Divorced</option>
     <option value="Widowed">Widowed</option>
-</select>
+  </select>
 
-<input type="number" id="childrenInput" placeholder="Number of Children (if married)" class="w-full p-2 rounded border hidden">
+  <div id="childrenDiv" class="hidden">
+    <input type="number" id="childrenInput" placeholder="Number of Children" class="w-full p-2 rounded border">
+  </div>
 
-<input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded border">
-<input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded border">
-<input type="text" id="incomeInput" placeholder="Income" class="w-full p-2 rounded border">
+  <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded border">
+  <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded border">
+  <input type="text" id="incomeInput" placeholder="Income" class="w-full p-2 rounded border">
 
-<select id="religionInput" class="w-full p-2 rounded border">
+  <select id="religionInput" class="w-full p-2 rounded border">
     <option value="">Religion</option>
     <option value="Islam">Islam</option>
     <option value="Hindu">Hindu</option>
     <option value="Christian">Christian</option>
     <option value="Other">Other</option>
-</select>
+  </select>
 
-<input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded border">
-<input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded border">
+  <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded border">
+  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded border">
 
-<h2 class="font-bold text-lg mt-4">Relatives Info</h2>
+  <h2 class="font-bold text-lg mt-4">Relatives Info</h2>
+  <input type="text" id="fatherInput" placeholder="Father's Name" class="w-full p-2 rounded border">
+  <input type="text" id="motherInput" placeholder="Mother's Name" class="w-full p-2 rounded border">
 
-<input type="text" id="fatherInput" placeholder="Father's Name" class="w-full p-2 rounded border">
-<input type="text" id="motherInput" placeholder="Mother's Name" class="w-full p-2 rounded border">
+  <select id="brotherStatus" class="w-full p-2 rounded border">
+    <option value="">Do you have brothers?</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+  <div id="brotherCountDiv" class="hidden">
+    <input type="number" id="brotherCount" placeholder="How many brothers?" class="w-full p-2 rounded border">
+  </div>
 
-<select id="brotherStatus" class="w-full p-2 rounded border">
-  <option value="">Do you have brothers?</option>
-  <option value="Yes">Yes</option>
-  <option value="No">No</option>
-</select>
-<input type="number" id="brotherCount" placeholder="Number of Brothers" class="w-full p-2 rounded border hidden">
+  <select id="sisterStatus" class="w-full p-2 rounded border">
+    <option value="">Do you have sisters?</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+  <div id="sisterCountDiv" class="hidden">
+    <input type="number" id="sisterCount" placeholder="How many sisters?" class="w-full p-2 rounded border">
+  </div>
 
-<select id="sisterStatus" class="w-full p-2 rounded border">
-  <option value="">Do you have sisters?</option>
-  <option value="Yes">Yes</option>
-  <option value="No">No</option>
-</select>
-<input type="number" id="sisterCount" placeholder="Number of Sisters" class="w-full p-2 rounded border hidden">
+  <input type="file" id="photoInput" class="w-full p-2 rounded border">
 
-<input type="file" id="photoInput" class="w-full p-2 rounded border">
-
-<button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full mt-2">Submit Profile</button>
+  <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full mt-2">Submit Profile</button>
 </section>
 
 <!-- Public Profiles -->
@@ -130,7 +131,7 @@ input, select {background:white;}
 </div>
 
 <!-- Admin Panel -->
-<section id="adminPanel" class="hidden p-4 bg-white/80 rounded shadow my-4 mx-4">
+<section id="adminPanel" class="hidden p-4">
   <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
   <div id="adminList" class="grid gap-4"></div>
 </section>
@@ -152,7 +153,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-// Elements
 const loginBtn=document.getElementById("loginBtn");
 const postBtn=document.getElementById("postBtn");
 const postSection=document.getElementById("postSection");
@@ -171,7 +171,6 @@ let currentUser=null;
 let currentLikeProfile=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
 
-// Login
 loginBtn.addEventListener("click",async ()=>{
   const provider=new GoogleAuthProvider();
   await signInWithPopup(auth,provider);
@@ -194,15 +193,19 @@ onAuthStateChanged(auth,user=>{
 postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
 
 // Conditional fields
-document.getElementById("maritalInput").addEventListener("change",(e)=>{
-  document.getElementById("childrenInput").classList.toggle("hidden", e.target.value !== "Married");
+const maritalInput = document.getElementById("maritalInput");
+const childrenDiv = document.getElementById("childrenDiv");
+maritalInput.addEventListener("change",()=>{
+  childrenDiv.classList.toggle("hidden", maritalInput.value!=="Married");
 });
-document.getElementById("brotherStatus").addEventListener("change",(e)=>{
-  document.getElementById("brotherCount").classList.toggle("hidden", e.target.value !== "Yes");
-});
-document.getElementById("sisterStatus").addEventListener("change",(e)=>{
-  document.getElementById("sisterCount").classList.toggle("hidden", e.target.value !== "Yes");
-});
+
+const brotherStatus = document.getElementById("brotherStatus");
+const brotherCountDiv = document.getElementById("brotherCountDiv");
+brotherStatus.addEventListener("change",()=>{ brotherCountDiv.classList.toggle("hidden", brotherStatus.value!=="Yes"); });
+
+const sisterStatus = document.getElementById("sisterStatus");
+const sisterCountDiv = document.getElementById("sisterCountDiv");
+sisterStatus.addEventListener("change",()=>{ sisterCountDiv.classList.toggle("hidden", sisterStatus.value!=="Yes"); });
 
 // ImgBB upload
 async function uploadToImgbb(file){
@@ -214,7 +217,7 @@ async function uploadToImgbb(file){
   return data.data.url;
 }
 
-// Submit profile
+// Submit Post
 submitPost.addEventListener("click", async () => {
   const name=document.getElementById("nameInput").value.trim();
   const age=document.getElementById("ageInput").value.trim();
@@ -229,33 +232,29 @@ submitPost.addEventListener("click", async () => {
   const city=document.getElementById("cityInput").value.trim();
   const father=document.getElementById("fatherInput").value.trim();
   const mother=document.getElementById("motherInput").value.trim();
-  const brotherStatus=document.getElementById("brotherStatus").value;
-  const brotherCount=document.getElementById("brotherCount").value;
-  const sisterStatus=document.getElementById("sisterStatus").value;
-  const sisterCount=document.getElementById("sisterCount").value;
+  const brother = brotherStatus.value==="Yes"?document.getElementById("brotherCount").value.trim():"0";
+  const sister = sisterStatus.value==="Yes"?document.getElementById("sisterCount").value.trim():"0";
   const photo=document.getElementById("photoInput").files[0];
 
   if(!name||!age||!gender||!marital||!city||!photo) return alert("❌ Fill required fields!");
   const photoUrl=await uploadToImgbb(photo);
 
   await addDoc(collection(db,"profiles"),{
-    name,age,gender,marital,children: marital==="Married"?children:0,education,profession,income,
+    name,age,gender,marital,children,education,profession,income,
     religion,caste,city,
-    relatives:{father,mother,brother: brotherStatus==="Yes"?brotherCount:0, sister: sisterStatus==="Yes"?sisterCount:0},
+    relatives:{father,mother,brother,sister},
     photoUrl,
     uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
   });
   alert("✅ Submitted! Wait for Admin Approval");
 });
 
-// Fetch and render profiles
+// Fetch and Render Profiles
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
 onSnapshot(q,snapshot=>{
   const profiles=[];
   snapshot.forEach(docSnap=>{
-    let data=docSnap.data();
-    data.id=docSnap.id;
-    profiles.push(data);
+    let data=docSnap.data(); data.id=docSnap.id; profiles.push(data);
   });
   renderProfiles(profiles);
   if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
@@ -269,15 +268,15 @@ function renderProfiles(profiles){
     if(approvedFields.length===0) return;
 
     const card=document.createElement("div");
-    card.className="p-4 rounded shadow bg-white/90";
+    card.className="p-4 rounded shadow bg-white";
 
     let html=`<div class="space-y-1">`;
-    if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-full h-64 object-cover rounded border mb-2">`;
+    if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-full h-48 object-cover rounded border mb-2">`;
     ["name","age","gender","marital","children","education","profession","income","religion","caste","city"].forEach(f=>{
       if(p.approvals[f]) html+=`<p><b>${f}:</b> ${p[f]}</p>`;
     });
     if(p.approvals.relatives){
-      html+=`<p><b>Relatives:</b> Father:${p.relatives?.father||0}, Mother:${p.relatives?.mother||0}, Brother:${p.relatives?.brother||0}, Sister:${p.relatives?.sister||0}</p>`;
+      html+=`<p><b>Relatives:</b> Father:${p.relatives?.father||"-"}, Mother:${p.relatives?.mother||"-"}, Brother:${p.relatives?.brother||"-"}, Sister:${p.relatives?.sister||"-"}</p>`;
     }
     html+=`</div>`;
     html+=`<button class="like-btn bg-red-500 text-white px-3 py-1 rounded mt-2 w-full" data-id="${p.id}">❤️ Like</button>`;
@@ -290,7 +289,6 @@ function renderProfiles(profiles){
   });
 }
 
-// Like popup
 likeSubmit.onclick=async ()=>{
   if(!currentUser) return alert("Login required!");
   const name=likeName.value.trim();
@@ -304,18 +302,21 @@ likeSubmit.onclick=async ()=>{
 };
 likeCancel.onclick=()=>likePopup.classList.add("hidden");
 
-// Admin panel
+// Admin Panel
 function renderAdmin(profiles){
   adminList.innerHTML="";
   profiles.forEach(p=>{
     let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
     html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
+
     const fields=["photoUrl","name","age","gender","marital","children","education","profession","income","religion","caste","city","relatives"];
     fields.forEach(f=>{
       html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals&&p.approvals[f]?"checked":""}> ${f}</div>`;
     });
+
     html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
     html+=`<button class="bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn" data-id="${p.id}">🗑 Delete</button>`;
+
     if(p.likes && p.likes.length>0){
       html+=`<div class="mt-2"><b>❤️ Likes:</b><br>`;
       p.likes.forEach(l=>{
@@ -328,6 +329,7 @@ function renderAdmin(profiles){
       });
       html+=`</div>`;
     }
+
     html+=`</div>`;
     adminList.innerHTML+=html;
   });
