@@ -1,17 +1,16 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gallery | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
+body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 
-.title-3d{font-weight:700;font-size:2rem;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,.9);}
-
-/* 3D Buttons */
-.btn-3d { color:#fff; font-weight:700; border-radius:10px; padding:.35rem .7rem; font-size:.85rem;
+/* 3D Button Base */
+.btn-3d {
+  color:#fff; font-weight:700; border-radius:10px; padding:.35rem .7rem; font-size:.85rem;
   box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);
   transition: transform .12s ease, box-shadow .12s ease, filter .12s; cursor:pointer;
 }
@@ -19,25 +18,33 @@ body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
 .btn-3d:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
 
 /* Header Images */
-.header-png { height:50px;width:50px;border-radius:50%;object-fit:cover; }
+.header-png { height:50px; width:50px; border-radius:50%; object-fit:cover; }
 
-.gallery-img{cursor:pointer;transition:transform .2s;}
-.gallery-img:hover{transform:scale(1.05);}
-#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;align-items:center;justify-content:center;}
-#lightbox img{max-height:90%;max-width:90%;border-radius:.5rem;box-shadow:0 0 20px rgba(0,0,0,.6);}
-#lightbox button{position:absolute;top:20px;right:20px;background:#f44336;color:#fff;padding:6px 12px;border-radius:6px;}
-#adminLoginBtn{display:block;margin:10px auto;background:#db4437;color:white;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;transition:all .15s;}
-#adminLoginBtn:hover{filter:brightness(1.1); transform:translateY(-2px);}
+/* Gallery */
+.gallery-img { cursor:pointer; transition:transform .2s; }
+.gallery-img:hover { transform:scale(1.05); }
+
+#lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:50; align-items:center; justify-content:center; }
+#lightbox img { max-height:90%; max-width:90%; border-radius:.5rem; box-shadow:0 0 20px rgba(0,0,0,.6); }
+#lightbox button { position:absolute; top:20px; right:20px; background:#f44336; color:#fff; padding:6px 12px; border-radius:6px; }
+
+#adminLoginBtn { display:block; margin:10px auto; background:#db4437; color:white; padding:8px 16px; border:none; border-radius:6px; cursor:pointer; transition:all .15s; }
+#adminLoginBtn:hover { filter:brightness(1.1); transform:translateY(-2px); }
+
+.admin-btn { display:inline-block; margin:2px; padding:2px 6px; border-radius:5px; font-size:0.7rem; color:#fff; cursor:pointer; }
+.admin-edit { background:#1d4ed8; }  /* Blue */
+.admin-delete { background:#dc2626; } /* Red */
+
 </style>
 </head>
 <body>
 
 <!-- Header -->
 <header class="bg-blue-600 p-2">
-  <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
+  <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
 
-    <!-- Buttons in one line -->
-    <div class="flex gap-2 justify-center flex-wrap md:flex-nowrap">
+    <!-- Buttons + Home -->
+    <div class="flex flex-wrap gap-2 justify-center">
       <a href="index.html"><button class="btn-3d">🏠 Home</button></a>
       <a href="nikah.html"><button class="btn-3d" style="background:linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button></a>
       <a href="news.html"><button class="btn-3d" style="background:linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button></a>
@@ -45,9 +52,9 @@ body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
     </div>
 
     <!-- Logo -->
-    <div class="flex items-center gap-3 mt-2 md:mt-0">
+    <div class="flex items-center gap-3">
       <img src="makka.png" alt="Makka" class="header-png">
-      <div class="text-white font-bold text-xl title-3d">Talimi Ittehad</div>
+      <div class="text-white font-bold text-xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">Talimi Ittehad</div>
       <img src="madina.png" alt="Madina" class="header-png">
     </div>
   </div>
@@ -73,7 +80,7 @@ body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
 
 <!-- Lightbox -->
 <div id="lightbox" class="flex">
-  <img src="" alt="preview" id="lightbox-img" />
+  <img src="" alt="preview" id="lightbox-img">
   <button id="closeLightbox">✖</button>
 </div>
 
@@ -81,10 +88,9 @@ body { background:#f1f5f9; margin:0; font-family:Arial,sans-serif; }
   <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
 </footer>
 
-<!-- Firebase + Script -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -94,8 +100,9 @@ const firebaseConfig = {
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b"
+  appId:"1:619313835874:web:e387e1297663b11fc2463b"
 };
+
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 
@@ -112,9 +119,21 @@ const adminLoginBtn = document.getElementById("adminLoginBtn");
 
 let currentUser = null;
 
+// Convert file → base64
 function toBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(",")[1]);reader.onerror=e=>reject(e);reader.readAsDataURL(file);});}
-async function uploadToImgBB(file){const base64=await toBase64(file);const fd=new FormData();fd.append("image",base64);const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd});const data=await res.json();if(data.success)return data.data.url;else throw new Error("ImgBB upload failed");}
 
+// Upload to ImgBB
+async function uploadToImgBB(file){
+  const base64 = await toBase64(file);
+  const fd = new FormData();
+  fd.append("image", base64);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd});
+  const data = await res.json();
+  if(data.success) return data.data.url;
+  else throw new Error("ImgBB upload failed");
+}
+
+// Load gallery
 async function loadGallery(){
   galleryDiv.innerHTML="";
   const snap = await getDocs(collection(db,"gallery"));
@@ -134,9 +153,23 @@ async function loadGallery(){
         wrapper.appendChild(img);
 
         if(currentUser?.email===ADMIN_EMAIL){
-          const delBtn=document.createElement("button");
+          // Edit Button
+          const editBtn = document.createElement("button");
+          editBtn.textContent="✏️";
+          editBtn.className="admin-btn admin-edit absolute top-2 left-2 hidden group-hover:block";
+          editBtn.onclick=async()=>{
+            const newUrl = prompt("Enter new image URL:", d.url);
+            if(newUrl){
+              await updateDoc(doc(db,"gallery",docSnap.id),{url:newUrl});
+              loadGallery();
+            }
+          };
+          wrapper.appendChild(editBtn);
+
+          // Delete Button
+          const delBtn = document.createElement("button");
           delBtn.textContent="🗑";
-          delBtn.className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded hidden group-hover:block";
+          delBtn.className="admin-btn admin-delete absolute top-2 right-2 hidden group-hover:block";
           delBtn.onclick=async()=>{ if(confirm("Delete this image?")){ await deleteDoc(doc(db,"gallery",docSnap.id)); loadGallery(); }};
           wrapper.appendChild(delBtn);
         }
@@ -147,6 +180,7 @@ async function loadGallery(){
   }
 }
 
+// Upload handler
 uploadBtn.onclick = async ()=>{
   const files=document.getElementById("galleryFiles").files;
   if(!files.length)return alert("Select at least one file!");
@@ -160,7 +194,10 @@ uploadBtn.onclick = async ()=>{
   }catch(e){ alert("Upload failed: "+e.message); }
 };
 
+// Admin Login
 adminLoginBtn.onclick=()=>signInWithPopup(auth,provider).catch(e=>alert("Login failed: "+e.message));
+
+// Auth State
 onAuthStateChanged(auth,user=>{
   currentUser=user;
   if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); adminLoginBtn.style.display="none"; }
@@ -174,9 +211,7 @@ document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") do
 </script>
 
 <!-- Fixed Donate Button -->
-<a href="https://all-madrsa.netlify.app/upi" class="fixed top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-black font-bold px-5 py-3 rounded-lg shadow-lg hover:bg-yellow-300 z-50">
-💝 Donate
-</a>
+<a href="https://all-madrsa.netlify.app/upi" class="fixed top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-black font-bold px-5 py-3 rounded-lg shadow-lg hover:bg-yellow-300 z-50">💝 Donate</a>
 
 </body>
 </html>
