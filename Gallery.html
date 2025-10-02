@@ -207,6 +207,34 @@ document.addEventListener("DOMContentLoaded", () => {
 </header>
 
 
+  <header class="bg-blue-600 px-2 py-1 flex items-center gap-2">
+
+  <!-- Home Button -->
+  <a href="index.html" class="btn-3d px-2 py-1 text-xs rounded font-bold flex items-center justify-center">
+    🏠 Home
+  </a>
+
+  <!-- Doner List Button -->
+  <a href="https://all-madrsa.netlify.app/doner.html" class="btn-3d px-2 py-1 text-xs rounded font-bold flex items-center justify-center">
+    💝 Doner List
+  </a>
+</header>
+
+<style>
+/* 3D Button Style */
+.btn-3d {
+  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.btn-3d:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+}
+</style>
+
 <main class="flex-1 max-w-6xl mx-auto p-4">
 
   <!-- Upload Section (Admin only) -->
