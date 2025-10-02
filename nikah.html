@@ -20,6 +20,8 @@ button:hover {transform:scale(1.05);}
 
 
 <!-- Header with Logo and 3D Buttons -->
+
+<!-- Header with Logo and 3D Buttons -->
 <header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
   <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
 
@@ -95,6 +97,106 @@ button:hover {transform:scale(1.05);}
 }
 </style>
 
+
+
+
+
+
+<!-- Namaz Times Box -->
+<div id="prayer-times" 
+     class="bg-green-700 text-white text-xs sm:text-sm px-3 py-2 rounded shadow text-left leading-5 mt-2 sm:mt-0 sm:ml-4">
+  🕌 Loading...
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // ✅ Tumhara fixed timetable
+  const timings = {
+    "Fajr": "05:10",
+    "Dhuhr": "12:20",
+    "Asr": "04:00",
+    "Maghrib": "06:15",
+    "Isha": "07:45"
+  };
+
+  // ✅ Show times
+  document.getElementById("prayer-times").innerHTML = `
+    🌅 Fajr: ${timings.Fajr} &nbsp;|&nbsp;
+    ☀ Dhuhr: ${timings.Dhuhr} &nbsp;|&nbsp;
+    🌇 Asr: ${timings.Asr} &nbsp;|&nbsp;
+    🌆 Maghrib: ${timings.Maghrib} &nbsp;|&nbsp;
+    🌙 Isha: ${timings.Isha}
+  `;
+});
+</script>
+
+
+  
+    <!-- Menu -->
+    <div class="flex flex-wrap justify-center items-center gap-2 pb-2 text-xs sm:text-sm">
+      <div class="dropdown relative">
+        <button class="btn-3d">About ⬇</button>
+        <div class="dropdown-menu">
+
+          
+          <a href="https://all-madrsa.netlify.app/about.html">About us</a>
+          <a href="https://all-madrsa.netlify.app/mission.html">Mission</a>
+          <a href="https://all-madrsa.netlify.app/contact.html">Contect</a>
+          <a href="https://all-madrsa.netlify.app/privacy.html">Privacy policy</a>
+           <a href="https://all-madrsa.netlify.app/gallery.html">Gallery</a>
+          <a href="https://all-madrsa.netlify.app/terms.html">Terms & Conditions</a>
+
+           <a href="#Youtube">Youtube</a>
+           <a href="#Facbook">Facbook</a>
+          <a href="#Instagrm">Instagrm</a>
+ 
+          
+
+          
+        </div>
+      </div>
+      <div class="dropdown relative">
+        <button class="btn-3d">More ⬇</button>
+        <div class="dropdown-menu">
+          <a href="https://all-madrsa.netlify.app/Calendar.html">Calendar</a>
+
+           <a href="https://all-madrsa.netlify.app/founders.html">ALL INDIA MUSLIM PERSONAL BOARD</a>
+          <a href="#faq">FAQ</a>
+        </div>
+      </div>
+
+      <!-- 🌐 Translate Button -->
+      <div class="relative flex flex-col items-center">
+        <button id="langBtn" class="btn-3d">🌐 Select Language</button>
+        <div id="google_translate_element" class="absolute top-full mt-2 hidden bg-white rounded shadow p-1 z-50 w-40 text-center"></div>
+      </div>
+
+      <!-- Auth + Add Button -->
+      <button id="authBtn" class="btn-3d">Login</button>
+      <button id="addBtn" class="btn-3d hidden">➕ Add Madarsa</button>
+    </div>
+  </div>
+</header>
+
+
+
+
+
+
+
+  
+<!-- Notice Bar -->
+<div id="noticeBar" class="w-full">
+  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">
+    📢 Welcome to Talimi Ittehad!
+  </marquee>
+</div>
+
+<!-- Admin Notice Editor (admin only) -->
+<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
+  <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
+  <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
+</div>
 
 
   
