@@ -26,7 +26,7 @@ button:hover {transform:scale(1.05);}
 
 <!-- Notice Bar -->
 <div id="noticeBar" class="w-full bg-yellow-200 py-1">
-  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">📢 Welcome to Talimi Ittehad!</marquee>
+  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">📢 Loading notices...</marquee>
 </div>
 
 <!-- Admin Notice Editor -->
@@ -34,6 +34,69 @@ button:hover {transform:scale(1.05);}
   <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
   <button id="saveNotice" class="btn-3d mt-1 bg-blue-600 text-white px-4 py-2 rounded">💾 Save Notice</button>
 </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  databaseURL:"https://all-madrsa-default-rtdb.firebaseio.com",
+  projectId:"all-madrsa",
+  storageBucket:"all-madrsa.appspot.com",
+  messagingSenderId:"619313835874",
+  appId:"1:619313835874:web:e387e1297663b11fc2463b"
+};
+
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const noticeText = document.getElementById("noticeText");
+const noticeAdmin = document.getElementById("noticeAdmin");
+const noticeInput = document.getElementById("noticeInput");
+const saveNotice = document.getElementById("saveNotice");
+
+let currentUser = null;
+
+// Load latest notice
+async function loadNotice(){
+  const snap = await getDocs(collection(db,"notices"));
+  if(snap.empty){
+    noticeText.textContent = "📢 Welcome to Talimi Ittehad!";
+  } else {
+    // Display the most recent notice
+    let latest = snap.docs[snap.docs.length-1].data();
+    noticeText.textContent = latest.text;
+  }
+}
+
+// Save notice (for admin)
+saveNotice.onclick = async()=>{
+  const text = noticeInput.value.trim();
+  if(!text) return alert("Enter notice text");
+  await addDoc(collection(db,"notices"),{text, createdAt:serverTimestamp()});
+  noticeInput.value="";
+  loadNotice();
+  alert("✅ Notice updated!");
+};
+
+// Auth check
+onAuthStateChanged(auth,user=>{
+  currentUser=user;
+  if(user?.email===ADMIN_EMAIL){
+    noticeAdmin.classList.remove("hidden");
+  } else {
+    noticeAdmin.classList.add("hidden");
+  }
+});
+
+// Initial load
+loadNotice();
+</script>
 
 <!-- Header -->
 <header class="bg-blue-600 p-4 flex flex-col sm:flex-row justify-between items-center text-white gap-2">
