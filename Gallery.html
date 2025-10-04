@@ -3,71 +3,72 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gallery & Notice | Talimi Ittehad</title>
+<title>Gallery | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 
-/* 3D Buttons */
-.btn-3d, .btn-3d-home {
-  color:#fff; font-weight:700; border-radius:10px; padding:.35rem .7rem; font-size:.85rem;
-  box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);
-  transition: transform .12s ease, box-shadow .12s ease, filter .12s; cursor:pointer;
+/* Notice Bar */
+#noticeBar {
+  width: 100%;
+  background: #fffae6;
+  overflow: hidden;
+  border-bottom: 2px solid #facc15;
+  white-space: nowrap;
+  box-sizing: border-box;
+  position: relative;
+  padding: 5px 0;
 }
-.btn-3d:hover, .btn-3d-home:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);}
-.btn-3d:active, .btn-3d-home:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
+#noticeContent {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+}
+.notice-item {
+  display: inline-block;
+  margin-right: 50px;
+  font-weight: bold;
+  color: #b45309;
+}
+.admin-btn {
+  margin-left:5px;
+  background:#dc2626;
+  color:#fff;
+  border:none;
+  padding:2px 5px;
+  border-radius:3px;
+  cursor:pointer;
+  font-size:0.7rem;
+}
 
-/* Header */
-.header-png { height:50px; width:50px; border-radius:50%; object-fit:cover; }
+/* Gallery */
 .gallery-img { cursor:pointer; transition:transform .2s; }
 .gallery-img:hover { transform:scale(1.05); }
 
-/* Lightbox */
 #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:50; align-items:center; justify-content:center; }
 #lightbox img { max-height:90%; max-width:90%; border-radius:.5rem; box-shadow:0 0 20px rgba(0,0,0,.6); }
 #lightbox button { position:absolute; top:20px; right:20px; background:#f44336; color:#fff; padding:6px 12px; border-radius:6px; }
 
-/* Admin Buttons */
-.admin-btn { display:inline-block; margin:2px; padding:2px 6px; border-radius:5px; font-size:0.7rem; color:#fff; cursor:pointer; }
-.admin-edit { background:#1d4ed8; }  /* Blue */
-.admin-delete { background:#dc2626; } /* Red */
-
-/* Notice Scroll Box */
-#noticeBox { width:100%; overflow:hidden; background:#fffbcc; border:1px solid #facc15; padding:6px 0; position:relative; display:flex; align-items:center; }
-#noticeContent { display:flex; white-space:nowrap; gap:20px; animation:scrollNotice 15s linear infinite; }
-.notice-item { display:flex; align-items:center; gap:5px; }
-@keyframes scrollNotice { 0% { transform:translateX(0); } 100% { transform:translateX(-100%); } }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<header class="bg-blue-600 h-24 flex items-center justify-between px-4">
-  <img src="makka.png" alt="Makka" class="header-png">
-  <div class="text-white font-bold text-2xl">Talimi Ittehad</div>
-  <img src="madina.png" alt="Madina" class="header-png">
-</header>
-
-<!-- Notice Scrolling -->
-<div id="noticeBox">
-  <div id="noticeContent">Loading notices...</div>
+<!-- Notice Bar -->
+<div id="noticeBar">
+  <div id="noticeContent"></div>
 </div>
 
 <!-- Admin Upload Form -->
-<div id="adminUpload" class="hidden mb-6 border p-3 rounded bg-white shadow max-w-md mx-auto">
-  <h2 class="font-semibold mb-2">🖼 Upload New Gallery Post</h2>
-  <input id="galleryFiles" type="file" accept="image/*" multiple class="mb-2 w-full rounded border p-1"/>
-  <input id="galleryText" type="text" placeholder="Post Caption" class="mb-2 w-full rounded border p-1"/>
-  <button id="uploadBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8)">Upload</button>
-  <h2 class="font-semibold mt-4 mb-2">📝 Manage Notices</h2>
-  <input id="noticeInput" type="text" placeholder="Add Notice" class="mb-2 w-full rounded border p-1"/>
-  <button id="addNoticeBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#f59e0b,#fbbf24)">Add Notice</button>
+<div id="adminBox" class="hidden p-3 bg-white max-w-md mx-auto mt-3 rounded shadow">
+  <h2 class="font-bold mb-2">Admin Panel</h2>
+  <input type="text" id="noticeInput" placeholder="Add new notice" class="border p-1 mb-2 w-full rounded"/>
+  <button id="addNoticeBtn" class="bg-blue-600 text-white px-3 py-1 rounded mb-3">Add Notice</button>
 </div>
 
+<!-- Gallery -->
 <main class="max-w-6xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">📸 Gallery</h1>
   <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
-  <p id="emptyMsg" class="text-gray-500 text-sm mt-4 hidden">⚠️ No images uploaded yet.</p>
 </main>
 
 <!-- Lightbox -->
@@ -76,14 +77,10 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   <button id="closeLightbox">✖</button>
 </div>
 
-<footer class="bg-gray-100 text-center py-4 mt-10">
-  <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
-</footer>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -92,135 +89,41 @@ const firebaseConfig = {
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b11"
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
 };
 
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const galleryDiv = document.getElementById("galleryGrid");
-const adminBox = document.getElementById("adminUpload");
-const uploadBtn = document.getElementById("uploadBtn");
-const galleryText = document.getElementById("galleryText");
-const emptyMsg = document.getElementById("emptyMsg");
 const noticeContent = document.getElementById("noticeContent");
+const adminBox = document.getElementById("adminBox");
 const noticeInput = document.getElementById("noticeInput");
 const addNoticeBtn = document.getElementById("addNoticeBtn");
 
 let currentUser = null;
 
-// Convert file → base64
-function toBase64(file){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=()=>resolve(reader.result.split(",")[1]);
-    reader.onerror=e=>reject(e);
-    reader.readAsDataURL(file);
-  });
-}
-
-// Upload to ImgBB
-async function uploadToImgBB(file){
-  const base64 = await toBase64(file);
-  const fd = new FormData();
-  fd.append("image", base64);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd});
-  const data = await res.json();
-  if(data.success) return data.data.url;
-  else throw new Error("ImgBB upload failed");
-}
-
-// Load gallery
-async function loadGallery(){
-  galleryDiv.innerHTML="";
-  const q = query(collection(db,"gallery"), orderBy("createdAt","desc"));
-  const snap = await getDocs(q);
-  if(snap.empty){ emptyMsg.classList.remove("hidden"); }
-  else{
-    emptyMsg.classList.add("hidden");
-    snap.forEach(docSnap=>{
-      const d = docSnap.data();
-      if(d.url){
-        const wrapper = document.createElement("div");
-        wrapper.className="relative group";
-
-        const img = document.createElement("img");
-        img.src = d.url;
-        img.loading="lazy";
-        img.className="gallery-img rounded shadow w-full";
-        img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
-        wrapper.appendChild(img);
-
-        if(d.text){
-          const caption = document.createElement("div");
-          caption.textContent = d.text;
-          caption.className = "text-center text-sm mt-1 text-gray-700";
-          wrapper.appendChild(caption);
-        }
-
-        if(currentUser?.email===ADMIN_EMAIL){
-          const editBtn = document.createElement("button");
-          editBtn.textContent="✏️";
-          editBtn.className="admin-btn admin-edit absolute top-2 left-2 hidden group-hover:block";
-          editBtn.onclick=async()=>{
-            const newText = prompt("Edit caption:", d.text||"");
-            if(newText!==null){
-              await updateDoc(doc(db,"gallery",docSnap.id),{text:newText});
-              loadGallery();
-            }
-          };
-          wrapper.appendChild(editBtn);
-
-          const delBtn = document.createElement("button");
-          delBtn.textContent="🗑";
-          delBtn.className="admin-btn admin-delete absolute top-2 right-2 hidden group-hover:block";
-          delBtn.onclick=async()=>{ if(confirm("Delete this image?")){ await deleteDoc(doc(db,"gallery",docSnap.id)); loadGallery(); }};
-          wrapper.appendChild(delBtn);
-        }
-
-        galleryDiv.appendChild(wrapper);
-      }
-    });
-  }
-}
-
-// Upload handler
-uploadBtn.onclick=async()=>{
-  const files=document.getElementById("galleryFiles").files;
-  const text = galleryText.value;
-  if(!files.length) return alert("Select at least one file!");
-  try{
-    const uploads = Array.from(files).map(f=>uploadToImgBB(f));
-    const urls = await Promise.all(uploads);
-    const addDocs = urls.map(url=>addDoc(collection(db,"gallery"),{url,text,createdAt:serverTimestamp()}));
-    await Promise.all(addDocs);
-    galleryText.value="";
-    document.getElementById("galleryFiles").value="";
-    loadGallery();
-  }catch(e){ alert("Upload failed: "+e.message); }
-};
-
-// Notices
+// Load Notices
 async function loadNotices(){
-  noticeContent.innerHTML="";
-  const q = query(collection(db,"notices"), orderBy("createdAt","desc"));
+  noticeContent.innerHTML = "";
+  const q = query(collection(db,"notices"),orderBy("createdAt","desc"));
   const snap = await getDocs(q);
-  if(snap.empty){ noticeContent.textContent="No notices yet."; return; }
-
+  if(snap.empty){
+    noticeContent.textContent = "No notices yet.";
+    return;
+  }
   snap.docs.forEach(docSnap=>{
     const d = docSnap.data();
     const span = document.createElement("span");
     span.className="notice-item";
-    span.textContent=d.text;
+    span.textContent = d.text;
 
     if(currentUser?.email===ADMIN_EMAIL){
       const editBtn = document.createElement("button");
       editBtn.textContent="✏️";
-      editBtn.className="admin-btn admin-edit";
+      editBtn.className="admin-btn";
       editBtn.onclick=async()=>{
         const newText = prompt("Edit notice:", d.text);
         if(newText!==null){
@@ -230,7 +133,7 @@ async function loadNotices(){
       };
       const delBtn = document.createElement("button");
       delBtn.textContent="🗑";
-      delBtn.className="admin-btn admin-delete";
+      delBtn.className="admin-btn";
       delBtn.onclick=async()=>{
         if(confirm("Delete this notice?")){
           await deleteDoc(doc(db,"notices",docSnap.id));
@@ -243,34 +146,46 @@ async function loadNotices(){
 
     noticeContent.appendChild(span);
   });
+
+  // Dynamic scrolling
+  const totalWidth = noticeContent.scrollWidth;
+  const parentWidth = noticeContent.parentElement.offsetWidth;
+  const duration = Math.max(totalWidth / 50, 10); // 50px/sec, min 10s
+  noticeContent.style.animation = `scrollNotice ${duration}s linear infinite`;
 }
 
+// Add Notice
 addNoticeBtn.onclick=async()=>{
   const text = noticeInput.value.trim();
   if(!text) return;
-  await addDoc(collection(db,"notices"),{text,createdAt:serverTimestamp()});
+  await addDoc(collection(db,"notices"),{text, createdAt:serverTimestamp()});
   noticeInput.value="";
   loadNotices();
-};
+}
 
-// Auth check
+// Auth
 onAuthStateChanged(auth,user=>{
-  currentUser=user;
+  currentUser = user;
   if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
   else{ adminBox.classList.add("hidden"); }
-  loadGallery();
   loadNotices();
 });
 
-// Lightbox
+// Lightbox close
 document.getElementById("closeLightbox").onclick=()=>document.getElementById("lightbox").style.display="none";
 document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.getElementById("lightbox").style.display="none"; });
 
+// CSS keyframes dynamic
+const styleEl = document.createElement('style');
+styleEl.innerHTML = `
+@keyframes scrollNotice {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+#noticeContent:hover { animation-play-state: paused; }
+`;
+document.head.appendChild(styleEl);
 </script>
-
-<!-- Donate Button -->
-<a href="https://all-madrsa.netlify.app/upi" class="fixed top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-black font-bold px-5 py-3 rounded-lg shadow-lg hover:bg-yellow-300 z-50">💝 Donate</a>
 
 </body>
 </html>
