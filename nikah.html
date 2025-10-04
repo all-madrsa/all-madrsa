@@ -3,48 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal Production Ready</title>
+<title>Nikah Portal Final</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { background:#fdf6e3; font-family:sans-serif; }
-button { transition: transform .2s; }
-button:hover { transform: scale(1.05); }
-.toast { position: fixed; top: 1rem; right: 1rem; background: #1d4ed8; color: white; padding: .5rem 1rem; border-radius: 6px; display:none; z-index:1000; }
-.notice-bar { background: #fffae5; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0; }
-.notice-wrapper { display: inline-block; will-change: transform; }
+body {background:#fdf6e3; font-family:sans-serif;}
+button {transition:transform .2s;}
+button:hover {transform:scale(1.05);}
 </style>
 </head>
 <body class="text-black">
 
-<!-- Toast -->
-<div id="toast" class="toast"></div>
 
+
+
+  
 <!-- Notice Bar -->
-<div class="notice-bar">
-  <div id="noticeWrapper" class="notice-wrapper">📢 Loading notices...</div>
+<div id="noticeBar" class="w-full">
+  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">
+    📢 Welcome to Talimi Ittehad!
+  </marquee>
 </div>
 
-<!-- Admin Notice Editor -->
-<div id="noticeAdmin" class="hidden max-w-4xl mx-auto px-4 mt-2 space-y-2">
+<!-- Admin Notice Editor (admin only) -->
+<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
   <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
-  <button id="saveNotice" class="bg-blue-600 text-white px-4 py-2 rounded font-bold w-full">💾 Add Notice</button>
+  <button id="saveNotice" class="btn-3d mt-1">💾 Save Notice</button>
 </div>
 
+
+ 
+
+  
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
   <div class="flex gap-2">
-    <a href="index.html" class="bg-gradient-to-r from-red-500 to-blue-500 px-2 py-1 text-xs font-bold rounded flex items-center">🏠 Home</a>
-    <button id="loginBtn" class="bg-green-500 px-2 py-1 text-xs rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-2 py-1 text-xs rounded hidden">➕ Post</button>
+
+   <!-- Left: Home Button -->
+  <div>
+ <a href="index.html" class="btn-3d-home px-1 py-0.5 text-xs rounded font-bold flex items-center justify-center">
+  🏠 Home
+</a>
+
+
   </div>
+
+    
+    <button id="loginBtn" class="bg-green-500 px-2 py-0.5 text-xs rounded">Login</button>
+<button id="postBtn" class="bg-yellow-500 px-2 py-0.5 text-xs rounded hidden">➕ Post</button>
+
+  </div>
+
 </header>
+
+
+
+<style>
+/* 3D Button Style */
+.btn-3d-home {
+  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.btn-3d-home:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+}
+</style>
+
+  
 
 <!-- Post Form -->
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
-  <input type="text" id="nameInput" placeholder="Full Name*" class="w-full p-2 rounded mb-2 border" required>
-  <input type="number" id="ageInput" placeholder="Age*" class="w-full p-2 rounded mb-2 border" required>
-  <select id="genderInput" class="w-full p-2 rounded mb-2 border" required>
-    <option value="">Gender*</option>
+  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
+  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
+  <select id="genderInput" class="w-full p-2 rounded mb-2 border">
+    <option value="">Gender</option>
     <option value="Male">Male</option>
     <option value="Female">Female</option>
   </select>
@@ -54,13 +92,13 @@ button:hover { transform: scale(1.05); }
   <input type="text" id="maritalInput" placeholder="Marital Status" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="religionInput" placeholder="Religion" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="cityInput" placeholder="City*" class="w-full p-2 rounded mb-2 border" required>
-  <input type="file" id="photoInput" class="w-full p-2 mb-2" required>
+  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
+  <input type="file" id="photoInput" class="w-full p-2 mb-2">
   <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
 </section>
 
 <!-- User Profiles -->
-<main id="postsList" class="p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></main>
+<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
 <!-- Like Popup -->
 <div id="likePopup" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -68,7 +106,7 @@ button:hover { transform: scale(1.05); }
     <h3 class="text-lg font-bold mb-2">❤️ Like Profile</h3>
     <input type="text" id="likeName" placeholder="Your Name" class="w-full p-2 border rounded mb-2">
     <input type="text" id="likeAddress" placeholder="Your Address" class="w-full p-2 border rounded mb-2">
-    <input type="text" id="likeWhatsapp" placeholder="WhatsApp Number" class="w-full p-2 border rounded mb-2">
+    <input type="text" id="likeWhatsapp" placeholder="Your WhatsApp Number" class="w-full p-2 border rounded mb-2">
     <div class="flex gap-2">
       <button id="likeSubmit" class="bg-green-500 text-white px-3 py-1 rounded w-full">Submit</button>
       <button id="likeCancel" class="bg-gray-400 text-white px-3 py-1 rounded w-full">Cancel</button>
@@ -85,7 +123,7 @@ button:hover { transform: scale(1.05); }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, onSnapshot, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // Firebase Config
 const firebaseConfig = {
@@ -101,82 +139,144 @@ const auth = getAuth();
 const db = getFirestore();
 
 // Elements
-const loginBtn=document.getElementById("loginBtn"), postBtn=document.getElementById("postBtn"), postSection=document.getElementById("postSection"), submitPost=document.getElementById("submitPost"), postsList=document.getElementById("postsList"), adminPanel=document.getElementById("adminPanel"), adminList=document.getElementById("adminList"), likePopup=document.getElementById("likePopup"), likeName=document.getElementById("likeName"), likeAddress=document.getElementById("likeAddress"), likeWhatsapp=document.getElementById("likeWhatsapp"), likeSubmit=document.getElementById("likeSubmit"), likeCancel=document.getElementById("likeCancel"), toast=document.getElementById("toast"), noticeWrapper=document.getElementById("noticeWrapper"), noticeAdmin=document.getElementById("noticeAdmin"), noticeInput=document.getElementById("noticeInput"), saveNotice=document.getElementById("saveNotice");
+const loginBtn=document.getElementById("loginBtn");
+const postBtn=document.getElementById("postBtn");
+const postSection=document.getElementById("postSection");
+const submitPost=document.getElementById("submitPost");
+const postsList=document.getElementById("postsList");
+const adminPanel=document.getElementById("adminPanel");
+const adminList=document.getElementById("adminList");
+const likePopup=document.getElementById("likePopup");
+const likeName=document.getElementById("likeName");
+const likeAddress=document.getElementById("likeAddress");
+const likeWhatsapp=document.getElementById("likeWhatsapp");
+const likeSubmit=document.getElementById("likeSubmit");
+const likeCancel=document.getElementById("likeCancel");
 
-let currentUser=null, currentLikeProfile=null;
+let currentUser=null;
+let currentLikeProfile=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
 
-// Toast function
-function showToast(msg){ toast.textContent=msg; toast.style.display='block'; setTimeout(()=>toast.style.display='none',3000); }
-
 // Login
-loginBtn.addEventListener("click", async ()=>{ const provider=new GoogleAuthProvider(); await signInWithPopup(auth,provider); });
+loginBtn.addEventListener("click",async ()=>{
+  const provider=new GoogleAuthProvider();
+  await signInWithPopup(auth,provider);
+});
 
 onAuthStateChanged(auth,user=>{
   currentUser=user;
   if(user){
-    loginBtn.classList.add("hidden"); postBtn.classList.remove("hidden");
-    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"), noticeAdmin.classList.remove("hidden");
+    loginBtn.classList.add("hidden");
+    postBtn.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
   } else {
-    loginBtn.classList.remove("hidden"); postBtn.classList.add("hidden"); postSection.classList.add("hidden");
-    adminPanel.classList.add("hidden"); noticeAdmin.classList.add("hidden");
+    loginBtn.classList.remove("hidden");
+    postBtn.classList.add("hidden");
+    postSection.classList.add("hidden");
+    adminPanel.classList.add("hidden");
   }
 });
 
 postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
 
-// Upload Image to Imgbb
+// Upload Image
 async function uploadToImgbb(file){
-  const allowed=['image/png','image/jpeg','image/jpg']; if(!allowed.includes(file.type)) throw 'Invalid file type';
-  if(file.size>5*1024*1024) throw 'File too large';
   const key="d12c2e4a8650157b2b6b9fe85336ea43";
-  const formData=new FormData(); formData.append("image",file);
+  const formData=new FormData();
+  formData.append("image",file);
   const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
-  const data=await res.json(); return data.data.url;
+  const data=await res.json();
+  return data.data.url;
 }
 
 // Submit Post
-submitPost.addEventListener("click", async ()=>{
-  try{
-    const name=document.getElementById("nameInput").value.trim(), age=document.getElementById("ageInput").value.trim(), gender=document.getElementById("genderInput").value, city=document.getElementById("cityInput").value.trim(), photo=document.getElementById("photoInput").files[0];
-    if(!name||!age||!gender||!city||!photo) return showToast('❌ Fill required fields!');
-    const photoUrl=await uploadToImgbb(photo);
-    await addDoc(collection(db,"profiles"),{
-      name, age, gender, education:document.getElementById("educationInput").value.trim(), profession:document.getElementById("professionInput").value.trim(), income:document.getElementById("incomeInput").value.trim(), marital:document.getElementById("maritalInput").value.trim(), religion:document.getElementById("religionInput").value.trim(), caste:document.getElementById("casteInput").value.trim(), city, photoUrl, uid:currentUser.uid, email:currentUser.email, approvals:{}, likes:[], created:serverTimestamp()
-    });
-    showToast('✅ Submitted! Wait for Admin Approval');
-  } catch(e){ showToast(e); }
+submitPost.addEventListener("click",async ()=>{
+  const name=document.getElementById("nameInput").value.trim();
+  const age=document.getElementById("ageInput").value.trim();
+  const gender=document.getElementById("genderInput").value;
+  const education=document.getElementById("educationInput").value.trim();
+  const profession=document.getElementById("professionInput").value.trim();
+  const income=document.getElementById("incomeInput").value.trim();
+  const marital=document.getElementById("maritalInput").value.trim();
+  const religion=document.getElementById("religionInput").value.trim();
+  const caste=document.getElementById("casteInput").value.trim();
+  const city=document.getElementById("cityInput").value.trim();
+  const photo=document.getElementById("photoInput").files[0];
+  if(!name||!age||!gender||!city||!photo) return alert("❌ Fill required fields!");
+  const photoUrl=await uploadToImgbb(photo);
+
+  await addDoc(collection(db,"profiles"),{
+    name,age,gender,education,profession,income,marital,religion,caste,city,photoUrl,
+    uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
+  });
+  alert("✅ Submitted! Wait for Admin Approval");
 });
 
 // Fetch Profiles
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
-onSnapshot(q,snapshot=>{ const profiles=[]; snapshot.forEach(docSnap=>{ let data=docSnap.data(); data.id=docSnap.id; profiles.push(data); }); renderProfiles(profiles); if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles); });
+onSnapshot(q,snapshot=>{
+  const profiles=[];
+  snapshot.forEach(docSnap=>{
+    let data=docSnap.data();
+    data.id=docSnap.id;
+    profiles.push(data);
+  });
+  renderProfiles(profiles);
+  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
+});
 
-// Render Profiles
+// Render Public Profiles
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
     if(!p.approvals) return;
     const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
     if(approvedFields.length===0) return;
-    const card=document.createElement("div"); card.className="p-4 rounded shadow bg-white";
-    let html=`<div class='space-y-1'>`;
-    if(p.approvals.photoUrl && p.photoUrl) html+=`<img src='${p.photoUrl}' class='w-40 h-48 object-cover rounded border mb-2'>`;
-    ['name','age','gender','education','profession','income','marital','religion','caste','city'].forEach(f=>{ if(p.approvals[f]) html+=`<p><b>${f.charAt(0).toUpperCase()+f.slice(1)}:</b> ${p[f]}</p>` });
+
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow bg-white";
+
+    let html=`<div class="space-y-1">`;
+    if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2">`;
+    if(p.approvals.name) html+=`<p><b>👤 Name:</b> ${p.name}</p>`;
+    if(p.approvals.age) html+=`<p><b>🎂 Age:</b> ${p.age}</p>`;
+    if(p.approvals.gender) html+=`<p><b>🚻 Gender:</b> ${p.gender}</p>`;
+    if(p.approvals.education) html+=`<p><b>🎓 Education:</b> ${p.education}</p>`;
+    if(p.approvals.profession) html+=`<p><b>💼 Profession:</b> ${p.profession}</p>`;
+    if(p.approvals.income) html+=`<p><b>💰 Income:</b> ${p.income}</p>`;
+    if(p.approvals.marital) html+=`<p><b>📌 Marital:</b> ${p.marital}</p>`;
+    if(p.approvals.religion) html+=`<p><b>🕌 Religion:</b> ${p.religion}</p>`;
+    if(p.approvals.caste) html+=`<p><b>🪧 Caste:</b> ${p.caste}</p>`;
+    if(p.approvals.city) html+=`<p><b>🏙️ City:</b> ${p.city}</p>`;
     html+=`</div>`;
-    const alreadyLiked=p.likes.some(l=>l.uid===currentUser?.uid);
-    html+=`<button class='like-btn bg-red-500 text-white px-3 py-1 rounded mt-2' data-id='${p.id}' ${alreadyLiked?'disabled':''}>❤️ Like</button>`;
-    card.innerHTML=html; postsList.appendChild(card);
+
+    html+=`<button class="like-btn bg-red-500 text-white px-3 py-1 rounded mt-2" data-id="${p.id}">❤️ Like</button>`;
+
+    card.innerHTML=html;
+    postsList.appendChild(card);
   });
-  document.querySelectorAll(".like-btn").forEach(btn=>{ btn.onclick=()=>{ currentLikeProfile=btn.dataset.id; likePopup.classList.remove("hidden"); }; });
+
+  document.querySelectorAll(".like-btn").forEach(btn=>{
+    btn.onclick=()=>{
+      currentLikeProfile=btn.dataset.id;
+      likePopup.classList.remove("hidden");
+    };
+  });
 }
 
+// Like Popup Submit
 likeSubmit.onclick=async ()=>{
-  if(!currentUser) return showToast("Login required!");
-  const name=likeName.value.trim(), address=likeAddress.value.trim(), whatsapp=likeWhatsapp.value.trim();
-  if(!name||!address||!whatsapp) return showToast("Fill all fields!");
-  await updateDoc(doc(db,"profiles",currentLikeProfile),{likes:arrayUnion({uid:currentUser.uid,name,address,whatsapp})});
-  showToast("✅ Like submitted"); likePopup.classList.add("hidden"); likeName.value=likeAddress.value=likeWhatsapp.value="";
+  if(!currentUser) return alert("Login required!");
+  const name=likeName.value.trim();
+  const address=likeAddress.value.trim();
+  const whatsapp=likeWhatsapp.value.trim();
+  if(!name||!address||!whatsapp) return alert("Fill all fields!");
+  await updateDoc(doc(db,"profiles",currentLikeProfile),{
+    likes:arrayUnion({name,address,whatsapp})
+  });
+  alert("✅ Like submitted");
+  likePopup.classList.add("hidden");
+  likeName.value=likeAddress.value=likeWhatsapp.value="";
 };
 likeCancel.onclick=()=>likePopup.classList.add("hidden");
 
@@ -184,34 +284,52 @@ likeCancel.onclick=()=>likePopup.classList.add("hidden");
 function renderAdmin(profiles){
   adminList.innerHTML="";
   profiles.forEach(p=>{
-    let html=`<div class='p-4 bg-gray-100 rounded shadow'>`; html+=`<div class='mb-2'><img src='${p.photoUrl}' class='w-full h-32 object-cover rounded'></div>`;
-    ['photoUrl','name','age','gender','education','profession','income','marital','religion','caste','city'].forEach(f=>{
-      html+=`<div><input type='checkbox' class='cb-${p.id}' data-field='${f}' ${p.approvals&&p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
+    let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
+    html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
+
+    const fields=["photoUrl","name","age","gender","education","profession","income","marital","religion","caste","city"];
+    fields.forEach(f=>{
+      html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals&&p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
     });
-    html+=`<button class='bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn' data-id='${p.id}'>💾 Save Approval</button>`;
-    html+=`<button class='bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn' data-id='${p.id}'>🗑 Delete</button>`;
-    if(p.likes && p.likes.length>0){ html+=`<div class='mt-2'><b>❤️ Likes:</b>`;
-      p.likes.forEach(l=>{ html+=`<div class='p-2 bg-white rounded shadow mb-1'><p><b>Name:</b> ${l.name}</p><p><b>Address:</b> ${l.address}</p><p><b>WhatsApp:</b> ${l.whatsapp}</p><a href='https://wa.me/${l.whatsapp}' target='_blank' class='bg-green-500 text-white px-3 py-1 rounded inline-block'>WhatsApp</a></div>`; });
+
+    html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
+    html+=`<button class="bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn" data-id="${p.id}">🗑 Delete</button>`;
+
+    if(p.likes && p.likes.length>0){
+      html+=`<div class="mt-2"><b>❤️ Likes:</b><br>`;
+      p.likes.forEach(l=>{
+        html+=`<div class="p-2 bg-white rounded shadow mb-1">
+          <p><b>Name:</b> ${l.name}</p>
+          <p><b>Address:</b> ${l.address}</p>
+          <p><b>WhatsApp:</b> ${l.whatsapp}</p>
+          <a href="https://wa.me/${l.whatsapp}" target="_blank" class="bg-green-500 text-white px-3 py-1 rounded inline-block">WhatsApp</a>
+        </div>`;
+      });
       html+=`</div>`;
     }
-    html+=`</div>`; adminList.innerHTML+=html;
-  });
-  document.querySelectorAll(".saveBtn").forEach(btn=>{ btn.onclick=async ()=>{
-    const id=btn.dataset.id; let approvals={}; document.querySelectorAll(`.cb-${id}`).forEach(cb=>approvals[cb.dataset.field]=cb.checked);
-    await updateDoc(doc(db,"profiles",id),{approvals}); showToast("✅ Approvals Updated");
-  }});
-  document.querySelectorAll(".deleteBtn").forEach(btn=>{ btn.onclick=async ()=>{ const id=btn.dataset.id; if(confirm("Delete this profile?")) await deleteDoc(doc(db,"profiles",id)); }});
-}
 
-// Notice Management
-const noticesQuery=query(collection(db,"notices"),orderBy("createdAt","desc"));
-onSnapshot(noticesQuery, snapshot=>{
-  noticeWrapper.innerHTML="";
-  if(snapshot.empty) noticeWrapper.textContent="📢 Welcome to Talimi Ittehad!";
-  snapshot.forEach(docSnap=>{ const d=docSnap.data();
-    const span=document.createElement("span"); span.textContent=d.text; span.className="mr-8";
-    if(currentUser?.email===ADMIN_EMAIL){ const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.className="ml-2 bg-blue-600 text-white px-1 rounded";
-      editBtn.onclick=async()=>{ const newText=prompt("Update notice:",d.text); if(newText) await updateDoc(doc(db,"notices",docSnap.id),{text:newText}); };
-      const delBtn=document.createElement("button"); delBtn.textContent="🗑"; delBtn.className="ml-1 bg-red-600 text-white px-1 rounded";
-      delBtn.onclick=async()=>{ if(confirm("Delete this notice?")) await deleteDoc(doc(db,"notices",docSnap.id)); };
-      span.appendChild(edit
+    html+=`</div>`;
+    adminList.innerHTML+=html;
+  });
+
+  document.querySelectorAll(".saveBtn").forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
+      const checkboxes=document.querySelectorAll(`.cb-${id}`);
+      let approvals={};
+      checkboxes.forEach(cb=>{ approvals[cb.dataset.field]=cb.checked; });
+      await updateDoc(doc(db,"profiles",id),{approvals});
+      alert("✅ Approvals Updated");
+    };
+  });
+
+  document.querySelectorAll(".deleteBtn").forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
+      if(confirm("Delete this profile?")) await deleteDoc(doc(db,"profiles",id));
+    };
+  });
+}
+</script>
+</body>
+</html>
