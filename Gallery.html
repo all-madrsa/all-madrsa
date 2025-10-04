@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gallery | Talimi Ittehad</title>
+<title>Gallery & Notice | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
@@ -42,9 +42,12 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 }
 
 /* Gallery */
-.gallery-img { cursor:pointer; transition:transform .2s; }
-.gallery-img:hover { transform:scale(1.05); }
+.gallery-img { cursor:pointer; transition:transform .2s; width:100%; border-radius:5px; }
+.gallery-item { position: relative; }
+.gallery-admin-btn { position: absolute; top:5px; right:5px; display:none; }
+.gallery-item:hover .gallery-admin-btn { display:flex; gap:3px; }
 
+/* Lightbox */
 #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:50; align-items:center; justify-content:center; }
 #lightbox img { max-height:90%; max-width:90%; border-radius:.5rem; box-shadow:0 0 20px rgba(0,0,0,.6); }
 #lightbox button { position:absolute; top:20px; right:20px; background:#f44336; color:#fff; padding:6px 12px; border-radius:6px; }
@@ -58,11 +61,18 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   <div id="noticeContent"></div>
 </div>
 
-<!-- Admin Upload Form -->
+<!-- Admin Panel -->
 <div id="adminBox" class="hidden p-3 bg-white max-w-md mx-auto mt-3 rounded shadow">
   <h2 class="font-bold mb-2">Admin Panel</h2>
+
+  <!-- Notice Add -->
   <input type="text" id="noticeInput" placeholder="Add new notice" class="border p-1 mb-2 w-full rounded"/>
-  <button id="addNoticeBtn" class="bg-blue-600 text-white px-3 py-1 rounded mb-3">Add Notice</button>
+  <button id="addNoticeBtn" class="bg-blue-600 text-white px-3 py-1 rounded mb-3 w-full">Add Notice</button>
+
+  <!-- Gallery Upload -->
+  <input type="file" id="galleryFiles" accept="image/*" multiple class="border p-1 mb-2 w-full rounded"/>
+  <input type="text" id="galleryText" placeholder="Gallery caption" class="border p-1 mb-2 w-full rounded"/>
+  <button id="uploadBtn" class="bg-green-600 text-white px-3 py-1 rounded w-full">Upload Gallery</button>
 </div>
 
 <!-- Gallery -->
@@ -93,6 +103,7 @@ const firebaseConfig = {
 };
 
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -102,23 +113,24 @@ const noticeContent = document.getElementById("noticeContent");
 const adminBox = document.getElementById("adminBox");
 const noticeInput = document.getElementById("noticeInput");
 const addNoticeBtn = document.getElementById("addNoticeBtn");
+const galleryFiles = document.getElementById("galleryFiles");
+const galleryText = document.getElementById("galleryText");
+const uploadBtn = document.getElementById("uploadBtn");
+const galleryGrid = document.getElementById("galleryGrid");
 
 let currentUser = null;
 
-// Load Notices
+// Notice Functions
 async function loadNotices(){
   noticeContent.innerHTML = "";
   const q = query(collection(db,"notices"),orderBy("createdAt","desc"));
   const snap = await getDocs(q);
-  if(snap.empty){
-    noticeContent.textContent = "No notices yet.";
-    return;
-  }
+  if(snap.empty){ noticeContent.textContent="No notices yet."; return; }
   snap.docs.forEach(docSnap=>{
     const d = docSnap.data();
     const span = document.createElement("span");
     span.className="notice-item";
-    span.textContent = d.text;
+    span.textContent=d.text;
 
     if(currentUser?.email===ADMIN_EMAIL){
       const editBtn = document.createElement("button");
@@ -126,31 +138,22 @@ async function loadNotices(){
       editBtn.className="admin-btn";
       editBtn.onclick=async()=>{
         const newText = prompt("Edit notice:", d.text);
-        if(newText!==null){
-          await updateDoc(doc(db,"notices",docSnap.id),{text:newText});
-          loadNotices();
-        }
+        if(newText!==null){ await updateDoc(doc(db,"notices",docSnap.id),{text:newText}); loadNotices(); }
       };
       const delBtn = document.createElement("button");
       delBtn.textContent="🗑";
       delBtn.className="admin-btn";
-      delBtn.onclick=async()=>{
-        if(confirm("Delete this notice?")){
-          await deleteDoc(doc(db,"notices",docSnap.id));
-          loadNotices();
-        }
-      };
-      span.appendChild(editBtn);
-      span.appendChild(delBtn);
+      delBtn.onclick=async()=>{ if(confirm("Delete this notice?")){ await deleteDoc(doc(db,"notices",docSnap.id)); loadNotices(); } };
+      span.appendChild(editBtn); span.appendChild(delBtn);
     }
 
     noticeContent.appendChild(span);
   });
 
-  // Dynamic scrolling
+  // Dynamic scroll
   const totalWidth = noticeContent.scrollWidth;
   const parentWidth = noticeContent.parentElement.offsetWidth;
-  const duration = Math.max(totalWidth / 50, 10); // 50px/sec, min 10s
+  const duration = Math.max(totalWidth/50, 10); // 50px/sec
   noticeContent.style.animation = `scrollNotice ${duration}s linear infinite`;
 }
 
@@ -158,34 +161,75 @@ async function loadNotices(){
 addNoticeBtn.onclick=async()=>{
   const text = noticeInput.value.trim();
   if(!text) return;
-  await addDoc(collection(db,"notices"),{text, createdAt:serverTimestamp()});
+  await addDoc(collection(db,"notices"),{text,createdAt:serverTimestamp()});
   noticeInput.value="";
   loadNotices();
 }
 
-// Auth
+// Gallery Functions
+function toBase64(file){ return new Promise((res,rej)=>{ const reader=new FileReader(); reader.onload=()=>res(reader.result.split(",")[1]); reader.onerror=e=>rej(e); reader.readAsDataURL(file); }); }
+async function uploadToImgBB(file){ const base64 = await toBase64(file); const fd=new FormData(); fd.append("image",base64); const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd}); const data=await res.json(); if(data.success) return data.data.url; else throw new Error("ImgBB upload failed"); }
+async function loadGallery(){
+  galleryGrid.innerHTML="";
+  const q = query(collection(db,"gallery"),orderBy("createdAt","desc"));
+  const snap = await getDocs(q);
+  snap.forEach(docSnap=>{
+    const d = docSnap.data();
+    if(d.url){
+      const wrapper = document.createElement("div");
+      wrapper.className="gallery-item";
+
+      const img = document.createElement("img");
+      img.src=d.url; img.className="gallery-img"; 
+      img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
+      wrapper.appendChild(img);
+
+      if(d.text){ const cap=document.createElement("div"); cap.textContent=d.text; cap.className="text-center text-sm"; wrapper.appendChild(cap); }
+
+      if(currentUser?.email===ADMIN_EMAIL){
+        const delBtn=document.createElement("button"); delBtn.textContent="🗑"; delBtn.className="gallery-admin-btn bg-red-600 text-white p-1 rounded"; delBtn.onclick=async()=>{ if(confirm("Delete image?")){ await deleteDoc(doc(db,"gallery",docSnap.id)); loadGallery(); } };
+        const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.className="gallery-admin-btn bg-blue-600 text-white p-1 rounded"; editBtn.onclick=async()=>{ const newText=prompt("Edit caption:", d.text||""); if(newText!==null){ await updateDoc(doc(db,"gallery",docSnap.id),{text:newText}); loadGallery(); } };
+        wrapper.appendChild(editBtn); wrapper.appendChild(delBtn);
+      }
+
+      galleryGrid.appendChild(wrapper);
+    }
+  });
+}
+
+// Upload gallery
+uploadBtn.onclick=async()=>{
+  const files=galleryFiles.files;
+  if(!files.length) return alert("Select at least one file!");
+  const text = galleryText.value;
+  try{
+    const urls = await Promise.all(Array.from(files).map(f=>uploadToImgBB(f)));
+    await Promise.all(urls.map(url=>addDoc(collection(db,"gallery"),{url,text,createdAt:serverTimestamp()})));
+    galleryText.value=""; galleryFiles.value="";
+    loadGallery();
+  }catch(e){ alert("Upload failed: "+e.message); }
+}
+
+// Auth check
 onAuthStateChanged(auth,user=>{
-  currentUser = user;
-  if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
-  else{ adminBox.classList.add("hidden"); }
-  loadNotices();
+  currentUser=user;
+  if(user?.email===ADMIN_EMAIL) adminBox.classList.remove("hidden");
+  else adminBox.classList.add("hidden");
+  loadNotices(); loadGallery();
 });
 
-// Lightbox close
+// Lightbox
 document.getElementById("closeLightbox").onclick=()=>document.getElementById("lightbox").style.display="none";
 document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
 
-// CSS keyframes dynamic
-const styleEl = document.createElement('style');
-styleEl.innerHTML = `
-@keyframes scrollNotice {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-#noticeContent:hover { animation-play-state: paused; }
-`;
-document.head.appendChild(styleEl);
+// Notice scroll animation
+const style=document.createElement("style");
+style.textContent=`@keyframes scrollNotice{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}`;
+document.head.appendChild(style);
 </script>
+
+<!-- Donate Button -->
+<a href="https://all-madrsa.netlify.app/upi" class="fixed top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-black font-bold px-5 py-3 rounded-lg shadow-lg hover:bg-yellow-300 z-50">💝 Donate</a>
 
 </body>
 </html>
