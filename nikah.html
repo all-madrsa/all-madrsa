@@ -25,19 +25,49 @@ button:hover {transform:scale(1.05);}
 <body class="text-black">
 
 <!-- Notice Bar -->
-<div id="noticeBar" class="w-full bg-yellow-200 py-1">
-  <marquee id="noticeText" style="font-weight: bold; font-size: 1rem;">📢 Loading notices...</marquee>
+<div id="noticeBar" class="w-full bg-yellow-200 py-1 overflow-hidden relative">
+  <div id="noticeText" class="whitespace-nowrap font-bold text-lg animate-scroll">
+    📢 Loading notices...
+  </div>
 </div>
 
 <!-- Admin Notice Editor -->
-<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2">
+<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2 space-y-2">
   <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
-  <button id="saveNotice" class="btn-3d mt-1 bg-blue-600 text-white px-4 py-2 rounded">💾 Save Notice</button>
+  <button id="saveNotice" class="btn-3d bg-blue-600 text-white px-4 py-2 rounded">💾 Add Notice</button>
 </div>
+
+<style>
+/* Scrolling text */
+@keyframes scroll-left {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.animate-scroll {
+  display: inline-block;
+  will-change: transform;
+  animation: scroll-left linear infinite;
+  animation-duration: 20s; /* speed adjust */
+}
+.notice-item {
+  display: inline-block;
+  margin-right: 2rem;
+}
+.notice-btn {
+  margin-left: 5px;
+  padding: 2px 5px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+}
+.notice-edit { background: #1d4ed8; }
+.notice-delete { background: #dc2626; }
+</style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -47,10 +77,11 @@ const firebaseConfig = {
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b"
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
 };
 
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -62,26 +93,67 @@ const saveNotice = document.getElementById("saveNotice");
 
 let currentUser = null;
 
-// Load latest notice
-async function loadNotice(){
-  const snap = await getDocs(collection(db,"notices"));
-  if(snap.empty){
-    noticeText.textContent = "📢 Welcome to Talimi Ittehad!";
-  } else {
-    // Display the most recent notice
-    let latest = snap.docs[snap.docs.length-1].data();
-    noticeText.textContent = latest.text;
+// Load all notices
+async function loadNotices() {
+  noticeText.innerHTML = ""; // clear previous
+  try {
+    const q = query(collection(db,"notices"), orderBy("createdAt","desc"));
+    const snap = await getDocs(q);
+    if(snap.empty){
+      noticeText.innerHTML = `<span class="notice-item">📢 Welcome to Talimi Ittehad!</span>`;
+      return;
+    }
+    snap.forEach(docSnap=>{
+      const d = docSnap.data();
+      const span = document.createElement("span");
+      span.className="notice-item";
+      span.textContent = d.text;
+
+      // Admin buttons
+      if(currentUser?.email === ADMIN_EMAIL){
+        const editBtn = document.createElement("button");
+        editBtn.textContent="✏️";
+        editBtn.className="notice-btn notice-edit";
+        editBtn.onclick = async()=>{
+          const newText = prompt("Update notice text:", d.text);
+          if(newText){
+            await updateDoc(doc(db,"notices",docSnap.id),{text:newText});
+            loadNotices();
+          }
+        };
+        const delBtn = document.createElement("button");
+        delBtn.textContent="🗑";
+        delBtn.className="notice-btn notice-delete";
+        delBtn.onclick = async()=>{
+          if(confirm("Delete this notice?")){
+            await deleteDoc(doc(db,"notices",docSnap.id));
+            loadNotices();
+          }
+        };
+        span.appendChild(editBtn);
+        span.appendChild(delBtn);
+      }
+
+      noticeText.appendChild(span);
+    });
+  } catch(e){
+    noticeText.textContent = "⚠️ Failed to load notices";
+    console.error(e);
   }
 }
 
-// Save notice (for admin)
+// Save notice
 saveNotice.onclick = async()=>{
   const text = noticeInput.value.trim();
   if(!text) return alert("Enter notice text");
-  await addDoc(collection(db,"notices"),{text, createdAt:serverTimestamp()});
-  noticeInput.value="";
-  loadNotice();
-  alert("✅ Notice updated!");
+  try{
+    await addDoc(collection(db,"notices"),{text, createdAt:serverTimestamp()});
+    noticeInput.value="";
+    loadNotices();
+  } catch(e){
+    alert("Failed to save notice");
+    console.error(e);
+  }
 };
 
 // Auth check
@@ -92,11 +164,13 @@ onAuthStateChanged(auth,user=>{
   } else {
     noticeAdmin.classList.add("hidden");
   }
+  loadNotices();
 });
 
 // Initial load
-loadNotice();
+loadNotices();
 </script>
+
 
 <!-- Header -->
 <header class="bg-blue-600 p-4 flex flex-col sm:flex-row justify-between items-center text-white gap-2">
