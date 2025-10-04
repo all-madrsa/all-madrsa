@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gallery | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -32,13 +32,9 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 .admin-edit { background:#1d4ed8; }  /* Blue */
 .admin-delete { background:#dc2626; } /* Red */
 
-/* Notice Scroll */
-#noticeContainer { overflow:hidden; white-space:nowrap; background:#fffae6; padding:5px 0; border-bottom:2px solid #ffecb3; position:relative; }
-#noticeText { display:inline-block; padding-left:100%; animation:scroll linear infinite; }
-@keyframes scroll { 0% { transform:translateX(0); } 100% { transform:translateX(-100%); } }
-.notice-admin { display:flex; gap:4px; margin:4px 0; }
-.notice-admin input { flex:1; padding:4px; border-radius:4px; border:1px solid #ccc; }
-.notice-admin button { padding:4px 8px; border-radius:4px; border:none; cursor:pointer; background:#4d94ff; color:#fff; }
+/* Notice Box */
+#noticeBox { overflow:hidden; background:#fffbeb; color:#92400e; border:1px solid #fcd34d; padding:8px 0; margin:10px auto; max-width:900px; position:relative; height:30px; }
+#noticeText { display:inline-block; white-space:nowrap; position:absolute; will-change:transform; }
 </style>
 </head>
 <body>
@@ -46,12 +42,16 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 <!-- Header -->
 <header class="bg-blue-600" style="height:100px;">
   <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
+
+    <!-- Top Buttons -->
     <div class="flex justify-center gap-2">
       <a href="index.html"><button class="btn-3d-home">🏠 Home</button></a>
       <a href="nikah.html"><button class="btn-3d" style="background:linear-gradient(90deg,#ff4d4d,#ff914d)">💍 Nikah</button></a>
       <a href="news.html"><button class="btn-3d" style="background:linear-gradient(90deg,#4dffb8,#4d94ff)">📰 News</button></a>
       <a href="hadees.html"><button class="btn-3d" style="background:linear-gradient(90deg,#d24dff,#ff4dd2)">📜 Hadees</button></a>
     </div>
+
+    <!-- Logo & Side Images -->
     <div class="flex justify-between items-center h-full mt-1">
       <img src="makka.png" alt="Makka" class="header-png">
       <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform:translateY(-8px);">Talimi Ittehad</div>
@@ -60,17 +60,15 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   </div>
 </header>
 
-<!-- Notice Scroll -->
-<div id="noticeContainer">
-  <span id="noticeText"></span>
+<!-- Admin Notice Box -->
+<div id="adminNoticeBox" class="hidden max-w-6xl mx-auto p-2 bg-yellow-100 rounded mt-4">
+  <input type="text" id="noticeInput" placeholder="Add/Edit notice text..." class="w-full p-1 border rounded"/>
+  <button id="noticeSaveBtn" class="btn-3d mt-1" style="background:linear-gradient(90deg,#facc15,#f59e0b); width:100%;">Save Notice</button>
 </div>
 
-<!-- Admin Notice Input -->
-<div id="adminNoticeBox" class="hidden max-w-md mx-auto p-2 bg-white rounded mt-2 shadow">
-  <div class="notice-admin">
-    <input type="text" id="noticeInput" placeholder="Add new notice...">
-    <button id="noticeAddBtn">Add</button>
-  </div>
+<!-- Notice Scrolling -->
+<div id="noticeBox">
+  <div id="noticeText">Welcome to Talimi Ittehad!</div>
 </div>
 
 <!-- Admin Upload Form -->
@@ -112,7 +110,7 @@ const firebaseConfig = {
   appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
 };
 
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const ADMIN_EMAILS = ["zaradigitalseva@gmail.com"];
 const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 
 const app = initializeApp(firebaseConfig);
@@ -125,10 +123,12 @@ const adminBox = document.getElementById("adminUpload");
 const uploadBtn = document.getElementById("uploadBtn");
 const emptyMsg = document.getElementById("emptyMsg");
 const galleryText = document.getElementById("galleryText");
+
+const noticeBox = document.getElementById("noticeBox");
 const noticeText = document.getElementById("noticeText");
 const adminNoticeBox = document.getElementById("adminNoticeBox");
 const noticeInput = document.getElementById("noticeInput");
-const noticeAddBtn = document.getElementById("noticeAddBtn");
+const noticeSaveBtn = document.getElementById("noticeSaveBtn");
 
 let currentUser = null;
 
@@ -144,7 +144,8 @@ function toBase64(file){
 
 // Upload to ImgBB
 async function uploadToImgBB(file){
-  if(file.size>5*1024*1024) throw new Error("File size must be < 5MB");
+  if(!file.type.startsWith("image/")) throw new Error("Only images allowed");
+  if(file.size>5*1024*1024) throw new Error("Max file size 5MB");
   const base64 = await toBase64(file);
   const fd = new FormData();
   fd.append("image", base64);
@@ -154,7 +155,7 @@ async function uploadToImgBB(file){
   else throw new Error("ImgBB upload failed");
 }
 
-// Load gallery
+// Load gallery with newest first
 async function loadGallery(){
   galleryDiv.innerHTML="";
   const q = query(collection(db,"gallery"), orderBy("createdAt","desc"));
@@ -167,12 +168,14 @@ async function loadGallery(){
       if(d.url){
         const wrapper = document.createElement("div");
         wrapper.className="relative group";
+
         const img = document.createElement("img");
         img.src = d.url;
         img.className="gallery-img rounded shadow w-full";
         img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
         wrapper.appendChild(img);
 
+        // Caption
         if(d.text){
           const caption = document.createElement("div");
           caption.textContent = d.text;
@@ -180,15 +183,15 @@ async function loadGallery(){
           wrapper.appendChild(caption);
         }
 
-        if(currentUser?.email===ADMIN_EMAIL){
+        if(currentUser && ADMIN_EMAILS.includes(currentUser.email)){
           const editBtn = document.createElement("button");
           editBtn.textContent="✏️";
-          editBtn.className="admin-btn admin-edit absolute top-2 left-2";
+          editBtn.className="admin-btn admin-edit absolute top-2 left-2 hidden group-hover:block";
           editBtn.onclick=async()=>{
             const newUrl = prompt("Enter new image URL:", d.url);
             const newText = prompt("Enter new caption:", d.text||"");
             if(newUrl){
-              await updateDoc(doc(db,"gallery",docSnap.id),{url:newUrl,text:newText});
+              await updateDoc(doc(db,"gallery",docSnap.id),{url:newUrl, text:newText});
               loadGallery();
             }
           };
@@ -196,7 +199,7 @@ async function loadGallery(){
 
           const delBtn = document.createElement("button");
           delBtn.textContent="🗑";
-          delBtn.className="admin-btn admin-delete absolute top-2 right-2";
+          delBtn.className="admin-btn admin-delete absolute top-2 right-2 hidden group-hover:block";
           delBtn.onclick=async()=>{ if(confirm("Delete this image?")){ await deleteDoc(doc(db,"gallery",docSnap.id)); loadGallery(); }};
           wrapper.appendChild(delBtn);
         }
@@ -223,45 +226,57 @@ uploadBtn.onclick=async()=>{
   }catch(e){ alert("Upload failed: "+e.message); }
 };
 
-// Load notices
-async function loadNotices(){
+// Notices
+async function loadNotice(){
   const q = query(collection(db,"notices"), orderBy("createdAt","desc"));
   const snap = await getDocs(q);
-  if(snap.empty){ noticeText.textContent = "No notices yet"; return; }
-  const combined = snap.docs.map(d=>d.data().text).join("   ⚡   ");
-  noticeText.textContent = combined;
-  const duration = combined.length*0.2;
-  noticeText.style.animationDuration = duration+"s";
+  if(!snap.empty){
+    noticeText.textContent = snap.docs[0].data().text || "";
+    startScroll();
+  }
 }
 
-// Add notice
-noticeAddBtn.onclick=async()=>{
-  const txt = noticeInput.value.trim();
-  if(!txt) return;
-  await addDoc(collection(db,"notices"),{text:txt,createdAt:serverTimestamp()});
+noticeSaveBtn.onclick=async()=>{
+  const text = noticeInput.value.trim();
+  if(!text) return;
+  await addDoc(collection(db,"notices"),{text,createdAt:serverTimestamp()});
   noticeInput.value="";
-  loadNotices();
+  loadNotice();
 };
+
+// Scroll animation
+let scrollInterval;
+function startScroll(){
+  cancelAnimationFrame(scrollInterval);
+  const scrollWidth = noticeText.offsetWidth;
+  const boxWidth = noticeBox.offsetWidth;
+  let x = boxWidth;
+  function animate(){
+    x--;
+    if(x<-scrollWidth) x=boxWidth;
+    noticeText.style.transform = `translateX(${x}px)`;
+    scrollInterval = requestAnimationFrame(animate);
+  }
+  animate();
+}
 
 // Auth check
 onAuthStateChanged(auth,user=>{
   currentUser=user;
-  if(user?.email===ADMIN_EMAIL){ 
-    adminBox.classList.remove("hidden"); 
+  if(user && ADMIN_EMAILS.includes(user.email)){
+    adminBox.classList.remove("hidden");
     adminNoticeBox.classList.remove("hidden");
-  } else { 
+  }else{
     adminBox.classList.add("hidden");
     adminNoticeBox.classList.add("hidden");
   }
   loadGallery();
-  loadNotices();
+  loadNotice();
 });
 
 // Lightbox
 document.getElementById("closeLightbox").onclick=()=>document.getElementById("lightbox").style.display="none";
 document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.getElementById("lightbox").style.display="none"; });
-
 </script>
 
 <!-- Donate Button -->
