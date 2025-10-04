@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gallery | Talimi Ittehad</title>
+<title>Gallery & Notice | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
@@ -17,58 +17,40 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 .btn-3d:hover, .btn-3d-home:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);}
 .btn-3d:active, .btn-3d-home:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
 
-/* Header Images */
+/* Header */
 .header-png { height:50px; width:50px; border-radius:50%; object-fit:cover; }
-
-/* Gallery */
 .gallery-img { cursor:pointer; transition:transform .2s; }
 .gallery-img:hover { transform:scale(1.05); }
 
+/* Lightbox */
 #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:50; align-items:center; justify-content:center; }
 #lightbox img { max-height:90%; max-width:90%; border-radius:.5rem; box-shadow:0 0 20px rgba(0,0,0,.6); }
 #lightbox button { position:absolute; top:20px; right:20px; background:#f44336; color:#fff; padding:6px 12px; border-radius:6px; }
 
+/* Admin Buttons */
 .admin-btn { display:inline-block; margin:2px; padding:2px 6px; border-radius:5px; font-size:0.7rem; color:#fff; cursor:pointer; }
 .admin-edit { background:#1d4ed8; }  /* Blue */
 .admin-delete { background:#dc2626; } /* Red */
 
-/* Notice Box */
-#noticeBox { overflow:hidden; background:#fffbeb; color:#92400e; border:1px solid #fcd34d; padding:8px 0; margin:10px auto; max-width:900px; position:relative; height:30px; }
-#noticeText { display:inline-block; white-space:nowrap; position:absolute; will-change:transform; }
+/* Notice Scroll Box */
+#noticeBox { width:100%; overflow:hidden; background:#fffbcc; border:1px solid #facc15; padding:6px 0; position:relative; }
+#noticeText { display:inline-block; white-space:nowrap; padding-left:100%; animation:scrollNotice 15s linear infinite; }
+@keyframes scrollNotice { 0% { transform:translateX(0); } 100% { transform:translateX(-100%); } }
+
 </style>
 </head>
 <body>
 
 <!-- Header -->
-<header class="bg-blue-600" style="height:100px;">
-  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
-
-    <!-- Top Buttons -->
-    <div class="flex justify-center gap-2">
-      <a href="index.html"><button class="btn-3d-home">🏠 Home</button></a>
-      <a href="nikah.html"><button class="btn-3d" style="background:linear-gradient(90deg,#ff4d4d,#ff914d)">💍 Nikah</button></a>
-      <a href="news.html"><button class="btn-3d" style="background:linear-gradient(90deg,#4dffb8,#4d94ff)">📰 News</button></a>
-      <a href="hadees.html"><button class="btn-3d" style="background:linear-gradient(90deg,#d24dff,#ff4dd2)">📜 Hadees</button></a>
-    </div>
-
-    <!-- Logo & Side Images -->
-    <div class="flex justify-between items-center h-full mt-1">
-      <img src="makka.png" alt="Makka" class="header-png">
-      <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform:translateY(-8px);">Talimi Ittehad</div>
-      <img src="madina.png" alt="Madina" class="header-png">
-    </div>
-  </div>
+<header class="bg-blue-600 h-24 flex items-center justify-between px-4">
+  <img src="makka.png" alt="Makka" class="header-png">
+  <div class="text-white font-bold text-2xl">Talimi Ittehad</div>
+  <img src="madina.png" alt="Madina" class="header-png">
 </header>
-
-<!-- Admin Notice Box -->
-<div id="adminNoticeBox" class="hidden max-w-6xl mx-auto p-2 bg-yellow-100 rounded mt-4">
-  <input type="text" id="noticeInput" placeholder="Add/Edit notice text..." class="w-full p-1 border rounded"/>
-  <button id="noticeSaveBtn" class="btn-3d mt-1" style="background:linear-gradient(90deg,#facc15,#f59e0b); width:100%;">Save Notice</button>
-</div>
 
 <!-- Notice Scrolling -->
 <div id="noticeBox">
-  <div id="noticeText">Welcome to Talimi Ittehad!</div>
+  <span id="noticeText">Loading notices...</span>
 </div>
 
 <!-- Admin Upload Form -->
@@ -77,6 +59,9 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   <input id="galleryFiles" type="file" accept="image/*" multiple class="mb-2 w-full rounded border p-1"/>
   <input id="galleryText" type="text" placeholder="Post Caption" class="mb-2 w-full rounded border p-1"/>
   <button id="uploadBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8)">Upload</button>
+  <h2 class="font-semibold mt-4 mb-2">📝 Manage Notices</h2>
+  <input id="noticeInput" type="text" placeholder="Add Notice" class="mb-2 w-full rounded border p-1"/>
+  <button id="addNoticeBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#f59e0b,#fbbf24)">Add Notice</button>
 </div>
 
 <main class="max-w-6xl mx-auto p-4">
@@ -107,10 +92,10 @@ const firebaseConfig = {
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11"
 };
 
-const ADMIN_EMAILS = ["zaradigitalseva@gmail.com"];
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 
 const app = initializeApp(firebaseConfig);
@@ -121,14 +106,11 @@ const provider = new GoogleAuthProvider();
 const galleryDiv = document.getElementById("galleryGrid");
 const adminBox = document.getElementById("adminUpload");
 const uploadBtn = document.getElementById("uploadBtn");
-const emptyMsg = document.getElementById("emptyMsg");
 const galleryText = document.getElementById("galleryText");
-
-const noticeBox = document.getElementById("noticeBox");
+const emptyMsg = document.getElementById("emptyMsg");
 const noticeText = document.getElementById("noticeText");
-const adminNoticeBox = document.getElementById("adminNoticeBox");
 const noticeInput = document.getElementById("noticeInput");
-const noticeSaveBtn = document.getElementById("noticeSaveBtn");
+const addNoticeBtn = document.getElementById("addNoticeBtn");
 
 let currentUser = null;
 
@@ -144,8 +126,6 @@ function toBase64(file){
 
 // Upload to ImgBB
 async function uploadToImgBB(file){
-  if(!file.type.startsWith("image/")) throw new Error("Only images allowed");
-  if(file.size>5*1024*1024) throw new Error("Max file size 5MB");
   const base64 = await toBase64(file);
   const fd = new FormData();
   fd.append("image", base64);
@@ -155,7 +135,7 @@ async function uploadToImgBB(file){
   else throw new Error("ImgBB upload failed");
 }
 
-// Load gallery with newest first
+// Load gallery
 async function loadGallery(){
   galleryDiv.innerHTML="";
   const q = query(collection(db,"gallery"), orderBy("createdAt","desc"));
@@ -171,11 +151,11 @@ async function loadGallery(){
 
         const img = document.createElement("img");
         img.src = d.url;
+        img.loading="lazy";
         img.className="gallery-img rounded shadow w-full";
         img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
         wrapper.appendChild(img);
 
-        // Caption
         if(d.text){
           const caption = document.createElement("div");
           caption.textContent = d.text;
@@ -183,15 +163,14 @@ async function loadGallery(){
           wrapper.appendChild(caption);
         }
 
-        if(currentUser && ADMIN_EMAILS.includes(currentUser.email)){
+        if(currentUser?.email===ADMIN_EMAIL){
           const editBtn = document.createElement("button");
           editBtn.textContent="✏️";
           editBtn.className="admin-btn admin-edit absolute top-2 left-2 hidden group-hover:block";
           editBtn.onclick=async()=>{
-            const newUrl = prompt("Enter new image URL:", d.url);
-            const newText = prompt("Enter new caption:", d.text||"");
-            if(newUrl){
-              await updateDoc(doc(db,"gallery",docSnap.id),{url:newUrl, text:newText});
+            const newText = prompt("Edit caption:", d.text||"");
+            if(newText!==null){
+              await updateDoc(doc(db,"gallery",docSnap.id),{text:newText});
               loadGallery();
             }
           };
@@ -227,56 +206,35 @@ uploadBtn.onclick=async()=>{
 };
 
 // Notices
-async function loadNotice(){
+async function loadNotices(){
   const q = query(collection(db,"notices"), orderBy("createdAt","desc"));
   const snap = await getDocs(q);
-  if(!snap.empty){
-    noticeText.textContent = snap.docs[0].data().text || "";
-    startScroll();
-  }
+  const texts = snap.docs.map(d=>d.data().text);
+  if(texts.length>0){ noticeText.textContent = texts.join(" ⚡ "); }
+  else{ noticeText.textContent = "No notices yet."; }
 }
-
-noticeSaveBtn.onclick=async()=>{
+addNoticeBtn.onclick=async()=>{
   const text = noticeInput.value.trim();
   if(!text) return;
   await addDoc(collection(db,"notices"),{text,createdAt:serverTimestamp()});
   noticeInput.value="";
-  loadNotice();
+  loadNotices();
 };
-
-// Scroll animation
-let scrollInterval;
-function startScroll(){
-  cancelAnimationFrame(scrollInterval);
-  const scrollWidth = noticeText.offsetWidth;
-  const boxWidth = noticeBox.offsetWidth;
-  let x = boxWidth;
-  function animate(){
-    x--;
-    if(x<-scrollWidth) x=boxWidth;
-    noticeText.style.transform = `translateX(${x}px)`;
-    scrollInterval = requestAnimationFrame(animate);
-  }
-  animate();
-}
 
 // Auth check
 onAuthStateChanged(auth,user=>{
   currentUser=user;
-  if(user && ADMIN_EMAILS.includes(user.email)){
-    adminBox.classList.remove("hidden");
-    adminNoticeBox.classList.remove("hidden");
-  }else{
-    adminBox.classList.add("hidden");
-    adminNoticeBox.classList.add("hidden");
-  }
+  if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
+  else{ adminBox.classList.add("hidden"); }
   loadGallery();
-  loadNotice();
+  loadNotices();
 });
 
 // Lightbox
 document.getElementById("closeLightbox").onclick=()=>document.getElementById("lightbox").style.display="none";
 document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.getElementById("lightbox").style.display="none"; });
+
 </script>
 
 <!-- Donate Button -->
