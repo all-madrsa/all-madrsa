@@ -15,7 +15,6 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   overflow: hidden;
   border-bottom: 2px solid #facc15;
   white-space: nowrap;
-  box-sizing: border-box;
   position: relative;
   padding: 5px 0;
 }
@@ -23,6 +22,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   display: inline-block;
   white-space: nowrap;
   padding-left: 100%;
+  will-change: transform;
 }
 .notice-item {
   display: inline-block;
@@ -30,7 +30,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   font-weight: bold;
   color: #b45309;
 }
-.admin-btn {
+.notice-edit-btn {
   margin-left:5px;
   background:#dc2626;
   color:#fff;
@@ -44,14 +44,13 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 /* Gallery */
 .gallery-img { cursor:pointer; transition:transform .2s; width:100%; border-radius:5px; }
 .gallery-item { position: relative; }
-.gallery-admin-btn { position: absolute; top:5px; right:5px; display:none; }
-.gallery-item:hover .gallery-admin-btn { display:flex; gap:3px; }
+.gallery-admin-btn { position: absolute; top:5px; right:5px; display:flex; gap:3px; flex-direction: column; }
+.gallery-admin-btn button { font-size:0.7rem; padding:2px 5px; border-radius:3px; }
 
 /* Lightbox */
 #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:50; align-items:center; justify-content:center; }
 #lightbox img { max-height:90%; max-width:90%; border-radius:.5rem; box-shadow:0 0 20px rgba(0,0,0,.6); }
 #lightbox button { position:absolute; top:20px; right:20px; background:#f44336; color:#fff; padding:6px 12px; border-radius:6px; }
-
 </style>
 </head>
 <body>
@@ -73,6 +72,8 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   <input type="file" id="galleryFiles" accept="image/*" multiple class="border p-1 mb-2 w-full rounded"/>
   <input type="text" id="galleryText" placeholder="Gallery caption" class="border p-1 mb-2 w-full rounded"/>
   <button id="uploadBtn" class="bg-green-600 text-white px-3 py-1 rounded w-full">Upload Gallery</button>
+
+  <div id="errorMsg" class="text-red-600 mt-2"></div>
 </div>
 
 <!-- Gallery -->
@@ -117,10 +118,32 @@ const galleryFiles = document.getElementById("galleryFiles");
 const galleryText = document.getElementById("galleryText");
 const uploadBtn = document.getElementById("uploadBtn");
 const galleryGrid = document.getElementById("galleryGrid");
+const errorMsg = document.getElementById("errorMsg");
 
 let currentUser = null;
 
-// Notice Functions
+// Convert file to base64
+function toBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result.split(",")[1]);
+    reader.onerror=e=>reject(e);
+    reader.readAsDataURL(file);
+  });
+}
+
+// ImgBB upload
+async function uploadToImgBB(file){
+  const base64 = await toBase64(file);
+  const fd = new FormData();
+  fd.append("image", base64);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd});
+  const data = await res.json();
+  if(data.success) return data.data.url;
+  else throw new Error("ImgBB upload failed");
+}
+
+// Load Notices
 async function loadNotices(){
   noticeContent.innerHTML = "";
   const q = query(collection(db,"notices"),orderBy("createdAt","desc"));
@@ -135,14 +158,14 @@ async function loadNotices(){
     if(currentUser?.email===ADMIN_EMAIL){
       const editBtn = document.createElement("button");
       editBtn.textContent="✏️";
-      editBtn.className="admin-btn";
+      editBtn.className="notice-edit-btn";
       editBtn.onclick=async()=>{
         const newText = prompt("Edit notice:", d.text);
         if(newText!==null){ await updateDoc(doc(db,"notices",docSnap.id),{text:newText}); loadNotices(); }
       };
       const delBtn = document.createElement("button");
       delBtn.textContent="🗑";
-      delBtn.className="admin-btn";
+      delBtn.className="notice-edit-btn";
       delBtn.onclick=async()=>{ if(confirm("Delete this notice?")){ await deleteDoc(doc(db,"notices",docSnap.id)); loadNotices(); } };
       span.appendChild(editBtn); span.appendChild(delBtn);
     }
@@ -150,11 +173,24 @@ async function loadNotices(){
     noticeContent.appendChild(span);
   });
 
-  // Dynamic scroll
+  // Scroll animation
   const totalWidth = noticeContent.scrollWidth;
   const parentWidth = noticeContent.parentElement.offsetWidth;
-  const duration = Math.max(totalWidth/50, 10); // 50px/sec
-  noticeContent.style.animation = `scrollNotice ${duration}s linear infinite`;
+  const duration = Math.max(totalWidth/50,10);
+  noticeContent.style.transition = `transform ${duration}s linear`;
+  noticeContent.style.transform = `translateX(${parentWidth}px)`;
+  let start = null;
+  function step(timestamp){
+    if(!start) start = timestamp;
+    const progress = timestamp-start;
+    const x = parentWidth - (progress*50)/1000;
+    noticeContent.style.transform = `translateX(${x}px)`;
+    if(x + totalWidth > 0) requestAnimationFrame(step);
+    else noticeContent.style.transform = `translateX(${parentWidth}px)` , requestAnimationFrame(step);
+  }
+  noticeContent.onmouseenter = ()=> noticeContent.style.transition="none";
+  noticeContent.onmouseleave = ()=> { noticeContent.style.transition = `transform ${duration}s linear`; requestAnimationFrame(step); };
+  requestAnimationFrame(step);
 }
 
 // Add Notice
@@ -166,9 +202,7 @@ addNoticeBtn.onclick=async()=>{
   loadNotices();
 }
 
-// Gallery Functions
-function toBase64(file){ return new Promise((res,rej)=>{ const reader=new FileReader(); reader.onload=()=>res(reader.result.split(",")[1]); reader.onerror=e=>rej(e); reader.readAsDataURL(file); }); }
-async function uploadToImgBB(file){ const base64 = await toBase64(file); const fd=new FormData(); fd.append("image",base64); const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd}); const data=await res.json(); if(data.success) return data.data.url; else throw new Error("ImgBB upload failed"); }
+// Load Gallery
 async function loadGallery(){
   galleryGrid.innerHTML="";
   const q = query(collection(db,"gallery"),orderBy("createdAt","desc"));
@@ -180,16 +214,30 @@ async function loadGallery(){
       wrapper.className="gallery-item";
 
       const img = document.createElement("img");
-      img.src=d.url; img.className="gallery-img"; 
+      img.src=d.url;
+      img.className="gallery-img";
       img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
+
       wrapper.appendChild(img);
 
-      if(d.text){ const cap=document.createElement("div"); cap.textContent=d.text; cap.className="text-center text-sm"; wrapper.appendChild(cap); }
+      if(d.text){
+        const cap = document.createElement("div");
+        cap.textContent=d.text;
+        cap.className="text-center text-sm mt-1";
+        wrapper.appendChild(cap);
+      }
 
       if(currentUser?.email===ADMIN_EMAIL){
-        const delBtn=document.createElement("button"); delBtn.textContent="🗑"; delBtn.className="gallery-admin-btn bg-red-600 text-white p-1 rounded"; delBtn.onclick=async()=>{ if(confirm("Delete image?")){ await deleteDoc(doc(db,"gallery",docSnap.id)); loadGallery(); } };
-        const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.className="gallery-admin-btn bg-blue-600 text-white p-1 rounded"; editBtn.onclick=async()=>{ const newText=prompt("Edit caption:", d.text||""); if(newText!==null){ await updateDoc(doc(db,"gallery",docSnap.id),{text:newText}); loadGallery(); } };
-        wrapper.appendChild(editBtn); wrapper.appendChild(delBtn);
+        const btnDiv = document.createElement("div"); btnDiv.className="gallery-admin-btn";
+        const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.onclick=async()=>{
+          const newText=prompt("Edit caption:", d.text||"");
+          if(newText!==null){ await updateDoc(doc(db,"gallery",docSnap.id),{text:newText}); loadGallery(); }
+        };
+        const delBtn=document.createElement("button"); delBtn.textContent="🗑"; delBtn.onclick=async()=>{
+          if(confirm("Delete this image?")){ await deleteDoc(doc(db,"gallery",docSnap.id)); loadGallery(); }
+        };
+        btnDiv.appendChild(editBtn); btnDiv.appendChild(delBtn);
+        wrapper.appendChild(btnDiv);
       }
 
       galleryGrid.appendChild(wrapper);
@@ -197,22 +245,21 @@ async function loadGallery(){
   });
 }
 
-// Upload gallery
+// Upload Gallery
 uploadBtn.onclick=async()=>{
-  const files=galleryFiles.files;
+  const files = galleryFiles.files;
   if(!files.length) return alert("Select at least one file!");
-  const text = galleryText.value;
   try{
     const urls = await Promise.all(Array.from(files).map(f=>uploadToImgBB(f)));
-    await Promise.all(urls.map(url=>addDoc(collection(db,"gallery"),{url,text,createdAt:serverTimestamp()})));
+    await Promise.all(urls.map(url=>addDoc(collection(db,"gallery"),{url,text:galleryText.value,createdAt:serverTimestamp()})));
     galleryText.value=""; galleryFiles.value="";
     loadGallery();
-  }catch(e){ alert("Upload failed: "+e.message); }
+  }catch(e){ errorMsg.textContent="Upload failed: "+e.message; }
 }
 
 // Auth check
 onAuthStateChanged(auth,user=>{
-  currentUser=user;
+  currentUser = user;
   if(user?.email===ADMIN_EMAIL) adminBox.classList.remove("hidden");
   else adminBox.classList.add("hidden");
   loadNotices(); loadGallery();
@@ -221,14 +268,10 @@ onAuthStateChanged(auth,user=>{
 // Lightbox
 document.getElementById("closeLightbox").onclick=()=>document.getElementById("lightbox").style.display="none";
 document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
-
-// Notice scroll animation
-const style=document.createElement("style");
-style.textContent=`@keyframes scrollNotice{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}`;
-document.head.appendChild(style);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.getElementById("lightbox").style.display="none"; });
 </script>
 
-<!-- Donate Button -->
+<!-- Donate -->
 <a href="https://all-madrsa.netlify.app/upi" class="fixed top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-black font-bold px-5 py-3 rounded-lg shadow-lg hover:bg-yellow-300 z-50">💝 Donate</a>
 
 </body>
