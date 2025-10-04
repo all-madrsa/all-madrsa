@@ -33,10 +33,10 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 .admin-delete { background:#dc2626; } /* Red */
 
 /* Notice Scroll Box */
-#noticeBox { width:100%; overflow:hidden; background:#fffbcc; border:1px solid #facc15; padding:6px 0; position:relative; }
-#noticeText { display:inline-block; white-space:nowrap; padding-left:100%; animation:scrollNotice 15s linear infinite; }
+#noticeBox { width:100%; overflow:hidden; background:#fffbcc; border:1px solid #facc15; padding:6px 0; position:relative; display:flex; align-items:center; }
+#noticeContent { display:flex; white-space:nowrap; gap:20px; animation:scrollNotice 15s linear infinite; }
+.notice-item { display:flex; align-items:center; gap:5px; }
 @keyframes scrollNotice { 0% { transform:translateX(0); } 100% { transform:translateX(-100%); } }
-
 </style>
 </head>
 <body>
@@ -50,7 +50,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 
 <!-- Notice Scrolling -->
 <div id="noticeBox">
-  <span id="noticeText">Loading notices...</span>
+  <div id="noticeContent">Loading notices...</div>
 </div>
 
 <!-- Admin Upload Form -->
@@ -83,7 +83,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -101,14 +101,13 @@ const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 
 const galleryDiv = document.getElementById("galleryGrid");
 const adminBox = document.getElementById("adminUpload");
 const uploadBtn = document.getElementById("uploadBtn");
 const galleryText = document.getElementById("galleryText");
 const emptyMsg = document.getElementById("emptyMsg");
-const noticeText = document.getElementById("noticeText");
+const noticeContent = document.getElementById("noticeContent");
 const noticeInput = document.getElementById("noticeInput");
 const addNoticeBtn = document.getElementById("addNoticeBtn");
 
@@ -207,12 +206,45 @@ uploadBtn.onclick=async()=>{
 
 // Notices
 async function loadNotices(){
+  noticeContent.innerHTML="";
   const q = query(collection(db,"notices"), orderBy("createdAt","desc"));
   const snap = await getDocs(q);
-  const texts = snap.docs.map(d=>d.data().text);
-  if(texts.length>0){ noticeText.textContent = texts.join(" ⚡ "); }
-  else{ noticeText.textContent = "No notices yet."; }
+  if(snap.empty){ noticeContent.textContent="No notices yet."; return; }
+
+  snap.docs.forEach(docSnap=>{
+    const d = docSnap.data();
+    const span = document.createElement("span");
+    span.className="notice-item";
+    span.textContent=d.text;
+
+    if(currentUser?.email===ADMIN_EMAIL){
+      const editBtn = document.createElement("button");
+      editBtn.textContent="✏️";
+      editBtn.className="admin-btn admin-edit";
+      editBtn.onclick=async()=>{
+        const newText = prompt("Edit notice:", d.text);
+        if(newText!==null){
+          await updateDoc(doc(db,"notices",docSnap.id),{text:newText});
+          loadNotices();
+        }
+      };
+      const delBtn = document.createElement("button");
+      delBtn.textContent="🗑";
+      delBtn.className="admin-btn admin-delete";
+      delBtn.onclick=async()=>{
+        if(confirm("Delete this notice?")){
+          await deleteDoc(doc(db,"notices",docSnap.id));
+          loadNotices();
+        }
+      };
+      span.appendChild(editBtn);
+      span.appendChild(delBtn);
+    }
+
+    noticeContent.appendChild(span);
+  });
 }
+
 addNoticeBtn.onclick=async()=>{
   const text = noticeInput.value.trim();
   if(!text) return;
