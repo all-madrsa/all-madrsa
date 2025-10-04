@@ -3,69 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal Final</title>
+<title>Nikah Portal Production Ready</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body { background:#fdf6e3; font-family:sans-serif; }
 button { transition: transform .2s; }
 button:hover { transform: scale(1.05); }
-
-/* 3D Buttons */
-.btn-3d-home {
-  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
-  color: white; font-weight:700;
-  box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25);
-  transition: transform .1s ease, box-shadow .1s ease;
-}
-.btn-3d-home:active {
-  transform: translateY(3px);
-  box-shadow:0 3px 0 rgba(0,0,0,0.25);
-}
-
-/* Notice Bar */
-#noticeBar { width:100%; background:#fffae5; overflow:hidden; white-space:nowrap; padding:6px 0; }
-.notice-item { display:inline-block; margin-right:3rem; font-weight:bold; font-size:1rem; }
-#noticeWrapper { display:inline-block; will-change:transform; }
-
-/* Admin Likes Scroll */
-.admin-likes { max-height:200px; overflow-y:auto; }
-
-/* Toast Notifications */
-#toast { position: fixed; bottom:20px; left:50%; transform: translateX(-50%); 
-  background:#333;color:#fff;padding:10px 20px;border-radius:5px;display:none; z-index:999; }
+.toast { position: fixed; top: 1rem; right: 1rem; background: #1d4ed8; color: white; padding: .5rem 1rem; border-radius: 6px; display:none; z-index:1000; }
+.notice-bar { background: #fffae5; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0; }
+.notice-wrapper { display: inline-block; will-change: transform; }
 </style>
 </head>
 <body class="text-black">
 
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
 <!-- Notice Bar -->
-<div id="noticeBar">
-  <div id="noticeWrapper">
-    <span class="notice-item">📢 Welcome to Talimi Ittehad!</span>
-  </div>
+<div class="notice-bar">
+  <div id="noticeWrapper" class="notice-wrapper">📢 Loading notices...</div>
 </div>
 
 <!-- Admin Notice Editor -->
-<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2 space-y-2">
+<div id="noticeAdmin" class="hidden max-w-4xl mx-auto px-4 mt-2 space-y-2">
   <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
-  <button id="saveNotice" class="btn-3d-home w-full">💾 Add Notice</button>
+  <button id="saveNotice" class="bg-blue-600 text-white px-4 py-2 rounded font-bold w-full">💾 Add Notice</button>
 </div>
 
-<!-- Header -->
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
   <div class="flex gap-2">
-    <a href="index.html" class="btn-3d-home px-2 py-1 text-xs rounded flex items-center justify-center">🏠 Home</a>
-    <button id="loginBtn" class="bg-green-500 px-2 py-0.5 text-xs rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-2 py-0.5 text-xs rounded hidden">➕ Post</button>
+    <a href="index.html" class="bg-gradient-to-r from-red-500 to-blue-500 px-2 py-1 text-xs font-bold rounded flex items-center">🏠 Home</a>
+    <button id="loginBtn" class="bg-green-500 px-2 py-1 text-xs rounded">Login</button>
+    <button id="postBtn" class="bg-yellow-500 px-2 py-1 text-xs rounded hidden">➕ Post</button>
   </div>
 </header>
 
 <!-- Post Form -->
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
-  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
-  <input type="number" id="ageInput" placeholder="Age" min="18" max="100" class="w-full p-2 rounded mb-2 border">
-  <select id="genderInput" class="w-full p-2 rounded mb-2 border">
-    <option value="">Gender</option>
+  <input type="text" id="nameInput" placeholder="Full Name*" class="w-full p-2 rounded mb-2 border" required>
+  <input type="number" id="ageInput" placeholder="Age*" class="w-full p-2 rounded mb-2 border" required>
+  <select id="genderInput" class="w-full p-2 rounded mb-2 border" required>
+    <option value="">Gender*</option>
     <option value="Male">Male</option>
     <option value="Female">Female</option>
   </select>
@@ -75,13 +54,13 @@ button:hover { transform: scale(1.05); }
   <input type="text" id="maritalInput" placeholder="Marital Status" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="religionInput" placeholder="Religion" class="w-full p-2 rounded mb-2 border">
   <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
-  <input type="file" id="photoInput" class="w-full p-2 mb-2">
+  <input type="text" id="cityInput" placeholder="City*" class="w-full p-2 rounded mb-2 border" required>
+  <input type="file" id="photoInput" class="w-full p-2 mb-2" required>
   <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
 </section>
 
-<!-- Profiles List -->
-<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
+<!-- User Profiles -->
+<main id="postsList" class="p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></main>
 
 <!-- Like Popup -->
 <div id="likePopup" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -89,7 +68,7 @@ button:hover { transform: scale(1.05); }
     <h3 class="text-lg font-bold mb-2">❤️ Like Profile</h3>
     <input type="text" id="likeName" placeholder="Your Name" class="w-full p-2 border rounded mb-2">
     <input type="text" id="likeAddress" placeholder="Your Address" class="w-full p-2 border rounded mb-2">
-    <input type="text" id="likeWhatsapp" placeholder="Your WhatsApp Number" class="w-full p-2 border rounded mb-2">
+    <input type="text" id="likeWhatsapp" placeholder="WhatsApp Number" class="w-full p-2 border rounded mb-2">
     <div class="flex gap-2">
       <button id="likeSubmit" class="bg-green-500 text-white px-3 py-1 rounded w-full">Submit</button>
       <button id="likeCancel" class="bg-gray-400 text-white px-3 py-1 rounded w-full">Cancel</button>
@@ -103,14 +82,12 @@ button:hover { transform: scale(1.05); }
   <div id="adminList" class="grid gap-4"></div>
 </section>
 
-<!-- Toast -->
-<div id="toast"></div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, onSnapshot, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -123,141 +100,83 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
+// Elements
+const loginBtn=document.getElementById("loginBtn"), postBtn=document.getElementById("postBtn"), postSection=document.getElementById("postSection"), submitPost=document.getElementById("submitPost"), postsList=document.getElementById("postsList"), adminPanel=document.getElementById("adminPanel"), adminList=document.getElementById("adminList"), likePopup=document.getElementById("likePopup"), likeName=document.getElementById("likeName"), likeAddress=document.getElementById("likeAddress"), likeWhatsapp=document.getElementById("likeWhatsapp"), likeSubmit=document.getElementById("likeSubmit"), likeCancel=document.getElementById("likeCancel"), toast=document.getElementById("toast"), noticeWrapper=document.getElementById("noticeWrapper"), noticeAdmin=document.getElementById("noticeAdmin"), noticeInput=document.getElementById("noticeInput"), saveNotice=document.getElementById("saveNotice");
+
+let currentUser=null, currentLikeProfile=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
 
-// Elements
-const loginBtn=document.getElementById("loginBtn");
-const postBtn=document.getElementById("postBtn");
-const postSection=document.getElementById("postSection");
-const submitPost=document.getElementById("submitPost");
-const postsList=document.getElementById("postsList");
-const adminPanel=document.getElementById("adminPanel");
-const adminList=document.getElementById("adminList");
-const likePopup=document.getElementById("likePopup");
-const likeName=document.getElementById("likeName");
-const likeAddress=document.getElementById("likeAddress");
-const likeWhatsapp=document.getElementById("likeWhatsapp");
-const likeSubmit=document.getElementById("likeSubmit");
-const likeCancel=document.getElementById("likeCancel");
-const noticeInput=document.getElementById("noticeInput");
-const saveNotice=document.getElementById("saveNotice");
-const noticeWrapper=document.getElementById("noticeWrapper");
-const toast=document.getElementById("toast");
-
-let currentUser=null;
-let currentLikeProfile=null;
-
 // Toast function
-function showToast(msg){
-  toast.textContent=msg;
-  toast.style.display="block";
-  setTimeout(()=>{ toast.style.display="none"; },3000);
-}
+function showToast(msg){ toast.textContent=msg; toast.style.display='block'; setTimeout(()=>toast.style.display='none',3000); }
 
 // Login
-loginBtn.addEventListener("click",async ()=>{
-  const provider=new GoogleAuthProvider();
-  await signInWithPopup(auth,provider);
-});
+loginBtn.addEventListener("click", async ()=>{ const provider=new GoogleAuthProvider(); await signInWithPopup(auth,provider); });
 
 onAuthStateChanged(auth,user=>{
   currentUser=user;
   if(user){
-    loginBtn.classList.add("hidden");
-    postBtn.classList.remove("hidden");
-    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
+    loginBtn.classList.add("hidden"); postBtn.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"), noticeAdmin.classList.remove("hidden");
   } else {
-    loginBtn.classList.remove("hidden");
-    postBtn.classList.add("hidden");
-    postSection.classList.add("hidden");
-    adminPanel.classList.add("hidden");
+    loginBtn.classList.remove("hidden"); postBtn.classList.add("hidden"); postSection.classList.add("hidden");
+    adminPanel.classList.add("hidden"); noticeAdmin.classList.add("hidden");
   }
 });
 
 postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
 
-// Upload Image to imgbb
+// Upload Image to Imgbb
 async function uploadToImgbb(file){
+  const allowed=['image/png','image/jpeg','image/jpg']; if(!allowed.includes(file.type)) throw 'Invalid file type';
+  if(file.size>5*1024*1024) throw 'File too large';
   const key="d12c2e4a8650157b2b6b9fe85336ea43";
-  if(!["image/png","image/jpeg"].includes(file.type)) { showToast("Only PNG/JPG allowed"); return null; }
-  if(file.size>5*1024*1024) { showToast("File must be <5MB"); return null; }
-  const formData=new FormData();
-  formData.append("image",file);
+  const formData=new FormData(); formData.append("image",file);
   const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
-  const data=await res.json();
-  return data.data.url;
+  const data=await res.json(); return data.data.url;
 }
 
 // Submit Post
-submitPost.addEventListener("click",async ()=>{
-  const name=document.getElementById("nameInput").value.trim();
-  const age=document.getElementById("ageInput").value.trim();
-  const gender=document.getElementById("genderInput").value;
-  const city=document.getElementById("cityInput").value.trim();
-  const photo=document.getElementById("photoInput").files[0];
-  if(!name||!age||!gender||!city||!photo) return showToast("Fill required fields!");
-
-  const photoUrl=await uploadToImgbb(photo);
-  if(!photoUrl) return;
-
-  await addDoc(collection(db,"profiles"),{
-    name,age,gender,city,photoUrl,
-    uid:currentUser.uid,email:currentUser.email,approvals:{},likes:[],created:serverTimestamp()
-  });
-  showToast("✅ Submitted! Wait for Admin Approval");
+submitPost.addEventListener("click", async ()=>{
+  try{
+    const name=document.getElementById("nameInput").value.trim(), age=document.getElementById("ageInput").value.trim(), gender=document.getElementById("genderInput").value, city=document.getElementById("cityInput").value.trim(), photo=document.getElementById("photoInput").files[0];
+    if(!name||!age||!gender||!city||!photo) return showToast('❌ Fill required fields!');
+    const photoUrl=await uploadToImgbb(photo);
+    await addDoc(collection(db,"profiles"),{
+      name, age, gender, education:document.getElementById("educationInput").value.trim(), profession:document.getElementById("professionInput").value.trim(), income:document.getElementById("incomeInput").value.trim(), marital:document.getElementById("maritalInput").value.trim(), religion:document.getElementById("religionInput").value.trim(), caste:document.getElementById("casteInput").value.trim(), city, photoUrl, uid:currentUser.uid, email:currentUser.email, approvals:{}, likes:[], created:serverTimestamp()
+    });
+    showToast('✅ Submitted! Wait for Admin Approval');
+  } catch(e){ showToast(e); }
 });
 
-// Fetch and render profiles
+// Fetch Profiles
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
-onSnapshot(q,snapshot=>{
-  const profiles=[];
-  snapshot.forEach(docSnap=>{ let d=docSnap.data(); d.id=docSnap.id; profiles.push(d); });
-  renderProfiles(profiles);
-  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
-});
+onSnapshot(q,snapshot=>{ const profiles=[]; snapshot.forEach(docSnap=>{ let data=docSnap.data(); data.id=docSnap.id; profiles.push(data); }); renderProfiles(profiles); if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles); });
 
+// Render Profiles
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
-    const approvedFields=Object.keys(p.approvals||{}).filter(f=>p.approvals[f]);
+    if(!p.approvals) return;
+    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
     if(approvedFields.length===0) return;
-
-    const card=document.createElement("div");
-    card.className="p-4 rounded shadow bg-white";
-
-    let html=`<div class="space-y-1">`;
-    if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2">`;
-    ["name","age","gender","city"].forEach(f=>{
-      if(p.approvals[f] && p[f]) html+=`<p><b>${f}:</b> ${p[f]}</p>`;
-    });
+    const card=document.createElement("div"); card.className="p-4 rounded shadow bg-white";
+    let html=`<div class='space-y-1'>`;
+    if(p.approvals.photoUrl && p.photoUrl) html+=`<img src='${p.photoUrl}' class='w-40 h-48 object-cover rounded border mb-2'>`;
+    ['name','age','gender','education','profession','income','marital','religion','caste','city'].forEach(f=>{ if(p.approvals[f]) html+=`<p><b>${f.charAt(0).toUpperCase()+f.slice(1)}:</b> ${p[f]}</p>` });
     html+=`</div>`;
-    html+=`<button class="like-btn bg-red-500 text-white px-3 py-1 rounded mt-2" data-id="${p.id}">❤️ Like</button>`;
-
-    card.innerHTML=html;
-    postsList.appendChild(card);
+    const alreadyLiked=p.likes.some(l=>l.uid===currentUser?.uid);
+    html+=`<button class='like-btn bg-red-500 text-white px-3 py-1 rounded mt-2' data-id='${p.id}' ${alreadyLiked?'disabled':''}>❤️ Like</button>`;
+    card.innerHTML=html; postsList.appendChild(card);
   });
-
-  document.querySelectorAll(".like-btn").forEach(btn=>{
-    btn.onclick=()=>{ currentLikeProfile=btn.dataset.id; likePopup.classList.remove("hidden"); };
-  });
+  document.querySelectorAll(".like-btn").forEach(btn=>{ btn.onclick=()=>{ currentLikeProfile=btn.dataset.id; likePopup.classList.remove("hidden"); }; });
 }
 
-// Like Popup
 likeSubmit.onclick=async ()=>{
   if(!currentUser) return showToast("Login required!");
   const name=likeName.value.trim(), address=likeAddress.value.trim(), whatsapp=likeWhatsapp.value.trim();
   if(!name||!address||!whatsapp) return showToast("Fill all fields!");
-
-  const docRef=doc(db,"profiles",currentLikeProfile);
-  const docSnap=await docRef.get();
-  // Restrict one like per user
-  const likesArr=(docSnap.data()?.likes)||[];
-  if(likesArr.some(l=>l.uid===currentUser.uid)) return showToast("You already liked");
-
-  await updateDoc(docRef,{ likes: arrayUnion({name,address,whatsapp,uid:currentUser.uid}) });
-  showToast("✅ Like submitted");
-  likePopup.classList.add("hidden");
-  likeName.value=likeAddress.value=likeWhatsapp.value="";
+  await updateDoc(doc(db,"profiles",currentLikeProfile),{likes:arrayUnion({uid:currentUser.uid,name,address,whatsapp})});
+  showToast("✅ Like submitted"); likePopup.classList.add("hidden"); likeName.value=likeAddress.value=likeWhatsapp.value="";
 };
 likeCancel.onclick=()=>likePopup.classList.add("hidden");
 
@@ -265,66 +184,34 @@ likeCancel.onclick=()=>likePopup.classList.add("hidden");
 function renderAdmin(profiles){
   adminList.innerHTML="";
   profiles.forEach(p=>{
-    let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
-    html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
-    const fields=["photoUrl","name","age","gender","city"];
-    fields.forEach(f=>{
-      html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals&&p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
+    let html=`<div class='p-4 bg-gray-100 rounded shadow'>`; html+=`<div class='mb-2'><img src='${p.photoUrl}' class='w-full h-32 object-cover rounded'></div>`;
+    ['photoUrl','name','age','gender','education','profession','income','marital','religion','caste','city'].forEach(f=>{
+      html+=`<div><input type='checkbox' class='cb-${p.id}' data-field='${f}' ${p.approvals&&p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
     });
-    html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
-    html+=`<button class="bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn" data-id="${p.id}">🗑 Delete</button>`;
-    if(p.likes && p.likes.length>0){
-      html+=`<div class="admin-likes mt-2"><b>❤️ Likes:</b><br>`;
-      p.likes.forEach(l=>{
-        html+=`<div class="p-2 bg-white rounded shadow mb-1">
-          <p><b>Name:</b> ${l.name}</p>
-          <p><b>Address:</b> ${l.address}</p>
-          <p><b>WhatsApp:</b> ${l.whatsapp}</p>
-          <a href="https://wa.me/${l.whatsapp}" target="_blank" class="bg-green-500 text-white px-3 py-1 rounded inline-block">WhatsApp</a>
-        </div>`;
-      });
+    html+=`<button class='bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn' data-id='${p.id}'>💾 Save Approval</button>`;
+    html+=`<button class='bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn' data-id='${p.id}'>🗑 Delete</button>`;
+    if(p.likes && p.likes.length>0){ html+=`<div class='mt-2'><b>❤️ Likes:</b>`;
+      p.likes.forEach(l=>{ html+=`<div class='p-2 bg-white rounded shadow mb-1'><p><b>Name:</b> ${l.name}</p><p><b>Address:</b> ${l.address}</p><p><b>WhatsApp:</b> ${l.whatsapp}</p><a href='https://wa.me/${l.whatsapp}' target='_blank' class='bg-green-500 text-white px-3 py-1 rounded inline-block'>WhatsApp</a></div>`; });
       html+=`</div>`;
     }
-    html+=`</div>`;
-    adminList.innerHTML+=html;
+    html+=`</div>`; adminList.innerHTML+=html;
   });
-
-  document.querySelectorAll(".saveBtn").forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      const checkboxes=document.querySelectorAll(`.cb-${id}`);
-      let approvals={};
-      checkboxes.forEach(cb=>{ approvals[cb.dataset.field]=cb.checked; });
-      await updateDoc(doc(db,"profiles",id),{approvals});
-      showToast("✅ Approvals Updated");
-    };
-  });
-
-  document.querySelectorAll(".deleteBtn").forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      if(confirm("Delete this profile?")) await deleteDoc(doc(db,"profiles",id));
-    };
-  });
+  document.querySelectorAll(".saveBtn").forEach(btn=>{ btn.onclick=async ()=>{
+    const id=btn.dataset.id; let approvals={}; document.querySelectorAll(`.cb-${id}`).forEach(cb=>approvals[cb.dataset.field]=cb.checked);
+    await updateDoc(doc(db,"profiles",id),{approvals}); showToast("✅ Approvals Updated");
+  }});
+  document.querySelectorAll(".deleteBtn").forEach(btn=>{ btn.onclick=async ()=>{ const id=btn.dataset.id; if(confirm("Delete this profile?")) await deleteDoc(doc(db,"profiles",id)); }});
 }
 
-// Notice Bar dynamic scroll
-function scrollNotices(){
-  const wrapper=noticeWrapper;
-  let pos=wrapper.offsetWidth;
-  function step(){ pos--; wrapper.style.transform=`translateX(${pos}px)`; requestAnimationFrame(step); }
-  step();
-}
-scrollNotices();
-
-// Save Notice (admin only)
-saveNotice.onclick=async ()=>{
-  if(currentUser?.email!==ADMIN_EMAIL) return;
-  const text=noticeInput.value.trim(); if(!text) return showToast("Enter notice text!");
-  await addDoc(collection(db,"notices"),{text,createdAt:serverTimestamp()});
-  noticeInput.value="";
-  showToast("✅ Notice added!");
-};
-</script>
-</body>
-</html>
+// Notice Management
+const noticesQuery=query(collection(db,"notices"),orderBy("createdAt","desc"));
+onSnapshot(noticesQuery, snapshot=>{
+  noticeWrapper.innerHTML="";
+  if(snapshot.empty) noticeWrapper.textContent="📢 Welcome to Talimi Ittehad!";
+  snapshot.forEach(docSnap=>{ const d=docSnap.data();
+    const span=document.createElement("span"); span.textContent=d.text; span.className="mr-8";
+    if(currentUser?.email===ADMIN_EMAIL){ const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.className="ml-2 bg-blue-600 text-white px-1 rounded";
+      editBtn.onclick=async()=>{ const newText=prompt("Update notice:",d.text); if(newText) await updateDoc(doc(db,"notices",docSnap.id),{text:newText}); };
+      const delBtn=document.createElement("button"); delBtn.textContent="🗑"; delBtn.className="ml-1 bg-red-600 text-white px-1 rounded";
+      delBtn.onclick=async()=>{ if(confirm("Delete this notice?")) await deleteDoc(doc(db,"notices",docSnap.id)); };
+      span.appendChild(edit
