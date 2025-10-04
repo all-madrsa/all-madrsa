@@ -23,7 +23,6 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 /* Gallery */
 .gallery-img { cursor:pointer; transition:transform .2s; }
 .gallery-img:hover { transform:scale(1.05); }
-
 #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:50; align-items:center; justify-content:center; }
 #lightbox img { max-height:90%; max-width:90%; border-radius:.5rem; box-shadow:0 0 20px rgba(0,0,0,.6); }
 #lightbox button { position:absolute; top:20px; right:20px; background:#f44336; color:#fff; padding:6px 12px; border-radius:6px; }
@@ -31,6 +30,11 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 .admin-btn { display:inline-block; margin:2px; padding:2px 6px; border-radius:5px; font-size:0.7rem; color:#fff; cursor:pointer; }
 .admin-edit { background:#1d4ed8; }  /* Blue */
 .admin-delete { background:#dc2626; } /* Red */
+
+/* Scrolling notice box */
+#noticeBox { background:#fffbcc; color:#000; padding:8px 12px; margin:10px auto; max-width:800px; border-radius:6px; overflow:hidden; white-space:nowrap; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+#noticeText { display:inline-block; padding-left:100%; animation:scrollNotice 20s linear infinite; }
+@keyframes scrollNotice { 0%{transform:translateX(0);} 100%{transform:translateX(-100%);} }
 </style>
 </head>
 <body>
@@ -38,16 +42,12 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 <!-- Header -->
 <header class="bg-blue-600" style="height:100px;">
   <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
-
-    <!-- Top Buttons -->
     <div class="flex justify-center gap-2">
       <a href="index.html"><button class="btn-3d-home">🏠 Home</button></a>
       <a href="nikah.html"><button class="btn-3d" style="background:linear-gradient(90deg,#ff4d4d,#ff914d)">💍 Nikah</button></a>
       <a href="news.html"><button class="btn-3d" style="background:linear-gradient(90deg,#4dffb8,#4d94ff)">📰 News</button></a>
       <a href="hadees.html"><button class="btn-3d" style="background:linear-gradient(90deg,#d24dff,#ff4dd2)">📜 Hadees</button></a>
     </div>
-
-    <!-- Logo & Side Images -->
     <div class="flex justify-between items-center h-full mt-1">
       <img src="makka.png" alt="Makka" class="header-png">
       <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform:translateY(-8px);">Talimi Ittehad</div>
@@ -64,6 +64,11 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   <button id="uploadBtn" class="btn-3d w-full py-2" style="background:linear-gradient(90deg,#4d94ff,#4dffb8)">Upload</button>
 </div>
 
+<!-- Scrolling Notice Box -->
+<div id="noticeBox">
+  <span id="noticeText">Loading notices...</span>
+</div>
+
 <main class="max-w-6xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">📸 Gallery</h1>
   <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
@@ -76,6 +81,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
   <button id="closeLightbox">✖</button>
 </div>
 
+<!-- Footer -->
 <footer class="bg-gray-100 text-center py-4 mt-10">
   <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
 </footer>
@@ -83,7 +89,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -101,13 +107,13 @@ const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 
 const galleryDiv = document.getElementById("galleryGrid");
 const adminBox = document.getElementById("adminUpload");
 const uploadBtn = document.getElementById("uploadBtn");
 const emptyMsg = document.getElementById("emptyMsg");
 const galleryText = document.getElementById("galleryText");
+const noticeText = document.getElementById("noticeText");
 
 let currentUser = null;
 
@@ -152,7 +158,6 @@ async function loadGallery(){
         img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
         wrapper.appendChild(img);
 
-        // Caption
         if(d.text){
           const caption = document.createElement("div");
           caption.textContent = d.text;
@@ -160,6 +165,7 @@ async function loadGallery(){
           wrapper.appendChild(caption);
         }
 
+        // Admin buttons
         if(currentUser?.email===ADMIN_EMAIL){
           const editBtn = document.createElement("button");
           editBtn.textContent="✏️";
@@ -187,6 +193,15 @@ async function loadGallery(){
   }
 }
 
+// Load notices
+async function loadNotices(){
+  const snap = await getDocs(collection(db,"notices"));
+  if(snap.empty){ noticeText.textContent="No notices yet."; return; }
+  let allText = "";
+  snap.forEach(d=>allText += d.data().text + " ⚡ "); // scrolling separator
+  noticeText.textContent = allText;
+}
+
 // Upload handler
 uploadBtn.onclick=async()=>{
   const files=document.getElementById("galleryFiles").files;
@@ -206,9 +221,13 @@ uploadBtn.onclick=async()=>{
 // Auth check
 onAuthStateChanged(auth,user=>{
   currentUser=user;
-  if(user?.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
-  else{ adminBox.classList.add("hidden"); }
+  if(user?.email===ADMIN_EMAIL){ 
+    adminBox.classList.remove("hidden"); 
+  } else { 
+    adminBox.classList.add("hidden"); 
+  }
   loadGallery();
+  loadNotices();
 });
 
 // Lightbox
