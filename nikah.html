@@ -1,51 +1,58 @@
-<!-- Notice Bar -->
-<div id="noticeBar" class="w-full bg-yellow-200 py-1 overflow-hidden relative">
-  <div id="noticeScroll" class="flex whitespace-nowrap items-center gap-4"></div>
-</div>
-
-<!-- Admin Notice Editor -->
-<div id="noticeAdmin" class="hidden max-w-6xl mx-auto px-4 mt-2 space-y-2">
-  <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Add new notice..."></textarea>
-  <button id="saveNotice" class="btn-3d bg-blue-600 text-white px-4 py-2 rounded">💾 Add Notice</button>
-</div>
-
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notice Bar | Talimi Ittehad</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-/* Scroll animation */
+body { background:#fdf6e3; font-family:sans-serif; margin:0; }
+
+/* 3D Button Style */
+.btn-3d { 
+  color:#fff; font-weight:700; border-radius:8px; padding:.35rem .7rem; font-size:.85rem;
+  box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s; cursor:pointer;
+}
+.btn-3d:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 6px 0 rgba(0,0,0,.25),0 8px 14px rgba(0,0,0,.25);}
+.btn-3d:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.25); }
+
+/* Notice Bar */
+#noticeBar { width:100%; background:#fffae5; overflow:hidden; white-space:nowrap; position:relative; padding:6px 0; }
+.notice-item { display:inline-block; margin-right:3rem; font-weight:bold; font-size:1rem; }
+.notice-btn { margin-left:5px; padding:2px 5px; font-size:0.7rem; border-radius:4px; cursor:pointer; color:#fff; }
+.notice-edit { background:#1d4ed8; }
+.notice-delete { background:#dc2626; }
+
+/* Scrolling Animation */
 @keyframes scroll-left {
   0% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
-#noticeScroll {
-  display: inline-flex;
-  animation: scroll-left linear infinite;
-  animation-duration: 25s; /* Adjust speed */
-}
-.notice-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #facc15; /* yellow-400 */
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-weight: bold;
-  font-size: 1rem;
-}
-.notice-btn {
-  padding: 2px 5px;
-  font-size: 0.75rem;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #fff;
-}
-.notice-edit { background: #1d4ed8; }
-.notice-delete { background: #dc2626; }
+#noticeWrapper { display:inline-block; will-change:transform; animation:scroll-left linear infinite; animation-duration:25s; }
 </style>
+</head>
+<body>
+
+<!-- Notice Bar -->
+<div id="noticeBar">
+  <div id="noticeWrapper">
+    <span class="notice-item">📢 Loading notices...</span>
+  </div>
+</div>
+
+<!-- Admin Notice Editor -->
+<div id="noticeAdmin" class="hidden max-w-4xl mx-auto px-4 mt-2 space-y-2">
+  <textarea id="noticeInput" class="border p-2 w-full rounded text-sm" placeholder="Update notice text..."></textarea>
+  <button id="saveNotice" class="btn-3d bg-blue-600 w-full text-white">💾 Add Notice</button>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+// Firebase Config
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain:"all-madrsa.firebaseapp.com",
@@ -55,93 +62,83 @@ const firebaseConfig = {
   messagingSenderId:"619313835874",
   appId:"1:619313835874:web:e387e1297663b11fc2463b"
 };
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
+const ADMIN_EMAIL="zaradigitalseva@gmail.com";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const noticeScroll = document.getElementById("noticeScroll");
+const noticeWrapper = document.getElementById("noticeWrapper");
 const noticeAdmin = document.getElementById("noticeAdmin");
 const noticeInput = document.getElementById("noticeInput");
 const saveNotice = document.getElementById("saveNotice");
 
-let currentUser = null;
+let currentUser=null;
 
-// Load all notices
-async function loadNotices() {
-  noticeScroll.innerHTML = "";
-  try {
-    const q = query(collection(db,"notices"), orderBy("createdAt","desc"));
-    const snap = await getDocs(q);
-    if(snap.empty){
-      const span = document.createElement("span");
-      span.className="notice-item";
-      span.textContent = "📢 Welcome to Talimi Ittehad!";
-      noticeScroll.appendChild(span);
-      return;
-    }
-    snap.forEach(docSnap=>{
-      const d = docSnap.data();
-      const span = document.createElement("span");
-      span.className="notice-item";
-      span.textContent = d.text;
-
-      if(currentUser?.email === ADMIN_EMAIL){
-        const editBtn = document.createElement("button");
-        editBtn.textContent="✏️";
-        editBtn.className="notice-btn notice-edit";
-        editBtn.onclick = async()=>{
-          const newText = prompt("Update notice text:", d.text);
-          if(newText){
-            await updateDoc(doc(db,"notices",docSnap.id),{text:newText});
-            loadNotices();
-          }
-        };
-        const delBtn = document.createElement("button");
-        delBtn.textContent="🗑";
-        delBtn.className="notice-btn notice-delete";
-        delBtn.onclick = async()=>{
-          if(confirm("Delete this notice?")){
-            await deleteDoc(doc(db,"notices",docSnap.id));
-            loadNotices();
-          }
-        };
-        span.appendChild(editBtn);
-        span.appendChild(delBtn);
-      }
-
-      noticeScroll.appendChild(span);
-    });
-  } catch(e){
-    console.error(e);
+// Load Notices Real-Time
+const noticesQuery = query(collection(db,"notices"), orderBy("createdAt","desc"));
+onSnapshot(noticesQuery, snapshot=>{
+  noticeWrapper.innerHTML="";
+  if(snapshot.empty){
     const span = document.createElement("span");
     span.className="notice-item";
-    span.textContent="⚠️ Failed to load notices";
-    noticeScroll.appendChild(span);
+    span.textContent="📢 Welcome to Talimi Ittehad!";
+    noticeWrapper.appendChild(span);
+    return;
   }
-}
+  snapshot.forEach(docSnap=>{
+    const d = docSnap.data();
+    const span = document.createElement("span");
+    span.className="notice-item";
+    span.textContent = d.text;
 
-// Save notice (Admin)
+    // Admin buttons
+    if(currentUser?.email === ADMIN_EMAIL){
+      const editBtn = document.createElement("button");
+      editBtn.textContent="✏️";
+      editBtn.className="notice-btn notice-edit";
+      editBtn.onclick = async()=>{
+        const newText = prompt("Update notice text:", d.text);
+        if(newText){
+          await updateDoc(doc(db,"notices",docSnap.id), {text:newText});
+        }
+      };
+      const delBtn = document.createElement("button");
+      delBtn.textContent="🗑";
+      delBtn.className="notice-btn notice-delete";
+      delBtn.onclick = async()=>{
+        if(confirm("Delete this notice?")){
+          await deleteDoc(doc(db,"notices",docSnap.id));
+        }
+      };
+      span.appendChild(editBtn);
+      span.appendChild(delBtn);
+    }
+
+    noticeWrapper.appendChild(span);
+  });
+});
+
+// Save Notice (Admin)
 saveNotice.onclick = async()=>{
   const text = noticeInput.value.trim();
-  if(!text) return alert("Enter notice text");
-  await addDoc(collection(db,"notices"),{text, createdAt:serverTimestamp()});
+  if(!text) return alert("Enter notice text!");
+  await addDoc(collection(db,"notices"), {text, createdAt:serverTimestamp()});
   noticeInput.value="";
-  loadNotices();
+  alert("✅ Notice added!");
 };
 
-// Auth check
+// Auth Check
 onAuthStateChanged(auth,user=>{
-  currentUser = user;
+  currentUser=user;
   if(user?.email===ADMIN_EMAIL){
     noticeAdmin.classList.remove("hidden");
   } else {
     noticeAdmin.classList.add("hidden");
   }
-  loadNotices();
 });
-
-// Initial load
-loadNotices();
 </script>
+
+</body>
+</html>
