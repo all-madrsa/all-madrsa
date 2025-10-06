@@ -3,40 +3,79 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Trust Documents | Talimi Ittehad</title>
+<title>Admin Dashboard | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
-.btn-3d { background:linear-gradient(90deg,#4d94ff,#4dffb8); color:#fff; font-weight:700; border-radius:10px; padding:.35rem .7rem; font-size:.85rem;
-box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);
-transition: transform .12s ease, box-shadow .12s ease, filter .12s; cursor:pointer;}
-.btn-3d:hover{filter:brightness(1.1); transform:translateY(-2px);}
-.upload-area{border:2px dashed #4d94ff;padding:20px;text-align:center;border-radius:10px;cursor:pointer;transition:0.3s;}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;}
+header{background:#1e40af;color:#fff;font-weight:700;text-align:center;padding:1rem;font-size:1.25rem;}
+.tabs{display:flex;gap:1px;margin:1rem 0;background:#ddd;border-radius:5px;overflow:hidden;}
+.tab{flex:1;text-align:center;padding:.5rem 0;cursor:pointer;background:#eee;font-weight:600;}
+.tab.active{background:#1e40af;color:#fff;}
+.section{display:none;}
+.section.active{display:block;}
+.btn-3d{background:linear-gradient(90deg,#4d94ff,#4dffb8);color:#fff;font-weight:700;border-radius:10px;padding:.35rem .7rem;font-size:.85rem;
+box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);transition:transform .12s ease,box-shadow .12s ease,filter .12s;cursor:pointer;}
+.btn-3d:hover{filter:brightness(1.1);transform:translateY(-2px);}
+.upload-area{border:2px dashed #4d94ff;padding:20px;text-align:center;border-radius:10px;cursor:pointer;transition:.3s;}
 .upload-area.dragover{background:#e0f7ff;}
-.progress-bar{height:6px;background:#4d94ff;border-radius:3px;margin-top:5px;transition:width 0.2s;}
-.admin-btn{display:inline-block;margin:2px;padding:2px 6px;border-radius:5px;font-size:0.7rem;color:#fff;cursor:pointer;}
+.progress-bar{height:6px;background:#4d94ff;border-radius:3px;margin-top:5px;transition:width .2s;}
+.admin-btn{display:inline-block;margin:2px;padding:2px 6px;border-radius:5px;font-size:.7rem;color:#fff;cursor:pointer;}
 .admin-edit{background:#1d4ed8;}
 .admin-delete{background:#dc2626;}
+.card-img{width:100%;height:200px;object-fit:cover;border-radius:5px;}
 </style>
 </head>
 <body>
 
-<header class="bg-blue-600 p-4 text-white text-center font-bold text-xl">📄 Trust Documents</header>
+<header>📊 Admin Dashboard | Talimi Ittehad</header>
 
-<!-- Admin Upload -->
-<div id="adminUpload" class="hidden max-w-md mx-auto mt-4 p-4 bg-white rounded shadow">
-  <h2 class="font-semibold mb-2">📤 Upload New Document</h2>
-  <div id="uploadArea" class="upload-area mb-2">Drag & Drop File Here or Click to Select (PDF/DOC/DOCX)</div>
-  <input id="docFile" type="file" accept=".pdf,.doc,.docx" class="hidden"/>
-  <input id="docTitle" type="text" placeholder="Document Title" class="mb-2 w-full rounded border p-1"/>
-  <div class="w-full bg-gray-300 rounded overflow-hidden mb-2"><div id="progress" class="progress-bar w-0"></div></div>
-  <button id="uploadBtn" class="btn-3d w-full py-2">Upload</button>
+<!-- Tabs -->
+<div class="max-w-5xl mx-auto px-4">
+  <div class="tabs">
+    <div class="tab active" data-tab="galleryTab">Gallery</div>
+    <div class="tab" data-tab="noticeTab">Notices</div>
+    <div class="tab" data-tab="docsTab">Trust Documents</div>
+  </div>
+
+  <!-- Gallery Section -->
+  <div id="galleryTab" class="section active">
+    <div id="adminGallery" class="hidden bg-white p-4 rounded shadow mb-4">
+      <h2 class="font-semibold mb-2">📤 Upload New Image</h2>
+      <div id="galleryUploadArea" class="upload-area mb-2">Drag & Drop Image or Click</div>
+      <input id="galleryFile" type="file" accept=".jpg,.jpeg,.png" class="hidden"/>
+      <input id="galleryTitle" type="text" placeholder="Image Title" class="mb-2 w-full rounded border p-1"/>
+      <div class="w-full bg-gray-300 rounded overflow-hidden mb-2"><div id="galleryProgress" class="progress-bar w-0"></div></div>
+      <button id="galleryUploadBtn" class="btn-3d w-full py-2">Upload</button>
+    </div>
+    <div id="galleryList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
+    <p id="galleryEmptyMsg" class="text-gray-500 text-sm mt-4 hidden">⚠️ No images available.</p>
+  </div>
+
+  <!-- Notices Section -->
+  <div id="noticeTab" class="section">
+    <div id="adminNotice" class="hidden bg-white p-4 rounded shadow mb-4">
+      <h2 class="font-semibold mb-2">📝 Post New Notice</h2>
+      <textarea id="noticeInput" class="w-full p-2 border rounded mb-2" placeholder="Enter notice text..."></textarea>
+      <button id="noticePostBtn" class="btn-3d w-full py-2">Post Notice</button>
+    </div>
+    <div id="noticeList" class="space-y-2"></div>
+    <p id="noticeEmptyMsg" class="text-gray-500 text-sm mt-2 hidden">⚠️ No notices available.</p>
+  </div>
+
+  <!-- Trust Documents Section -->
+  <div id="docsTab" class="section">
+    <div id="adminDocs" class="hidden bg-white p-4 rounded shadow mb-4">
+      <h2 class="font-semibold mb-2">📤 Upload New Document</h2>
+      <div id="docUploadArea" class="upload-area mb-2">Drag & Drop File or Click (PDF/DOC/DOCX)</div>
+      <input id="docFile" type="file" accept=".pdf,.doc,.docx" class="hidden"/>
+      <input id="docTitle" type="text" placeholder="Document Title" class="mb-2 w-full rounded border p-1"/>
+      <div class="w-full bg-gray-300 rounded overflow-hidden mb-2"><div id="docProgress" class="progress-bar w-0"></div></div>
+      <button id="docUploadBtn" class="btn-3d w-full py-2">Upload</button>
+    </div>
+    <div id="docList" class="space-y-3"></div>
+    <p id="docEmptyMsg" class="text-gray-500 text-sm mt-2 hidden">⚠️ No documents available.</p>
+  </div>
 </div>
-
-<main class="max-w-4xl mx-auto p-4">
-  <div id="docList" class="space-y-3"></div>
-  <p id="emptyMsg" class="text-gray-500 text-sm mt-4 hidden">⚠️ No documents available.</p>
-</main>
 
 <footer class="bg-gray-100 text-center py-4 mt-10">
   <p class="text-xs text-gray-500">© 2025 Talimi Ittehad</p>
@@ -48,6 +87,7 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, s
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain:"all-madrsa.firebaseapp.com",
@@ -64,111 +104,186 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const adminBox = document.getElementById("adminUpload");
-const uploadArea = document.getElementById("uploadArea");
-const docFile = document.getElementById("docFile");
-const docTitle = document.getElementById("docTitle");
-const uploadBtn = document.getElementById("uploadBtn");
-const progressBar = document.getElementById("progress");
-const docList = document.getElementById("docList");
-const emptyMsg = document.getElementById("emptyMsg");
-
 let currentUser = null;
 
-// Drag & drop
-uploadArea.addEventListener("click",()=>docFile.click());
-uploadArea.addEventListener("dragover",e=>{ e.preventDefault(); uploadArea.classList.add("dragover"); });
-uploadArea.addEventListener("dragleave",e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); });
-uploadArea.addEventListener("drop",e=>{
-  e.preventDefault(); uploadArea.classList.remove("dragover");
-  docFile.files = e.dataTransfer.files;
+// --- Tabs ---
+const tabs = document.querySelectorAll(".tab");
+const sections = document.querySelectorAll(".section");
+tabs.forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    tabs.forEach(t=>t.classList.remove("active"));
+    sections.forEach(s=>s.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.tab).classList.add("active");
+  });
 });
 
-// Upload document
-uploadBtn.onclick = async()=>{
-  const file = docFile.files[0];
-  if(!file) return alert("Select a file!");
-  const title = docTitle.value.trim();
-  if(!title) return alert("Enter document title!");
+// --- Admin Controls ---
+const adminGallery = document.getElementById("adminGallery");
+const galleryUploadArea = document.getElementById("galleryUploadArea");
+const galleryFile = document.getElementById("galleryFile");
+const galleryTitle = document.getElementById("galleryTitle");
+const galleryUploadBtn = document.getElementById("galleryUploadBtn");
+const galleryProgress = document.getElementById("galleryProgress");
+const galleryList = document.getElementById("galleryList");
+const galleryEmptyMsg = document.getElementById("galleryEmptyMsg");
 
-  const storageRef = ref(storage,"trust_docs/"+Date.now()+"_"+file.name);
+const adminNotice = document.getElementById("adminNotice");
+const noticeInput = document.getElementById("noticeInput");
+const noticePostBtn = document.getElementById("noticePostBtn");
+const noticeList = document.getElementById("noticeList");
+const noticeEmptyMsg = document.getElementById("noticeEmptyMsg");
+
+const adminDocs = document.getElementById("adminDocs");
+const docUploadArea = document.getElementById("docUploadArea");
+const docFile = document.getElementById("docFile");
+const docTitle = document.getElementById("docTitle");
+const docUploadBtn = document.getElementById("docUploadBtn");
+const docProgress = document.getElementById("docProgress");
+const docList = document.getElementById("docList");
+const docEmptyMsg = document.getElementById("docEmptyMsg");
+
+// --- Drag & Drop ---
+function setupDragDrop(area,input){
+  area.addEventListener("click",()=>input.click());
+  area.addEventListener("dragover",e=>{ e.preventDefault(); area.classList.add("dragover"); });
+  area.addEventListener("dragleave",e=>{ e.preventDefault(); area.classList.remove("dragover"); });
+  area.addEventListener("drop",e=>{ e.preventDefault(); area.classList.remove("dragover"); input.files=e.dataTransfer.files; });
+}
+setupDragDrop(galleryUploadArea,galleryFile);
+setupDragDrop(docUploadArea,docFile);
+
+// --- Upload Functions ---
+async function uploadFile(file,inputTitle,progressBar,path,collectionName){
+  if(!file) return alert("Select a file!");
+  const title = inputTitle.value.trim();
+  if(!title) return alert("Enter title!");
+  const storageRef = ref(storage, path + "/" + Date.now() + "_" + file.name);
   const uploadTask = uploadBytesResumable(storageRef,file);
 
   progressBar.style.width="0%";
-  uploadBtn.textContent="⏳ Uploading...";
+  inputTitle.disabled = true;
 
-  uploadTask.on('state_changed',
-    snapshot=>{
-      const percent = Math.round((snapshot.bytesTransferred/snapshot.totalBytes)*100);
-      progressBar.style.width = percent+"%";
-    },
-    error=>{ alert("Upload error: "+error.message); uploadBtn.textContent="Upload"; progressBar.style.width="0%"; },
-    async()=>{
-      const url = await getDownloadURL(uploadTask.snapshot.ref);
-      await addDoc(collection(db,"trust_docs"),{title,url,createdAt:serverTimestamp()});
-      docTitle.value=""; docFile.value="";
-      uploadBtn.textContent="✅ Done"; progressBar.style.width="0%";
-      loadDocs();
-    }
-  );
+  return new Promise((resolve,reject)=>{
+    uploadTask.on('state_changed',
+      snapshot=>{
+        const percent = Math.round((snapshot.bytesTransferred/snapshot.totalBytes)*100);
+        progressBar.style.width = percent+"%";
+      },
+      error=>{ alert("Upload error: "+error.message); progressBar.style.width="0%"; inputTitle.disabled=false; reject(error); },
+      async()=>{
+        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        await addDoc(collection(db,collectionName),{title,url,createdAt:serverTimestamp()});
+        inputTitle.value=""; progressBar.style.width="0%"; inputTitle.disabled=false;
+        resolve();
+      }
+    );
+  });
+}
+
+// --- Gallery Upload ---
+galleryUploadBtn.onclick = async()=>{
+  await uploadFile(galleryFile,galleryTitle,galleryProgress,"gallery","gallery");
+  loadGallery();
 };
 
-// Load documents
+// --- Documents Upload ---
+docUploadBtn.onclick = async()=>{
+  await uploadFile(docFile,docTitle,docProgress,"trust_docs","trust_docs");
+  loadDocs();
+};
+
+// --- Notices ---
+noticePostBtn.onclick = async()=>{
+  const text = noticeInput.value.trim();
+  if(!text) return alert("Enter notice text!");
+  await addDoc(collection(db,"notices"),{text,createdAt:serverTimestamp()});
+  noticeInput.value="";
+  loadNotices();
+};
+
+// --- Load Functions ---
+async function loadGallery(){
+  galleryList.innerHTML="";
+  const q=query(collection(db,"gallery"),orderBy("createdAt","desc"));
+  const snap = await getDocs(q);
+  if(snap.empty){ galleryEmptyMsg.classList.remove("hidden"); return; }
+  galleryEmptyMsg.classList.add("hidden");
+  snap.forEach(docSnap=>{
+    const d = docSnap.data();
+    const div = document.createElement("div");
+    div.className="bg-white p-2 rounded shadow relative";
+    const img = document.createElement("img");
+    img.src=d.url; img.alt=d.title; img.className="card-img mb-1";
+    div.appendChild(img);
+    const title = document.createElement("div"); title.textContent=d.title; title.className="text-sm font-medium mb-1"; div.appendChild(title);
+
+    if(currentUser && currentUser.email===ADMIN_EMAIL){
+      const btnWrapper = document.createElement("div"); btnWrapper.className="flex gap-1";
+      const delBtn = document.createElement("button"); delBtn.textContent="Delete"; delBtn.className="admin-btn admin-delete";
+      delBtn.onclick=async()=>{ if(confirm("Delete this image?")){ await deleteDoc(doc(db,"gallery",docSnap.id)); loadGallery(); } };
+      const editBtn = document.createElement("button"); editBtn.textContent="Edit"; editBtn.className="admin-btn admin-edit";
+      editBtn.onclick=async()=>{ const newTitle=prompt("Update title:",d.title); if(newTitle && newTitle.trim()!==""){ await updateDoc(doc(db,"gallery",docSnap.id),{title:newTitle}); loadGallery(); } };
+      btnWrapper.appendChild(editBtn); btnWrapper.appendChild(delBtn); div.appendChild(btnWrapper);
+    }
+
+    galleryList.appendChild(div);
+  });
+}
+
+async function loadNotices(){
+  noticeList.innerHTML="";
+  const q=query(collection(db,"notices"),orderBy("createdAt","desc"));
+  const snap = await getDocs(q);
+  if(snap.empty){ noticeEmptyMsg.classList.remove("hidden"); return; }
+  noticeEmptyMsg.classList.add("hidden");
+  snap.forEach(docSnap=>{
+    const d = docSnap.data();
+    const div = document.createElement("div"); div.className="bg-white p-2 rounded shadow flex justify-between items-center";
+    const span = document.createElement("span"); span.textContent=d.text; div.appendChild(span);
+
+    if(currentUser && currentUser.email===ADMIN_EMAIL){
+      const btnWrapper = document.createElement("div"); btnWrapper.className="flex gap-1";
+      const delBtn = document.createElement("button"); delBtn.textContent="Delete"; delBtn.className="admin-btn admin-delete";
+      delBtn.onclick=async()=>{ if(confirm("Delete this notice?")){ await deleteDoc(doc(db,"notices",docSnap.id)); loadNotices(); } };
+      btnWrapper.appendChild(delBtn);
+      div.appendChild(btnWrapper);
+    }
+
+    noticeList.appendChild(div);
+  });
+}
+
 async function loadDocs(){
   docList.innerHTML="";
   const q=query(collection(db,"trust_docs"),orderBy("createdAt","desc"));
   const snap = await getDocs(q);
-  if(snap.empty){ emptyMsg.classList.remove("hidden"); return; }
-  emptyMsg.classList.add("hidden");
-
+  if(snap.empty){ docEmptyMsg.classList.remove("hidden"); return; }
+  docEmptyMsg.classList.add("hidden");
   snap.forEach(docSnap=>{
     const d = docSnap.data();
-    const div = document.createElement("div");
-    div.className="bg-white p-3 rounded shadow flex justify-between items-center";
-
-    const link = document.createElement("a");
-    link.href=d.url; link.target="_blank"; link.textContent=d.title;
-    link.className="text-blue-600 hover:underline";
-    div.appendChild(link);
+    const div = document.createElement("div"); div.className="bg-white p-3 rounded shadow flex justify-between items-center";
+    const link = document.createElement("a"); link.href=d.url; link.target="_blank"; link.textContent=d.title; link.className="text-blue-600 hover:underline"; div.appendChild(link);
 
     if(currentUser && currentUser.email===ADMIN_EMAIL){
-      const btnWrapper = document.createElement("div");
-      btnWrapper.className="flex gap-1";
-
-      const delBtn = document.createElement("button");
-      delBtn.textContent="Delete"; delBtn.className="admin-btn admin-delete";
-      delBtn.onclick=async()=>{
-        if(confirm("Delete this document?")){
-          await deleteDoc(doc(db,"trust_docs",docSnap.id));
-          loadDocs();
-        }
-      };
-      btnWrapper.appendChild(delBtn);
-
-      const editBtn = document.createElement("button");
-      editBtn.textContent="Edit"; editBtn.className="admin-btn admin-edit";
-      editBtn.onclick=async()=>{
-        const newTitle = prompt("Update document title:",d.title);
-        if(newTitle!==null && newTitle.trim()!==""){
-          await updateDoc(doc(db,"trust_docs",docSnap.id),{title:newTitle});
-          loadDocs();
-        }
-      };
-      btnWrapper.appendChild(editBtn);
-
-      div.appendChild(btnWrapper);
+      const btnWrapper = document.createElement("div"); btnWrapper.className="flex gap-1";
+      const delBtn = document.createElement("button"); delBtn.textContent="Delete"; delBtn.className="admin-btn admin-delete";
+      delBtn.onclick=async()=>{ if(confirm("Delete this document?")){ await deleteDoc(doc(db,"trust_docs",docSnap.id)); loadDocs(); } };
+      const editBtn = document.createElement("button"); editBtn.textContent="Edit"; editBtn.className="admin-btn admin-edit";
+      editBtn.onclick=async()=>{ const newTitle=prompt("Update title:",d.title); if(newTitle && newTitle.trim()!==""){ await updateDoc(doc(db,"trust_docs",docSnap.id),{title:newTitle}); loadDocs(); } };
+      btnWrapper.appendChild(editBtn); btnWrapper.appendChild(delBtn); div.appendChild(btnWrapper);
     }
 
     docList.appendChild(div);
   });
 }
 
-// Auth
+// --- Auth ---
 onAuthStateChanged(auth,user=>{
   currentUser = user;
-  if(user && user.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
+  if(user && user.email===ADMIN_EMAIL){ adminGallery.classList.remove("hidden"); adminNotice.classList.remove("hidden"); adminDocs.classList.remove("hidden"); }
   if(!user){ signInWithPopup(auth,provider); }
-  loadDocs();
+  loadGallery(); loadNotices(); loadDocs();
 });
 </script>
 
