@@ -74,7 +74,7 @@ transition: transform .12s ease, box-shadow .12s ease, filter .12s; cursor:point
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -87,7 +87,7 @@ const firebaseConfig = {
 };
 
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-const IMGBB_API_KEY = "3701b37092582c6aa3b6f8d1d3dcd00d";
+const IMGBB_API_KEY = "396fbc779807e34e4131a8a8e48ad03c";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -99,9 +99,6 @@ const uploadBtn = document.getElementById("uploadBtn");
 const galleryText = document.getElementById("galleryText");
 const emptyMsg = document.getElementById("emptyMsg");
 const adminBox = document.getElementById("adminUpload");
-const noticeText = document.getElementById("noticeText");
-
-let currentUser = null;
 
 // Base64 convert
 function toBase64(file){
@@ -121,7 +118,7 @@ async function uploadToImgBB(file){
   const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd});
   const data = await res.json();
   if(data.success) return data.data.url;
-  else throw new Error("Upload failed");
+  else throw new Error("Upload failed: " + (data.error?.message || ""));
 }
 
 // Load Gallery
@@ -139,7 +136,10 @@ async function loadGallery(){
       const img=document.createElement("img");
       img.src=d.url;
       img.className="gallery-img rounded shadow w-full";
-      img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
+      img.onclick=()=>{ 
+        document.getElementById("lightbox").style.display="flex"; 
+        document.getElementById("lightbox-img").src=d.url; 
+      };
       wrapper.appendChild(img);
       if(d.text){
         const caption=document.createElement("div");
@@ -171,12 +171,8 @@ uploadBtn.onclick=async()=>{
 
 // Auth
 onAuthStateChanged(auth,user=>{
-  currentUser=user;
-  if(user){ 
-    if(user.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
-  } else {
-    signInWithPopup(auth,provider);
-  }
+  if(user && user.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
+  else { signInWithPopup(auth,provider); }
   loadGallery();
 });
 
