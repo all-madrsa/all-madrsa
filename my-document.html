@@ -23,6 +23,7 @@ box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);transition:transfor
 
 <header>📤 Admin Upload Page</header>
 
+<!-- Admin Upload Section -->
 <div id="adminUpload" class="max-w-md mx-auto mt-4 p-4 bg-white rounded shadow hidden">
 
   <h2 class="font-semibold mb-2">Upload Image</h2>
@@ -49,7 +50,9 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimest
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-// Firebase config
+// ========================
+// 🔹 Firebase config
+// ========================
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain:"all-madrsa.firebaseapp.com",
@@ -59,13 +62,18 @@ const firebaseConfig = {
   appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
 };
 
+// Admin email
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// ========================
+// DOM Elements
+// ========================
 const adminUpload = document.getElementById("adminUpload");
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileInput");
@@ -82,16 +90,21 @@ const emptyMsg = document.getElementById("emptyMsg");
 
 let currentUser = null;
 
+// ========================
 // Drag & Drop
+// ========================
 uploadArea.addEventListener("click",()=>fileInput.click());
 uploadArea.addEventListener("dragover",e=>{ e.preventDefault(); uploadArea.classList.add("dragover"); });
 uploadArea.addEventListener("dragleave",e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); });
 uploadArea.addEventListener("drop",e=>{
-  e.preventDefault(); uploadArea.classList.remove("dragover");
+  e.preventDefault();
+  uploadArea.classList.remove("dragover");
   fileInput.files = e.dataTransfer.files;
 });
 
+// ========================
 // Upload Image
+// ========================
 uploadBtn.onclick = async()=>{
   if(!currentUser || currentUser.email!==ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
   const file = fileInput.files[0];
@@ -112,7 +125,8 @@ uploadBtn.onclick = async()=>{
     },
     error=>{
       alert("Upload error: "+error.message);
-      uploadBtn.textContent="Upload Image"; progressBar.style.width="0%";
+      uploadBtn.textContent="Upload Image";
+      progressBar.style.width="0%";
     },
     async()=>{
       const url = await getDownloadURL(uploadTask.snapshot.ref);
@@ -124,7 +138,9 @@ uploadBtn.onclick = async()=>{
   );
 };
 
+// ========================
 // Upload Text
+// ========================
 textUploadBtn.onclick = async()=>{
   if(!currentUser || currentUser.email!==ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
   const title = textTitle.value.trim();
@@ -135,7 +151,9 @@ textUploadBtn.onclick = async()=>{
   loadItems();
 };
 
+// ========================
 // Load Items
+// ========================
 async function loadItems(){
   itemList.innerHTML="";
   const q=query(collection(db,"items"),orderBy("createdAt","desc"));
@@ -166,7 +184,9 @@ async function loadItems(){
   });
 }
 
+// ========================
 // Auth
+// ========================
 onAuthStateChanged(auth,user=>{
   currentUser = user;
   if(!user){ signInWithPopup(auth,provider); }
@@ -175,6 +195,26 @@ onAuthStateChanged(auth,user=>{
   }
   loadItems();
 });
+
+/* ========================
+🔥 Important: CORS fix
+========================
+If uploads fail with CORS error:
+
+1. Create a file `cors.json`:
+[
+  {
+    "origin": ["https://all-madrsa.netlify.app"],
+    "method": ["GET","POST","PUT","DELETE","OPTIONS"],
+    "maxAgeSeconds": 3600
+  }
+]
+
+2. Run in terminal:
+firebase login
+firebase use --add
+gsutil cors set cors.json gs://all-madrsa.appspot.com
+*/
 </script>
 
 </body>
