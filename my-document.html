@@ -23,7 +23,7 @@ box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);transition:transfor
 
 <header>📤 Admin Upload Page</header>
 
-<div class="max-w-md mx-auto mt-4 p-4 bg-white rounded shadow">
+<div id="adminUpload" class="max-w-md mx-auto mt-4 p-4 bg-white rounded shadow hidden">
 
   <h2 class="font-semibold mb-2">Upload Image</h2>
   <div id="uploadArea" class="upload-area mb-2">Drag & Drop Image or Click (JPG/PNG)</div>
@@ -56,7 +56,7 @@ const firebaseConfig = {
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b"
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
 };
 
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
@@ -66,6 +66,7 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+const adminUpload = document.getElementById("adminUpload");
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileInput");
 const imgTitle = document.getElementById("imgTitle");
@@ -92,8 +93,7 @@ uploadArea.addEventListener("drop",e=>{
 
 // Upload Image
 uploadBtn.onclick = async()=>{
-  if(!currentUser || currentUser.email !== ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
-
+  if(!currentUser || currentUser.email!==ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
   const file = fileInput.files[0];
   if(!file) return alert("Select an image!");
   const title = imgTitle.value.trim();
@@ -126,8 +126,7 @@ uploadBtn.onclick = async()=>{
 
 // Upload Text
 textUploadBtn.onclick = async()=>{
-  if(!currentUser || currentUser.email !== ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
-
+  if(!currentUser || currentUser.email!==ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
   const title = textTitle.value.trim();
   const content = textContent.value.trim();
   if(!title || !content) return alert("Enter title and text!");
@@ -171,6 +170,9 @@ async function loadItems(){
 onAuthStateChanged(auth,user=>{
   currentUser = user;
   if(!user){ signInWithPopup(auth,provider); }
+  if(currentUser && currentUser.email===ADMIN_EMAIL){
+    adminUpload.classList.remove("hidden"); // only admin sees upload
+  }
   loadItems();
 });
 </script>
