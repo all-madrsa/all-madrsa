@@ -6,90 +6,82 @@
 <title>My Document | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;}
 header{background:#1e40af;color:#fff;font-weight:700;text-align:center;padding:1rem;font-size:1.25rem;}
-.upload-area{border:2px dashed #4d94ff;padding:20px;text-align:center;border-radius:10px;cursor:pointer;transition:.3s;}
-.upload-area.dragover{background:#e0f7ff;}
-.progress-bar{height:6px;background:#4d94ff;border-radius:3px;margin-top:5px;transition:width .2s;}
 .btn-3d{background:linear-gradient(90deg,#4d94ff,#4dffb8);color:#fff;font-weight:700;border-radius:10px;padding:.35rem .7rem;font-size:.85rem;
 box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);transition:transform .12s ease,box-shadow .12s ease,filter .12s;cursor:pointer;}
 .btn-3d:hover{filter:brightness(1.1);transform:translateY(-2px);}
-.admin-btn{display:inline-block;margin:2px;padding:2px 6px;border-radius:5px;font-size:.7rem;color:#fff;cursor:pointer;}
+.upload-area{border:2px dashed #4d94ff;padding:20px;text-align:center;border-radius:10px;cursor:pointer;transition:.3s;}
+.upload-area.dragover{background:#e0f7ff;}
+.progress-bar{height:6px;background:#4d94ff;border-radius:3px;margin-top:5px;transition:width .2s;}
+.gallery-img{cursor:pointer;transition:transform .2s;}
+.gallery-img:hover{transform:scale(1.05);}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;align-items:center;justify-content:center;}
+#lightbox img{max-height:90%;max-width:90%;border-radius:.5rem;box-shadow:0 0 20px rgba(0,0,0,.6);}
+#lightbox button{position:absolute;top:20px;right:20px;background:#f44336;color:#fff;padding:6px 12px;border-radius:6px;cursor:pointer;}
+.admin-btn{display:inline-block;margin:2px;padding:2px 6px;border-radius:5px;font-size:0.7rem;color:#fff;cursor:pointer;}
 .admin-delete{background:#dc2626;}
-.card-img{width:100%;height:200px;object-fit:cover;border-radius:5px;}
 </style>
 </head>
 <body>
 
-<header>📄 My Document Page</header>
+<header>📄 My Document</header>
 
-<div id="adminUpload" class="max-w-md mx-auto mt-4 p-4 bg-white rounded shadow hidden">
-  <h2 class="font-semibold mb-2">Upload Image</h2>
-  <div id="uploadArea" class="upload-area mb-2">Drag & Drop Image or Click (JPG/PNG)</div>
-  <input id="fileInput" type="file" accept=".jpg,.jpeg,.png" class="hidden"/>
-  <input id="imgTitle" type="text" placeholder="Image Title" class="mb-2 w-full rounded border p-1"/>
+<!-- Admin Upload -->
+<div id="adminUpload" class="hidden max-w-md mx-auto mt-4 p-4 bg-white rounded shadow">
+  <h2 class="font-semibold mb-2">🖼 Upload New Document Image</h2>
+  <div id="uploadArea" class="upload-area mb-2">Drag & Drop Image or Click to Select (JPG/PNG/GIF)</div>
+  <input id="fileInput" type="file" accept="image/*" class="hidden"/>
+  <input id="docTitle" type="text" placeholder="Document Title" class="mb-2 w-full rounded border p-1"/>
   <div class="w-full bg-gray-300 rounded overflow-hidden mb-2"><div id="progress" class="progress-bar w-0"></div></div>
-  <button id="uploadBtn" class="btn-3d w-full py-2 mb-4">Upload Image</button>
-
-  <h2 class="font-semibold mb-2">Upload Text</h2>
-  <input id="textTitle" type="text" placeholder="Title" class="mb-2 w-full rounded border p-1"/>
-  <textarea id="textContent" placeholder="Enter text..." class="mb-2 w-full rounded border p-1"></textarea>
-  <button id="textUploadBtn" class="btn-3d w-full py-2 mb-4">Upload Text</button>
+  <button id="uploadBtn" class="btn-3d w-full py-2">Upload Image</button>
 </div>
 
-<main class="max-w-md mx-auto p-4">
-  <div id="itemList" class="space-y-3"></div>
-  <p id="emptyMsg" class="text-gray-500 text-sm mt-4 hidden">⚠️ No items available.</p>
+<main class="max-w-4xl mx-auto p-4">
+  <div id="docList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+  <p id="emptyMsg" class="text-gray-500 text-sm mt-4 hidden">⚠️ No documents uploaded yet.</p>
 </main>
+
+<div id="lightbox" class="flex">
+  <img src="" alt="preview" id="lightbox-img">
+  <button id="closeLightbox">✖</button>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain:"all-madrsa.firebaseapp.com",
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b"
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
 };
 
-const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// DOM
 const adminBox = document.getElementById("adminUpload");
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileInput");
-const imgTitle = document.getElementById("imgTitle");
+const docTitle = document.getElementById("docTitle");
 const uploadBtn = document.getElementById("uploadBtn");
 const progressBar = document.getElementById("progress");
-
-const textTitle = document.getElementById("textTitle");
-const textContent = document.getElementById("textContent");
-const textUploadBtn = document.getElementById("textUploadBtn");
-
-const itemList = document.getElementById("itemList");
+const docList = document.getElementById("docList");
 const emptyMsg = document.getElementById("emptyMsg");
 
 let currentUser = null;
-let isAdminUser = false;
 
-// Drag & Drop
-uploadArea.addEventListener("click",()=>fileInput.click());
-uploadArea.addEventListener("dragover",e=>{ e.preventDefault(); uploadArea.classList.add("dragover"); });
-uploadArea.addEventListener("dragleave",e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); });
-uploadArea.addEventListener("drop",e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); fileInput.files = e.dataTransfer.files; });
-
-// Convert to base64
+// ====================
+// Base64 convert
 function toBase64(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
@@ -99,82 +91,101 @@ function toBase64(file){
   });
 }
 
-// Upload Image to ImgBB
+// ====================
+// Upload to ImgBB
+async function uploadToImgBB(file){
+  const base64 = await toBase64(file);
+  const fd = new FormData();
+  fd.append("image", base64);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:fd});
+  const data = await res.json();
+  if(data.success) return data.data.url;
+  else throw new Error("Upload failed");
+}
+
+// ====================
+// Drag & Drop
+uploadArea.addEventListener("click",()=>fileInput.click());
+uploadArea.addEventListener("dragover",e=>{ e.preventDefault(); uploadArea.classList.add("dragover"); });
+uploadArea.addEventListener("dragleave",e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); });
+uploadArea.addEventListener("drop",e=>{
+  e.preventDefault();
+  uploadArea.classList.remove("dragover");
+  fileInput.files = e.dataTransfer.files;
+});
+
+// ====================
+// Upload Button
 uploadBtn.onclick = async()=>{
-  if(!isAdminUser){ alert("Only admin can upload!"); return; }
+  if(!currentUser || currentUser.email!==ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
   const file = fileInput.files[0];
   if(!file) return alert("Select an image!");
-  const title = imgTitle.value.trim();
-  if(!title) return alert("Enter title!");
-
+  const title = docTitle.value.trim();
+  if(!title) return alert("Enter document title!");
   uploadBtn.textContent="⏳ Uploading...";
   progressBar.style.width="0%";
 
   try{
-    const base64 = await toBase64(file);
-    const fd = new FormData();
-    fd.append("image", base64);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {method:"POST", body:fd});
-    const data = await res.json();
-    if(!data.success) throw new Error("Upload failed");
-
-    await addDoc(collection(db,"items"),{type:"image",title,url:data.data.url,createdAt:serverTimestamp()});
-    imgTitle.value=""; fileInput.value="";
-    progressBar.style.width="0%"; uploadBtn.textContent="Upload Image";
-    loadItems();
-  }catch(e){ alert(e.message); uploadBtn.textContent="Upload Image"; progressBar.style.width="0%"; }
+    const url = await uploadToImgBB(file);
+    await addDoc(collection(db,"my_documents"),{title,url,createdAt:serverTimestamp()});
+    docTitle.value=""; fileInput.value="";
+    uploadBtn.textContent="✅ Done"; progressBar.style.width="0%";
+    loadDocs();
+  }catch(e){ alert("Upload error: "+e.message); uploadBtn.textContent="Upload Image"; progressBar.style.width="0%"; }
 };
 
-// Upload Text
-textUploadBtn.onclick = async()=>{
-  if(!isAdminUser){ alert("Only admin can upload!"); return; }
-  const title = textTitle.value.trim();
-  const content = textContent.value.trim();
-  if(!title || !content) return alert("Enter title and text!");
-  await addDoc(collection(db,"items"),{type:"text",title,content,createdAt:serverTimestamp()});
-  textTitle.value=""; textContent.value="";
-  loadItems();
-};
-
-// Load Items
-async function loadItems(){
-  itemList.innerHTML="";
-  const q=query(collection(db,"items"),orderBy("createdAt","desc"));
-  const snap = await getDocs(q);
+// ====================
+// Load Documents
+async function loadDocs(){
+  docList.innerHTML="";
+  const q=query(collection(db,"my_documents"),orderBy("createdAt","desc"));
+  const snap=await getDocs(q);
   if(snap.empty){ emptyMsg.classList.remove("hidden"); return; }
   emptyMsg.classList.add("hidden");
 
   snap.forEach(docSnap=>{
-    const d = docSnap.data();
-    const div = document.createElement("div");
-    div.className="bg-white p-3 rounded shadow";
+    const d=docSnap.data();
+    const wrapper=document.createElement("div");
+    wrapper.className="relative";
 
-    if(d.type==="image"){
-      const img = document.createElement("img"); img.src=d.url; img.className="card-img mb-1"; div.appendChild(img);
-      const span = document.createElement("div"); span.textContent=d.title; span.className="font-medium mb-1"; div.appendChild(span);
-    } else {
-      const h3 = document.createElement("div"); h3.textContent=d.title; h3.className="font-semibold mb-1"; div.appendChild(h3);
-      const p = document.createElement("div"); p.textContent=d.content; div.appendChild(p);
+    const img=document.createElement("img");
+    img.src=d.url;
+    img.alt=d.title;
+    img.className="gallery-img rounded shadow w-full";
+    img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
+    wrapper.appendChild(img);
+
+    const caption=document.createElement("div");
+    caption.textContent=d.title;
+    caption.className="text-center text-sm mt-1";
+    wrapper.appendChild(caption);
+
+    if(currentUser && currentUser.email===ADMIN_EMAIL){
+      const delBtn = document.createElement("button");
+      delBtn.textContent="Delete";
+      delBtn.className="admin-btn admin-delete mt-1";
+      delBtn.onclick=async()=>{ if(confirm("Delete this document?")){ await deleteDoc(doc(db,"my_documents",docSnap.id)); loadDocs(); } };
+      wrapper.appendChild(delBtn);
     }
 
-    if(isAdminUser){
-      const delBtn = document.createElement("button"); delBtn.textContent="Delete"; delBtn.className="admin-btn admin-delete mt-2";
-      delBtn.onclick=async()=>{ if(confirm("Delete this item?")){ await deleteDoc(doc(db,"items",docSnap.id)); loadItems(); } };
-      div.appendChild(delBtn);
-    }
-
-    itemList.appendChild(div);
+    docList.appendChild(wrapper);
   });
 }
 
+// ====================
 // Auth
 onAuthStateChanged(auth,user=>{
-  currentUser = user;
-  if(!user){ signInWithPopup(auth,provider); return; }
-  isAdminUser = user.email===ADMIN_EMAIL;
-  if(isAdminUser) adminBox.classList.remove("hidden");
-  loadItems();
+  currentUser=user;
+  if(user && user.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
+  if(!user){ signInWithPopup(auth,provider); }
+  loadDocs();
 });
+
+// ====================
+// Lightbox
+document.getElementById("closeLightbox").onclick=()=>document.getElementById("lightbox").style.display="none";
+document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
+
 </script>
 
 </body>
