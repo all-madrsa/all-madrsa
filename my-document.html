@@ -23,6 +23,39 @@ box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);transition:transfor
 .admin-delete{background:#dc2626;}
 </style>
 </head>
+
+<!-- 🔹 Top Header -->
+<header class="bg-blue-600">
+  <div class="flex justify-center items-center py-3 px-4 gap-4">
+
+    <!-- Right: 3D Special Buttons -->
+    <button class="btn-3d-special">💍 Nikah</button>
+    <button class="btn-3d-special">📰 News</button>
+    <button class="btn-3d-special">📜 Hadees</button>
+
+  </div>
+</header>
+
+<style>
+/* 🔹 Sirf Top Header ke buttons ke liye */
+.btn-3d-special {
+  background: linear-gradient(90deg,#ff4d4d,#d24dff);
+  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+  font-size: 1rem;
+  padding: .7rem 1.3rem;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-3d-special:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+</style>
+
+
+  
 <body>
 
 <header>📄 My Document</header>
