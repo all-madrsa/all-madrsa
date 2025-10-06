@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Upload | Talimi Ittehad</title>
+<title>My Document | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;}
+body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; }
 header{background:#1e40af;color:#fff;font-weight:700;text-align:center;padding:1rem;font-size:1.25rem;}
 .upload-area{border:2px dashed #4d94ff;padding:20px;text-align:center;border-radius:10px;cursor:pointer;transition:.3s;}
 .upload-area.dragover{background:#e0f7ff;}
@@ -21,10 +21,9 @@ box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);transition:transfor
 </head>
 <body>
 
-<header>📤 Admin Upload Page</header>
+<header>📄 My Document Page</header>
 
 <div id="adminUpload" class="max-w-md mx-auto mt-4 p-4 bg-white rounded shadow hidden">
-
   <h2 class="font-semibold mb-2">Upload Image</h2>
   <div id="uploadArea" class="upload-area mb-2">Drag & Drop Image or Click (JPG/PNG)</div>
   <input id="fileInput" type="file" accept=".jpg,.jpeg,.png" class="hidden"/>
@@ -47,8 +46,6 @@ box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);transition:transfor
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-import { getDatabase, ref as rRef, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -60,15 +57,16 @@ const firebaseConfig = {
   appId:"1:619313835874:web:e387e1297663b11fc2463b"
 };
 
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const dbRT = getDatabase(app);
-const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// DOM Elements
-const adminUpload = document.getElementById("adminUpload");
+// DOM
+const adminBox = document.getElementById("adminUpload");
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileInput");
 const imgTitle = document.getElementById("imgTitle");
@@ -85,67 +83,49 @@ const emptyMsg = document.getElementById("emptyMsg");
 let currentUser = null;
 let isAdminUser = false;
 
-// ========================
-// Helper: check admin from Realtime DB
-// ========================
-async function checkAdmin(email){
-  const snapshot = await get(rRef(dbRT,"admins"));
-  if(snapshot.exists()){
-    const admins = snapshot.val();
-    return Object.values(admins).includes(email);
-  }
-  return false;
-}
-
-// ========================
 // Drag & Drop
-// ========================
 uploadArea.addEventListener("click",()=>fileInput.click());
 uploadArea.addEventListener("dragover",e=>{ e.preventDefault(); uploadArea.classList.add("dragover"); });
 uploadArea.addEventListener("dragleave",e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); });
-uploadArea.addEventListener("drop",e=>{
-  e.preventDefault(); uploadArea.classList.remove("dragover");
-  fileInput.files = e.dataTransfer.files;
-});
+uploadArea.addEventListener("drop",e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); fileInput.files = e.dataTransfer.files; });
 
-// ========================
-// Upload Image
-// ========================
+// Convert to base64
+function toBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result.split(",")[1]);
+    reader.onerror=e=>reject(e);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Upload Image to ImgBB
 uploadBtn.onclick = async()=>{
   if(!isAdminUser){ alert("Only admin can upload!"); return; }
   const file = fileInput.files[0];
   if(!file) return alert("Select an image!");
   const title = imgTitle.value.trim();
-  if(!title) return alert("Enter image title!");
+  if(!title) return alert("Enter title!");
 
-  const storageRef = ref(storage,"uploads/"+Date.now()+"_"+file.name);
-  const uploadTask = uploadBytesResumable(storageRef,file);
-
-  progressBar.style.width="0%";
   uploadBtn.textContent="⏳ Uploading...";
+  progressBar.style.width="0%";
 
-  uploadTask.on('state_changed',
-    snapshot=>{
-      const percent = Math.round((snapshot.bytesTransferred/snapshot.totalBytes)*100);
-      progressBar.style.width = percent+"%";
-    },
-    error=>{
-      alert("Upload error: "+error.message);
-      uploadBtn.textContent="Upload Image"; progressBar.style.width="0%";
-    },
-    async()=>{
-      const url = await getDownloadURL(uploadTask.snapshot.ref);
-      await addDoc(collection(db,"items"),{type:"image",title,url,createdAt:serverTimestamp()});
-      imgTitle.value=""; fileInput.value="";
-      uploadBtn.textContent="Upload Image"; progressBar.style.width="0%";
-      loadItems();
-    }
-  );
+  try{
+    const base64 = await toBase64(file);
+    const fd = new FormData();
+    fd.append("image", base64);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {method:"POST", body:fd});
+    const data = await res.json();
+    if(!data.success) throw new Error("Upload failed");
+
+    await addDoc(collection(db,"items"),{type:"image",title,url:data.data.url,createdAt:serverTimestamp()});
+    imgTitle.value=""; fileInput.value="";
+    progressBar.style.width="0%"; uploadBtn.textContent="Upload Image";
+    loadItems();
+  }catch(e){ alert(e.message); uploadBtn.textContent="Upload Image"; progressBar.style.width="0%"; }
 };
 
-// ========================
 // Upload Text
-// ========================
 textUploadBtn.onclick = async()=>{
   if(!isAdminUser){ alert("Only admin can upload!"); return; }
   const title = textTitle.value.trim();
@@ -156,9 +136,7 @@ textUploadBtn.onclick = async()=>{
   loadItems();
 };
 
-// ========================
 // Load Items
-// ========================
 async function loadItems(){
   itemList.innerHTML="";
   const q=query(collection(db,"items"),orderBy("createdAt","desc"));
@@ -189,33 +167,14 @@ async function loadItems(){
   });
 }
 
-// ========================
 // Auth
-// ========================
-onAuthStateChanged(auth, async user=>{
+onAuthStateChanged(auth,user=>{
   currentUser = user;
   if(!user){ signInWithPopup(auth,provider); return; }
-  isAdminUser = await checkAdmin(user.email);
-  if(isAdminUser){ adminUpload.classList.remove("hidden"); }
+  isAdminUser = user.email===ADMIN_EMAIL;
+  if(isAdminUser) adminBox.classList.remove("hidden");
   loadItems();
 });
-
-/* ========================
-🔥 Important: CORS fix for Storage
-========================
-1. Create cors.json
-[
-  {
-    "origin": ["https://all-madrsa.netlify.app"],
-    "method": ["GET","POST","PUT","DELETE","OPTIONS"],
-    "maxAgeSeconds": 3600
-  }
-]
-2. Apply:
-firebase login
-firebase use --add
-gsutil cors set cors.json gs://all-madrsa.appspot.com
-*/
 </script>
 
 </body>
