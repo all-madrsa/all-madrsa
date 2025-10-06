@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Upload Page | Talimi Ittehad</title>
+<title>Admin Upload | Talimi Ittehad</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;}
@@ -23,7 +23,6 @@ box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.2);transition:transfor
 
 <header>📤 Admin Upload Page</header>
 
-<!-- Admin Upload Section -->
 <div id="adminUpload" class="max-w-md mx-auto mt-4 p-4 bg-white rounded shadow hidden">
 
   <h2 class="font-semibold mb-2">Upload Image</h2>
@@ -49,31 +48,26 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { getDatabase, ref as rRef, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ========================
-// 🔹 Firebase config
-// ========================
+// Firebase config
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain:"all-madrsa.firebaseapp.com",
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
+  appId:"1:619313835874:web:e387e1297663b11fc2463b"
 };
-
-// Admin email
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const dbRT = getDatabase(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ========================
 // DOM Elements
-// ========================
 const adminUpload = document.getElementById("adminUpload");
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileInput");
@@ -89,6 +83,19 @@ const itemList = document.getElementById("itemList");
 const emptyMsg = document.getElementById("emptyMsg");
 
 let currentUser = null;
+let isAdminUser = false;
+
+// ========================
+// Helper: check admin from Realtime DB
+// ========================
+async function checkAdmin(email){
+  const snapshot = await get(rRef(dbRT,"admins"));
+  if(snapshot.exists()){
+    const admins = snapshot.val();
+    return Object.values(admins).includes(email);
+  }
+  return false;
+}
 
 // ========================
 // Drag & Drop
@@ -97,8 +104,7 @@ uploadArea.addEventListener("click",()=>fileInput.click());
 uploadArea.addEventListener("dragover",e=>{ e.preventDefault(); uploadArea.classList.add("dragover"); });
 uploadArea.addEventListener("dragleave",e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); });
 uploadArea.addEventListener("drop",e=>{
-  e.preventDefault();
-  uploadArea.classList.remove("dragover");
+  e.preventDefault(); uploadArea.classList.remove("dragover");
   fileInput.files = e.dataTransfer.files;
 });
 
@@ -106,7 +112,7 @@ uploadArea.addEventListener("drop",e=>{
 // Upload Image
 // ========================
 uploadBtn.onclick = async()=>{
-  if(!currentUser || currentUser.email!==ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
+  if(!isAdminUser){ alert("Only admin can upload!"); return; }
   const file = fileInput.files[0];
   if(!file) return alert("Select an image!");
   const title = imgTitle.value.trim();
@@ -125,8 +131,7 @@ uploadBtn.onclick = async()=>{
     },
     error=>{
       alert("Upload error: "+error.message);
-      uploadBtn.textContent="Upload Image";
-      progressBar.style.width="0%";
+      uploadBtn.textContent="Upload Image"; progressBar.style.width="0%";
     },
     async()=>{
       const url = await getDownloadURL(uploadTask.snapshot.ref);
@@ -142,7 +147,7 @@ uploadBtn.onclick = async()=>{
 // Upload Text
 // ========================
 textUploadBtn.onclick = async()=>{
-  if(!currentUser || currentUser.email!==ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
+  if(!isAdminUser){ alert("Only admin can upload!"); return; }
   const title = textTitle.value.trim();
   const content = textContent.value.trim();
   if(!title || !content) return alert("Enter title and text!");
@@ -174,7 +179,7 @@ async function loadItems(){
       const p = document.createElement("div"); p.textContent=d.content; div.appendChild(p);
     }
 
-    if(currentUser && currentUser.email===ADMIN_EMAIL){
+    if(isAdminUser){
       const delBtn = document.createElement("button"); delBtn.textContent="Delete"; delBtn.className="admin-btn admin-delete mt-2";
       delBtn.onclick=async()=>{ if(confirm("Delete this item?")){ await deleteDoc(doc(db,"items",docSnap.id)); loadItems(); } };
       div.appendChild(delBtn);
@@ -187,21 +192,18 @@ async function loadItems(){
 // ========================
 // Auth
 // ========================
-onAuthStateChanged(auth,user=>{
+onAuthStateChanged(auth, async user=>{
   currentUser = user;
-  if(!user){ signInWithPopup(auth,provider); }
-  if(currentUser && currentUser.email===ADMIN_EMAIL){
-    adminUpload.classList.remove("hidden"); // only admin sees upload
-  }
+  if(!user){ signInWithPopup(auth,provider); return; }
+  isAdminUser = await checkAdmin(user.email);
+  if(isAdminUser){ adminUpload.classList.remove("hidden"); }
   loadItems();
 });
 
 /* ========================
-🔥 Important: CORS fix
+🔥 Important: CORS fix for Storage
 ========================
-If uploads fail with CORS error:
-
-1. Create a file `cors.json`:
+1. Create cors.json
 [
   {
     "origin": ["https://all-madrsa.netlify.app"],
@@ -209,8 +211,7 @@ If uploads fail with CORS error:
     "maxAgeSeconds": 3600
   }
 ]
-
-2. Run in terminal:
+2. Apply:
 firebase login
 firebase use --add
 gsutil cors set cors.json gs://all-madrsa.appspot.com
