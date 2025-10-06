@@ -14,37 +14,42 @@ transition: transform .12s ease, box-shadow .12s ease, filter .12s; cursor:point
 .header-png{height:50px;width:50px;border-radius:50%;object-fit:cover;}
 .gallery-img{cursor:pointer;transition:transform .2s;}
 .gallery-img:hover{transform:scale(1.05);}
-#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;align-items:center;justify-content:center;}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;align-items:center;justify-content:center;padding:10px;}
 #lightbox img{max-height:90%;max-width:90%;border-radius:.5rem;box-shadow:0 0 20px rgba(0,0,0,.6);}
-#lightbox button{position:absolute;top:20px;right:20px;background:#f44336;color:#fff;padding:6px 12px;border-radius:6px;cursor:pointer;}
+#lightbox button{position:absolute;top:20px;right:20px;background:#f44336;color:#fff;padding:6px 12px;border-radius:6px;cursor:pointer;z-index:60;}
 .admin-btn{display:inline-block;margin:2px;padding:2px 6px;border-radius:5px;font-size:0.7rem;color:#fff;cursor:pointer;}
 .admin-edit{background:#1d4ed8;}
 .admin-delete{background:#dc2626;}
 .notice-bar{background:#004080;color:white;padding:6px 10px;overflow:hidden;white-space:nowrap;}
-.notice-text{display:inline-block;padding-left:100%;animation:scroll-left 15s linear infinite;}
+.notice-text{display:inline-block;padding-left:100%;animation:scroll-left 20s linear infinite;}
 .upload-area{border:2px dashed #4d94ff;padding:20px;text-align:center;border-radius:10px;cursor:pointer;transition:0.3s;}
 .upload-area.dragover{background:#e0f7ff;}
 .progress-bar{height:6px;background:#4d94ff;border-radius:3px;margin-top:5px;transition:width 0.2s;}
 @keyframes scroll-left{0%{transform:translateX(0%);}100%{transform:translateX(-100%);}}
+@media (max-width:640px){
+  .gallery-img{height:150px; object-fit:cover;}
+  #lightbox img{max-width:100%; max-height:80%;}
+}
 </style>
 </head>
 <body>
 
-<header class="bg-blue-600" style="height:100px;">
-  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
-    <div class="flex justify-center gap-2">
+<header class="bg-blue-600 p-2">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+    <div class="flex gap-2 flex-wrap justify-center">
       <a href="index.html"><button class="btn-3d">🏠 Home</button></a>
       <a href="nikah.html"><button class="btn-3d">💍 Nikah</button></a>
       <a href="news.html"><button class="btn-3d">📰 News</button></a>
     </div>
-    <div class="flex justify-between items-center h-full mt-1">
+    <div class="flex items-center gap-2 mt-2 sm:mt-0">
       <img src="makka.png" alt="Makka" class="header-png">
-      <div class="text-white font-bold text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform:translateY(-8px);">Talimi Ittehad</div>
+      <div class="text-white font-bold text-xl sm:text-2xl" style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">Talimi Ittehad</div>
       <img src="madina.png" alt="Madina" class="header-png">
     </div>
   </div>
 </header>
 
+<!-- Notice Bar -->
 <div class="notice-bar">
   <div id="noticeText" class="notice-text">Loading notices...</div>
 </div>
@@ -104,6 +109,7 @@ const adminBox = document.getElementById("adminUpload");
 const uploadArea = document.getElementById("uploadArea");
 const galleryFiles = document.getElementById("galleryFiles");
 const progressBar = document.getElementById("progress");
+const noticeText = document.getElementById("noticeText");
 
 let currentUser = null;
 
@@ -143,18 +149,18 @@ async function loadGallery(){
 
       const img=document.createElement("img");
       img.src=d.url;
-      img.className="gallery-img rounded shadow w-full";
+      img.className="gallery-img rounded shadow w-full h-48 object-cover";
       img.onclick=()=>{ document.getElementById("lightbox").style.display="flex"; document.getElementById("lightbox-img").src=d.url; };
       wrapper.appendChild(img);
 
       if(d.text){
         const caption=document.createElement("div");
         caption.textContent=d.text;
-        caption.className="text-center text-sm mt-1 text-gray-700";
+        caption.className="text-center text-sm mt-1 text-gray-700 break-words";
         wrapper.appendChild(caption);
       }
 
-      if(currentUser && currentUser.email===ADMIN_EMAIL){
+      if(currentUser){
         const btnWrapper = document.createElement("div");
         btnWrapper.className = "flex justify-center gap-1 mt-1";
 
@@ -198,7 +204,7 @@ uploadArea.addEventListener("drop", e=>{
   galleryFiles.files = e.dataTransfer.files;
 });
 
-// Upload Images Sequentially
+// Upload Images Parallel (faster)
 uploadBtn.onclick=async()=>{
   const files = Array.from(galleryFiles.files);
   if(files.length===0) return alert("कृपया कम से कम एक फ़ाइल चुनें!");
@@ -206,10 +212,12 @@ uploadBtn.onclick=async()=>{
   uploadBtn.textContent="⏳ Uploading...";
   progressBar.style.width="0%";
   try{
-    for(let i=0;i<files.length;i++){
-      const url = await uploadToImgBB(files[i]);
+    const urls = await Promise.all(files.map(f=>uploadToImgBB(f)));
+    let completed=0;
+    for(const url of urls){
       await addDoc(collection(db,"gallery"),{url,text,createdAt:serverTimestamp()});
-      progressBar.style.width = `${Math.round((i+1)/files.length*100)}%`;
+      completed++;
+      progressBar.style.width=`${Math.round(completed/files.length*100)}%`;
     }
     uploadBtn.textContent="✅ Done";
     galleryText.value="";
@@ -219,10 +227,20 @@ uploadBtn.onclick=async()=>{
   }catch(e){ alert("Error: "+e.message); uploadBtn.textContent="Upload"; progressBar.style.width="0%"; }
 };
 
+// Load Notices from Firebase
+async function loadNotices(){
+  const q=query(collection(db,"notices"),orderBy("createdAt","desc"));
+  const snap = await getDocs(q);
+  const texts = [];
+  snap.forEach(doc => texts.push(doc.data().text));
+  noticeText.textContent = texts.join(" ⚡ ");
+}
+loadNotices();
+
 // Auth
 onAuthStateChanged(auth,user=>{
   currentUser=user;
-  if(user && user.email===ADMIN_EMAIL){ adminBox.classList.remove("hidden"); }
+  adminBox.classList.toggle("hidden", !user);
   if(!user){ signInWithPopup(auth,provider); }
   loadGallery();
 });
@@ -230,7 +248,6 @@ onAuthStateChanged(auth,user=>{
 // Lightbox
 document.getElementById("closeLightbox").onclick=()=>document.getElementById("lightbox").style.display="none";
 document.getElementById("lightbox").onclick=e=>{ if(e.target.id==="lightbox") document.getElementById("lightbox").style.display="none"; };
-
 </script>
 
 <a href="https://all-madrsa.netlify.app/upi" class="fixed top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-black font-bold px-5 py-3 rounded-lg shadow-lg hover:bg-yellow-300 z-50">💝 Donate</a>
