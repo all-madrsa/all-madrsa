@@ -92,6 +92,8 @@ uploadArea.addEventListener("drop",e=>{
 
 // Upload Image
 uploadBtn.onclick = async()=>{
+  if(!currentUser || currentUser.email !== ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
+
   const file = fileInput.files[0];
   if(!file) return alert("Select an image!");
   const title = imgTitle.value.trim();
@@ -108,12 +110,15 @@ uploadBtn.onclick = async()=>{
       const percent = Math.round((snapshot.bytesTransferred/snapshot.totalBytes)*100);
       progressBar.style.width = percent+"%";
     },
-    error=>{ alert("Upload error: "+error.message); uploadBtn.textContent="Upload Image"; progressBar.style.width="0%"; },
+    error=>{
+      alert("Upload error: "+error.message);
+      uploadBtn.textContent="Upload Image"; progressBar.style.width="0%";
+    },
     async()=>{
       const url = await getDownloadURL(uploadTask.snapshot.ref);
       await addDoc(collection(db,"items"),{type:"image",title,url,createdAt:serverTimestamp()});
       imgTitle.value=""; fileInput.value="";
-      uploadBtn.textContent="✅ Done"; progressBar.style.width="0%";
+      uploadBtn.textContent="Upload Image"; progressBar.style.width="0%";
       loadItems();
     }
   );
@@ -121,6 +126,8 @@ uploadBtn.onclick = async()=>{
 
 // Upload Text
 textUploadBtn.onclick = async()=>{
+  if(!currentUser || currentUser.email !== ADMIN_EMAIL){ alert("Only admin can upload!"); return; }
+
   const title = textTitle.value.trim();
   const content = textContent.value.trim();
   if(!title || !content) return alert("Enter title and text!");
@@ -143,7 +150,7 @@ async function loadItems(){
     div.className="bg-white p-3 rounded shadow";
 
     if(d.type==="image"){
-      const img = document.createElement("img"); img.src=d.title?d.url:d.url; img.className="card-img mb-1"; div.appendChild(img);
+      const img = document.createElement("img"); img.src=d.url; img.className="card-img mb-1"; div.appendChild(img);
       const span = document.createElement("div"); span.textContent=d.title; span.className="font-medium mb-1"; div.appendChild(span);
     } else {
       const h3 = document.createElement("div"); h3.textContent=d.title; h3.className="font-semibold mb-1"; div.appendChild(h3);
