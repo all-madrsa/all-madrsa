@@ -57,11 +57,32 @@ button:hover {opacity:0.9;}
     </div>
   </div>
 
-  <!-- Left: Home Button -->
-  <div>
- <a href="index.html" class="btn-3d-home px-1 py-0.5 text-xs rounded font-bold flex items-center justify-center">
-  🏠 Home
-</a>
+<!-- Left: Home Button -->
+<div>
+  <a href="index.html" class="btn-3d-home px-2 py-1 text-xs rounded font-bold flex items-center justify-center">
+    🏠 Home
+  </a>
+</div>
+
+<style>
+/* 3D Home Button */
+.btn-3d-home {
+  background: linear-gradient(90deg, #ff4d4d, #4d94ff);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.25);
+  transition: transform 0.1s, box-shadow 0.1s, background 0.3s;
+}
+
+.btn-3d-home:hover {
+  background: linear-gradient(90deg, #ff6666, #66a3ff);
+}
+
+.btn-3d-home:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+}
+</style>
 
 
 </header>
