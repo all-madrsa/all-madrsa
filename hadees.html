@@ -49,11 +49,15 @@ body {
     <h1 class="text-2xl font-bold">📜 Hadees</h1>
     <a href="index.html" class="bg-blue-600 px-3 py-1 rounded text-white hover:bg-blue-700">🏠 Home</a>
   </div>
+  <div>
+    <!-- Login button removed, only logic check -->
+    <button id="postBtn" class="bg-blue-600 px-3 py-1 rounded hidden">➕ Post Hadees</button>
+  </div>
 </header>
 
 <section id="postSection" class="hidden p-4">
   <textarea id="hadeesInput" class="w-full p-2 text-black rounded" rows="3" placeholder="✍️ Write Hadees..."></textarea>
-  <button id="submitPost" class="bg-purple-600 px-4 py-2 rounded mt-2">Post Hadees</button>
+  <button id="submitPost" class="bg-purple-600 px-4 py-2 rounded mt-2 w-full">Post Hadees</button>
 </section>
 
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
@@ -61,7 +65,7 @@ body {
 <div id="popup" class="popup hidden">
   <div class="popup-content">
     <p id="popupText" class="font-bold text-lg"></p>
-    <p id="popupMeta" class="text-sm text-gray-300 mt-2"></p>
+    <p id="popupMeta" class="text-sm text-gray-200 mt-2"></p>
     <p id="popupStatus" class="text-sm font-semibold mt-1"></p>
     <div class="mt-4">
       <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white">❌ Close</button>
@@ -74,6 +78,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -86,6 +91,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
+// Elements
 const postBtn = document.getElementById("postBtn");
 const postSection = document.getElementById("postSection");
 const submitPost = document.getElementById("submitPost");
@@ -93,46 +99,51 @@ const hadeesInput = document.getElementById("hadeesInput");
 const postsList = document.getElementById("postsList");
 
 let currentUser = null;
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
-// 🔹 Auto-login check (hidden)
-onAuthStateChanged(auth, (user) => {
-  currentUser = user;
-  if (user) {
-    postBtn.classList.remove("hidden");
-  } else {
-    postBtn.classList.add("hidden");
-    postSection.classList.add("hidden");
+// Silent login check (no visible login button)
+async function silentLogin() {
+  try {
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) postBtn.classList.remove("hidden");
+    });
+  } catch(e){ console.log("Auth error:", e); }
+}
+silentLogin();
+
+// Post button click
+postBtn.addEventListener("click", async () => {
+  if (!currentUser) {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
   }
+  postSection.classList.toggle("hidden");
 });
 
-// 🔹 Toggle post section
-postBtn.addEventListener("click", () => {
-  if (currentUser) postSection.classList.toggle("hidden");
-  else alert("⚠️ Login required to post!");
-});
-
-// 🔹 Post hadees
+// Submit Hadees
 submitPost.addEventListener("click", async () => {
-  if (!currentUser) return alert("⚠️ Login required to post!");
-  if (hadeesInput.value.trim() === "") return alert("❌ Write something!");
-  await addDoc(collection(db, "hadees"), {
-    text: hadeesInput.value,
-    uid: currentUser.uid,
-    email: currentUser.email,
-    approved: false,
-    created: serverTimestamp()
+  if(!currentUser) return alert("⚠️ Login required to post!");
+  if(hadeesInput.value.trim() === "") return alert("❌ Write something");
+  await addDoc(collection(db,"hadees"),{
+    text:hadeesInput.value,
+    uid:currentUser.uid,
+    email:currentUser.email,
+    approved:false,
+    created:serverTimestamp()
   });
-  hadeesInput.value = "";
+  hadeesInput.value="";
+  postSection.classList.add("hidden");
   alert("✅ Submitted for approval!");
 });
 
-// 🔹 Helper functions
+// Helper functions
 function getContrastYIQ(hexcolor){
   hexcolor = hexcolor.replace("#","");
   const r=parseInt(hexcolor.substr(0,2),16);
   const g=parseInt(hexcolor.substr(2,2),16);
   const b=parseInt(hexcolor.substr(4,2),16);
-  const yiq=((r*299)+(g*587)+(b*114))/1000;
+  const yiq = ((r*299)+(g*587)+(b*114))/1000;
   return (yiq>=128) ? "black":"white";
 }
 function bgColorToHex(hsl){
@@ -144,8 +155,7 @@ function bgColorToHex(hsl){
   if(s===0){r=g=b=l;}
   else{
     const hue2rgb=(p,q,t)=>{
-      if(t<0)t+=1;
-      if(t>1)t-=1;
+      if(t<0)t+=1; if(t>1)t-=1;
       if(t<1/6)return p+(q-p)*6*t;
       if(t<1/2)return q;
       if(t<2/3)return p+(q-p)*(2/3-t)*6;
@@ -161,77 +171,74 @@ function bgColorToHex(hsl){
   return "#"+toHex(r)+toHex(g)+toHex(b);
 }
 
-// 🔹 Show posts (everyone can see)
-const q = query(collection(db, "hadees"), orderBy("created", "desc"));
-onSnapshot(q, (snapshot) => {
-  postsList.innerHTML = "";
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const postId = docSnap.id;
+// Load posts
+const q=query(collection(db,"hadees"),orderBy("created","desc"));
+onSnapshot(q,(snapshot)=>{
+  postsList.innerHTML="";
+  snapshot.forEach((docSnap)=>{
+    const data=docSnap.data();
+    const postId=docSnap.id;
 
-    // Hide unapproved for normal users
-    if (!data.approved && !(currentUser && (currentUser.email === data.email || currentUser.email === "zaradigitalseva@gmail.com"))) return;
+    if(!data.approved && !(currentUser && (currentUser.email===data.email || currentUser.email===ADMIN_EMAIL))) return;
 
-    const bgColor = `hsl(${Math.random() * 360},70%,70%)`;
-    const hex = bgColorToHex(bgColor);
-    const textColor = getContrastYIQ(hex);
+    const bgColor=`hsl(${Math.random()*360},70%,70%)`;
+    const hex=bgColorToHex(bgColor);
+    const textColor=getContrastYIQ(hex);
 
     const time = data.created instanceof Timestamp ? data.created.toDate() : new Date();
     const formattedTime = time.toLocaleString();
 
-    let statusLabel = "";
-    if (data.approved === true) statusLabel = "✅ Approved";
-    else if (data.approved === false && currentUser?.email === "zaradigitalseva@gmail.com") statusLabel = "⏳ Pending / Rejected";
-    else statusLabel = "⏳ Pending";
+    let statusLabel="";
+    if(data.approved===true) statusLabel="✅ Approved";
+    else if(data.approved===false && currentUser?.email===ADMIN_EMAIL) statusLabel="⏳ Pending / Rejected";
+    else statusLabel="⏳ Pending";
 
-    const card = document.createElement("div");
-    card.className = "p-4 rounded shadow cursor-pointer h-40 overflow-hidden flex flex-col justify-between";
-    card.style.background = bgColor;
-    card.style.color = textColor;
-    card.innerHTML = `
-      <p class="font-bold text-lg card-text">${data.text}</p>
-      <p class="text-xs mt-2">✍️ ${data.email}</p>
-      <p class="text-xs">${formattedTime}</p>
-      <p class="text-sm font-semibold mt-1">${statusLabel}</p>
-    `;
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow cursor-pointer h-40 overflow-hidden flex flex-col justify-between";
+    card.style.background=bgColor;
+    card.style.color=textColor;
+    card.innerHTML=`<p class="font-bold text-lg card-text">${data.text}</p>
+                    <p class="text-xs mt-2">✍️ ${data.email}</p>
+                    <p class="text-xs">${formattedTime}</p>
+                    <p class="text-sm font-semibold mt-1">${statusLabel}</p>`;
 
-    // Delete (self or admin)
-    if (currentUser && (currentUser.email === data.email || currentUser.email === "zaradigitalseva@gmail.com")) {
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "🗑️ Delete";
-      delBtn.className = "bg-red-500 text-white px-2 py-1 rounded mt-2 self-start";
-      delBtn.onclick = async e => {
+    // Delete
+    if(currentUser && (currentUser.email===data.email || currentUser.email===ADMIN_EMAIL)){
+      const delBtn=document.createElement("button");
+      delBtn.textContent="🗑️ Delete";
+      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2 self-start";
+      delBtn.onclick=async e=>{
         e.stopPropagation();
-        await deleteDoc(doc(db, "hadees", postId));
+        await deleteDoc(doc(db,"hadees",postId));
       };
       card.appendChild(delBtn);
     }
 
     // Admin approve/reject
-    if (currentUser && currentUser.email === "zaradigitalseva@gmail.com" && !data.approved) {
-      const approveBtn = document.createElement("button");
-      approveBtn.textContent = "✅ Approve";
-      approveBtn.className = "bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
-      approveBtn.onclick = async e => {
+    if(currentUser && currentUser.email===ADMIN_EMAIL && data.approved===false){
+      const approveBtn=document.createElement("button");
+      approveBtn.textContent="✅ Approve";
+      approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
+      approveBtn.onclick=async e=>{
         e.stopPropagation();
-        await updateDoc(doc(db, "hadees", postId), { approved: true });
+        await updateDoc(doc(db,"hadees",postId),{approved:true});
       };
-      const rejectBtn = document.createElement("button");
-      rejectBtn.textContent = "❌ Reject";
-      rejectBtn.className = "bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
-      rejectBtn.onclick = async e => {
+      const rejectBtn=document.createElement("button");
+      rejectBtn.textContent="❌ Reject";
+      rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
+      rejectBtn.onclick=async e=>{
         e.stopPropagation();
-        await updateDoc(doc(db, "hadees", postId), { approved: false });
+        await updateDoc(doc(db,"hadees",postId),{approved:false});
       };
       card.appendChild(approveBtn);
       card.appendChild(rejectBtn);
     }
 
     // Popup
-    card.addEventListener("click", () => {
-      document.getElementById("popupText").textContent = data.text;
-      document.getElementById("popupMeta").textContent = `✍️ ${data.email} | ${formattedTime}`;
-      document.getElementById("popupStatus").textContent = statusLabel;
+    card.addEventListener("click",()=>{
+      document.getElementById("popupText").textContent=data.text;
+      document.getElementById("popupMeta").textContent=`✍️ ${data.email} | ${formattedTime}`;
+      document.getElementById("popupStatus").textContent=statusLabel;
       document.getElementById("popup").classList.remove("hidden");
     });
 
@@ -239,12 +246,12 @@ onSnapshot(q, (snapshot) => {
   });
 });
 
-document.getElementById("closePopup").addEventListener("click", () => {
+document.getElementById("closePopup").addEventListener("click",()=>{
   document.getElementById("popup").classList.add("hidden");
 });
 </script>
 
-<!-- Donate Button -->
+<!-- Fixed Donate Button -->
 <a href="https://all-madrsa.netlify.app/upi" 
    class="fixed top-1/2 right-4 transform -translate-y-1/2 
           bg-yellow-400 text-black font-bold px-5 py-3 
