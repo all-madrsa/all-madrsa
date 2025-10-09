@@ -49,11 +49,6 @@ body {
     <h1 class="text-2xl font-bold">📜 Hadees</h1>
     <a href="index.html" class="bg-blue-600 px-3 py-1 rounded text-white hover:bg-blue-700">🏠 Home</a>
   </div>
-  <div>
-    <button id="loginBtn" class="bg-green-600 px-3 py-1 rounded">Login</button>
-    <button id="logoutBtn" class="bg-red-600 px-3 py-1 rounded hidden">Logout</button>
-    <button id="postBtn" class="bg-blue-600 px-3 py-1 rounded hidden">➕ Post</button>
-  </div>
 </header>
 
 <section id="postSection" class="hidden p-4">
@@ -76,7 +71,7 @@ body {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -91,8 +86,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
 const postBtn = document.getElementById("postBtn");
 const postSection = document.getElementById("postSection");
 const submitPost = document.getElementById("submitPost");
@@ -101,27 +94,12 @@ const postsList = document.getElementById("postsList");
 
 let currentUser = null;
 
-// 🔹 Login
-loginBtn.addEventListener("click", async () => {
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
-});
-
-// 🔹 Logout
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-});
-
-// 🔹 Check user
+// 🔹 Auto-login check (hidden)
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
   if (user) {
-    loginBtn.classList.add("hidden");
-    logoutBtn.classList.remove("hidden");
     postBtn.classList.remove("hidden");
   } else {
-    loginBtn.classList.remove("hidden");
-    logoutBtn.classList.add("hidden");
     postBtn.classList.add("hidden");
     postSection.classList.add("hidden");
   }
@@ -130,7 +108,7 @@ onAuthStateChanged(auth, (user) => {
 // 🔹 Toggle post section
 postBtn.addEventListener("click", () => {
   if (currentUser) postSection.classList.toggle("hidden");
-  else alert("⚠️ Please login to post!");
+  else alert("⚠️ Login required to post!");
 });
 
 // 🔹 Post hadees
@@ -148,6 +126,7 @@ submitPost.addEventListener("click", async () => {
   alert("✅ Submitted for approval!");
 });
 
+// 🔹 Helper functions
 function getContrastYIQ(hexcolor){
   hexcolor = hexcolor.replace("#","");
   const r=parseInt(hexcolor.substr(0,2),16);
