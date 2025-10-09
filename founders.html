@@ -7,97 +7,111 @@
   <style>
     body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
 
-    /* Header Section */
-    header {
-      background: linear-gradient(90deg, #003366, #0055aa);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      height: 80px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
-    }
-    /* Home circular button */
-    .home-btn {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(145deg,#4f9cf9,#1c3fa0);
-      color: white;
-      font-size: 20px;
-      font-weight: bold;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      box-shadow: 0 5px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
-      transition: all 0.15s ease;
-    }
-    .home-btn:hover {
-      background: linear-gradient(145deg,#66b0ff,#3a55c3);
-      transform: translateY(-55%);
-    }
+    <!-- Header with Logo and 3D Buttons -->
+<header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
+  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
 
-    main { max-width:900px; margin:auto; padding:20px; }
+    <!-- Top: 3D Buttons -->
+   <div class="flex justify-center gap-4">
+  <a href="nikah.html">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
+  </a>
+  <a href="news.html">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
+  </a>
+  <a href="hadees.html">
+    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
+  </a>
+</div>
 
-    .member-card {
-      display:flex; align-items:center;
-      background:white; margin:10px 0; padding:10px;
-      border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);
-    }
-    .member-card img {
-      width:80px; height:80px; border-radius:50%;
-      margin-right:15px; object-fit:cover;
-      transition: transform 0.3s;
-    }
-    .member-card img:hover { transform: scale(1.8); z-index:100; }
 
-    .member-card button {
-      margin-left:5px; padding:5px 8px; border:none; border-radius:5px;
-      cursor:pointer; font-size:0.8rem;
-    }
-    .edit-btn { background:#ffc107; color:#000; }
-    .delete-btn { background:#dc3545; color:#fff; }
+    <!-- Middle: Logo and Side Images -->
+    <div class="flex justify-between items-center h-full mt-1">
 
-    form {
-      display:none; background:white; padding:20px;
-      border-radius:8px; margin-top:20px;
-    }
-    form input { width:100%; margin:8px 0; padding:10px; }
-    form button {
-      background:#004080; color:white; border:none;
-      padding:10px; cursor:pointer; border-radius:5px;
-    }
+      <!-- Left: Makka -->
+      <div class="flex items-center">
+        <img src="makka.png" alt="Makka" class="header-png">
+      </div>
 
-    #msg { color:red; margin-top:10px; text-align:center; }
+    <!-- Center: Logo / Title -->
+<div class="flex flex-col items-center justify-center h-full">
+  <div class="text-white font-bold text-2xl" 
+       style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform: translateY(-8px);">
+     My Document
+  </div>
+</div>
 
-    /* Fixed Donate Button */
-    .donate-btn {
-      position: fixed;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      background: #ffcc00;
-      color: #000;
-      font-weight: bold;
-      padding: 10px 16px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      text-decoration: none;
-      z-index: 999;
-    }
-  </style>
-</head>
+
+      <!-- Right: Madina -->
+      <div class="flex items-center">
+        <img src="madina.png" alt="Madina" class="header-png">
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<style>
+/* 3D Buttons Base */
+.btn-3d-special {
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-3d-special:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+
+/* Small variant for top header buttons */
+.btn-small {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
+
+/* Header PNG images */
+.header-png {
+  height: 70px;           /* image height */
+  width: 70px;            /* image width */
+  object-fit: cover;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+
+
+
+
+  
+
+   
+  <!-- Left: Home Button -->
+  <div>
+ <a href="index.html" class="btn-3d-home px-1 py-0.5 text-xs rounded font-bold flex items-center justify-center">
+  🏠 Home
+</a>
+
+  
+
+
+<style>
+/* 3D Button Style */
+.btn-3d-home {
+  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.btn-3d-home:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+}
+</style>
 <body>
 
 <header>
