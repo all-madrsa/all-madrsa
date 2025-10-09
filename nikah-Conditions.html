@@ -57,30 +57,38 @@ button:hover {opacity:0.9;}
     </div>
   </div>
 
-<!-- Left: Home Button -->
+<!-- Circular 3D Home Button -->
 <div>
-  <a href="index.html" class="btn-3d-home px-2 py-1 text-xs rounded font-bold flex items-center justify-center">
-    🏠 Home
+  <a href="index.html" class="btn-3d-home-circle flex items-center justify-center">
+    🏠
   </a>
 </div>
 
 <style>
-/* 3D Home Button */
-.btn-3d-home {
-  background: linear-gradient(90deg, #ff4d4d, #4d94ff);
+.btn-3d-home-circle {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(145deg, #4f9cf9, #1c3fa0);
   color: white;
+  font-size: 18px;
   font-weight: 700;
-  box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.25);
-  transition: transform 0.1s, box-shadow 0.1s, background 0.3s;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2), 0 8px 12px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease;
 }
 
-.btn-3d-home:hover {
-  background: linear-gradient(90deg, #ff6666, #66a3ff);
+.btn-3d-home-circle:hover {
+  background: linear-gradient(145deg, #66b0ff, #3a55c3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.2);
 }
 
-.btn-3d-home:active {
-  transform: translateY(3px);
-  box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+.btn-3d-home-circle:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.15);
 }
 </style>
 
