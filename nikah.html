@@ -10,46 +10,47 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-.card-img {
-  width: 100%; height: 120px; object-fit: cover; border-radius: 8px;
+.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.btn-3d {
+  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
+  color: white; font-weight:700;
+  box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25);
+  transition:transform .1s, box-shadow .1s, background .3s;
 }
-.card-placeholder {
-  width: 100%; height: 120px; display:flex; align-items:center; justify-content:center;
-  background:#ccc; color:#555; border-radius:8px; font-weight:bold;
-}
-.card {cursor:pointer; transition: transform 0.1s;}
-.card:hover {transform: scale(1.05);}
+.btn-3d:hover {background: linear-gradient(90deg,#ff6666,#66a3ff);}
+.btn-3d:active {transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.25);}
 </style>
 </head>
 <body class="text-black">
 
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
+  <div class="flex gap-2 items-center">
+    <a href="index.html" class="btn-3d px-3 py-1 text-sm rounded font-bold flex items-center justify-center">🏠 Home</a>
+  </div>
 </header>
 
-<!-- Search -->
-<div class="p-4 flex flex-wrap gap-2">
-  <input type="number" id="searchAge" placeholder="Age" class="p-2 border rounded w-24">
-  <select id="searchMarital" class="p-2 border rounded w-32">
-    <option value="">Marital Status</option>
-    <option value="Kuwari">Kuwari</option>
-    <option value="Talakshuda">Talakshuda</option>
-  </select>
-  <select id="searchGender" class="p-2 border rounded w-32">
-    <option value="">Gender</option>
+<section class="p-4 flex gap-2 flex-wrap">
+  <select id="filterGender" class="border p-2 rounded">
+    <option value="all">All Gender</option>
     <option value="Male">Male</option>
     <option value="Female">Female</option>
   </select>
-  <button id="searchBtn" class="bg-blue-500 px-3 py-1 text-white rounded">Search</button>
-</div>
+  <select id="filterMarital" class="border p-2 rounded">
+    <option value="all">All Marital</option>
+    <option value="Single">Single</option>
+    <option value="Divorced">Divorced</option>
+    <option value="Widow/Widower">Widow/Widower</option>
+  </select>
+  <input type="number" id="filterAge" class="border p-2 rounded" placeholder="Age">
+  <button id="filterBtn" class="bg-blue-500 text-white px-3 py-1 rounded">Search</button>
+</section>
 
-<!-- Profiles Grid -->
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></main>
 
-<!-- Popup -->
-<div id="popup" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-  <div class="bg-white p-4 rounded w-11/12 max-w-lg max-h-[90vh] overflow-y-auto relative">
-    <button id="closePopup" class="absolute top-2 right-2 bg-red-500 px-2 py-1 text-white rounded">❌</button>
+<div id="popup" class="fixed top-0 left-0 right-0 bottom-0 hidden bg-black/70 flex items-center justify-center z-50">
+  <div class="bg-white rounded p-4 max-w-md w-11/12 max-h-[90vh] overflow-y-auto relative">
+    <button id="closePopup" class="absolute top-2 right-2 bg-red-500 px-2 py-1 rounded text-white">❌</button>
     <div id="popupContent" class="space-y-2"></div>
   </div>
 </div>
@@ -76,72 +77,75 @@ const closePopup = document.getElementById("closePopup");
 
 let allProfiles = [];
 
-// Fetch Profiles
-const q = query(collection(db,"profiles"), orderBy("created","desc"));
-onSnapshot(q, snapshot=>{
-  allProfiles=[];
-  snapshot.forEach(docSnap=>{
-    let data=docSnap.data();
-    data.id=docSnap.id;
-    if(data.approvals){ // only show approved profiles
-      allProfiles.push(data);
-    }
+// Fetch profiles
+const q = query(collection(db, "profiles"), orderBy("created", "desc"));
+onSnapshot(q, snapshot => {
+  allProfiles = [];
+  snapshot.forEach(docSnap => {
+    let data = docSnap.data();
+    data.id = docSnap.id;
+    allProfiles.push(data);
   });
   renderProfiles(allProfiles);
 });
 
-// Render Profiles
-function renderProfiles(profiles){
-  postsList.innerHTML="";
-  profiles.forEach(p=>{
-    const approvedFields = Object.keys(p.approvals).filter(f=>p.approvals[f]);
-    if(approvedFields.length===0) return;
+// Render profiles
+function renderProfiles(profiles, filters={}) {
+  postsList.innerHTML = "";
+  let filtered = profiles.filter(p => {
+    if(!p.approvals) return false;
+    const approved = Object.values(p.approvals).some(v => v);
+    if(!approved) return false;
+    if(filters.gender && filters.gender !== "all" && p.gender !== filters.gender) return false;
+    if(filters.marital && filters.marital !== "all" && p.marital !== filters.marital) return false;
+    if(filters.age && p.age != filters.age) return false;
+    return true;
+  });
 
-    const card=document.createElement("div");
-    card.className="card p-2 bg-white rounded shadow";
-
-    let imgHtml = "";
-    if(p.approvals.photoUrl && p.photoUrl) imgHtml=`<img src="${p.photoUrl}" class="card-img">`;
-    else imgHtml=`<div class="card-placeholder">No Image</div>`;
-
-    const nameAge = `${p.approvals.name?p.name:""} ${p.approvals.age?`(${p.age})`:""}`;
-
-    card.innerHTML=imgHtml+`<p class="text-center font-semibold mt-1">${nameAge}</p>`;
-
-    card.addEventListener("click", ()=>{
-      let html="";
-      for(const f in p.approvals){
-        if(p.approvals[f] && p[f]) html+=`<p><strong>${f}:</strong> ${p[f]}</p>`;
-      }
-      popupContent.innerHTML=html;
-      popup.classList.remove("hidden");
-    });
-
+  filtered.forEach(p => {
+    const imgSrc = p.approvals.photoUrl && p.photoUrl ? p.photoUrl : "https://via.placeholder.com/150?text=No+Image";
+    const nameAge = `${p.approvals.name ? p.name : "No Name"} / ${p.approvals.age ? p.age : "NA"}`;
+    
+    const card = document.createElement("div");
+    card.className = "cursor-pointer flex flex-col items-center bg-white rounded shadow p-2";
+    card.innerHTML = `
+      <img src="${imgSrc}" class="w-32 h-32 object-cover rounded mb-1">
+      <p class="text-center font-semibold text-sm">${nameAge}</p>
+    `;
+    card.onclick = () => showPopup(p);
     postsList.appendChild(card);
   });
 }
 
-// Close popup
-closePopup.addEventListener("click", ()=> popup.classList.add("hidden"));
+// Popup
+function showPopup(profile) {
+  let html = "";
+  html += `<img src="${profile.photoUrl || 'https://via.placeholder.com/300?text=No+Image'}" class="w-full h-64 object-cover rounded">`;
+  html += `<p>👤 Name: ${profile.name || "NA"}</p>`;
+  html += `<p>🎂 Age: ${profile.age || "NA"}</p>`;
+  html += `<p>📱 WhatsApp: ${profile.whatsapp || "NA"}</p>`;
+  html += `<p>🚻 Gender: ${profile.gender || "NA"}</p>`;
+  html += `<p>🎓 Education: ${profile.education || "NA"}</p>`;
+  html += `<p>💼 Profession: ${profile.profession || "NA"}</p>`;
+  html += `<p>💰 Income: ${profile.income || "NA"}</p>`;
+  html += `<p>📌 Marital Status: ${profile.marital || "NA"}</p>`;
+  html += `<p>🕌 Religion: ${profile.religion || "NA"}</p>`;
+  html += `<p>🪧 Caste: ${profile.caste || "NA"}</p>`;
+  html += `<p>🏙️ City: ${profile.city || "NA"}</p>`;
+  popupContent.innerHTML = html;
+  popup.classList.remove("hidden");
+}
 
-// Search
-document.getElementById("searchBtn").addEventListener("click", ()=>{
-  const age=document.getElementById("searchAge").value.trim();
-  const marital=document.getElementById("searchMarital").value;
-  const gender=document.getElementById("searchGender").value;
+closePopup.onclick = () => popup.classList.add("hidden");
 
-  const filtered=allProfiles.filter(p=>{
-    if(!p.approvals) return false;
-    let ok=true;
-    if(age) ok = ok && p.age==age;
-    if(marital) ok = ok && p.marital==marital;
-    if(gender) ok = ok && p.gender==gender;
-    // check at least one approved field exists
-    const approvedFields = Object.keys(p.approvals).filter(f=>p.approvals[f]);
-    return ok && approvedFields.length>0;
-  });
-  renderProfiles(filtered);
-});
+// Filters
+document.getElementById("filterBtn").onclick = () => {
+  const gender = document.getElementById("filterGender").value;
+  const marital = document.getElementById("filterMarital").value;
+  const age = document.getElementById("filterAge").value.trim();
+  renderProfiles(allProfiles, {gender, marital, age});
+};
 </script>
+
 </body>
 </html>
