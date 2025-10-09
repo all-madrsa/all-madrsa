@@ -10,23 +10,31 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
-.btn-3d { background: linear-gradient(90deg,#ff4d4d,#4d94ff); color:white; font-weight:700; box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25); transition:transform .1s, box-shadow .1s, background .3s;}
+.btn-3d {background:linear-gradient(90deg,#ff4d4d,#4d94ff); color:white; font-weight:700; box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25); transition:transform .1s, box-shadow .1s, background .3s;}
 .btn-3d:hover {background: linear-gradient(90deg,#ff6666,#66a3ff);}
 .btn-3d:active {transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.25);}
-.popup { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index:50; }
-.popup-content { background: white; padding: 20px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center; position: relative; }
-.popup-content img { max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 10px; }
+.popup {position:fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:50;}
+.popup-content {background:white; padding:20px; border-radius:12px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; text-align:left; position:relative;}
 </style>
 </head>
 <body class="text-black">
 
-<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
+<header class="bg-blue-600 p-4 flex flex-col md:flex-row justify-between items-center text-white gap-2">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
-  <div class="flex gap-2 items-center">
+  <div class="flex gap-2 items-center w-full md:w-auto">
     <a href="index.html" class="btn-3d px-3 py-1 text-sm rounded font-bold flex items-center justify-center">🏠 Home</a>
     <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded font-semibold hover:bg-green-600 transition">Login</button>
     <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded font-semibold hover:bg-yellow-600 transition hidden">➕ Post Profile</button>
+  </div>
+  <div class="mt-2 md:mt-0 flex gap-2">
+    <input id="searchAge" type="number" placeholder="Search Age" class="p-2 rounded border w-24">
+    <select id="searchMarital" class="p-2 rounded border">
+      <option value="">All</option>
+      <option value="Kuwari">Kuwari</option>
+      <option value="Talakshuda">Talakshuda</option>
+      <option value="Widow">Widow</option>
+    </select>
+    <button id="searchBtn" class="bg-blue-500 px-3 py-1 rounded text-white">Search</button>
   </div>
 </header>
 
@@ -50,7 +58,6 @@ body {background:#fdf6e3; font-family:sans-serif;}
   <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
 </section>
 
-<!-- Responsive Grid -->
 <main id="postsList" class="p-4 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"></main>
 
 <section id="adminPanel" class="hidden p-4">
@@ -58,10 +65,9 @@ body {background:#fdf6e3; font-family:sans-serif;}
   <div id="adminList" class="grid gap-4"></div>
 </section>
 
-<!-- Popup -->
 <div id="popup" class="popup hidden">
   <div class="popup-content">
-    <img id="popupImage" src="" alt="Profile Image">
+    <img id="popupImage" class="w-full h-64 object-cover rounded mb-2" src="">
     <div id="popupDetails" class="text-left"></div>
     <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white mt-3">❌ Close</button>
   </div>
@@ -91,25 +97,21 @@ const submitPost=document.getElementById("submitPost");
 const postsList=document.getElementById("postsList");
 const adminPanel=document.getElementById("adminPanel");
 const adminList=document.getElementById("adminList");
-const popup=document.getElementById("popup");
-const popupImage=document.getElementById("popupImage");
-const popupDetails=document.getElementById("popupDetails");
-const closePopup=document.getElementById("closePopup");
-
 let currentUser=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
+let allProfiles=[];
 
+// Login
 loginBtn.addEventListener("click", async ()=>{
   const provider = new GoogleAuthProvider();
   await signInWithPopup(auth, provider);
 });
-
 onAuthStateChanged(auth, user=>{
-  currentUser = user;
+  currentUser=user;
   if(user){
     loginBtn.classList.add("hidden");
     postBtn.classList.remove("hidden");
-    if(user.email === ADMIN_EMAIL) adminPanel.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
   } else {
     loginBtn.classList.remove("hidden");
     postBtn.classList.add("hidden");
@@ -118,8 +120,10 @@ onAuthStateChanged(auth, user=>{
   }
 });
 
+// Toggle Post Form
 postBtn.addEventListener("click", ()=> postSection.classList.toggle("hidden"));
 
+// Upload Image
 async function uploadToImgbb(file){
   const key="d12c2e4a8650157b2b6b9fe85336ea43";
   const formData=new FormData();
@@ -129,6 +133,7 @@ async function uploadToImgbb(file){
   return data.data.url;
 }
 
+// Submit Profile
 submitPost.addEventListener("click", async ()=>{
   if(!currentUser) return alert("⚠️ Login required!");
   const name=document.getElementById("nameInput").value.trim();
@@ -143,58 +148,39 @@ submitPost.addEventListener("click", async ()=>{
   const caste=document.getElementById("casteInput").value.trim();
   const city=document.getElementById("cityInput").value.trim();
   const photo=document.getElementById("photoInput").files[0];
-
   if(!name||!age||!gender||!city||!whatsapp) return alert("❌ Fill required fields!");
-  const photoUrl = photo ? await uploadToImgbb(photo) : null;
-
+  const photoUrl = photo ? await uploadToImgbb(photo) : "";
   await addDoc(collection(db,"profiles"),{
-    name, age, gender, city, whatsapp,
-    education, profession, income, marital, religion, caste, photoUrl,
-    uid: currentUser.uid, email: currentUser.email,
-    approvals:{}, created: serverTimestamp()
+    name, age, whatsapp, gender, education, profession, income, marital, religion, caste, city, photoUrl,
+    uid:currentUser.uid, email:currentUser.email, approvals:{}, created:serverTimestamp()
   });
   alert("✅ Submitted! Wait for admin approval.");
 });
 
-// Fetch profiles
+// Fetch Profiles
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
 onSnapshot(q, snapshot=>{
-  const profiles=[];
+  allProfiles=[];
   snapshot.forEach(docSnap=>{
     let data=docSnap.data();
     data.id=docSnap.id;
-    profiles.push(data);
+    allProfiles.push(data);
   });
-  renderProfiles(profiles);
-  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
+  renderProfiles(allProfiles);
+  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(allProfiles);
 });
 
-// Render profiles in grid
+// Render Profiles
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
-    if(!p.approvals) return;
-    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
-    if(approvedFields.length===0) return;
-
-    const card=document.createElement("div");
+    const card=document.createElement('div');
     card.className="p-2 bg-white rounded shadow cursor-pointer flex flex-col items-center";
-
-    // image or placeholder
-    let imgHtml="";
-    if(p.approvals.photoUrl && p.photoUrl){
-      imgHtml=`<img src="${p.photoUrl}" class="w-24 h-24 object-cover rounded mb-2">`;
-    } else {
-      imgHtml=`<div class="w-24 h-24 bg-gray-300 flex items-center justify-center rounded mb-2">No Image</div>`;
-    }
-
-    const nameAge=`<p class="font-semibold text-sm text-center">${p.approvals.name?p.name:""} ${p.approvals.age?p.age:""}</p>`;
-
-    card.innerHTML=imgHtml+nameAge;
-
-    card.addEventListener("click", ()=>{
-      popup.classList.remove("hidden");
-      popupImage.src = p.photoUrl ? p.photoUrl : "";
+    let imgHtml=p.photoUrl ? `<img src="${p.photoUrl}" class="w-24 h-24 object-cover rounded mb-2">` : `<div class="w-24 h-24 bg-gray-300 flex items-center justify-center rounded mb-2">No Image</div>`;
+    card.innerHTML=imgHtml + `<p class="font-semibold text-sm text-center">${p.name} ${p.age}</p>`;
+    card.addEventListener('click',()=>{
+      document.getElementById('popup').classList.remove('hidden');
+      document.getElementById('popupImage').src = p.photoUrl ? p.photoUrl : "";
       let html=`<p>👤 Name: ${p.name}</p>`;
       html+=`<p>🎂 Age: ${p.age}</p>`;
       html+=`<p>📱 WhatsApp: ${p.whatsapp}</p>`;
@@ -206,4 +192,58 @@ function renderProfiles(profiles){
       html+=`<p>🕌 Religion: ${p.religion}</p>`;
       html+=`<p>🪧 Caste: ${p.caste}</p>`;
       html+=`<p>🏙️ City: ${p.city}</p>`;
-      html+=`<p>📧 Email: ${p
+      html+=`<p>📧 Email: ${p.email}</p>`;
+      document.getElementById('popupDetails').innerHTML=html;
+    });
+    postsList.appendChild(card);
+  });
+}
+
+// Search
+document.getElementById('searchBtn').addEventListener('click',()=>{
+  const age=document.getElementById('searchAge').value.trim();
+  const marital=document.getElementById('searchMarital').value;
+  let filtered=allProfiles;
+  if(age) filtered=filtered.filter(p=>p.age==age);
+  if(marital) filtered=filtered.filter(p=>p.marital==marital);
+  renderProfiles(filtered);
+});
+
+// Popup close
+document.getElementById('closePopup').addEventListener('click',()=> document.getElementById('popup').classList.add('hidden'));
+
+// Admin Panel
+function renderAdmin(profiles){
+  adminList.innerHTML="";
+  profiles.forEach(p=>{
+    let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
+    html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
+    const fields=["photoUrl","name","age","whatsapp","gender","education","profession","income","marital","religion","caste","city","email"];
+    fields.forEach(f=>{
+      html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals && p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
+    });
+    html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
+    html+=`<button class="bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn" data-id="${p.id}">🗑 Delete</button>`;
+    html+=`</div>`;
+    adminList.innerHTML+=html;
+  });
+  document.querySelectorAll(".saveBtn").forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
+      const checkboxes=document.querySelectorAll(`.cb-${id}`);
+      let approvals={};
+      checkboxes.forEach(cb=>{ approvals[cb.dataset.field]=cb.checked; });
+      await updateDoc(doc(db,"profiles",id),{approvals});
+      alert("✅ Approvals Updated");
+    };
+  });
+  document.querySelectorAll(".deleteBtn").forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
+      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
+    };
+  });
+}
+</script>
+</body>
+</html>
