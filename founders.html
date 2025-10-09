@@ -6,8 +6,47 @@
   <title>All Members List | All India Muslim Personal Board</title>
   <style>
     body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
-    header { background:#004080; color:white; text-align:center; padding:15px; }
-    header h1 { margin:0; font-size:22px; }
+
+    /* Header Section */
+    header {
+      background: linear-gradient(90deg, #003366, #0055aa);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      height: 80px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+    }
+    /* Home circular button */
+    .home-btn {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(145deg,#4f9cf9,#1c3fa0);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 5px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+      transition: all 0.15s ease;
+    }
+    .home-btn:hover {
+      background: linear-gradient(145deg,#66b0ff,#3a55c3);
+      transform: translateY(-55%);
+    }
 
     main { max-width:900px; margin:auto; padding:20px; }
 
@@ -21,20 +60,14 @@
       margin-right:15px; object-fit:cover;
       transition: transform 0.3s;
     }
-    .member-card img:hover {
-      transform: scale(1.8);
-      z-index: 100;
-    }
+    .member-card img:hover { transform: scale(1.8); z-index:100; }
+
     .member-card button {
-      margin-left: 5px;
-      padding: 5px 8px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.8rem;
+      margin-left:5px; padding:5px 8px; border:none; border-radius:5px;
+      cursor:pointer; font-size:0.8rem;
     }
-    .edit-btn { background: #ffc107; color: #000; }
-    .delete-btn { background: #dc3545; color: #fff; }
+    .edit-btn { background:#ffc107; color:#000; }
+    .delete-btn { background:#dc3545; color:#fff; }
 
     form {
       display:none; background:white; padding:20px;
@@ -47,26 +80,6 @@
     }
 
     #msg { color:red; margin-top:10px; text-align:center; }
-
-    /* 3D Button Style */
-    .btn-3d {
-      background: linear-gradient(90deg,#ff4d4d,#4d94ff);
-      color: white;
-      font-weight: 700;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 16px;
-      border-radius: 8px;
-      margin: 10px;
-    }
-    .btn-3d:active {
-      transform: translateY(3px);
-      box-shadow: 0 3px 0 rgba(0,0,0,0.25);
-    }
 
     /* Fixed Donate Button */
     .donate-btn {
@@ -88,18 +101,12 @@
 <body>
 
 <header>
+  <a href="index.html" class="home-btn">🏠</a>
   <h1>All Members List</h1>
 </header>
 
-<div style="text-align:center;">
-  <a href="index.html" class="btn-3d">🏠 Home</a>
-  <a href="https://all-madrsa.netlify.app/doner.html" class="btn-3d">💝 Doner List</a>
-</div>
-
 <main>
-  <h2>Members</h2>
   <div id="members"></div>
-
   <p id="msg"></p>
 
   <form id="memberForm">
@@ -124,7 +131,6 @@
     messagingSenderId: "619313835874",
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
-
   const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
 
   firebase.initializeApp(firebaseConfig);
@@ -132,25 +138,10 @@
   const db = firebase.firestore();
 
   const adminEmails = ["zaradigitalseva@gmail.com","secondadmin@gmail.com"];
+
   const membersContainer = document.getElementById("members");
   const memberForm = document.getElementById("memberForm");
   const msg = document.getElementById("msg");
-
-  // Auto login check (silent check)
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      if (adminEmails.includes(user.email)) {
-        memberForm.style.display = "block";
-        msg.innerText = "✅ Admin Access Granted";
-      } else {
-        memberForm.style.display = "none";
-        msg.innerText = "aap bhi jude aaj hi aur abhi";
-      }
-    } else {
-      memberForm.style.display = "none";
-      msg.innerText = "";
-    }
-  });
 
   // Load Members
   function loadMembers() {
@@ -194,7 +185,22 @@
   }
   loadMembers();
 
-  // Upload to ImgBB
+  // Login Check
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (adminEmails.includes(user.email)) {
+        memberForm.style.display = "block";
+        msg.innerText = "";
+      } else {
+        memberForm.style.display = "none";
+        msg.innerText = "आप भी जुड़ें आज ही और अभी।";
+      }
+    } else {
+      // Auto-login nahi, sirf check
+      msg.innerText = "";
+    }
+  });
+
   async function uploadToImgbb(file) {
     const formData = new FormData();
     formData.append("image", file);
@@ -206,7 +212,7 @@
       });
       const result = await response.json();
       if (!result.success) {
-        alert("❌ Image upload failed.");
+        alert("❌ Image upload failed. Please try again.");
         return null;
       }
       return result.data.url;
@@ -216,7 +222,6 @@
     }
   }
 
-  // Add Member
   async function addMember() {
     let name = document.getElementById("name").value.trim();
     let file = document.getElementById("photoFile").files[0];
@@ -230,7 +235,6 @@
       .catch(err=>alert("Error: "+err.message));
   }
 
-  // Edit Member
   function editMember(id, oldName){
     let newName = prompt("Update Name:", oldName);
     if(!newName) return;
@@ -239,7 +243,6 @@
       .catch(err=>alert("Error: "+err.message));
   }
 
-  // Delete Member
   function deleteMember(id){
     if(confirm("Are you sure you want to delete this member?")){
       db.collection("members").doc(id).delete()
