@@ -34,7 +34,6 @@ body {background:#fdf6e3; font-family:sans-serif;}
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
   <div class="flex gap-2 items-center">
     <a href="index.html" class="btn-3d px-3 py-1 text-sm rounded font-bold flex items-center justify-center">🏠 Home</a>
-    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded font-semibold hover:bg-green-600 transition">Login</button>
   </div>
 </header>
 
@@ -58,7 +57,7 @@ body {background:#fdf6e3; font-family:sans-serif;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, query, orderBy, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -73,7 +72,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-const loginBtn=document.getElementById("loginBtn");
 const postsList=document.getElementById("postsList");
 const profilePopup=document.getElementById("profilePopup");
 const popupBody=document.getElementById("popupBody");
@@ -86,12 +84,7 @@ let currentUser=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
 let allProfiles=[];
 
-// Login
-loginBtn.addEventListener("click", async ()=>{
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
-});
-
+// Check login
 onAuthStateChanged(auth, user=>{
   currentUser=user;
   if(user && user.email===ADMIN_EMAIL){
