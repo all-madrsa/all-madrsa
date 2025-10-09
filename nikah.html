@@ -10,61 +10,30 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
-/* 3D Home Button */
-.btn-3d {
-  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
-  color: white;
-  font-weight:700;
-  box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25);
-  transition:transform .1s, box-shadow .1s, background .3s;
-}
-.btn-3d:hover {background: linear-gradient(90deg,#ff6666,#66a3ff);}
-.btn-3d:active {transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.25);}
+.card-img-grid {display:grid; grid-template-columns: repeat(2, 1fr); gap:0.25rem;}
+.card-img-grid img {width:100%; height:100px; object-fit:cover; border-radius:0.25rem;}
+.modal-bg {background: rgba(0,0,0,0.5);}
 </style>
 </head>
 <body class="text-black">
 
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
-  <div class="flex gap-2 items-center">
-    <a href="index.html" class="btn-3d px-3 py-1 text-sm rounded font-bold flex items-center justify-center">🏠 Home</a>
-    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded font-semibold hover:bg-green-600 transition">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded font-semibold hover:bg-yellow-600 transition hidden">➕ Post Profile</button>
-  </div>
 </header>
-
-<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
-  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
-  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="whatsappInput" placeholder="WhatsApp Number" class="w-full p-2 rounded mb-2 border">
-  <select id="genderInput" class="w-full p-2 rounded mb-2 border">
-    <option value="">Gender</option>
-    <option value="Male">Male</option>
-    <option value="Female">Female</option>
-  </select>
-  <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="incomeInput" placeholder="Income" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="maritalInput" placeholder="Marital Status" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="religionInput" placeholder="Religion" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded mb-2 border">
-  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
-  <input type="file" id="photoInput" class="w-full p-2 mb-2">
-  <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
-</section>
 
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
-<section id="adminPanel" class="hidden p-4">
-  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
-  <div id="adminList" class="grid gap-4"></div>
-</section>
+<!-- Modal -->
+<div id="profileModal" class="fixed inset-0 hidden justify-center items-center modal-bg z-50">
+  <div class="bg-white rounded shadow-lg p-4 w-11/12 max-w-lg relative">
+    <button id="closeModal" class="absolute top-2 right-2 text-red-500 font-bold text-xl">&times;</button>
+    <div id="modalContent" class="space-y-2"></div>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -74,84 +43,15 @@ const firebaseConfig = {
   messagingSenderId: "619313835874",
   appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
+initializeApp(firebaseConfig);
 const db = getFirestore();
 
-const loginBtn=document.getElementById("loginBtn");
-const postBtn=document.getElementById("postBtn");
-const postSection=document.getElementById("postSection");
-const submitPost=document.getElementById("submitPost");
-const postsList=document.getElementById("postsList");
-const adminPanel=document.getElementById("adminPanel");
-const adminList=document.getElementById("adminList");
+const postsList = document.getElementById("postsList");
+const profileModal = document.getElementById("profileModal");
+const modalContent = document.getElementById("modalContent");
+const closeModal = document.getElementById("closeModal");
 
-let currentUser=null;
-const ADMIN_EMAIL="zaradigitalseva@gmail.com";
-
-// Login
-loginBtn.addEventListener("click", async ()=>{
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
-});
-
-onAuthStateChanged(auth, user=>{
-  currentUser = user;
-  if(user){
-    loginBtn.classList.add("hidden");
-    postBtn.classList.remove("hidden");
-    if(user.email === ADMIN_EMAIL) adminPanel.classList.remove("hidden");
-  } else {
-    loginBtn.classList.remove("hidden");
-    postBtn.classList.add("hidden");
-    postSection.classList.add("hidden");
-    adminPanel.classList.add("hidden");
-  }
-});
-
-// Toggle Post Form
-postBtn.addEventListener("click", ()=> postSection.classList.toggle("hidden"));
-
-// Upload to ImgBB
-async function uploadToImgbb(file){
-  const key="d12c2e4a8650157b2b6b9fe85336ea43";
-  const formData=new FormData();
-  formData.append("image", file);
-  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST", body:formData});
-  const data=await res.json();
-  return data.data.url;
-}
-
-// Submit Profile
-submitPost.addEventListener("click", async ()=>{
-  if(!currentUser) return alert("⚠️ Login required to post!");
-  const name=document.getElementById("nameInput").value.trim();
-  const age=document.getElementById("ageInput").value.trim();
-  const whatsapp=document.getElementById("whatsappInput").value.trim();
-  const gender=document.getElementById("genderInput").value;
-  const education=document.getElementById("educationInput").value.trim();
-  const profession=document.getElementById("professionInput").value.trim();
-  const income=document.getElementById("incomeInput").value.trim();
-  const marital=document.getElementById("maritalInput").value.trim();
-  const religion=document.getElementById("religionInput").value.trim();
-  const caste=document.getElementById("casteInput").value.trim();
-  const city=document.getElementById("cityInput").value.trim();
-  const photo=document.getElementById("photoInput").files[0];
-
-  if(!name||!age||!gender||!city||!photo||!whatsapp) return alert("❌ Fill required fields!");
-  const photoUrl=await uploadToImgbb(photo);
-
-  await addDoc(collection(db,"profiles"),{
-    name, age, gender, city, whatsapp,
-    education, profession, income, marital, religion, caste, photoUrl,
-    uid: currentUser.uid, email: currentUser.email,
-    approvals:{}, created: serverTimestamp()
-  });
-  alert("✅ Submitted! Wait for admin approval.");
-});
-
-// Fetch Profiles
-const q=query(collection(db,"profiles"),orderBy("created","desc"));
+const q = query(collection(db,"profiles"), orderBy("created","desc"));
 onSnapshot(q, snapshot=>{
   const profiles=[];
   snapshot.forEach(docSnap=>{
@@ -160,10 +60,8 @@ onSnapshot(q, snapshot=>{
     profiles.push(data);
   });
   renderProfiles(profiles);
-  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
-// Render Profiles
 function renderProfiles(profiles){
   postsList.innerHTML="";
   profiles.forEach(p=>{
@@ -171,63 +69,43 @@ function renderProfiles(profiles){
     const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
     if(approvedFields.length===0) return;
 
-    const card=document.createElement("div");
-    card.className="p-4 rounded shadow bg-white";
+    // Card
+    const card = document.createElement("div");
+    card.className = "bg-white rounded shadow cursor-pointer hover:shadow-lg transition p-2";
+    card.innerHTML = `
+      <div class="card-img-grid">
+        ${p.approvals.photoUrl ? `<img src="${p.photoUrl}" />` : ""}
+        ${p.approvals.photoUrl ? `<img src="${p.photoUrl}" />` : ""}
+      </div>
+      <p class="font-bold mt-2">${p.approvals.name ? p.name : ""}</p>
+      <p>${p.approvals.age ? p.age : ""} years</p>
+    `;
 
-    let html=`<div class="space-y-1">`;
-    if(p.approvals.photoUrl && p.photoUrl) html+=`<div><img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-1"></div>`;
-    if(p.approvals.name) html+=`<p>👤 Name: ${p.name}</p>`;
-    if(p.approvals.age) html+=`<p>🎂 Age: ${p.age}</p>`;
-    if(p.approvals.gender) html+=`<p>🚻 Gender: ${p.gender}</p>`;
-    if(p.approvals.whatsapp) html+=`<p>📱 WhatsApp: ${p.whatsapp}</p>`;
-    if(p.approvals.education) html+=`<p>🎓 Education: ${p.education}</p>`;
-    if(p.approvals.profession) html+=`<p>💼 Profession: ${p.profession}</p>`;
-    if(p.approvals.income) html+=`<p>💰 Income: ${p.income}</p>`;
-    if(p.approvals.marital) html+=`<p>📌 Marital Status: ${p.marital}</p>`;
-    if(p.approvals.religion) html+=`<p>🕌 Religion: ${p.religion}</p>`;
-    if(p.approvals.caste) html+=`<p>🪧 Caste: ${p.caste}</p>`;
-    if(p.approvals.city) html+=`<p>🏙️ City: ${p.city}</p>`;
-    html+=`</div>`;
-    card.innerHTML=html;
+    card.addEventListener("click", ()=>{
+      modalContent.innerHTML = `
+        ${p.photoUrl ? `<img src="${p.photoUrl}" class="w-full h-64 object-cover rounded mb-2">` : ""}
+        <p><strong>Name:</strong> ${p.name || "-"}</p>
+        <p><strong>Age:</strong> ${p.age || "-"}</p>
+        <p><strong>WhatsApp:</strong> ${p.whatsapp || "-"}</p>
+        <p><strong>Gender:</strong> ${p.gender || "-"}</p>
+        <p><strong>Education:</strong> ${p.education || "-"}</p>
+        <p><strong>Profession:</strong> ${p.profession || "-"}</p>
+        <p><strong>Income:</strong> ${p.income || "-"}</p>
+        <p><strong>Marital:</strong> ${p.marital || "-"}</p>
+        <p><strong>Religion:</strong> ${p.religion || "-"}</p>
+        <p><strong>Caste:</strong> ${p.caste || "-"}</p>
+        <p><strong>City:</strong> ${p.city || "-"}</p>
+      `;
+      profileModal.classList.remove("hidden");
+    });
+
     postsList.appendChild(card);
   });
 }
 
-// Admin Panel
-function renderAdmin(profiles){
-  adminList.innerHTML="";
-  profiles.forEach(p=>{
-    let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
-    html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
-    const fields=["photoUrl","name","age","whatsapp","gender","education","profession","income","marital","religion","caste","city","email"];
-    fields.forEach(f=>{
-      html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals && p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
-    });
-    html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
-    html+=`<button class="bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn" data-id="${p.id}">🗑 Delete</button>`;
-    html+=`</div>`;
-    adminList.innerHTML+=html;
-  });
-
-  document.querySelectorAll(".saveBtn").forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      const checkboxes=document.querySelectorAll(`.cb-${id}`);
-      let approvals={};
-      checkboxes.forEach(cb=>{ approvals[cb.dataset.field]=cb.checked; });
-      await updateDoc(doc(db,"profiles",id),{approvals});
-      alert("✅ Approvals Updated");
-    };
-  });
-
-  document.querySelectorAll(".deleteBtn").forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
-    };
-  });
-}
+closeModal.addEventListener("click", ()=>{
+  profileModal.classList.add("hidden");
+});
 </script>
-
 </body>
 </html>
