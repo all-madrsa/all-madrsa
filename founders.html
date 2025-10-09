@@ -5,267 +5,316 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>All Members List | All India Muslim Personal Board</title>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f8f9fa;
+    }
 
-    <!-- Header with Logo and 3D Buttons -->
-<header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
-  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
+    /* HEADER */
+    header {
+      background: linear-gradient(90deg, #0077cc, #005fa3);
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      position: relative;
+    }
 
-    <!-- Top: 3D Buttons -->
-   <div class="flex justify-center gap-4">
-  <a href="nikah.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
-  </a>
-  <a href="news.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
-  </a>
-  <a href="hadees.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
-  </a>
-</div>
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+    }
 
+    /* HOME BUTTON */
+    .btn-3d-home {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background: linear-gradient(90deg, #ff4d4d, #4d94ff);
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.8rem;
+      padding: 5px 10px;
+      border-radius: 8px;
+      box-shadow: 0 5px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      text-decoration: none;
+    }
 
-    <!-- Middle: Logo and Side Images -->
-    <div class="flex justify-between items-center h-full mt-1">
+    .btn-3d-home:active {
+      transform: translateY(3px);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+    }
 
-      <!-- Left: Makka -->
-      <div class="flex items-center">
-        <img src="makka.png" alt="Makka" class="header-png">
-      </div>
+    /* 3D Small Buttons */
+    .btn-3d-special {
+      color: #fff;
+      font-weight: 700;
+      border-radius: 10px;
+      box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+      transition: transform .12s ease, box-shadow .12s ease;
+      font-size: 0.85rem;
+      padding: 0.4rem 0.9rem;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-3d-special:active {
+      transform: translateY(3px);
+      box-shadow: 0 3px 0 rgba(0,0,0,.25);
+    }
 
-    <!-- Center: Logo / Title -->
-<div class="flex flex-col items-center justify-center h-full">
-  <div class="text-white font-bold text-2xl" 
-       style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform: translateY(-8px);">
-     My Document
-  </div>
-</div>
+    .top-links {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
 
+    /* Member List */
+    main {
+      max-width: 700px;
+      margin: 20px auto;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
 
-      <!-- Right: Madina -->
-      <div class="flex items-center">
-        <img src="madina.png" alt="Madina" class="header-png">
-      </div>
+    .member-card {
+      display: inline-block;
+      background: #f0f8ff;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
 
-    </div>
-  </div>
-</header>
+    .member-card img {
+      height: 100px;
+      width: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 8px;
+    }
 
-<style>
-/* 3D Buttons Base */
-.btn-3d-special {
-  color: #fff;
-  font-weight: 700;
-  border-radius: 10px;
-  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.btn-3d-special:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
-}
+    .member-card span {
+      display: block;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
 
-/* Small variant for top header buttons */
-.btn-small {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
-}
+    .edit-btn, .delete-btn {
+      border: none;
+      color: white;
+      padding: 5px 8px;
+      border-radius: 6px;
+      margin: 2px;
+      cursor: pointer;
+    }
 
-/* Header PNG images */
-.header-png {
-  height: 70px;           /* image height */
-  width: 70px;            /* image width */
-  object-fit: cover;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>
+    .edit-btn { background: #28a745; }
+    .delete-btn { background: #dc3545; }
 
+    #memberForm {
+      margin-top: 20px;
+      display: none;
+    }
 
+    #memberForm input, #memberForm button {
+      display: block;
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
 
+    #msg {
+      text-align: center;
+      color: #444;
+      font-weight: bold;
+    }
 
-  
+    .donate-btn {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: linear-gradient(90deg, #ff5c8d, #ff9a3c);
+      color: white;
+      font-weight: bold;
+      border-radius: 50px;
+      padding: 10px 18px;
+      text-decoration: none;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.25);
+    }
+  </style>
+</head>
 
-   
-  <!-- Left: Home Button -->
-  <div>
- <a href="index.html" class="btn-3d-home px-1 py-0.5 text-xs rounded font-bold flex items-center justify-center">
-  🏠 Home
-</a>
-
-  
-
-
-<style>
-/* 3D Button Style */
-.btn-3d-home {
-  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-.btn-3d-home:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 rgba(0,0,0,0.25);
-}
-</style>
 <body>
 
-<header>
-  <a href="index.html" class="home-btn">🏠</a>
-  <h1>All Members List</h1>
-</header>
+  <header>
+    <a href="index.html" class="btn-3d-home">🏠 Home</a>
+    <h1>All Members List</h1>
 
-<main>
-  <div id="members"></div>
-  <p id="msg"></p>
+    <div class="top-links">
+      <a href="nikah.html"><button class="btn-3d-special" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button></a>
+      <a href="news.html"><button class="btn-3d-special" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button></a>
+      <a href="hadees.html"><button class="btn-3d-special" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button></a>
+    </div>
+  </header>
 
-  <form id="memberForm">
-    <h3>Add Member</h3>
-    <input type="text" id="name" placeholder="Member Name" required>
-    <input type="file" id="photoFile" accept="image/*" required>
-    <button type="button" onclick="addMember()">Add Member</button>
-  </form>
-</main>
+  <main>
+    <div id="members"></div>
+    <p id="msg"></p>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <form id="memberForm">
+      <h3>Add Member</h3>
+      <input type="text" id="name" placeholder="Member Name" required>
+      <input type="file" id="photoFile" accept="image/*" required>
+      <button type="button" onclick="addMember()">Add Member</button>
+    </form>
+  </main>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-    authDomain: "all-madrasa.firebaseapp.com",
-    projectId: "all-madrsa",
-    storageBucket: "all-madrsa.appspot.com",
-    messagingSenderId: "619313835874",
-    appId: "1:619313835874:web:e387e1297663f11fc2463b"
-  };
-  const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+      authDomain: "all-madrasa.firebaseapp.com",
+      projectId: "all-madrsa",
+      storageBucket: "all-madrsa.appspot.com",
+      messagingSenderId: "619313835874",
+      appId: "1:619313835874:web:e387e1297663f11fc2463b"
+    };
+    const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
 
-  const adminEmails = ["zaradigitalseva@gmail.com","secondadmin@gmail.com"];
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-  const membersContainer = document.getElementById("members");
-  const memberForm = document.getElementById("memberForm");
-  const msg = document.getElementById("msg");
+    const adminEmails = ["zaradigitalseva@gmail.com", "secondadmin@gmail.com"];
 
-  // Load Members
-  function loadMembers() {
-    db.collection("members").orderBy("name").onSnapshot(snapshot => {
-      membersContainer.innerHTML = "";
-      snapshot.forEach(doc => {
-        let m = doc.data();
-        let card = document.createElement("div");
-        card.className = "member-card";
+    const membersContainer = document.getElementById("members");
+    const memberForm = document.getElementById("memberForm");
+    const msg = document.getElementById("msg");
 
-        let img = document.createElement("img");
-        img.src = m.photo;
-        img.alt = m.name;
+    // Load Members
+    function loadMembers() {
+      db.collection("members").orderBy("name").onSnapshot(snapshot => {
+        membersContainer.innerHTML = "";
+        snapshot.forEach(doc => {
+          let m = doc.data();
+          let card = document.createElement("div");
+          card.className = "member-card";
 
-        let span = document.createElement("span");
-        span.textContent = m.name;
+          let img = document.createElement("img");
+          img.src = m.photo;
+          img.alt = m.name;
 
-        card.appendChild(img);
-        card.appendChild(span);
+          let span = document.createElement("span");
+          span.textContent = m.name;
 
-        auth.onAuthStateChanged(user => {
-          if (user && adminEmails.includes(user.email)) {
-            let editBtn = document.createElement("button");
-            editBtn.textContent = "✏️ Edit";
-            editBtn.className = "edit-btn";
-            editBtn.onclick = () => editMember(doc.id, m.name);
+          card.appendChild(img);
+          card.appendChild(span);
 
-            let delBtn = document.createElement("button");
-            delBtn.textContent = "🗑 Delete";
-            delBtn.className = "delete-btn";
-            delBtn.onclick = () => deleteMember(doc.id);
+          auth.onAuthStateChanged(user => {
+            if (user && adminEmails.includes(user.email)) {
+              let editBtn = document.createElement("button");
+              editBtn.textContent = "✏️ Edit";
+              editBtn.className = "edit-btn";
+              editBtn.onclick = () => editMember(doc.id, m.name);
 
-            card.appendChild(editBtn);
-            card.appendChild(delBtn);
-          }
+              let delBtn = document.createElement("button");
+              delBtn.textContent = "🗑 Delete";
+              delBtn.className = "delete-btn";
+              delBtn.onclick = () => deleteMember(doc.id);
+
+              card.appendChild(editBtn);
+              card.appendChild(delBtn);
+            }
+          });
+
+          membersContainer.appendChild(card);
         });
-
-        membersContainer.appendChild(card);
       });
-    });
-  }
-  loadMembers();
-
-  // Login Check
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      if (adminEmails.includes(user.email)) {
-        memberForm.style.display = "block";
-        msg.innerText = "";
-      } else {
-        memberForm.style.display = "none";
-        msg.innerText = "आप भी जुड़ें आज ही और अभी।";
-      }
-    } else {
-      // Auto-login nahi, sirf check
-      msg.innerText = "";
     }
-  });
+    loadMembers();
 
-  async function uploadToImgbb(file) {
-    const formData = new FormData();
-    formData.append("image", file);
-    try {
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
-        method: "POST",
-        body: formData,
-        headers: { Accept: "application/json" }
-      });
-      const result = await response.json();
-      if (!result.success) {
-        alert("❌ Image upload failed. Please try again.");
+    // Login Check
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        if (adminEmails.includes(user.email)) {
+          memberForm.style.display = "block";
+          msg.innerText = "";
+        } else {
+          memberForm.style.display = "none";
+          msg.innerText = "आप भी जुड़ें आज ही और अभी।";
+        }
+      } else {
+        msg.innerText = "";
+      }
+    });
+
+    async function uploadToImgbb(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      try {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
+          method: "POST",
+          body: formData,
+          headers: { Accept: "application/json" }
+        });
+        const result = await response.json();
+        if (!result.success) {
+          alert("❌ Image upload failed. Please try again.");
+          return null;
+        }
+        return result.data.url;
+      } catch (err) {
+        alert("⚠️ Network issue: Unable to upload image.");
         return null;
       }
-      return result.data.url;
-    } catch (err) {
-      alert("⚠️ Network issue: Unable to upload image.");
-      return null;
     }
-  }
 
-  async function addMember() {
-    let name = document.getElementById("name").value.trim();
-    let file = document.getElementById("photoFile").files[0];
-    if(!file){ alert("कृपया फोटो चुनें"); return; }
+    async function addMember() {
+      let name = document.getElementById("name").value.trim();
+      let file = document.getElementById("photoFile").files[0];
+      if (!file) { alert("कृपया फोटो चुनें"); return; }
 
-    const photoUrl = await uploadToImgbb(file);
-    if(!photoUrl) return;
+      const photoUrl = await uploadToImgbb(file);
+      if (!photoUrl) return;
 
-    db.collection("members").add({ name, photo: photoUrl })
-      .then(()=> document.getElementById("memberForm").reset())
-      .catch(err=>alert("Error: "+err.message));
-  }
-
-  function editMember(id, oldName){
-    let newName = prompt("Update Name:", oldName);
-    if(!newName) return;
-    db.collection("members").doc(id).update({name: newName})
-      .then(()=>alert("✅ Name updated!"))
-      .catch(err=>alert("Error: "+err.message));
-  }
-
-  function deleteMember(id){
-    if(confirm("Are you sure you want to delete this member?")){
-      db.collection("members").doc(id).delete()
-        .then(()=>alert("✅ Member deleted!"))
-        .catch(err=>alert("Error: "+err.message));
+      db.collection("members").add({ name, photo: photoUrl })
+        .then(() => document.getElementById("memberForm").reset())
+        .catch(err => alert("Error: " + err.message));
     }
-  }
-</script>
 
-<a href="https://all-madrsa.netlify.app/upi" class="donate-btn">💝 Donate</a>
+    function editMember(id, oldName) {
+      let newName = prompt("Update Name:", oldName);
+      if (!newName) return;
+      db.collection("members").doc(id).update({ name: newName })
+        .then(() => alert("✅ Name updated!"))
+        .catch(err => alert("Error: " + err.message));
+    }
+
+    function deleteMember(id) {
+      if (confirm("Are you sure you want to delete this member?")) {
+        db.collection("members").doc(id).delete()
+          .then(() => alert("✅ Member deleted!"))
+          .catch(err => alert("Error: " + err.message));
+      }
+    }
+  </script>
+
+  <a href="https://all-madrsa.netlify.app/upi" class="donate-btn">💝 Donate</a>
+
 </body>
 </html>
