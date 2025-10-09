@@ -36,14 +36,85 @@ body {background:#fdf6e3; font-family:sans-serif;}
 </head>
 <body class="text-black">
 
-<!-- Header -->
-<header class="bg-blue-600 px-3 py-2 flex justify-between items-center text-white">
-  <h1 class="text-lg font-bold">Nikah Portal</h1>
-  <div class="flex gap-2 items-center">
-    <a href="index.html" class="btn-3d px-3 py-1 text-sm rounded font-bold flex items-center justify-center">🏠 Home</a>
-    <a href="nikah-Conditions.html" class="bg-yellow-500 px-3 py-1 text-sm rounded font-semibold hover:bg-yellow-600 transition">Terms & Conditions</a>
+<header class="bg-blue-600" style="height:100px;">
+  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
+
+    <!-- Top: 3D Buttons -->
+    <div class="flex justify-center gap-4">
+      <a href="nikah.html">
+        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
+      </a>
+      <a href="news.html">
+        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
+      </a>
+      <a href="hadees.html">
+        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
+      </a>
+    </div>
+
+    <!-- Middle: Logo / Title with Home Button -->
+    <div class="flex justify-center items-center h-full mt-1 gap-2">
+      <div class="text-white font-bold text-2xl" 
+           style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">
+        Terms & Conditions
+      </div>
+      <!-- Home Button -->
+      <a href="index.html" class="btn-3d-home-circle flex items-center justify-center">
+        🏠
+      </a>
+    </div>
+
   </div>
 </header>
+
+<style>
+/* Circular 3D Home Button */
+.btn-3d-home-circle {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(145deg, #4f9cf9, #1c3fa0);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2), 0 8px 12px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease;
+}
+
+.btn-3d-home-circle:hover {
+  background: linear-gradient(145deg, #66b0ff, #3a55c3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.2);
+}
+
+.btn-3d-home-circle:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.15);
+}
+
+/* 3D Buttons Base */
+.btn-3d-special {
+  color:white;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-3d-special:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+
+/* Small variant for top header buttons */
+.btn-small {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
+</style>
+
 
 <!-- Main -->
 <main class="p-4">
