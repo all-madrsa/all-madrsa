@@ -1,265 +1,224 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>All Members List | All India Muslim Personal Board</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
-    header { background:#004080; color:white; text-align:center; padding:15px; }
-    header h1 { margin:0; font-size:22px; }
-
-    main { max-width:900px; margin:auto; padding:20px; }
-
-    .member-card {
-      display:flex; align-items:center;
-      background:white; margin:10px 0; padding:10px;
-      border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);
-    }
-    .member-card img {
-      width:80px; height:80px; border-radius:50%;
-      margin-right:15px; object-fit:cover;
-      transition: transform 0.3s;
-    }
-    .member-card img:hover {
-      transform: scale(1.8);
-      z-index: 100;
-    }
-    .member-card button {
-      margin-left: 5px;
-      padding: 5px 8px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-    .edit-btn { background: #ffc107; color: #000; }
-    .delete-btn { background: #dc3545; color: #fff; }
-
-    form {
-      display:none; background:white; padding:20px;
-      border-radius:8px; margin-top:20px;
-    }
-    form input { width:100%; margin:8px 0; padding:10px; }
-    form button {
-      background:#004080; color:white; border:none;
-      padding:10px; cursor:pointer; border-radius:5px;
-    }
-    #loginBtn {
-      margin:20px auto; display:block; background:#db4437; color:white;
-      padding:10px 20px; border:none; border-radius:5px; cursor:pointer;
-      font-size:16px;
-    }
-    #msg { color:red; margin-top:10px; text-align:center; }
-
-    /* 3D Button Style */
-    .btn-3d {
-      background: linear-gradient(90deg,#ff4d4d,#4d94ff);
-      color: white;
-      font-weight: 700;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 16px;
-      border-radius: 8px;
-      margin: 10px;
-    }
-    .btn-3d:active {
-      transform: translateY(3px);
-      box-shadow: 0 3px 0 rgba(0,0,0,0.25);
-    }
-
-    /* Fixed Donate Button */
-    .donate-btn {
-      position: fixed;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      background: #ffcc00;
-      color: #000;
-      font-weight: bold;
-      padding: 10px 16px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      text-decoration: none;
-      z-index: 999;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nikah Portal</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {background:#fdf6e3; font-family:sans-serif;}
+.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+</style>
 </head>
-<body>
+<body class="text-black">
 
-<header>
-  <h1>All Members List</h1>
+<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
+  <h1 class="text-2xl font-bold">Nikah Portal</h1>
+  <div class="flex gap-2">
+    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
+    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post Profile</button>
+  </div>
 </header>
 
-<div style="text-align:center;">
-  <a href="index.html" class="btn-3d">🏠 Home</a>
-  <a href="https://all-madrsa.netlify.app/doner.html" class="btn-3d">💝 Doner List</a>
-</div>
+<!-- Post Form -->
+<section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
+  <input type="text" id="nameInput" placeholder="Full Name" class="w-full p-2 rounded mb-2 border">
+  <input type="number" id="ageInput" placeholder="Age" class="w-full p-2 rounded mb-2 border">
+  <select id="genderInput" class="w-full p-2 rounded mb-2 border">
+    <option value="">Gender</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+  </select>
+  <input type="text" id="educationInput" placeholder="Education" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="professionInput" placeholder="Profession" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="incomeInput" placeholder="Income" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="maritalInput" placeholder="Marital Status" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="religionInput" placeholder="Religion" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="casteInput" placeholder="Caste" class="w-full p-2 rounded mb-2 border">
+  <input type="text" id="cityInput" placeholder="City" class="w-full p-2 rounded mb-2 border">
+  <input type="file" id="photoInput" class="w-full p-2 mb-2">
+  <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
+</section>
 
-<main>
-  <h2>Members</h2>
-  <div id="members"></div>
+<!-- User Profiles -->
+<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
-  <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
-  <p id="msg"></p>
+<!-- Admin Panel -->
+<section id="adminPanel" class="hidden p-4">
+  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
+  <div id="adminList" class="grid gap-4"></div>
+</section>
 
-  <form id="memberForm">
-    <h3>Add Member</h3>
-    <input type="text" id="name" placeholder="Member Name" required>
-    <input type="file" id="photoFile" accept="image/*" required>
-    <button type="button" onclick="addMember()">Add Member</button>
-  </form>
-</main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-    authDomain: "all-madrasa.firebaseapp.com",
-    databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
-    projectId: "all-madrsa",
-    storageBucket: "all-madrsa.appspot.com",
-    messagingSenderId: "619313835874",
-    appId: "1:619313835874:web:e387e1297663f11fc2463b"
-  };
+// Elements
+const loginBtn=document.getElementById("loginBtn");
+const postBtn=document.getElementById("postBtn");
+const postSection=document.getElementById("postSection");
+const submitPost=document.getElementById("submitPost");
+const postsList=document.getElementById("postsList");
+const adminPanel=document.getElementById("adminPanel");
+const adminList=document.getElementById("adminList");
 
-  const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
+let currentUser=null;
+const ADMIN_EMAIL="zaradigitalseva@gmail.com";
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+// Login
+loginBtn.addEventListener("click",async ()=>{
+  const provider=new GoogleAuthProvider();
+  await signInWithPopup(auth,provider);
+});
 
-  const adminEmails = ["zaradigitalseva@gmail.com","secondadmin@gmail.com"];
-
-  const membersContainer = document.getElementById("members");
-  const loginBtn = document.getElementById("loginBtn");
-  const memberForm = document.getElementById("memberForm");
-  const msg = document.getElementById("msg");
-
-  // Load Members
-  function loadMembers() {
-    db.collection("members").orderBy("name").onSnapshot(snapshot => {
-      membersContainer.innerHTML = "";
-      snapshot.forEach(doc => {
-        let m = doc.data();
-        let card = document.createElement("div");
-        card.className = "member-card";
-
-        let img = document.createElement("img");
-        img.src = m.photo;
-        img.alt = m.name;
-
-        let span = document.createElement("span");
-        span.textContent = m.name;
-
-        card.appendChild(img);
-        card.appendChild(span);
-
-        auth.onAuthStateChanged(user => {
-          if (user && adminEmails.includes(user.email)) {
-            let editBtn = document.createElement("button");
-            editBtn.textContent = "✏️ Edit";
-            editBtn.className = "edit-btn";
-            editBtn.onclick = () => editMember(doc.id, m.name);
-
-            let delBtn = document.createElement("button");
-            delBtn.textContent = "🗑 Delete";
-            delBtn.className = "delete-btn";
-            delBtn.onclick = () => deleteMember(doc.id);
-
-            card.appendChild(editBtn);
-            card.appendChild(delBtn);
-          }
-        });
-
-        membersContainer.appendChild(card);
-      });
-    });
+onAuthStateChanged(auth,user=>{
+  currentUser=user;
+  if(user){
+    loginBtn.classList.add("hidden");
+    postBtn.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
+  } else {
+    loginBtn.classList.remove("hidden");
+    postBtn.classList.add("hidden");
+    postSection.classList.add("hidden");
+    adminPanel.classList.add("hidden");
   }
-  loadMembers();
+});
 
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      if (adminEmails.includes(user.email)) {
-        loginBtn.style.display = "none";
-        memberForm.style.display = "block";
-        msg.innerText = "";
-      } else {
-        loginBtn.style.display = "none";
-        memberForm.style.display = "none";
-        msg.innerText = "aap bhi jude aaj hi aur abhi";
-      }
-    } else {
-      loginBtn.style.display = "block";
-      memberForm.style.display = "none";
-      msg.innerText = "";
-    }
+postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
+
+// Upload Image
+async function uploadToImgbb(file){
+  const key="d12c2e4a8650157b2b6b9fe85336ea43";
+  const formData=new FormData();
+  formData.append("image",file);
+  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
+  const data=await res.json();
+  return data.data.url;
+}
+
+// Submit Post
+submitPost.addEventListener("click",async ()=>{
+  const name=document.getElementById("nameInput").value.trim();
+  const age=document.getElementById("ageInput").value.trim();
+  const gender=document.getElementById("genderInput").value;
+  const education=document.getElementById("educationInput").value.trim();
+  const profession=document.getElementById("professionInput").value.trim();
+  const income=document.getElementById("incomeInput").value.trim();
+  const marital=document.getElementById("maritalInput").value.trim();
+  const religion=document.getElementById("religionInput").value.trim();
+  const caste=document.getElementById("casteInput").value.trim();
+  const city=document.getElementById("cityInput").value.trim();
+  const photo=document.getElementById("photoInput").files[0];
+  if(!name||!age||!gender||!city||!photo) return alert("❌ Fill required fields!");
+  const photoUrl=await uploadToImgbb(photo);
+
+  await addDoc(collection(db,"profiles"),{
+    name,age,gender,education,profession,income,marital,religion,caste,city,photoUrl,
+    uid:currentUser.uid,email:currentUser.email,approvals:{},created:serverTimestamp()
+  });
+  alert("✅ Submitted! Wait for Admin Approval");
+});
+
+// Fetch Profiles
+const q=query(collection(db,"profiles"),orderBy("created","desc"));
+onSnapshot(q,snapshot=>{
+  const profiles=[];
+  snapshot.forEach(docSnap=>{
+    let data=docSnap.data();
+    data.id=docSnap.id;
+    profiles.push(data);
+  });
+  renderProfiles(profiles);
+  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
+});
+
+// Render Public Profiles in Form Style
+function renderProfiles(profiles){
+  postsList.innerHTML="";
+  profiles.forEach(p=>{
+    if(!p.approvals) return;
+    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
+    if(approvedFields.length===0) return;
+
+    const card=document.createElement("div");
+    card.className="p-4 rounded shadow bg-white";
+
+    let html = `<div class="space-y-2">`;
+    if(p.approvals.photoUrl && p.photoUrl) html += `<div><img src="${p.photoUrl}" class="w-40 h-48 object-cover rounded border mb-2"></div>`;
+    if(p.approvals.name) html += `<p><strong>👤 Name:</strong> ${p.name}</p>`;
+    if(p.approvals.age) html += `<p><strong>🎂 Age:</strong> ${p.age}</p>`;
+    if(p.approvals.gender) html += `<p><strong>🚻 Gender:</strong> ${p.gender}</p>`;
+    if(p.approvals.education) html += `<p><strong>🎓 Education:</strong> ${p.education}</p>`;
+    if(p.approvals.profession) html += `<p><strong>💼 Profession:</strong> ${p.profession}</p>`;
+    if(p.approvals.income) html += `<p><strong>💰 Income:</strong> ${p.income}</p>`;
+    if(p.approvals.marital) html += `<p><strong>📌 Marital Status:</strong> ${p.marital}</p>`;
+    if(p.approvals.religion) html += `<p><strong>🕌 Religion:</strong> ${p.religion}</p>`;
+    if(p.approvals.caste) html += `<p><strong>🪧 Caste:</strong> ${p.caste}</p>`;
+    if(p.approvals.city) html += `<p><strong>🏙️ City:</strong> ${p.city}</p>`;
+    if(p.approvals.email) html += `<p><strong>📧 Email:</strong> ${p.email}</p>`;
+    html += `</div>`;
+
+    card.innerHTML = html;
+    postsList.appendChild(card);
+  });
+}
+
+// Admin Panel
+function renderAdmin(profiles){
+  adminList.innerHTML="";
+  profiles.forEach(p=>{
+    let html=`<div class="p-4 bg-gray-100 rounded shadow">`;
+    html+=`<div class="mb-2"><img src="${p.photoUrl}" class="w-full h-32 object-cover rounded"></div>`;
+
+    const fields=["photoUrl","name","age","gender","education","profession","income","marital","religion","caste","city","email"];
+    fields.forEach(f=>{
+      html+=`<div><input type="checkbox" class="cb-${p.id}" data-field="${f}" ${p.approvals&&p.approvals[f]?"checked":""}> ${f}: ${p[f]||""}</div>`;
+    });
+
+    html+=`<button class="bg-blue-500 text-white px-3 py-1 rounded mt-2 saveBtn" data-id="${p.id}">💾 Save Approval</button>`;
+    html+=`<button class="bg-red-500 text-white px-3 py-1 rounded mt-2 deleteBtn" data-id="${p.id}">🗑 Delete</button>`;
+    html+=`</div>`;
+    adminList.innerHTML+=html;
   });
 
-  function googleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(err => alert("Login Failed: "+err.message));
-  }
+  // Save button
+  document.querySelectorAll(".saveBtn").forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
+      const checkboxes=document.querySelectorAll(`.cb-${id}`);
+      let approvals={};
+      checkboxes.forEach(cb=>{ approvals[cb.dataset.field]=cb.checked; });
+      await updateDoc(doc(db,"profiles",id),{approvals});
+      alert("✅ Approvals Updated");
+    };
+  });
 
-  async function uploadToImgbb(file) {
-    const formData = new FormData();
-    formData.append("image", file);
-    try {
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
-        method: "POST",
-        body: formData,
-        headers: { Accept: "application/json" }
-      });
-      const result = await response.json();
-      if (!result.success) {
-        alert("❌ Image upload failed. Please try again.");
-        return null;
-      }
-      return result.data.url;
-    } catch (err) {
-      alert("⚠️ Network issue: Unable to upload image.");
-      return null;
-    }
-  }
-
-  async function addMember() {
-    let name = document.getElementById("name").value.trim();
-    let file = document.getElementById("photoFile").files[0];
-    if(!file){ alert("कृपया फोटो चुनें"); return; }
-
-    const photoUrl = await uploadToImgbb(file);
-    if(!photoUrl) return;
-
-    db.collection("members").add({ name, photo: photoUrl })
-      .then(()=> document.getElementById("memberForm").reset())
-      .catch(err=>alert("Error: "+err.message));
-  }
-
-  function editMember(id, oldName){
-    let newName = prompt("Update Name:", oldName);
-    if(!newName) return;
-    db.collection("members").doc(id).update({name: newName})
-      .then(()=>alert("✅ Name updated!"))
-      .catch(err=>alert("Error: "+err.message));
-  }
-
-  function deleteMember(id){
-    if(confirm("Are you sure you want to delete this member?")){
-      db.collection("members").doc(id).delete()
-        .then(()=>alert("✅ Member deleted!"))
-        .catch(err=>alert("Error: "+err.message));
-    }
-  }
+  // Delete button
+  document.querySelectorAll(".deleteBtn").forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
+      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
+    };
+  });
+}
 </script>
-
-<a href="https://all-madrsa.netlify.app/upi" class="donate-btn">💝 Donate</a>
 </body>
 </html>
