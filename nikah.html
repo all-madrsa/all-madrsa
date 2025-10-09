@@ -5,27 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nikah Portal</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-.card-img-grid {display:grid; grid-template-columns: repeat(2, 1fr); gap:0.25rem;}
-.card-img-grid img {width:100%; height:100px; object-fit:cover; border-radius:0.25rem;}
+.profile-img {width:100%; height:150px; object-fit:cover; border-radius:0.25rem; cursor:pointer;}
 .modal-bg {background: rgba(0,0,0,0.5);}
 </style>
 </head>
 <body class="text-black">
 
-<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
-  <h1 class="text-2xl font-bold">Nikah Portal</h1>
+<header class="bg-blue-600 p-4 text-white font-bold text-2xl text-center">
+  Nikah Portal
 </header>
 
 <main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
 
 <!-- Modal -->
 <div id="profileModal" class="fixed inset-0 hidden justify-center items-center modal-bg z-50">
-  <div class="bg-white rounded shadow-lg p-4 w-11/12 max-w-lg relative">
+  <div class="bg-white rounded shadow-lg p-4 w-11/12 max-w-md relative">
     <button id="closeModal" class="absolute top-2 right-2 text-red-500 font-bold text-xl">&times;</button>
     <div id="modalContent" class="space-y-2"></div>
   </div>
@@ -55,8 +53,8 @@ const q = query(collection(db,"profiles"), orderBy("created","desc"));
 onSnapshot(q, snapshot=>{
   const profiles=[];
   snapshot.forEach(docSnap=>{
-    let data=docSnap.data();
-    data.id=docSnap.id;
+    let data = docSnap.data();
+    data.id = docSnap.id;
     profiles.push(data);
   });
   renderProfiles(profiles);
@@ -64,48 +62,48 @@ onSnapshot(q, snapshot=>{
 
 function renderProfiles(profiles){
   postsList.innerHTML="";
-  profiles.forEach(p=>{
-    if(!p.approvals) return;
-    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
-    if(approvedFields.length===0) return;
+  for(let i=0; i<profiles.length; i+=2){
+    // Create row for 2 profiles
+    const row = document.createElement("div");
+    row.className = "flex gap-2";
 
-    // Card
-    const card = document.createElement("div");
-    card.className = "bg-white rounded shadow cursor-pointer hover:shadow-lg transition p-2";
-    card.innerHTML = `
-      <div class="card-img-grid">
-        ${p.approvals.photoUrl ? `<img src="${p.photoUrl}" />` : ""}
-        ${p.approvals.photoUrl ? `<img src="${p.photoUrl}" />` : ""}
-      </div>
-      <p class="font-bold mt-2">${p.approvals.name ? p.name : ""}</p>
-      <p>${p.approvals.age ? p.age : ""} years</p>
-    `;
+    for(let j=i; j<i+2 && j<profiles.length; j++){
+      const p = profiles[j];
+      if(!p.approvals || !p.approvals.photoUrl) continue;
 
-    card.addEventListener("click", ()=>{
-      modalContent.innerHTML = `
-        ${p.photoUrl ? `<img src="${p.photoUrl}" class="w-full h-64 object-cover rounded mb-2">` : ""}
-        <p><strong>Name:</strong> ${p.name || "-"}</p>
-        <p><strong>Age:</strong> ${p.age || "-"}</p>
-        <p><strong>WhatsApp:</strong> ${p.whatsapp || "-"}</p>
-        <p><strong>Gender:</strong> ${p.gender || "-"}</p>
-        <p><strong>Education:</strong> ${p.education || "-"}</p>
-        <p><strong>Profession:</strong> ${p.profession || "-"}</p>
-        <p><strong>Income:</strong> ${p.income || "-"}</p>
-        <p><strong>Marital:</strong> ${p.marital || "-"}</p>
-        <p><strong>Religion:</strong> ${p.religion || "-"}</p>
-        <p><strong>Caste:</strong> ${p.caste || "-"}</p>
-        <p><strong>City:</strong> ${p.city || "-"}</p>
-      `;
-      profileModal.classList.remove("hidden");
-    });
+      const img = document.createElement("img");
+      img.src = p.photoUrl;
+      img.className = "profile-img flex-1";
+      img.title = p.name;
+      img.addEventListener("click", ()=>{
+        modalContent.innerHTML = `
+          <img src="${p.photoUrl}" class="w-full h-64 object-cover rounded mb-2">
+          <p><strong>Name:</strong> ${p.name || "-"}</p>
+          <p><strong>Age:</strong> ${p.age || "-"}</p>
+          <p><strong>WhatsApp:</strong> ${p.whatsapp || "-"}</p>
+          <p><strong>Gender:</strong> ${p.gender || "-"}</p>
+          <p><strong>Education:</strong> ${p.education || "-"}</p>
+          <p><strong>Profession:</strong> ${p.profession || "-"}</p>
+          <p><strong>Income:</strong> ${p.income || "-"}</p>
+          <p><strong>Marital:</strong> ${p.marital || "-"}</p>
+          <p><strong>Religion:</strong> ${p.religion || "-"}</p>
+          <p><strong>Caste:</strong> ${p.caste || "-"}</p>
+          <p><strong>City:</strong> ${p.city || "-"}</p>
+        `;
+        profileModal.classList.remove("hidden");
+      });
 
-    postsList.appendChild(card);
-  });
+      row.appendChild(img);
+    }
+
+    postsList.appendChild(row);
+  }
 }
 
 closeModal.addEventListener("click", ()=>{
   profileModal.classList.add("hidden");
 });
 </script>
+
 </body>
 </html>
