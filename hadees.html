@@ -35,12 +35,11 @@ body {
   border-radius: 12px;
   max-width: 500px;
   width: 90%;
-  max-height: 80vh;       /* popup की max height */
-  overflow-y: auto;       /* vertical scroll enable */
+  max-height: 80vh;
+  overflow-y: auto;
   text-align: center;
   position: relative;
 }
-
 </style>
 </head>
 <body class="text-white">
@@ -52,6 +51,7 @@ body {
   </div>
   <div>
     <button id="loginBtn" class="bg-green-600 px-3 py-1 rounded">Login</button>
+    <button id="logoutBtn" class="bg-red-600 px-3 py-1 rounded hidden">Logout</button>
     <button id="postBtn" class="bg-blue-600 px-3 py-1 rounded hidden">➕ Post</button>
   </div>
 </header>
@@ -66,7 +66,7 @@ body {
 <div id="popup" class="popup hidden">
   <div class="popup-content">
     <p id="popupText" class="font-bold text-lg"></p>
-    <p id="popupMeta" class="text-sm text-gray-600 mt-2"></p>
+    <p id="popupMeta" class="text-sm text-gray-300 mt-2"></p>
     <p id="popupStatus" class="text-sm font-semibold mt-1"></p>
     <div class="mt-4">
       <button id="closePopup" class="bg-red-500 px-3 py-1 rounded text-white">❌ Close</button>
@@ -76,7 +76,7 @@ body {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -92,6 +92,7 @@ const auth = getAuth();
 const db = getFirestore();
 
 const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 const postBtn = document.getElementById("postBtn");
 const postSection = document.getElementById("postSection");
 const submitPost = document.getElementById("submitPost");
@@ -100,38 +101,50 @@ const postsList = document.getElementById("postsList");
 
 let currentUser = null;
 
+// 🔹 Login
 loginBtn.addEventListener("click", async () => {
   const provider = new GoogleAuthProvider();
   await signInWithPopup(auth, provider);
 });
 
-onAuthStateChanged(auth, (user)=>{
+// 🔹 Logout
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+});
+
+// 🔹 Check user
+onAuthStateChanged(auth, (user) => {
   currentUser = user;
-  if(user){
+  if (user) {
     loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
     postBtn.classList.remove("hidden");
   } else {
     loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
     postBtn.classList.add("hidden");
     postSection.classList.add("hidden");
   }
 });
 
+// 🔹 Toggle post section
 postBtn.addEventListener("click", () => {
-  if(currentUser) postSection.classList.toggle("hidden");
+  if (currentUser) postSection.classList.toggle("hidden");
   else alert("⚠️ Please login to post!");
 });
 
-submitPost.addEventListener("click", async ()=>{
-  if(hadeesInput.value.trim()==="") return alert("❌ Write something");
-  await addDoc(collection(db,"hadees"),{
-    text:hadeesInput.value,
-    uid:currentUser.uid,
-    email:currentUser.email,
-    approved:false,
-    created:serverTimestamp()
+// 🔹 Post hadees
+submitPost.addEventListener("click", async () => {
+  if (!currentUser) return alert("⚠️ Login required to post!");
+  if (hadeesInput.value.trim() === "") return alert("❌ Write something!");
+  await addDoc(collection(db, "hadees"), {
+    text: hadeesInput.value,
+    uid: currentUser.uid,
+    email: currentUser.email,
+    approved: false,
+    created: serverTimestamp()
   });
-  hadeesInput.value="";
+  hadeesInput.value = "";
   alert("✅ Submitted for approval!");
 });
 
@@ -140,7 +153,7 @@ function getContrastYIQ(hexcolor){
   const r=parseInt(hexcolor.substr(0,2),16);
   const g=parseInt(hexcolor.substr(2,2),16);
   const b=parseInt(hexcolor.substr(4,2),16);
-  const yiq = ((r*299)+(g*587)+(b*114))/1000;
+  const yiq=((r*299)+(g*587)+(b*114))/1000;
   return (yiq>=128) ? "black":"white";
 }
 function bgColorToHex(hsl){
@@ -169,77 +182,77 @@ function bgColorToHex(hsl){
   return "#"+toHex(r)+toHex(g)+toHex(b);
 }
 
-// Load posts
-const q=query(collection(db,"hadees"),orderBy("created","desc"));
-onSnapshot(q,(snapshot)=>{
-  postsList.innerHTML="";
-  snapshot.forEach((docSnap)=>{
-    const data=docSnap.data();
-    const postId=docSnap.id;
+// 🔹 Show posts (everyone can see)
+const q = query(collection(db, "hadees"), orderBy("created", "desc"));
+onSnapshot(q, (snapshot) => {
+  postsList.innerHTML = "";
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const postId = docSnap.id;
 
-    // Visibility check
-    if(!data.approved && !(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com"))) return;
+    // Hide unapproved for normal users
+    if (!data.approved && !(currentUser && (currentUser.email === data.email || currentUser.email === "zaradigitalseva@gmail.com"))) return;
 
-    const bgColor=`hsl(${Math.random()*360},70%,70%)`;
-    const hex=bgColorToHex(bgColor);
-    const textColor=getContrastYIQ(hex);
+    const bgColor = `hsl(${Math.random() * 360},70%,70%)`;
+    const hex = bgColorToHex(bgColor);
+    const textColor = getContrastYIQ(hex);
 
     const time = data.created instanceof Timestamp ? data.created.toDate() : new Date();
     const formattedTime = time.toLocaleString();
 
-    let statusLabel="";
-    if(data.approved===true) statusLabel="✅ Approved";
-    else if(data.approved===false && currentUser?.email==="zaradigitalseva@gmail.com") statusLabel="⏳ Pending / Rejected";
-    else statusLabel="⏳ Pending";
+    let statusLabel = "";
+    if (data.approved === true) statusLabel = "✅ Approved";
+    else if (data.approved === false && currentUser?.email === "zaradigitalseva@gmail.com") statusLabel = "⏳ Pending / Rejected";
+    else statusLabel = "⏳ Pending";
 
-    const card=document.createElement("div");
-    card.className="p-4 rounded shadow cursor-pointer h-40 overflow-hidden flex flex-col justify-between";
-    card.style.background=bgColor;
-    card.style.color=textColor;
-    card.innerHTML=`
+    const card = document.createElement("div");
+    card.className = "p-4 rounded shadow cursor-pointer h-40 overflow-hidden flex flex-col justify-between";
+    card.style.background = bgColor;
+    card.style.color = textColor;
+    card.innerHTML = `
       <p class="font-bold text-lg card-text">${data.text}</p>
       <p class="text-xs mt-2">✍️ ${data.email}</p>
       <p class="text-xs">${formattedTime}</p>
       <p class="text-sm font-semibold mt-1">${statusLabel}</p>
     `;
 
-    // Delete button
-    if(currentUser && (currentUser.email===data.email || currentUser.email==="zaradigitalseva@gmail.com")){
-      const delBtn=document.createElement("button");
-      delBtn.textContent="🗑️ Delete";
-      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2 self-start";
-      delBtn.onclick=async e=>{
+    // Delete (self or admin)
+    if (currentUser && (currentUser.email === data.email || currentUser.email === "zaradigitalseva@gmail.com")) {
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "🗑️ Delete";
+      delBtn.className = "bg-red-500 text-white px-2 py-1 rounded mt-2 self-start";
+      delBtn.onclick = async e => {
         e.stopPropagation();
-        await deleteDoc(doc(db,"hadees",postId));
+        await deleteDoc(doc(db, "hadees", postId));
       };
       card.appendChild(delBtn);
     }
 
     // Admin approve/reject
-    if(currentUser && currentUser.email==="zaradigitalseva@gmail.com" && !data.approved){
-      const approveBtn=document.createElement("button");
-      approveBtn.textContent="✅ Approve";
-      approveBtn.className="bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
-      approveBtn.onclick=async e=>{
+    if (currentUser && currentUser.email === "zaradigitalseva@gmail.com" && !data.approved) {
+      const approveBtn = document.createElement("button");
+      approveBtn.textContent = "✅ Approve";
+      approveBtn.className = "bg-green-500 text-white px-2 py-1 rounded mt-2 self-start";
+      approveBtn.onclick = async e => {
         e.stopPropagation();
-        await updateDoc(doc(db,"hadees",postId),{approved:true});
+        await updateDoc(doc(db, "hadees", postId), { approved: true });
       };
-      const rejectBtn=document.createElement("button");
-      rejectBtn.textContent="❌ Reject";
-      rejectBtn.className="bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
-      rejectBtn.onclick=async e=>{
+      const rejectBtn = document.createElement("button");
+      rejectBtn.textContent = "❌ Reject";
+      rejectBtn.className = "bg-gray-500 text-white px-2 py-1 rounded mt-2 self-start";
+      rejectBtn.onclick = async e => {
         e.stopPropagation();
-        await updateDoc(doc(db,"hadees",postId),{approved:false});
+        await updateDoc(doc(db, "hadees", postId), { approved: false });
       };
       card.appendChild(approveBtn);
       card.appendChild(rejectBtn);
     }
 
-    // Card click = popup
-    card.addEventListener("click",()=>{
-      document.getElementById("popupText").textContent=data.text;
-      document.getElementById("popupMeta").textContent=`✍️ ${data.email} | ${formattedTime}`;
-      document.getElementById("popupStatus").textContent=statusLabel;
+    // Popup
+    card.addEventListener("click", () => {
+      document.getElementById("popupText").textContent = data.text;
+      document.getElementById("popupMeta").textContent = `✍️ ${data.email} | ${formattedTime}`;
+      document.getElementById("popupStatus").textContent = statusLabel;
       document.getElementById("popup").classList.remove("hidden");
     });
 
@@ -247,14 +260,12 @@ onSnapshot(q,(snapshot)=>{
   });
 });
 
-document.getElementById("closePopup").addEventListener("click",()=>{
+document.getElementById("closePopup").addEventListener("click", () => {
   document.getElementById("popup").classList.add("hidden");
 });
 </script>
 
-
-  <script type="module" src="auth-protect.js"></script>
-<!-- Fixed Donate Button -->
+<!-- Donate Button -->
 <a href="https://all-madrsa.netlify.app/upi" 
    class="fixed top-1/2 right-4 transform -translate-y-1/2 
           bg-yellow-400 text-black font-bold px-5 py-3 
@@ -262,7 +273,5 @@ document.getElementById("closePopup").addEventListener("click",()=>{
    💝 Donate
 </a>
 
-
-  
 </body>
 </html>
