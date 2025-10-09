@@ -5,33 +5,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nikah Portal</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-.profile-img {width:100%; height:150px; object-fit:cover; border-radius:0.25rem; cursor:pointer;}
-.modal-bg {background: rgba(0,0,0,0.5);}
+.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
+/* 3D Home Button */
+.btn-3d {
+  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
+  color: white;
+  font-weight:700;
+  box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25);
+  transition:transform .1s, box-shadow .1s, background .3s;
+}
+.btn-3d:hover {background: linear-gradient(90deg,#ff6666,#66a3ff);}
+.btn-3d:active {transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.25);}
+
+/* Card hover effect */
+.profile-card {cursor:pointer; transition: transform 0.1s;}
+.profile-card:hover {transform: scale(1.05);}
+
+/* Popup */
+#profilePopup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
+#popupContent {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
+#popupContent img {width:100%; height:auto; border-radius:8px; margin-bottom:10px;}
+#closePopup {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
 </style>
 </head>
 <body class="text-black">
 
-<header class="bg-blue-600 p-4 text-white font-bold text-2xl text-center">
-  Nikah Portal
+<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
+  <h1 class="text-2xl font-bold">Nikah Portal</h1>
+  <div class="flex gap-2 items-center">
+    <a href="index.html" class="btn-3d px-3 py-1 text-sm rounded font-bold flex items-center justify-center">🏠 Home</a>
+  </div>
 </header>
 
-<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
+<main id="postsList" class="p-4 grid grid-cols-2 gap-2"></main>
 
-<!-- Modal -->
-<div id="profileModal" class="fixed inset-0 hidden justify-center items-center modal-bg z-50">
-  <div class="bg-white rounded shadow-lg p-4 w-11/12 max-w-md relative">
-    <button id="closeModal" class="absolute top-2 right-2 text-red-500 font-bold text-xl">&times;</button>
-    <div id="modalContent" class="space-y-2"></div>
+<!-- Popup -->
+<div id="profilePopup">
+  <div id="popupContent">
+    <button id="closePopup">❌ Close</button>
+    <div id="popupBody"></div>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -41,67 +64,73 @@ const firebaseConfig = {
   messagingSenderId: "619313835874",
   appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
-initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 
 const postsList = document.getElementById("postsList");
-const profileModal = document.getElementById("profileModal");
-const modalContent = document.getElementById("modalContent");
-const closeModal = document.getElementById("closeModal");
+const profilePopup = document.getElementById("profilePopup");
+const popupBody = document.getElementById("popupBody");
+const closePopup = document.getElementById("closePopup");
 
-const q = query(collection(db,"profiles"), orderBy("created","desc"));
+// Fetch Profiles
+const q = query(collection(db, "profiles"), orderBy("created", "desc"));
 onSnapshot(q, snapshot=>{
-  const profiles=[];
+  const profiles = [];
   snapshot.forEach(docSnap=>{
-    let data = docSnap.data();
+    const data = docSnap.data();
     data.id = docSnap.id;
     profiles.push(data);
   });
   renderProfiles(profiles);
 });
 
+// Render Cards
 function renderProfiles(profiles){
   postsList.innerHTML="";
-  for(let i=0; i<profiles.length; i+=2){
-    // Create row for 2 profiles
-    const row = document.createElement("div");
-    row.className = "flex gap-2";
+  profiles.forEach(p=>{
+    if(!p.approvals) return;
+    const approvedFields = Object.keys(p.approvals).filter(f=>p.approvals[f]);
+    if(approvedFields.length===0) return;
 
-    for(let j=i; j<i+2 && j<profiles.length; j++){
-      const p = profiles[j];
-      if(!p.approvals || !p.approvals.photoUrl) continue;
+    const card = document.createElement("div");
+    card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
 
-      const img = document.createElement("img");
-      img.src = p.photoUrl;
-      img.className = "profile-img flex-1";
-      img.title = p.name;
-      img.addEventListener("click", ()=>{
-        modalContent.innerHTML = `
-          <img src="${p.photoUrl}" class="w-full h-64 object-cover rounded mb-2">
-          <p><strong>Name:</strong> ${p.name || "-"}</p>
-          <p><strong>Age:</strong> ${p.age || "-"}</p>
-          <p><strong>WhatsApp:</strong> ${p.whatsapp || "-"}</p>
-          <p><strong>Gender:</strong> ${p.gender || "-"}</p>
-          <p><strong>Education:</strong> ${p.education || "-"}</p>
-          <p><strong>Profession:</strong> ${p.profession || "-"}</p>
-          <p><strong>Income:</strong> ${p.income || "-"}</p>
-          <p><strong>Marital:</strong> ${p.marital || "-"}</p>
-          <p><strong>Religion:</strong> ${p.religion || "-"}</p>
-          <p><strong>Caste:</strong> ${p.caste || "-"}</p>
-          <p><strong>City:</strong> ${p.city || "-"}</p>
-        `;
-        profileModal.classList.remove("hidden");
-      });
+    // Image or placeholder
+    let imgSrc = p.photoUrl && p.approvals.photoUrl ? p.photoUrl : "";
+    let imgHtml = imgSrc ? `<img src="${imgSrc}" class="w-full h-32 object-cover rounded mb-1">` : `<div class="w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1">No Image</div>`;
+    card.innerHTML = `
+      ${imgHtml}
+      <p class="text-sm font-bold">${p.approvals.name ? p.name : ""}</p>
+      <p class="text-xs text-gray-600">${p.approvals.age ? p.age : ""} years</p>
+    `;
 
-      row.appendChild(img);
-    }
+    // Click to popup
+    card.addEventListener("click", ()=>{
+      let html=`<h2 class="text-xl font-bold mb-2">${p.name || ""}</h2>`;
+      if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}">`;
+      if(p.approvals.age) html+=`<p>🎂 Age: ${p.age}</p>`;
+      if(p.approvals.gender) html+=`<p>🚻 Gender: ${p.gender}</p>`;
+      if(p.approvals.whatsapp) html+=`<p>📱 WhatsApp: ${p.whatsapp}</p>`;
+      if(p.approvals.education) html+=`<p>🎓 Education: ${p.education}</p>`;
+      if(p.approvals.profession) html+=`<p>💼 Profession: ${p.profession}</p>`;
+      if(p.approvals.income) html+=`<p>💰 Income: ${p.income}</p>`;
+      if(p.approvals.marital) html+=`<p>📌 Marital Status: ${p.marital}</p>`;
+      if(p.approvals.religion) html+=`<p>🕌 Religion: ${p.religion}</p>`;
+      if(p.approvals.caste) html+=`<p>🪧 Caste: ${p.caste}</p>`;
+      if(p.approvals.city) html+=`<p>🏙️ City: ${p.city}</p>`;
+      if(p.approvals.email) html+=`<p>📧 Email: ${p.email}</p>`;
+      popupBody.innerHTML = html;
+      profilePopup.style.display="flex";
+    });
 
-    postsList.appendChild(row);
-  }
+    postsList.appendChild(card);
+  });
 }
 
-closeModal.addEventListener("click", ()=>{
-  profileModal.classList.add("hidden");
+// Close popup
+closePopup.addEventListener("click", ()=> profilePopup.style.display="none");
+profilePopup.addEventListener("click", (e)=>{
+  if(e.target===profilePopup) profilePopup.style.display="none";
 });
 </script>
 
