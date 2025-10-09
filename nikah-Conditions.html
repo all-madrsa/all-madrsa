@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms & Conditions - Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {background:#fdf6e3; font-family:sans-serif;}
+textarea {width:100%; min-height:300px; padding:10px; border-radius:6px; border:1px solid #ccc;}
+button {transition: all 0.2s;}
+button:hover {opacity:0.9;}
+</style>
+</head>
+<body class="p-4">
+
+<header class="bg-blue-600 p-4 text-white flex justify-between items-center mb-4 rounded">
+  <h1 class="text-2xl font-bold">Terms & Conditions - Admin</h1>
+  <a href="index.html" class="bg-red-500 px-3 py-1 rounded hover:bg-red-600">🏠 Home</a>
+</header>
+
+<main class="max-w-3xl mx-auto">
+  <h2 class="text-xl font-bold mb-2">Edit Terms & Conditions</h2>
+  <textarea id="termsText" placeholder="Write or update terms & conditions here..."></textarea>
+  <button id="saveBtn" class="bg-green-500 text-white px-4 py-2 mt-2 rounded hover:bg-green-600">💾 Save</button>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore();
+const auth = getAuth();
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
+const termsText = document.getElementById("termsText");
+const saveBtn = document.getElementById("saveBtn");
+
+// Check admin login
+onAuthStateChanged(auth, user=>{
+  if(!user || user.email !== ADMIN_EMAIL){
+    alert("❌ Only admin can access this page!");
+    window.location.href = "index.html";
+  }
+});
+
+// Load existing terms
+async function loadTerms(){
+  const docRef = doc(db, "settings", "terms");
+  const docSnap = await getDoc(docRef);
+  if(docSnap.exists()){
+    termsText.value = docSnap.data().content;
+  }
+}
+loadTerms();
+
+// Save terms
+saveBtn.addEventListener("click", async ()=>{
+  const content = termsText.value.trim();
+  if(!content) return alert("❌ Cannot save empty content!");
+  await setDoc(doc(db,"settings","terms"), {content});
+  alert("✅ Terms & Conditions updated successfully!");
+});
+</script>
+
+</body>
+</html>
