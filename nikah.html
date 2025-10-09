@@ -10,17 +10,18 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-/* 3D Home Button */
+.card-img {width:100%; height:150px; object-fit:cover; border-radius:6px;}
+.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;}
 .btn-3d {
   background: linear-gradient(90deg,#ff4d4d,#4d94ff);
-  color: white;
-  font-weight:700;
+  color: white; font-weight:700;
   box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25);
   transition:transform .1s, box-shadow .1s, background .3s;
 }
 .btn-3d:hover {background: linear-gradient(90deg,#ff6666,#66a3ff);}
 .btn-3d:active {transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.25);}
+.popup {position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:50;}
+.popup-content {background:white; padding:20px; border-radius:12px; max-width:90%; width:600px; max-height:90vh; overflow-y:auto;}
 </style>
 </head>
 <body class="text-black">
@@ -36,7 +37,7 @@ body {background:#fdf6e3; font-family:sans-serif;}
 
 <!-- Search -->
 <section class="p-4">
-  <input type="text" id="searchInput" placeholder="Search by Age / Marital Status / Gender..." class="w-full p-2 border rounded">
+  <input type="text" id="searchInput" placeholder="Search by Name/Age/Marital Status" class="w-full p-2 rounded border">
 </section>
 
 <!-- Post Form -->
@@ -61,11 +62,17 @@ body {background:#fdf6e3; font-family:sans-serif;}
 </section>
 
 <!-- Profiles Grid -->
-<main id="postsList" class="p-4 grid gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4"></main>
+<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-4"></main>
+
+<!-- Admin Panel -->
+<section id="adminPanel" class="hidden p-4 bg-gray-100">
+  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
+  <div id="adminList" class="grid gap-4"></div>
+</section>
 
 <!-- Popup -->
-<div id="popup" class="hidden fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex items-center justify-center z-50">
-  <div class="bg-white rounded p-4 w-11/12 md:w-2/3 max-h-[90vh] overflow-y-auto">
+<div id="popup" class="popup hidden">
+  <div class="popup-content">
     <div id="popupContent"></div>
     <button id="closePopup" class="mt-4 px-3 py-1 bg-red-500 text-white rounded">Close</button>
   </div>
@@ -76,25 +83,25 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
   projectId: "all-madrsa",
   storageBucket: "all-madrsa.appspot.com",
   messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  appId: "1:619313835874:web:e387e1297663f11fc2463"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-// Elements
 const loginBtn=document.getElementById("loginBtn");
 const postBtn=document.getElementById("postBtn");
 const postSection=document.getElementById("postSection");
 const submitPost=document.getElementById("submitPost");
 const postsList=document.getElementById("postsList");
+const adminPanel=document.getElementById("adminPanel");
+const adminList=document.getElementById("adminList");
 const searchInput=document.getElementById("searchInput");
 const popup=document.getElementById("popup");
 const popupContent=document.getElementById("popupContent");
@@ -103,7 +110,6 @@ const closePopup=document.getElementById("closePopup");
 let currentUser=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
 
-// Login
 loginBtn.addEventListener("click", async ()=>{
   const provider=new GoogleAuthProvider();
   await signInWithPopup(auth, provider);
@@ -114,27 +120,27 @@ onAuthStateChanged(auth, user=>{
   if(user){
     loginBtn.classList.add("hidden");
     postBtn.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
+    else adminPanel.classList.add("hidden");
   } else {
     loginBtn.classList.remove("hidden");
     postBtn.classList.add("hidden");
     postSection.classList.add("hidden");
+    adminPanel.classList.add("hidden");
   }
 });
 
-// Toggle Post Form
-postBtn.addEventListener("click", ()=> postSection.classList.toggle("hidden"));
+postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
 
-// Upload Image to ImgBB
 async function uploadToImgbb(file){
   const key="d12c2e4a8650157b2b6b9fe85336ea43";
   const formData=new FormData();
   formData.append("image", file);
-  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST", body:formData});
+  const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:formData});
   const data=await res.json();
   return data.data.url;
 }
 
-// Submit Profile
 submitPost.addEventListener("click", async ()=>{
   if(!currentUser) return alert("⚠️ Login required!");
   const name=document.getElementById("nameInput").value.trim();
@@ -149,96 +155,79 @@ submitPost.addEventListener("click", async ()=>{
   const caste=document.getElementById("casteInput").value.trim();
   const city=document.getElementById("cityInput").value.trim();
   const photo=document.getElementById("photoInput").files[0];
-  if(!name||!age||!gender||!city||!photo||!whatsapp) return alert("❌ Fill required fields!");
-  const photoUrl=await uploadToImgbb(photo);
+
+  if(!name||!age||!gender||!city||!whatsapp) return alert("❌ Fill required fields!");
+  const photoUrl=photo?await uploadToImgbb(photo):null;
 
   await addDoc(collection(db,"profiles"),{
     name, age, gender, city, whatsapp,
     education, profession, income, marital, religion, caste, photoUrl,
-    uid: currentUser.uid, email: currentUser.email,
+    uid:currentUser.uid, email:currentUser.email,
     approvals:{}, created: serverTimestamp()
   });
   alert("✅ Submitted! Wait for admin approval.");
 });
 
-// Fetch Profiles
 const q=query(collection(db,"profiles"), orderBy("created","desc"));
-let allProfiles=[];
 onSnapshot(q, snapshot=>{
-  allProfiles=[];
+  const profiles=[];
   snapshot.forEach(docSnap=>{
     let data=docSnap.data();
     data.id=docSnap.id;
-    allProfiles.push(data);
+    profiles.push(data);
   });
-  renderProfiles(allProfiles);
+  renderProfiles(profiles);
+  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
 });
 
 // Render Profiles
 function renderProfiles(profiles){
-  const search=searchInput.value.toLowerCase();
   postsList.innerHTML="";
+  const search=searchInput.value.toLowerCase();
   profiles.forEach(p=>{
     if(!p.approvals) return;
     const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
     if(approvedFields.length===0) return;
 
-    // Search filter
-    if(search){
-      const str=`${p.age} ${p.marital || ""} ${p.gender || ""}`.toLowerCase();
-      if(!str.includes(search)) return;
-    }
+    // Search Filter
+    const str=(p.name+p.age+p.marital+p.gender).toLowerCase();
+    if(search && !str.includes(search)) return;
 
     const card=document.createElement("div");
-    card.className="p-2 rounded shadow bg-white cursor-pointer flex flex-col items-center";
-    // Image or Placeholder
-    if(p.approvals.photoUrl && p.photoUrl) {
-      card.innerHTML=`<img src="${p.photoUrl}" class="w-32 h-32 object-cover rounded mb-2">`;
-    } else {
-      card.innerHTML=`<div class="w-32 h-32 bg-gray-200 flex items-center justify-center rounded mb-2">No Image</div>`;
-    }
-    // Name + Age
-    let text="";
-    if(p.approvals.name) text+=`${p.name} `;
-    if(p.approvals.age) text+=`(${p.age})`;
-    card.innerHTML+=`<p class="text-center font-semibold">${text}</p>`;
+    card.className="cursor-pointer bg-white p-2 rounded shadow flex flex-col items-center";
 
-    card.addEventListener("click", ()=>showPopup(p));
+    const imgSrc=p.approvals.photoUrl && p.photoUrl ? p.photoUrl : "";
+    const nameAge=`${p.approvals.name?p.name:""} ${p.approvals.age?p.age:""}`;
+
+    card.innerHTML=`
+      <div class="w-full h-32 flex items-center justify-center bg-gray-200 rounded mb-1">
+        ${imgSrc?`<img src="${imgSrc}" class="card-img">`:'No Image'}
+      </div>
+      <div class="text-center font-semibold">${nameAge}</div>
+    `;
+
+    card.onclick=()=> showPopup(p);
     postsList.appendChild(card);
   });
 }
 
-// Search event
-searchInput.addEventListener("input", ()=>renderProfiles(allProfiles));
-
 // Popup
-function showPopup(profile){
-  if(!profile.approvals) return;
-  let html="";
-  // Photo
-  if(profile.approvals.photoUrl && profile.photoUrl){
-    html+=`<img src="${profile.photoUrl}" class="w-full h-64 object-cover rounded mb-2">`;
-  } else {
-    html+=`<div class="w-full h-64 bg-gray-200 flex items-center justify-center rounded mb-2">No Image</div>`;
-  }
-
-  if(profile.approvals.name) html+=`<p>👤 Name: ${profile.name}</p>`;
-  if(profile.approvals.age) html+=`<p>🎂 Age: ${profile.age}</p>`;
-  if(profile.approvals.whatsapp) html+=`<p>📱 WhatsApp: ${profile.whatsapp}</p>`;
-  if(profile.approvals.gender) html+=`<p>🚻 Gender: ${profile.gender}</p>`;
-  if(profile.approvals.education) html+=`<p>🎓 Education: ${profile.education}</p>`;
-  if(profile.approvals.profession) html+=`<p>💼 Profession: ${profile.profession}</p>`;
-  if(profile.approvals.income) html+=`<p>💰 Income: ${profile.income}</p>`;
-  if(profile.approvals.marital) html+=`<p>📌 Marital Status: ${profile.marital}</p>`;
-  if(profile.approvals.religion) html+=`<p>🕌 Religion: ${profile.religion}</p>`;
-  if(profile.approvals.caste) html+=`<p>🪧 Caste: ${profile.caste}</p>`;
-  if(profile.approvals.city) html+=`<p>🏙️ City: ${profile.city}</p>`;
-
+function showPopup(p){
+  let html=`<div class="space-y-2">`;
+  const fields=["photoUrl","name","age","whatsapp","gender","education","profession","income","marital","religion","caste","city","email"];
+  fields.forEach(f=>{
+    if(p.approvals && p.approvals[f]){
+      if(f==="photoUrl" && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-full h-64 object-cover rounded mb-2">`;
+      else html+=`<p><strong>${f}:</strong> ${p[f]}</p>`;
+    }
+  });
+  html+="</div>";
   popupContent.innerHTML=html;
   popup.classList.remove("hidden");
 }
 
-closePopup.addEventListener("click", ()=>popup.classList.add("hidden"));
+closePopup.addEventListener("click", ()=> popup.classList.add("hidden"));
+searchInput.addEventListener("input", ()=> renderProfiles(snapshot));
 </script>
 
 </body>
