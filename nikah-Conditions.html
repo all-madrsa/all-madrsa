@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-textarea {width:100%; min-height:200px; padding:10px; border-radius:6px; border:1px solid #ccc; resize:vertical;}
+textarea {width:100%; min-height:200px; padding:10px; border-radius:6px; border:1px solid #ccc; margin-bottom:10px;}
 button {transition: all 0.2s;}
 button:hover {opacity:0.9;}
 </style>
@@ -20,39 +20,44 @@ button:hover {opacity:0.9;}
 </header>
 
 <main class="max-w-3xl mx-auto">
-  <h2 class="text-xl font-bold mb-2">Terms & Conditions</h2>
+  <!-- Terms display for all users -->
+  <div id="termsDisplay" class="bg-white p-4 rounded shadow mb-4"></div>
 
-  <!-- Terms display -->
-  <div id="termsDisplay" class="p-2 border rounded bg-white mb-2 min-h-[200px] overflow-auto"></div>
-
-  <!-- Admin edit -->
-  <textarea id="termsText" class="hidden"></textarea>
-  <button id="saveBtn" class="bg-green-500 text-white px-4 py-2 mt-2 rounded hover:bg-green-600 hidden">💾 Save</button>
+  <!-- Admin edit section -->
+  <textarea id="termsText" class="hidden" placeholder="Write or update terms & conditions here..."></textarea>
+  <div id="adminButtons" class="hidden flex gap-2">
+    <button id="saveBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">💾 Save</button>
+    <button id="deleteBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">🗑 Delete</button>
+  </div>
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
   projectId: "all-madrsa",
   storageBucket: "all-madrsa.appspot.com",
   messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663b"
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 const auth = getAuth();
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
+// Elements
 const termsDisplay = document.getElementById("termsDisplay");
 const termsText = document.getElementById("termsText");
 const saveBtn = document.getElementById("saveBtn");
+const deleteBtn = document.getElementById("deleteBtn");
+const adminButtons = document.getElementById("adminButtons");
 
-// Load terms from Firestore
+// Load terms
 async function loadTerms(){
   const docRef = doc(db,"settings","terms");
   const docSnap = await getDoc(docRef);
@@ -64,23 +69,48 @@ async function loadTerms(){
     termsDisplay.innerText = "No terms available yet.";
   }
 }
-loadTerms();
 
-// Admin check
-onAuthStateChanged(auth, user=>{
+// Show admin UI if logged in
+function showAdminUI(user){
   if(user && user.email === ADMIN_EMAIL){
     termsText.classList.remove("hidden");
-    saveBtn.classList.remove("hidden");
+    adminButtons.classList.remove("hidden");
+  }
+}
+
+// Real-time update for all users
+const termsRef = doc(db,"settings","terms");
+onSnapshot(termsRef, docSnap=>{
+  if(docSnap.exists()){
+    const content = docSnap.data().content;
+    termsDisplay.innerText = content;
+    if(!termsText.classList.contains("hidden")) termsText.value = content;
+  } else {
+    termsDisplay.innerText = "No terms available yet.";
+    if(!termsText.classList.contains("hidden")) termsText.value = "";
   }
 });
 
-// Save button
+// Check admin login
+onAuthStateChanged(auth, user=>{
+  showAdminUI(user);
+  loadTerms();
+});
+
+// Save terms
 saveBtn.addEventListener("click", async ()=>{
   const content = termsText.value.trim();
   if(!content) return alert("❌ Cannot save empty content!");
   await setDoc(doc(db,"settings","terms"), {content});
-  termsDisplay.innerText = content;
   alert("✅ Terms updated!");
+});
+
+// Delete terms
+deleteBtn.addEventListener("click", async ()=>{
+  if(confirm("Are you sure you want to delete all terms?")){
+    await deleteDoc(doc(db,"settings","terms"));
+    alert("🗑 Terms deleted!");
+  }
 });
 </script>
 
