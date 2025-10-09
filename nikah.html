@@ -17,11 +17,42 @@ body {background:#fdf6e3; font-family:sans-serif;}
 
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
-  <div class="flex gap-2">
-    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded hidden">➕ Post Profile</button>
+
+  <div class="flex gap-2 items-center">
+    <!-- 🏠 Home Button (3D Style) -->
+    <a href="index.html" class="btn-3d px-3 py-1 text-sm rounded font-bold flex items-center justify-center">
+      🏠 Home
+    </a>
+
+    <!-- Login Button -->
+    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded font-semibold hover:bg-green-600 transition">
+      Login
+    </button>
+
+    <!-- Post Profile Button -->
+    <button id="postBtn" class="bg-yellow-500 px-3 py-1 rounded font-semibold hover:bg-yellow-600 transition hidden">
+      ➕ Post Profile
+    </button>
   </div>
 </header>
+
+<style>
+/* 🎨 3D Button Style */
+.btn-3d {
+  background: linear-gradient(90deg, #ff4d4d, #4d94ff);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.3s;
+}
+.btn-3d:hover {
+  background: linear-gradient(90deg, #ff6666, #66a3ff);
+}
+.btn-3d:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+}
+</style>
 
 <!-- Post Form -->
 <section id="postSection" class="hidden p-4 bg-white rounded shadow my-4 mx-4">
