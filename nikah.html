@@ -10,18 +10,10 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
-.card-img {width:100%; height:150px; object-fit:cover; border-radius:6px;}
-.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;}
-.btn-3d {
-  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
-  color: white; font-weight:700;
-  box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25);
-  transition:transform .1s, box-shadow .1s, background .3s;
-}
+.card-text{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
+.btn-3d {background: linear-gradient(90deg,#ff4d4d,#4d94ff); color:white; font-weight:700; box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25); transition:transform .1s, box-shadow .1s, background .3s;}
 .btn-3d:hover {background: linear-gradient(90deg,#ff6666,#66a3ff);}
 .btn-3d:active {transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.25);}
-.popup {position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:50;}
-.popup-content {background:white; padding:20px; border-radius:12px; max-width:90%; width:600px; max-height:90vh; overflow-y:auto;}
 </style>
 </head>
 <body class="text-black">
@@ -37,7 +29,7 @@ body {background:#fdf6e3; font-family:sans-serif;}
 
 <!-- Search -->
 <section class="p-4">
-  <input type="text" id="searchInput" placeholder="Search by Name/Age/Marital Status" class="w-full p-2 rounded border">
+  <input type="text" id="searchInput" placeholder="Search by Name, Age, Marital Status..." class="w-full p-2 rounded border">
 </section>
 
 <!-- Post Form -->
@@ -61,36 +53,32 @@ body {background:#fdf6e3; font-family:sans-serif;}
   <button id="submitPost" class="bg-blue-500 px-4 py-2 rounded text-white w-full">Submit Profile</button>
 </section>
 
-<!-- Profiles Grid -->
-<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-4"></main>
+<!-- Featured Profiles -->
+<section id="featuredProfiles" class="p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-4"></section>
+
+<!-- All Profiles -->
+<main id="postsList" class="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></main>
+
+<!-- Popup -->
+<div id="popup" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded p-4 max-w-md w-full max-h-[80vh] overflow-y-auto relative">
+    <button id="closePopup" class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded">❌ Close</button>
+    <div id="popupContent" class="space-y-2"></div>
+  </div>
+</div>
 
 <!-- Admin Panel -->
-<section id="adminPanel" class="hidden p-4 bg-gray-100">
+<section id="adminPanel" class="hidden p-4">
   <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
   <div id="adminList" class="grid gap-4"></div>
 </section>
-
-<!-- Popup -->
-<div id="popup" class="popup hidden">
-  <div class="popup-content">
-    <div id="popupContent"></div>
-    <button id="closePopup" class="mt-4 px-3 py-1 bg-red-500 text-white rounded">Close</button>
-  </div>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, updateDoc, deleteDoc, doc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463"
-};
+const firebaseConfig = {apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng", authDomain:"all-madrsa.firebaseapp.com", projectId:"all-madrsa", storageBucket:"all-madrsa.appspot.com", messagingSenderId:"619313835874", appId:"1:619313835874:web:e387e1297663f11fc2463b"};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
@@ -100,20 +88,18 @@ const postBtn=document.getElementById("postBtn");
 const postSection=document.getElementById("postSection");
 const submitPost=document.getElementById("submitPost");
 const postsList=document.getElementById("postsList");
+const featuredProfiles=document.getElementById("featuredProfiles");
 const adminPanel=document.getElementById("adminPanel");
 const adminList=document.getElementById("adminList");
-const searchInput=document.getElementById("searchInput");
 const popup=document.getElementById("popup");
 const popupContent=document.getElementById("popupContent");
 const closePopup=document.getElementById("closePopup");
+const searchInput=document.getElementById("searchInput");
 
 let currentUser=null;
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
 
-loginBtn.addEventListener("click", async ()=>{
-  const provider=new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
-});
+loginBtn.addEventListener("click", async ()=>{const provider = new GoogleAuthProvider(); await signInWithPopup(auth, provider);});
 
 onAuthStateChanged(auth, user=>{
   currentUser=user;
@@ -121,7 +107,6 @@ onAuthStateChanged(auth, user=>{
     loginBtn.classList.add("hidden");
     postBtn.classList.remove("hidden");
     if(user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
-    else adminPanel.classList.add("hidden");
   } else {
     loginBtn.classList.remove("hidden");
     postBtn.classList.add("hidden");
@@ -130,7 +115,7 @@ onAuthStateChanged(auth, user=>{
   }
 });
 
-postBtn.addEventListener("click",()=> postSection.classList.toggle("hidden"));
+postBtn.addEventListener("click", ()=> postSection.classList.toggle("hidden"));
 
 async function uploadToImgbb(file){
   const key="d12c2e4a8650157b2b6b9fe85336ea43";
@@ -145,90 +130,4 @@ submitPost.addEventListener("click", async ()=>{
   if(!currentUser) return alert("⚠️ Login required!");
   const name=document.getElementById("nameInput").value.trim();
   const age=document.getElementById("ageInput").value.trim();
-  const whatsapp=document.getElementById("whatsappInput").value.trim();
-  const gender=document.getElementById("genderInput").value;
-  const education=document.getElementById("educationInput").value.trim();
-  const profession=document.getElementById("professionInput").value.trim();
-  const income=document.getElementById("incomeInput").value.trim();
-  const marital=document.getElementById("maritalInput").value.trim();
-  const religion=document.getElementById("religionInput").value.trim();
-  const caste=document.getElementById("casteInput").value.trim();
-  const city=document.getElementById("cityInput").value.trim();
-  const photo=document.getElementById("photoInput").files[0];
-
-  if(!name||!age||!gender||!city||!whatsapp) return alert("❌ Fill required fields!");
-  const photoUrl=photo?await uploadToImgbb(photo):null;
-
-  await addDoc(collection(db,"profiles"),{
-    name, age, gender, city, whatsapp,
-    education, profession, income, marital, religion, caste, photoUrl,
-    uid:currentUser.uid, email:currentUser.email,
-    approvals:{}, created: serverTimestamp()
-  });
-  alert("✅ Submitted! Wait for admin approval.");
-});
-
-const q=query(collection(db,"profiles"), orderBy("created","desc"));
-onSnapshot(q, snapshot=>{
-  const profiles=[];
-  snapshot.forEach(docSnap=>{
-    let data=docSnap.data();
-    data.id=docSnap.id;
-    profiles.push(data);
-  });
-  renderProfiles(profiles);
-  if(currentUser && currentUser.email===ADMIN_EMAIL) renderAdmin(profiles);
-});
-
-// Render Profiles
-function renderProfiles(profiles){
-  postsList.innerHTML="";
-  const search=searchInput.value.toLowerCase();
-  profiles.forEach(p=>{
-    if(!p.approvals) return;
-    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
-    if(approvedFields.length===0) return;
-
-    // Search Filter
-    const str=(p.name+p.age+p.marital+p.gender).toLowerCase();
-    if(search && !str.includes(search)) return;
-
-    const card=document.createElement("div");
-    card.className="cursor-pointer bg-white p-2 rounded shadow flex flex-col items-center";
-
-    const imgSrc=p.approvals.photoUrl && p.photoUrl ? p.photoUrl : "";
-    const nameAge=`${p.approvals.name?p.name:""} ${p.approvals.age?p.age:""}`;
-
-    card.innerHTML=`
-      <div class="w-full h-32 flex items-center justify-center bg-gray-200 rounded mb-1">
-        ${imgSrc?`<img src="${imgSrc}" class="card-img">`:'No Image'}
-      </div>
-      <div class="text-center font-semibold">${nameAge}</div>
-    `;
-
-    card.onclick=()=> showPopup(p);
-    postsList.appendChild(card);
-  });
-}
-
-// Popup
-function showPopup(p){
-  let html=`<div class="space-y-2">`;
-  const fields=["photoUrl","name","age","whatsapp","gender","education","profession","income","marital","religion","caste","city","email"];
-  fields.forEach(f=>{
-    if(p.approvals && p.approvals[f]){
-      if(f==="photoUrl" && p.photoUrl) html+=`<img src="${p.photoUrl}" class="w-full h-64 object-cover rounded mb-2">`;
-      else html+=`<p><strong>${f}:</strong> ${p[f]}</p>`;
-    }
-  });
-  html+="</div>";
-  popupContent.innerHTML=html;
-  popup.classList.remove("hidden");
-}
-
-closePopup.addEventListener("click", ()=> popup.classList.add("hidden"));
-searchInput.addEventListener("input", ()=> renderProfiles(snapshot));
-</script>
-
-</body>
-</html>
+  const whatsapp=document.getElementById("whatsapp
