@@ -14,60 +14,39 @@ button:hover {opacity:0.9;}
 </head>
 <body class="p-4">
 
-<!-- Header with Logo and 3D Buttons -->
-<header class="bg-blue-600" style="height:100px;"> <!-- header height thoda kam kiya -->
+<header class="bg-blue-600" style="height:100px;">
   <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
 
     <!-- Top: 3D Buttons -->
-   <div class="flex justify-center gap-4">
-  <a href="nikah.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
-  </a>
-  <a href="news.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
-  </a>
-  <a href="hadees.html">
-    <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
-  </a>
-</div>
-
-
-    <!-- Middle: Logo and Side Images -->
-    <div class="flex justify-between items-center h-full mt-1">
-
-      <!-- Left: Makka -->
-      <div class="flex items-center">
-        <img src="makka.png" alt="Makka" class="header-png">
-      </div>
-
-    <!-- Center: Logo / Title -->
-<div class="flex flex-col items-center justify-center h-full">
-  <div class="text-white font-bold text-2xl" 
-       style="text-shadow:2px 2px 8px rgba(0,0,0,.9); transform: translateY(-8px);">
-   Terms & Conditions
-  </div>
-</div>
-
-
-      <!-- Right: Madina -->
-      <div class="flex items-center">
-        <img src="madina.png" alt="Madina" class="header-png">
-      </div>
-
+    <div class="flex justify-center gap-4">
+      <a href="nikah.html">
+        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">💍 Nikah</button>
+      </a>
+      <a href="news.html">
+        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
+      </a>
+      <a href="hadees.html">
+        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
+      </a>
     </div>
+
+    <!-- Middle: Logo / Title with Home Button -->
+    <div class="flex justify-center items-center h-full mt-1 gap-2">
+      <div class="text-white font-bold text-2xl" 
+           style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">
+        Terms & Conditions
+      </div>
+      <!-- Home Button -->
+      <a href="index.html" class="btn-3d-home-circle flex items-center justify-center">
+        🏠
+      </a>
+    </div>
+
   </div>
-
-
-
 </header>
-<!-- Circular 3D Home Button -->
-<div>
-  <a href="index.html" class="btn-3d-home-circle flex items-center justify-center">
-    🏠
-  </a>
-</div>
 
 <style>
+/* Circular 3D Home Button */
 .btn-3d-home-circle {
   width: 40px;
   height: 40px;
@@ -93,7 +72,27 @@ button:hover {opacity:0.9;}
   transform: translateY(2px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.15);
 }
+
+/* 3D Buttons Base */
+.btn-3d-special {
+  color:white;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-3d-special:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+
+/* Small variant for top header buttons */
+.btn-small {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
 </style>
+
 
 
 <style>
