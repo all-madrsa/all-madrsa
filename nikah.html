@@ -31,18 +31,12 @@ input, select, textarea {border:1px solid #ccc; padding:5px; border-radius:6px;}
   <div id="postsList" class="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4"></div>
 </main>
 
-// Admin checkbox render
-${Object.keys(p.approvals||{}).map(f=>
-  `<label>
-     <input type="checkbox" data-id="${p.id}" data-field="${f === "photos" ? "photoUrls" : f}" ${p.approvals[f]?"checked":""}>
-     ${f.charAt(0).toUpperCase()+f.slice(1)}
-   </label>`).join("")}
-
-// Profile render me image check
-let imgHtml = (p.approvals.photoUrls && p.photoUrls?.length)
-  ? `<img src="${p.photoUrls[0]}" class="w-full h-32 object-cover rounded mb-1">`
-  : `<div class='w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1'>No Image</div>`;
-
+<section id="adminPanel" class="hidden p-4 border-t mt-4 bg-white">
+  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
+  <div id="adminList" class="grid gap-4"></div>
+  <h3 class="text-lg font-bold mt-4">Contact Requests</h3>
+  <div id="likesList"></div>
+</section>
 
 <!-- Popups -->
 <div id="postPopup" class="popup">
@@ -101,6 +95,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -165,7 +160,7 @@ onSnapshot(q,snapshot=>{
   renderAdmin();
 });
 
-// ✅ FIXED: Render profiles with image approval check
+// Render profiles with approved images
 function renderProfiles(){
   const search=searchInput.value.toLowerCase();
   postsList.innerHTML="";
@@ -176,15 +171,17 @@ function renderProfiles(){
 
     const card=document.createElement("div");
     card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
+
+    // ✅ Image approval check
     let imgHtml = (p.approvals.photoUrls && p.photoUrls?.length)
       ? `<img src="${p.photoUrls[0]}" class="w-full h-32 object-cover rounded mb-1">`
       : `<div class='w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1'>No Image</div>`;
 
     card.innerHTML=`${imgHtml}
-    <p class="font-bold">${p.approvals.name?p.name:"Private"}</p>
-    <p class="text-xs">${p.approvals.age?p.age:""} yrs</p>
-    <p class="text-xs text-gray-500">${p.approvals.city?p.city:""}</p>
-    <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
+      <p class="font-bold">${p.approvals.name?p.name:"Private"}</p>
+      <p class="text-xs">${p.approvals.age?p.age:""} yrs</p>
+      <p class="text-xs text-gray-500">${p.approvals.city?p.city:""}</p>
+      <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
 
     card.onclick=e=>{
       if(!e.target.classList.contains("contactBtn")){
@@ -264,12 +261,12 @@ function renderAdmin(){
     const card=document.createElement("div");
     card.className="p-2 bg-gray-100 rounded shadow";
     card.innerHTML=`<p class="font-bold">${p.name||"No Name"}</p>
-    <div class="flex gap-2 flex-wrap">
-    ${Object.keys(p.approvals||{}).map(f=>
-      `<label><input type="checkbox" data-id="${p.id}" data-field="${f}" ${p.approvals[f]?"checked":""}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`).join("")}
-    </div>
-    <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
-    <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
+      <div class="flex gap-2 flex-wrap">
+      ${Object.keys(p.approvals||{}).map(f=>
+        `<label><input type="checkbox" data-id="${p.id}" data-field="${f}" ${p.approvals[f]?"checked":""}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`).join("")}
+      </div>
+      <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
+      <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
     adminList.appendChild(card);
   });
 
