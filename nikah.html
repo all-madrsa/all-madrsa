@@ -1,147 +1,22 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Nikah Portal — Shadi-style (Hidden Admin Check)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .card-gradient { background: linear-gradient(90deg,#ffffff 0%,#f8fafc 100%); }
-  </style>
-</head>
-<body class="bg-gray-50 text-gray-800">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nikah Portal | Shadi.com Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
 
-<header class="bg-white shadow sticky top-0 z-40">
-  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold text-xl">N</div>
-      <div>
-        <h1 class="text-xl font-semibold">Nikah Portal</h1>
-        <p class="text-sm text-gray-500">Shadi-style matrimonial site</p>
-      </div>
-    </div>
-    <div class="text-sm text-gray-500">Hidden admin check — no visible login</div>
-  </div>
-</header>
-
-<main class="max-w-6xl mx-auto px-4 py-6">
-  <!-- Hero -->
-  <section class="bg-white rounded-lg shadow p-6 mb-6 card-gradient">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-bold">Apni shaadi ka safar yahin se shuru karein</h2>
-        <p class="text-gray-600 mt-1">Profile upload karein — admin approval ke baad public honge.</p>
-      </div>
-      <div class="w-full md:w-1/2">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <input id="filterName" type="text" placeholder="Name / City" class="border rounded px-3 py-2" />
-          <select id="filterGender" class="border rounded px-3 py-2">
-            <option value="">Gender</option>
-            <option value="पुरुष">पुरुष</option>
-            <option value="महिला">महिला</option>
-          </select>
-          <button id="filterBtn" class="bg-green-600 text-white rounded px-3 py-2">Filter</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Left: Post form -->
-    <aside class="lg:col-span-1">
-      <div class="bg-white rounded-lg shadow p-5">
-        <h3 class="text-lg font-semibold mb-3">Profile Post Karein</h3>
-        <form id="postForm" class="space-y-3">
-          <input name="name" placeholder="पूरा नाम" class="w-full border rounded px-3 py-2" required />
-          <input name="age" type="number" placeholder="उम्र" class="w-full border rounded px-3 py-2" required />
-          <input name="city" placeholder="City" class="w-full border rounded px-3 py-2" />
-          <select name="gender" class="w-full border rounded px-3 py-2" required>
-            <option value="">लिंग चुनें</option>
-            <option value="पुरुष">पुरुष</option>
-            <option value="महिला">महिला</option>
-          </select>
-          <textarea name="about" rows="3" placeholder="Thoda sa intro (optional)" class="w-full border rounded px-3 py-2"></textarea>
-          <input name="contact" placeholder="Contact (optional)" class="w-full border rounded px-3 py-2" />
-          <label class="block text-sm text-gray-600">Profile Photo (max 2MB)</label>
-          <input name="image" type="file" accept="image/*" class="w-full" required />
-          <div class="flex items-center gap-2">
-            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Post Profile</button>
-            <div id="postingStatus" class="text-sm text-gray-600"></div>
-          </div>
-        </form>
-        <div class="mt-4 text-xs text-gray-500">Note: Profiles admin approval ke baad public honge.</div>
-      </div>
-
-      <div id="adminMini" class="mt-4 hidden bg-white rounded-lg shadow p-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <div id="adminEmailDisplay" class="text-sm font-medium"></div>
-            <div id="adminActions" class="space-x-2 mt-2"></div>
-          </div>
-          <div>
-            <button id="adminLogoutBtn" class="hidden bg-red-500 text-white px-2 py-1 rounded">Logout</button>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Profiles -->
-    <section class="lg:col-span-2">
-      <div class="bg-white rounded-lg shadow p-4 mb-4">
-        <h3 class="text-lg font-semibold">Public Profiles</h3>
-        <div class="text-sm text-gray-500">Filtered & approved profiles yahan dikhte hain.</div>
-      </div>
-      <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    </section>
-  </div>
-
-  <!-- Admin Panel (hidden until silent sign-in succeeds) -->
-  <div id="adminPanel" class="fixed inset-0 z-50 hidden items-start justify-center p-6">
-    <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
-      <div class="flex items-center justify-between p-4 border-b">
-        <h2 class="text-lg font-semibold">Admin Panel</h2>
-        <div class="flex items-center gap-2">
-          <button id="adminLogout" class="hidden bg-red-500 text-white px-3 py-1 rounded">Logout</button>
-          <button id="adminClose" class="text-gray-600 px-3 py-1">Close</button>
-        </div>
-      </div>
-
-      <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div>
-          <h3 class="font-semibold mb-2">Pending Profiles</h3>
-          <ul id="pendingList" class="space-y-3 max-h-80 overflow-auto"></ul>
-        </div>
-
-        <div>
-          <h3 class="font-semibold mb-2">Approved Profiles (Admin View)</h3>
-          <ul id="approvedAdminList" class="space-y-3 max-h-80 overflow-auto"></ul>
-
-          <div class="mt-4">
-            <h4 class="font-medium mb-2">Post Notice</h4>
-            <form id="noticeForm" class="flex gap-2">
-              <input name="notice" placeholder="Notice text..." class="flex-1 border rounded px-3 py-2" />
-              <button class="bg-blue-600 text-white px-3 py-2 rounded">Post</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</main>
-
-<!-- Firebase + App Script -->
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import {
-    getFirestore, collection, addDoc, getDocs, query, where,
-    updateDoc, doc, deleteDoc
+  import { 
+    getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where 
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  import {
-    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  import { 
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  // ---------- CONFIG: Replace these ----------
+  // 🔥 Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
     authDomain: "all-madrsa.firebaseapp.com",
@@ -150,309 +25,199 @@
     messagingSenderId: "619313835874",
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
-  const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
 
-  // IMPORTANT: put your admin email/password here if you want silent auto-login.
-  // Leave empty ("") to disable auto-login.
-  // WARNING: Storing password in client-side JS is insecure for production.
-  const adminEmail = "";       // e.g. "admin@example.com"
-  const adminPassword = "";    // e.g. "AdminPass123"
-  // ------------------------------------------
+  const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+  const adminEmail = "admin@gmail.com"; // change if needed
+  const adminPassword = "yourpassword"; // change if needed
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // DOM
-  const postForm = document.getElementById('postForm');
-  const postingStatus = document.getElementById('postingStatus');
-  const profilesGrid = document.getElementById('profilesGrid');
-  const pendingList = document.getElementById('pendingList');
-  const approvedAdminList = document.getElementById('approvedAdminList');
-  const adminPanel = document.getElementById('adminPanel');
-  const adminMini = document.getElementById('adminMini');
-  const adminEmailDisplay = document.getElementById('adminEmailDisplay');
-  const adminLogoutBtn = document.getElementById('adminLogoutBtn');
-  const adminLogoutMain = document.getElementById('adminLogout');
+  let isAdmin = false;
 
-  const noticeForm = document.getElementById('noticeForm');
-
-  function esc(s){ if(!s) return ""; return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
-
-  async function uploadToImgbb(file){
-    const fd=new FormData();
-    fd.append('image',file);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
-    const data = await res.json();
-    if(data && data.success) return data.data.display_url;
-    throw new Error('Image upload failed');
-  }
-
-  postForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    postingStatus.textContent = "Posting...";
-    const f = new FormData(postForm);
-    const name = f.get('name')?.trim();
-    const age = f.get('age')?.trim();
-    const gender = f.get('gender')?.trim();
-    const about = f.get('about')?.trim();
-    const city = f.get('city')?.trim();
-    const contact = f.get('contact')?.trim();
-    const imageFile = f.get('image');
-
-    if(!name || !age || !gender || !imageFile || imageFile.size === 0){
-      postingStatus.textContent = "Please fill required fields.";
-      setTimeout(()=>postingStatus.textContent="",2000);
-      return;
-    }
-    if(imageFile.size > 2*1024*1024){
-      postingStatus.textContent = "Image must be < 2MB.";
-      setTimeout(()=>postingStatus.textContent="",2000);
-      return;
-    }
-
-    try{
-      const imageUrl = await uploadToImgbb(imageFile);
-      await addDoc(collection(db,'profiles'), {
-        name, age, gender, about, city, contact, imageUrl,
-        approved: false, createdAt: Date.now()
-      });
-      postingStatus.textContent = "Submitted — admin approval pending.";
-      postForm.reset();
-      setTimeout(()=>postingStatus.textContent="",3000);
-      refreshData();
-    }catch(err){
-      console.error(err);
-      postingStatus.textContent = "Posting failed.";
-      setTimeout(()=>postingStatus.textContent="",3000);
-    }
-  });
-
-  // load approved profiles
-  async function loadApprovedProfiles(){
-    profilesGrid.innerHTML = "";
-    const q = query(collection(db,'profiles'), where('approved','==', true));
-    const snap = await getDocs(q);
-    const arr = [];
-    snap.forEach(s=> arr.push({ id:s.id, ...s.data() }));
-    arr.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
-
-    const nameFilter = document.getElementById('filterName').value.trim().toLowerCase();
-    const genderFilter = document.getElementById('filterGender').value;
-
-    const filtered = arr.filter(p=>{
-      if(nameFilter && !(`${p.name} ${p.city||''}`).toLowerCase().includes(nameFilter)) return false;
-      if(genderFilter && p.gender !== genderFilter) return false;
-      return true;
-    });
-
-    if(filtered.length === 0){
-      profilesGrid.innerHTML = `<div class="col-span-1 lg:col-span-3 bg-white p-6 rounded text-gray-500">No profiles found.</div>`;
-      return;
-    }
-
-    filtered.forEach(p=>{
-      const card = document.createElement('div');
-      card.className = 'bg-white rounded-lg shadow overflow-hidden';
-      card.innerHTML = `
-        <div class="h-44 bg-gray-100 overflow-hidden">
-          <img src="${esc(p.imageUrl)}" alt="${esc(p.name)}" class="w-full h-full object-cover">
-        </div>
-        <div class="p-4">
-          <div class="flex items-start justify-between">
-            <div>
-              <h4 class="font-semibold text-lg">${esc(p.name)}, <span class="text-sm font-medium text-gray-600">${esc(p.age)}</span></h4>
-              <div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div>
-            </div>
-          </div>
-          <p class="mt-3 text-sm text-gray-600">${esc(p.about||'')}</p>
-          <div class="mt-3 text-sm text-gray-700">${p.contact ? 'Contact: ' + esc(p.contact) : ''}</div>
-        </div>
-      `;
-      profilesGrid.appendChild(card);
-    });
-  }
-
-  // admin loads
-  async function loadPendingProfiles(){
-    pendingList.innerHTML = "";
-    const q = query(collection(db,'profiles'), where('approved','==', false));
-    const snap = await getDocs(q);
-    const arr = [];
-    snap.forEach(s=>arr.push({ id:s.id, ...s.data() }));
-    arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-
-    if(arr.length===0){
-      pendingList.innerHTML = `<div class="text-gray-500">No pending profiles.</div>`;
-      return;
-    }
-
-    arr.forEach(p=>{
-      const li = document.createElement('li');
-      li.className = 'border rounded p-3 flex gap-3 items-start justify-between';
-      li.innerHTML = `
-        <div class="flex gap-3 items-start">
-          <img src="${esc(p.imageUrl)}" class="w-16 h-16 object-cover rounded"/>
-          <div>
-            <div class="font-medium">${esc(p.name)} · ${esc(p.age)}</div>
-            <div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div>
-            <div class="text-sm text-gray-600 mt-1">${esc(p.about||'')}</div>
-          </div>
-        </div>
-        <div class="flex flex-col gap-2">
-          <button class="approveBtn bg-green-600 text-white px-3 py-1 rounded" data-id="${p.id}">Approve</button>
-          <button class="delBtn bg-red-500 text-white px-3 py-1 rounded" data-id="${p.id}">Delete</button>
-        </div>
-      `;
-      pendingList.appendChild(li);
-    });
-
-    pendingList.querySelectorAll('.approveBtn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const id = btn.dataset.id;
-        await updateDoc(doc(db,'profiles',id), { approved: true });
-        refreshData();
-      });
-    });
-    pendingList.querySelectorAll('.delBtn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const id = btn.dataset.id;
-        if(confirm('Delete this profile?')) {
-          await deleteDoc(doc(db,'profiles',id));
-          refreshData();
-        }
-      });
-    });
-  }
-
-  async function loadApprovedAdmin(){
-    approvedAdminList.innerHTML = "";
-    const q = query(collection(db,'profiles'), where('approved','==', true));
-    const snap = await getDocs(q);
-    const arr = [];
-    snap.forEach(s=>arr.push({ id:s.id, ...s.data() }));
-    arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    arr.forEach(p=>{
-      const li=document.createElement('li');
-      li.className='border rounded p-3 flex items-center justify-between';
-      li.innerHTML=`
-        <div class="flex items-center gap-3">
-          <img src="${esc(p.imageUrl)}" class="w-12 h-12 object-cover rounded" />
-          <div>
-            <div class="font-medium">${esc(p.name)}</div>
-            <div class="text-sm text-gray-500">${esc(p.city||'')}</div>
-          </div>
-        </div>
-        <div>
-          <button class="delApproved bg-red-500 text-white px-2 py-1 rounded" data-id="${p.id}">Delete</button>
-        </div>
-      `;
-      approvedAdminList.appendChild(li);
-    });
-
-    approvedAdminList.querySelectorAll('.delApproved').forEach(b=>{
-      b.addEventListener('click', async ()=>{
-        const id = b.dataset.id;
-        if(confirm('Delete this approved profile?')) {
-          await deleteDoc(doc(db,'profiles',id));
-          refreshData();
-        }
-      });
-    });
-  }
-
-  async function loadNotices(){
-    const noticeBar = document.getElementById('noticeBar');
-    const noticeList = document.getElementById('noticeList');
-    if(!noticeBar || !noticeList) return;
-    noticeList.innerHTML = "";
-    const snap = await getDocs(collection(db,'notices'));
-    const arr = [];
-    snap.forEach(s=>arr.push(s.data()));
-    arr.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
-    if(arr.length===0){ noticeBar.classList.add('hidden'); return; }
-    noticeBar.classList.remove('hidden');
-    arr.forEach(n=>{
-      const li = document.createElement('li'); li.className='text-sm'; li.textContent = n.text;
-      noticeList.appendChild(li);
-    });
-  }
-
-  noticeForm?.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const txt = (new FormData(noticeForm)).get('notice')?.trim();
-    if(!txt) return;
-    await addDoc(collection(db,'notices'), { text: txt, timestamp: Date.now() });
-    noticeForm.reset();
-    loadNotices();
-  });
-
-  async function refreshData(){
-    await loadApprovedProfiles();
-    if(currentAdmin) {
-      await loadPendingProfiles();
-      await loadApprovedAdmin();
-    }
-    await loadNotices();
-  }
-
-  document.getElementById('filterBtn').addEventListener('click', ()=> loadApprovedProfiles());
-  document.getElementById('adminClose').addEventListener('click', ()=> adminPanel.classList.add('hidden'));
-
-  // ------------------------- Hidden admin auto login -------------------------
-  let currentAdmin = null;
-
-  // Try silent sign-in only if adminEmail/adminPassword provided
-  (async function tryAutoAdminSignIn(){
-    if(!adminEmail || !adminPassword){
-      // no auto-login requested — just load public profiles
-      refreshData();
-      return;
-    }
+  // Auto login (hidden)
+  async function autoAdminLogin() {
     try {
       await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-      // onAuthStateChanged will handle UI
-    } catch(err) {
-      console.warn('Auto admin sign-in failed:', err.message || err);
-      // still load public profiles
-      refreshData();
+      console.log("✅ Admin auto login successful");
+    } catch (err) {
+      console.log("⚠️ Admin login failed:", err.message);
     }
-  })();
+  }
 
-  onAuthStateChanged(auth, async (user)=>{
-    if(user){
-      currentAdmin = user;
-      adminEmailDisplay.textContent = user.email;
-      adminMini.classList.remove('hidden');
-      adminLogoutBtn.classList.remove('hidden');
-      adminLogoutMain.classList.remove('hidden');
-      // show admin panel automatically
-      adminPanel.classList.remove('hidden');
-      adminPanel.style.display = 'flex';
-      await loadPendingProfiles();
-      await loadApprovedAdmin();
-      await loadNotices();
-    } else {
-      currentAdmin = null;
-      adminMini.classList.add('hidden');
-      adminLogoutBtn.classList.add('hidden');
-      adminLogoutMain.classList.add('hidden');
-      adminPanel.classList.add('hidden');
-      await loadApprovedProfiles();
-      await loadNotices();
+  // Check login
+  onAuthStateChanged(auth, (user) => {
+    isAdmin = !!user;
+    document.getElementById("adminSection").classList.toggle("hidden", !isAdmin);
+  });
+
+  // Add User
+  window.addUser = async function (event) {
+    event.preventDefault();
+    const form = event.target;
+
+    const name = form.name.value.trim();
+    const age = form.age.value.trim();
+    const gender = form.gender.value;
+    const contact = form.contact.value.trim();
+    const imageFile = form.image.files[0];
+
+    if (!name || !age || !gender || !contact || !imageFile) {
+      alert("कृपया सभी फील्ड भरें और फोटो चुनें।");
+      return;
     }
-  });
 
-  // admin logout (if auto-signed in)
-  adminLogoutBtn?.addEventListener('click', async ()=> {
-    await signOut(auth);
-  });
-  adminLogoutMain?.addEventListener('click', async ()=> {
-    await signOut(auth);
-  });
+    if (imageFile.size > 2 * 1024 * 1024) {
+      alert("Image size 2MB से कम होनी चाहिए।");
+      return;
+    }
 
-  // initial
-  (async ()=> { await refreshData(); })();
+    // Upload to Imgbb
+    let imageUrl = "";
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
+        method: "POST",
+        body: formData
+      });
+      const imgData = await imgbbRes.json();
+      if (!imgData.success) throw new Error("Upload failed");
+      imageUrl = imgData.data.display_url;
+    } catch (err) {
+      alert("Image upload error: " + err.message);
+      return;
+    }
+
+    // Save in Firestore
+    try {
+      await addDoc(collection(db, "users"), {
+        name, age, gender, contact, imageUrl,
+        approved: false,
+        timestamp: Date.now()
+      });
+      alert("Profile submitted! Admin approval pending.");
+      form.reset();
+      loadUsers();
+    } catch (err) {
+      alert("Data save failed");
+      console.error(err);
+    }
+  };
+
+  // Load Approved Profiles
+  async function loadUsers() {
+    const userList = document.getElementById("userList");
+    userList.innerHTML = "";
+    const q = query(collection(db, "users"), where("approved", "==", true));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((docSnap) => {
+      const user = docSnap.data();
+      const card = document.createElement("div");
+      card.className = "bg-white rounded-xl shadow hover:shadow-lg overflow-hidden transition transform hover:-translate-y-1";
+      card.innerHTML = `
+        <img src="${user.imageUrl}" class="w-full h-56 object-cover">
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-gray-800">${user.name}</h3>
+          <p class="text-sm text-gray-600">उम्र: ${user.age} | ${user.gender}</p>
+          <p class="text-sm text-gray-700 mt-1">संपर्क: ${user.contact}</p>
+        </div>`;
+      userList.prepend(card);
+    });
+  }
+
+  window.loadUsers = loadUsers;
+
+  // Admin Panel
+  window.loadPending = async function () {
+    const list = document.getElementById("pendingList");
+    list.innerHTML = "";
+    const q = query(collection(db, "users"), where("approved", "==", false));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((docSnap) => {
+      const user = docSnap.data();
+      const li = document.createElement("li");
+      li.className = "border p-3 bg-gray-50 rounded flex items-center justify-between";
+      li.innerHTML = `
+        <div class="flex items-center gap-4">
+          <img src="${user.imageUrl}" class="w-14 h-14 object-cover rounded-full">
+          <div>
+            <strong>${user.name}</strong> (${user.age}, ${user.gender})<br>
+            <span class="text-gray-600 text-sm">${user.contact}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="approveUser('${docSnap.id}')" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Approve</button>
+          <button onclick="deleteUser('${docSnap.id}')" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Delete</button>
+        </div>`;
+      list.append(li);
+    });
+  };
+
+  window.approveUser = async function (id) {
+    await updateDoc(doc(db, "users", id), { approved: true });
+    alert("User Approved!");
+    loadPending();
+    loadUsers();
+  };
+
+  window.deleteUser = async function (id) {
+    await deleteDoc(doc(db, "users", id));
+    alert("User Deleted!");
+    loadPending();
+  };
+
+  // Start on load
+  window.onload = async () => {
+    await autoAdminLogin();
+    await loadUsers();
+    await loadPending();
+  };
 </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+<!-- Header -->
+<header class="bg-pink-600 text-white text-center py-4 shadow-md">
+  <h1 class="text-3xl font-bold">Nikah Portal</h1>
+  <p class="text-sm opacity-90">Find your perfect match – Shadi.com style 💞</p>
+</header>
+
+<!-- Registration Form -->
+<section class="max-w-lg mx-auto bg-white rounded-xl p-6 mt-6 shadow-md">
+  <h2 class="text-xl font-bold text-gray-800 mb-4">अपनी प्रोफ़ाइल जोड़ें</h2>
+  <form onsubmit="addUser(event)" class="space-y-3">
+    <input type="text" name="name" placeholder="पूरा नाम" class="w-full border p-2 rounded" required>
+    <input type="number" name="age" placeholder="उम्र" class="w-full border p-2 rounded" required>
+    <select name="gender" class="w-full border p-2 rounded" required>
+      <option value="">लिंग चुनें</option>
+      <option value="पुरुष">पुरुष</option>
+      <option value="महिला">महिला</option>
+    </select>
+    <input type="text" name="contact" placeholder="संपर्क नंबर" class="w-full border p-2 rounded" required>
+    <input type="file" name="image" accept="image/*" class="w-full border p-2 rounded bg-gray-50" required>
+    <button type="submit" class="bg-pink-600 text-white w-full py-2 rounded font-semibold hover:bg-pink-700">Submit Profile</button>
+  </form>
+</section>
+
+<!-- Profiles List -->
+<section class="max-w-6xl mx-auto mt-8 px-4">
+  <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Approved Profiles</h2>
+  <div id="userList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+</section>
+
+<!-- Admin Section (hidden for non-admin) -->
+<section id="adminSection" class="hidden max-w-4xl mx-auto bg-white p-6 mt-10 rounded-xl shadow">
+  <h2 class="text-xl font-bold mb-4 text-gray-800">Admin Panel (Pending Approvals)</h2>
+  <ul id="pendingList" class="space-y-3"></ul>
+</section>
+
+<!-- Footer -->
+<footer class="text-center text-gray-600 text-sm mt-10 mb-4">
+  © 2025 Nikah Portal | Inspired by Shadi.com ❤️
+</footer>
+
 </body>
 </html>
