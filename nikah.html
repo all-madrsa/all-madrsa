@@ -234,37 +234,56 @@ postForm.onsubmit=async e=>{
 };
 
 // Admin render
-function renderAdmin(){
+// Admin render fixed
+function renderAdmin() {
   if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
   adminList.innerHTML="";
+
   allProfiles.forEach(p=>{
-    const card=document.createElement("div");
+    const card = document.createElement("div");
     card.className="p-2 bg-gray-100 rounded shadow";
     card.innerHTML=`<p class="font-bold">${p.name||"No Name"}</p>
-    <div class="flex gap-2 flex-wrap">${Object.keys(p.approvals||{}).map(f=>`<label><input type="checkbox" data-id="${p.id}" data-field="${f}" ${p.approvals[f]?"checked":""}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`).join("")}</div>
-    <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
-    <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
+      <div class="flex gap-2 flex-wrap">
+      ${Object.keys(p.approvals||{}).map(f=>
+        `<label>
+           <input type="checkbox" data-id="${p.id}" data-field="${f}" ${p.approvals[f]?"checked":""}>
+           ${f.charAt(0).toUpperCase()+f.slice(1)}
+         </label>`).join("")}
+      </div>
+      <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
+      <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
+
     adminList.appendChild(card);
   });
 
+  // Save button
   document.querySelectorAll(".saveBtn").forEach(btn=>{
     btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
-      let approvals={};
-      checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
-      await updateDoc(doc(db,"profiles",id),{approvals});
-      alert("✅ Approvals Updated");
+      const id = btn.dataset.id;
+      const checkboxes = document.querySelectorAll(`input[data-id="${id}"]`);
+      let approvals = {};
+      checkboxes.forEach(cb => approvals[cb.dataset.field] = cb.checked);
+
+      // Update Firestore
+      await updateDoc(doc(db,"profiles",id), { approvals });
+
+      // Reload profiles to reflect approval changes
+      alert("✅ Approvals updated!");
       renderProfiles();
-    };
+    }
   });
 
+  // Delete button
   document.querySelectorAll(".deleteBtn").forEach(btn=>{
     btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
-    };
+      const id = btn.dataset.id;
+      if(confirm("Are you sure to delete this profile?")) {
+        await deleteDoc(doc(db,"profiles",id));
+      }
+    }
   });
+}
+
 
   // Render contacts
   onSnapshot(collection(db,"likes"),snapshot=>{
