@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nikah Portal — Mobile Friendly</title>
+<title>Nikah Portal — Complete Version</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 .card-gradient { background: linear-gradient(90deg,#ffffff 0%,#f8fafc 100%); }
-.modal-bg { background: rgba(0,0,0,0.5); }
+.profile-modal { display:none; position:fixed; inset:0; z-index:60; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; }
+.profile-modal .content { background:white; max-width:500px; width:90%; max-height:90vh; overflow:auto; border-radius:0.5rem; padding:1rem; }
 </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -26,7 +27,7 @@
 </header>
 
 <main class="max-w-6xl mx-auto px-4 py-6">
-  <!-- Hero Section -->
+  <!-- Hero -->
   <section class="bg-white rounded-lg shadow p-6 mb-6 card-gradient">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
@@ -47,77 +48,280 @@
     </div>
   </section>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Post Form (Visible only for logged-in users) -->
-    <aside class="lg:col-span-1" id="postFormWrapper" style="display:none;">
-      <div class="bg-white rounded-lg shadow p-5">
-        <h3 class="text-lg font-semibold mb-3">Profile Post Karein</h3>
-        <form id="postForm" class="space-y-3">
-          <input name="name" placeholder="पूरा नाम" class="w-full border rounded px-3 py-2" required />
-          <input name="age" type="number" placeholder="उम्र" class="w-full border rounded px-3 py-2" required />
-          <input name="city" placeholder="City" class="w-full border rounded px-3 py-2" />
-          <select name="gender" class="w-full border rounded px-3 py-2" required>
-            <option value="">लिंग चुनें</option>
-            <option value="पुरुष">पुरुष</option>
-            <option value="महिला">महिला</option>
-          </select>
-          <textarea name="about" rows="3" placeholder="Thoda sa intro (optional)" class="w-full border rounded px-3 py-2"></textarea>
-          <input name="contact" placeholder="Contact (optional)" class="w-full border rounded px-3 py-2" />
-          <label class="block text-sm text-gray-600">Profile Photo (max 2MB)</label>
-          <input name="image" type="file" accept="image/*" class="w-full" required />
-          <div class="flex items-center gap-2">
-            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Post Profile</button>
-            <div id="postingStatus" class="text-sm text-gray-600"></div>
-          </div>
-        </form>
-      </div>
-    </aside>
-
-    <!-- Profiles -->
-    <section class="lg:col-span-2">
-      <div class="bg-white rounded-lg shadow p-4 mb-4">
-        <h3 class="text-lg font-semibold">Public Profiles</h3>
-        <div class="text-sm text-gray-500">Filtered & approved profiles yahan dikhte hain.</div>
-      </div>
-      <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-    </section>
+  <!-- Post Button -->
+  <div class="mb-4">
+    <button id="showPostForm" class="bg-green-600 text-white px-4 py-2 rounded">Post Profile</button>
   </div>
 
-  <!-- Admin Panel -->
-  <div id="adminPanel" class="fixed inset-0 z-50 hidden items-start justify-center p-6 modal-bg">
-    <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
-      <div class="flex items-center justify-between p-4 border-b">
-        <h2 class="text-lg font-semibold">Admin Panel</h2>
-        <button id="adminClose" class="text-gray-600 px-3 py-1">Close</button>
-      </div>
-      <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div>
-          <h3 class="font-semibold mb-2">Pending Profiles</h3>
-          <ul id="pendingList" class="space-y-3 max-h-80 overflow-auto"></ul>
+  <!-- Post Form -->
+  <aside id="postFormContainer" class="hidden mb-6">
+    <div class="bg-white rounded-lg shadow p-5">
+      <h3 class="text-lg font-semibold mb-3">Profile Post Karein</h3>
+      <form id="postForm" class="space-y-3">
+        <input name="name" placeholder="पूरा नाम" class="w-full border rounded px-3 py-2" required />
+        <input name="age" type="number" placeholder="उम्र" class="w-full border rounded px-3 py-2" required />
+        <input name="city" placeholder="City" class="w-full border rounded px-3 py-2" />
+        <select name="gender" class="w-full border rounded px-3 py-2" required>
+          <option value="">लिंग चुनें</option>
+          <option value="पुरुष">पुरुष</option>
+          <option value="महिला">महिला</option>
+        </select>
+        <textarea name="about" rows="3" placeholder="Thoda sa intro (optional)" class="w-full border rounded px-3 py-2"></textarea>
+        <input name="contact" placeholder="Contact (optional)" class="w-full border rounded px-3 py-2" />
+        <label class="block text-sm text-gray-600">Profile Photo (max 2MB)</label>
+        <input name="image" type="file" accept="image/*" class="w-full" required />
+        <div class="flex items-center gap-2">
+          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Post Profile</button>
+          <div id="postingStatus" class="text-sm text-gray-600"></div>
         </div>
-        <div>
-          <h3 class="font-semibold mb-2">Approved Profiles (Admin View)</h3>
-          <ul id="approvedAdminList" class="space-y-3 max-h-80 overflow-auto"></ul>
-          <div class="mt-4">
-            <h4 class="font-medium mb-2">Contact Requests</h4>
-            <ul id="contactRequests" class="space-y-2 max-h-40 overflow-auto text-sm text-gray-700"></ul>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
-  </div>
+  </aside>
 
-  <!-- Profile Zoom Modal -->
-  <div id="profileModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-bg p-4">
-    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-4 overflow-auto">
-      <div class="flex justify-between items-center mb-2">
-        <h3 class="text-lg font-semibold" id="modalName"></h3>
-        <button id="modalClose" class="text-gray-600 px-2 py-1">Close</button>
-      </div>
-      <div id="modalContent"></div>
-      <div class="mt-3" id="modalContactBtnWrapper"></div>
-    </div>
-  </div>
+  <!-- Profiles -->
+  <section>
+    <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+  </section>
 </main>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="profile-modal flex">
+  <div class="content">
+    <button id="closeModal" class="mb-2 bg-gray-300 px-2 py-1 rounded">Close</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="fixed inset-0 z-50 hidden items-start justify-center p-6 bg-black/50">
+  <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
+    <div class="flex items-center justify-between p-4 border-b">
+      <h2 class="text-lg font-semibold">Admin Panel</h2>
+      <button id="adminClose" class="text-gray-600 px-3 py-1">Close</button>
+    </div>
+
+    <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div>
+        <h3 class="font-semibold mb-2">Pending Profiles</h3>
+        <ul id="pendingList" class="space-y-3 max-h-80 overflow-auto"></ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-2">Approved Profiles (Admin View)</h3>
+        <ul id="approvedAdminList" class="space-y-3 max-h-40 overflow-auto"></ul>
+
+        <div class="mt-4">
+          <h3 class="font-semibold mb-2">Contact Requests</h3>
+          <ul id="contactRequests" class="space-y-2 max-h-40 overflow-auto text-sm text-gray-700"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_MSG_ID",
+  appId: "YOUR_APP_ID"
+};
+const IMG_API_KEY = "YOUR_IMGBB_KEY";
+const adminEmail = "ADMIN_EMAIL";
+const adminPassword = "ADMIN_PASSWORD";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const postForm = document.getElementById('postForm');
+const postingStatus = document.getElementById('postingStatus');
+const profilesGrid = document.getElementById('profilesGrid');
+const pendingList = document.getElementById('pendingList');
+const approvedAdminList = document.getElementById('approvedAdminList');
+const contactRequests = document.getElementById('contactRequests');
+const adminPanel = document.getElementById('adminPanel');
+const adminBtn = document.getElementById('adminBtn');
+const adminClose = document.getElementById('adminClose');
+const postFormContainer = document.getElementById('postFormContainer');
+const showPostFormBtn = document.getElementById('showPostForm');
+const profileModal = document.getElementById('profileModal');
+const modalContent = document.getElementById('modalContent');
+const closeModal = document.getElementById('closeModal');
+
+let currentAdmin = null;
+let currentUser = null;
+
+function esc(s){ return s?String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"):""; }
+
+async function uploadToImgbb(file){
+  const fd = new FormData();
+  fd.append('image',file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
+  const data = await res.json();
+  if(data && data.success) return data.data.display_url;
+  throw new Error('Image upload failed');
+}
+
+// Admin auto-login
+(async function(){ if(adminEmail && adminPassword){ try{ await signInWithEmailAndPassword(auth, adminEmail, adminPassword); }catch(e){ console.warn(e); }}})();
+
+// Auth state
+onAuthStateChanged(auth, user=>{
+  currentUser = user;
+  if(user && user.email===adminEmail){
+    currentAdmin = user;
+    adminBtn.classList.remove('hidden');
+  }else{
+    currentAdmin = null;
+    adminBtn.classList.add('hidden');
+  }
+  refreshData();
+});
+
+// Show post form only if logged in
+showPostFormBtn.addEventListener('click', ()=>{
+  if(!currentUser) return window.location.href = "index.html";
+  postFormContainer.classList.toggle('hidden');
+});
+
+// Post form submit
+postForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  postingStatus.textContent = "Posting...";
+  const f = new FormData(postForm);
+  const name = f.get('name')?.trim();
+  const age = f.get('age')?.trim();
+  const gender = f.get('gender')?.trim();
+  const about = f.get('about')?.trim();
+  const city = f.get('city')?.trim();
+  const contact = f.get('contact')?.trim();
+  const imageFile = f.get('image');
+
+  if(!name || !age || !gender || !imageFile || imageFile.size===0){
+    postingStatus.textContent = "Please fill required fields.";
+    setTimeout(()=>postingStatus.textContent="",2000); return;
+  }
+  if(imageFile.size>2*1024*1024){ postingStatus.textContent="Image must <2MB"; setTimeout(()=>postingStatus.textContent="",2000); return;}
+
+  try{
+    const imageUrl = await uploadToImgbb(imageFile);
+    await addDoc(collection(db,'profiles'), {name, age, gender, about, city, contact, imageUrl, approved:false, createdAt: Date.now()});
+    postingStatus.textContent="Submitted — admin approval pending.";
+    postForm.reset();
+    setTimeout(()=>postingStatus.textContent="",3000);
+    refreshData();
+  }catch(err){ console.error(err); postingStatus.textContent="Posting failed"; setTimeout(()=>postingStatus.textContent="",3000);}
+});
+
+// Load profiles
+async function loadApprovedProfiles(){
+  profilesGrid.innerHTML="";
+  const q = query(collection(db,'profiles'), where('approved','==', true));
+  const snap = await getDocs(q);
+  const arr=[];
+  snap.forEach(s=> arr.push({id:s.id,...s.data()}));
+  arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  arr.forEach(p=>{
+    const card = document.createElement('div');
+    card.className='bg-white rounded-lg shadow overflow-hidden cursor-pointer';
+    card.innerHTML=`<div class="h-44 bg-gray-100 overflow-hidden">
+      <img src="${esc(p.imageUrl)}" class="w-full h-full object-cover"/>
+    </div>
+    <div class="p-4">
+      <h4 class="font-semibold text-lg">${esc(p.name)}, <span class="text-sm text-gray-600">${esc(p.age)}</span></h4>
+      <div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div>
+    </div>`;
+    card.addEventListener('click', ()=>showProfileModal(p));
+    profilesGrid.appendChild(card);
+  });
+}
+
+// Profile modal
+function showProfileModal(p){
+  modalContent.innerHTML=`<h3 class="text-lg font-bold mb-2">${esc(p.name)}, ${esc(p.age)}</h3>
+    <img src="${esc(p.imageUrl)}" class="w-full h-64 object-cover mb-2"/>
+    <p>${esc(p.about||'')}</p>
+    <p class="mt-2">City: ${esc(p.city||'')}</p>
+    <p>Gender: ${esc(p.gender)}</p>
+    ${currentUser && !currentAdmin?`<button id="requestContactBtn" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded">Request Contact</button>`:''}`;
+  profileModal.style.display='flex';
+
+  const btn = document.getElementById('requestContactBtn');
+  if(btn){
+    btn.addEventListener('click', async ()=>{
+      await addDoc(collection(db,'contactRequests'), {profileId:p.id,userEmail:currentUser.email, timestamp:Date.now()});
+      alert('Request sent to admin!');
+      profileModal.style.display='none';
+    });
+  }
+}
+
+closeModal.addEventListener('click', ()=>profileModal.style.display='none');
+
+// Admin Panel toggle
+adminBtn.addEventListener('click', ()=>adminPanel.classList.remove('hidden'));
+adminClose.addEventListener('click', ()=>adminPanel.classList.add('hidden'));
+
+// Load pending and approved for admin
+async function loadAdminData(){
+  if(!currentAdmin) return;
+  // Pending
+  pendingList.innerHTML="";
+  const pq = query(collection(db,'profiles'), where('approved','==', false));
+  const psnap = await getDocs(pq);
+  psnap.forEach(s=>{
+    const p = s.data();
+    const li = document.createElement('li');
+    li.className='border p-2 flex justify-between items-start';
+    li.innerHTML=`<div>${esc(p.name)} (${esc(p.age)}) - ${esc(p.city||'')}</div>
+      <div>
+        <button class="approveBtn bg-green-600 text-white px-2 py-1 rounded">Approve</button>
+        <button class="delBtn bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+      </div>`;
+    pendingList.appendChild(li);
+    li.querySelector('.approveBtn').addEventListener('click', async ()=>{ await updateDoc(doc(db,'profiles',s.id), {approved:true}); refreshData(); });
+    li.querySelector('.delBtn').addEventListener('click', async ()=>{ await updateDoc(doc(db,'profiles',s.id), {approved:false}); refreshData(); });
+  });
+
+  // Approved
+  approvedAdminList.innerHTML="";
+  const aq = query(collection(db,'profiles'), where('approved','==', true));
+  const asnap = await getDocs(aq);
+  asnap.forEach(s=>{
+    const p = s.data();
+    const li = document.createElement('li');
+    li.className='border p-2 flex justify-between';
+    li.innerHTML=`<div>${esc(p.name)} (${esc(p.age)})</div>`;
+    approvedAdminList.appendChild(li);
+  });
+
+  // Contact requests
+  contactRequests.innerHTML="";
+  const cq = collection(db,'contactRequests');
+  const csnap = await getDocs(cq);
+  csnap.forEach(s=>{
+    const r = s.data();
+    const li = document.createElement('li');
+    li.textContent=`${r.userEmail} requested contact for profile ID: ${r.profileId}`;
+    contactRequests.appendChild(li);
+  });
+}
+
+async function refreshData(){
+  await loadApprovedProfiles();
+  await loadAdminData();
+}
+
+// Initial load
+refreshData();
+</script>
 </body>
 </html>
