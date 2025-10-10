@@ -100,7 +100,6 @@ const db = getFirestore();
 const storage = getStorage();
 const auth = getAuth();
 
-// Elements
 const postsList = document.getElementById("postsList");
 const profilePopup = document.getElementById("profilePopup");
 const popupBody = document.getElementById("popupBody");
@@ -135,7 +134,11 @@ let currentUser = null;
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
 // Auth check
-onAuthStateChanged(auth, user => { currentUser = user; if(user?.email===ADMIN_EMAIL){ adminPanel.classList.remove("hidden"); } else { adminPanel.classList.add("hidden"); } });
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  if(user?.email===ADMIN_EMAIL){ adminPanel.classList.remove("hidden"); } 
+  else { adminPanel.classList.add("hidden"); }
+});
 
 // Add profile popup
 addPostBtn.addEventListener("click", ()=> postPopup.style.display="flex");
@@ -222,19 +225,26 @@ postForm.addEventListener("submit", async e=>{
   let photoFile = postPhoto.files[0];
   let photoUrl = "";
 
-  if(photoFile){
-    const photoRef = ref(storage, `profiles/${Date.now()}_${photoFile.name}`);
-    await uploadBytes(photoRef, photoFile);
-    photoUrl = await getDownloadURL(photoRef);
+  try {
+    if(photoFile){
+      const photoRef = ref(storage, `profiles/${Date.now()}_${photoFile.name}`);
+      await uploadBytes(photoRef, photoFile);
+      photoUrl = await getDownloadURL(photoRef);
+    }
+
+    await addDoc(collection(db,"profiles"),{
+      name, age, gender, marital, city, photoUrl,
+      approvals:{name:false,age:false,gender:false,marital:false,city:false,photoUrl:false},
+      created:serverTimestamp()
+    });
+
+    postForm.reset();
+    postPopup.style.display="none";
+    alert("✅ Profile submitted! Admin will approve it.");
+  } catch(err){
+    console.error(err);
+    alert("❌ Error submitting profile!");
   }
-
-  await addDoc(collection(db,"profiles"),{
-    name, age, gender, marital, city, photoUrl, approvals:{name:false,age:false,gender:false,marital:false,city:false,photoUrl:false}, created:serverTimestamp()
-  });
-
-  postPopup.style.display="none";
-  postForm.reset();
-  alert("✅ Profile submitted! Admin will approve it.");
 });
 
 // Admin render
@@ -244,7 +254,12 @@ function renderAdmin(profiles){
   profiles.forEach(p=>{
     const card=document.createElement("div");
     card.className="p-2 bg-gray-100 rounded shadow";
-    card.innerHTML=`<p class="font-bold">${p.name||"No Name"}</p><div class="flex gap-2 flex-wrap">${Object.keys(p.approvals||{}).map(f=>{ const checked=p.approvals[f]?"checked":""; return `<label><input type="checkbox" data-field="${f}" data-id="${p.id}" ${checked}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`; }).join("")}</div><button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button><button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
+    card.innerHTML=`<p class="font-bold">${p.name||"No Name"}</p>
+      <div class="flex gap-2 flex-wrap">
+      ${Object.keys(p.approvals||{}).map(f=>{ const checked=p.approvals[f]?"checked":""; return `<label><input type="checkbox" data-field="${f}" data-id="${p.id}" ${checked}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`; }).join("")}
+      </div>
+      <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
+      <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
     adminList.appendChild(card);
   });
 
@@ -275,7 +290,8 @@ onSnapshot(collection(db,"likes"),snapshot=>{
     const data = docSnap.data();
     const div=document.createElement("div");
     div.className="p-2 bg-yellow-100 rounded shadow mb-1 flex justify-between items-center";
-    div.innerHTML=`<div><p><strong>${data.name}</strong></p><p>${data.address}</p><p>📱 ${data.whatsapp}</p></div><a href="https://wa.me/${data.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
+    div.innerHTML=`<div><p><strong>${data.name}</strong></p><p>${data.address}</p><p>📱 ${data.whatsapp}</p></div>
+      <a href="https://wa.me/${data.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
     likesList.appendChild(div);
   });
 });
