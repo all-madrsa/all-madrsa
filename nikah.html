@@ -1,90 +1,22 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Nikah Portal — Fixed</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* small visuals */
-    .card-gradient { background: linear-gradient(90deg,#fff 0%,#f8fafc 100%); }
-  </style>
-</head>
-<body class="bg-gray-50 text-gray-800">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nikah Portal | Shadi.com Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
 
-<header class="bg-pink-600 text-white py-4 shadow">
-  <div class="max-w-6xl mx-auto px-4 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-md bg-white text-pink-600 font-bold flex items-center justify-center">N</div>
-      <div>
-        <h1 class="text-lg font-semibold">Nikah Portal</h1>
-        <div class="text-xs opacity-90">Shadi-style • Public view • Admin approval</div>
-      </div>
-    </div>
-    <div class="text-xs opacity-90">Hidden admin check possible</div>
-  </div>
-</header>
-
-<main class="max-w-6xl mx-auto px-4 py-6">
-  <!-- Post form -->
-  <section class="max-w-lg mx-auto bg-white rounded-xl p-5 shadow-sm">
-    <h2 class="text-lg font-semibold mb-3">अपनी प्रोफ़ाइल जोड़ें</h2>
-    <form id="postForm" class="space-y-3">
-      <input name="name" placeholder="पूरा नाम" class="w-full border p-2 rounded" required />
-      <div class="grid grid-cols-2 gap-2">
-        <input name="age" type="number" placeholder="उम्र" class="border p-2 rounded" required />
-        <select name="gender" class="border p-2 rounded" required>
-          <option value="">लिंग चुनें</option>
-          <option value="पुरुष">पुरुष</option>
-          <option value="महिला">महिला</option>
-        </select>
-      </div>
-      <input name="contact" placeholder="संपर्क नंबर" class="w-full border p-2 rounded" required />
-      <input name="city" placeholder="City (optional)" class="w-full border p-2 rounded" />
-      <textarea name="about" rows="2" placeholder="थोड़ा परिचय (optional)" class="w-full border p-2 rounded"></textarea>
-      <label class="text-sm text-gray-600">प्रोफ़ाइल फोटो (max 2MB)</label>
-      <input name="image" type="file" accept="image/*" class="w-full" required />
-      <div class="flex gap-2">
-        <button id="postBtn" type="submit" class="bg-pink-600 text-white px-4 py-2 rounded flex-1">Submit Profile</button>
-        <div id="postStatus" class="text-sm text-gray-600 self-center"></div>
-      </div>
-    </form>
-  </section>
-
-  <!-- Profiles -->
-  <section class="mt-8">
-    <h2 class="text-xl font-semibold text-center mb-4">Approved Profiles</h2>
-    <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
-  </section>
-
-  <!-- Admin Panel -->
-  <section id="adminSection" class="hidden max-w-4xl mx-auto mt-8 bg-white p-4 rounded-xl shadow">
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="font-semibold">Admin — Pending Profiles</h3>
-      <div>
-        <button id="adminRefresh" class="bg-gray-200 px-2 py-1 rounded text-sm">Refresh</button>
-        <button id="adminSignOut" class="hidden bg-red-500 text-white px-2 py-1 rounded text-sm ml-2">Sign out</button>
-      </div>
-    </div>
-    <ul id="pendingList" class="space-y-3 max-h-72 overflow-auto"></ul>
-  </section>
-</main>
-
-<!-- FOOTER -->
-<footer class="text-center text-sm text-gray-500 py-6">© 2025 Nikah Portal</footer>
-
-<!-- Firebase + App Script -->
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import {
-    getFirestore, collection, addDoc, getDocs, query, where,
-    updateDoc, deleteDoc, doc, orderBy
+  import { 
+    getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where 
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  import {
-    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  import { 
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  // ---------------- CONFIG - replace as needed -----------------
+  // 🔥 Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
     authDomain: "all-madrsa.firebaseapp.com",
@@ -93,260 +25,199 @@
     messagingSenderId: "619313835874",
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
+
   const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+  const adminEmail = "admin@gmail.com"; // change if needed
+  const adminPassword = "yourpassword"; // change if needed
 
-  // If you want the page to try sign-in silently, put admin credentials here.
-  // WARNING: storing password in client code is insecure for production.
-  const adminEmail = "";      // e.g. "admin@example.com"
-  const adminPassword = "";   // e.g. "AdminPass123"
-  // ------------------------------------------------------------
-
-  // init
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // DOM refs
-  const postForm = document.getElementById('postForm');
-  const postStatus = document.getElementById('postStatus');
-  const postBtn = document.getElementById('postBtn');
-  const profilesGrid = document.getElementById('profilesGrid');
-  const pendingList = document.getElementById('pendingList');
-  const adminSection = document.getElementById('adminSection');
-  const adminRefresh = document.getElementById('adminRefresh');
-  const adminSignOut = document.getElementById('adminSignOut');
-
   let isAdmin = false;
 
-  // simple escape for text to reduce XSS risk
-  function escapeText(s){
-    if(!s) return "";
-    return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-  }
-
-  // Upload to Imgbb
-  async function uploadToImgbb(file){
-    const fd = new FormData();
-    fd.append('image', file);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
-      method: 'POST', body: fd
-    });
-    const data = await res.json();
-    if(!data || !data.success) throw new Error(data?.error?.message || 'Image upload failed');
-    return data.data.display_url;
-  }
-
-  // Post profile (anyone)
-  postForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    postStatus.textContent = "";
-    postBtn.disabled = true;
-    postBtn.classList.add('opacity-60');
-    postStatus.textContent = "Uploading...";
-
-    try {
-      const fd = new FormData(postForm);
-      const name = fd.get('name')?.trim();
-      const age = fd.get('age')?.trim();
-      const gender = fd.get('gender')?.trim();
-      const contact = fd.get('contact')?.trim();
-      const city = fd.get('city')?.trim();
-      const about = fd.get('about')?.trim();
-      const file = fd.get('image');
-
-      if(!name || !age || !gender || !contact || !file || file.size === 0) {
-        postStatus.textContent = "Please fill required fields.";
-        return;
-      }
-
-      if(file.size > 2*1024*1024) {
-        postStatus.textContent = "Image must be < 2MB.";
-        return;
-      }
-
-      // basic contact validation (10 digits) - optional
-      if(!/^\d{7,15}$/.test(contact)) {
-        // allow 7-15 digits (mobile/landline intl)
-        postStatus.textContent = "Please enter a valid contact number (digits only).";
-        return;
-      }
-
-      const imageUrl = await uploadToImgbb(file);
-
-      // create doc with approved:false enforced
-      await addDoc(collection(db,'profiles'), {
-        name: name, age: age, gender: gender, contact: contact,
-        city: city || "", about: about || "", imageUrl,
-        approved: false, createdAt: Date.now()
-      });
-
-      postStatus.textContent = "Submitted — admin approval pending.";
-      postForm.reset();
-      // refresh UI
-      await loadApprovedProfiles();
-      await (isAdmin ? loadPending() : Promise.resolve());
-    } catch(err) {
-      console.error(err);
-      postStatus.textContent = "Failed: " + (err.message || err);
-    } finally {
-      postBtn.disabled = false;
-      postBtn.classList.remove('opacity-60');
-      setTimeout(()=> postStatus.textContent = "", 4000);
-    }
-  });
-
-  // Load approved profiles
-  async function loadApprovedProfiles(){
-    profilesGrid.innerHTML = "";
-    try {
-      const q = query(collection(db,'profiles'), where('approved','==', true), orderBy('createdAt','desc'));
-      const snap = await getDocs(q);
-      const arr = [];
-      snap.forEach(s => arr.push({ id: s.id, ...s.data() }));
-      if(arr.length === 0) {
-        profilesGrid.innerHTML = `<div class="col-span-1 md:col-span-3 bg-white p-6 rounded text-gray-500">No profiles yet.</div>`;
-        return;
-      }
-      arr.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl shadow hover:shadow-lg overflow-hidden';
-        // build DOM safely
-        const img = document.createElement('img');
-        img.src = p.imageUrl;
-        img.alt = p.name;
-        img.className = 'w-full h-56 object-cover';
-        const body = document.createElement('div');
-        body.className = 'p-4';
-        const h = document.createElement('h3');
-        h.className = 'text-lg font-bold';
-        h.textContent = p.name;
-        const info = document.createElement('div');
-        info.className = 'text-sm text-gray-600';
-        info.textContent = `उम्र: ${p.age} • ${p.gender} • ${p.city || ''}`;
-        const about = document.createElement('p');
-        about.className = 'mt-2 text-sm text-gray-700';
-        about.textContent = p.about || '';
-        const contact = document.createElement('div');
-        contact.className = 'mt-2 text-sm text-gray-800';
-        contact.textContent = p.contact ? `Contact: ${p.contact}` : '';
-        body.appendChild(h); body.appendChild(info); body.appendChild(about); body.appendChild(contact);
-        card.appendChild(img); card.appendChild(body);
-        profilesGrid.appendChild(card);
-      });
-    } catch(err) {
-      console.error("Failed loading profiles:", err);
-      profilesGrid.innerHTML = `<div class="text-red-500">Error loading profiles.</div>`;
-    }
-  }
-
-  // Admin: load pending
-  async function loadPending(){
-    if(!isAdmin) return;
-    pendingList.innerHTML = "";
-    try {
-      const q = query(collection(db,'profiles'), where('approved','==', false), orderBy('createdAt','desc'));
-      const snap = await getDocs(q);
-      const arr = [];
-      snap.forEach(s => arr.push({ id: s.id, ...s.data() }));
-      if(arr.length === 0) {
-        pendingList.innerHTML = `<div class="text-gray-500">No pending profiles.</div>`;
-        return;
-      }
-      arr.forEach(p => {
-        const li = document.createElement('li');
-        li.className = 'border p-3 rounded flex items-center justify-between bg-gray-50';
-        // left info
-        const left = document.createElement('div'); left.className = 'flex items-center gap-3';
-        const img = document.createElement('img'); img.src = p.imageUrl; img.className='w-14 h-14 object-cover rounded-full';
-        const info = document.createElement('div');
-        const name = document.createElement('div'); name.className='font-medium'; name.textContent = `${p.name} • ${p.age}`;
-        const meta = document.createElement('div'); meta.className='text-sm text-gray-600'; meta.textContent = `${p.gender} • ${p.city || ''}`;
-        const about = document.createElement('div'); about.className='text-sm text-gray-700 mt-1'; about.textContent = p.about || '';
-        info.appendChild(name); info.appendChild(meta); info.appendChild(about);
-        left.appendChild(img); left.appendChild(info);
-        // right actions
-        const right = document.createElement('div'); right.className='flex gap-2';
-        const approveBtn = document.createElement('button'); approveBtn.className='bg-green-600 text-white px-3 py-1 rounded'; approveBtn.textContent = 'Approve';
-        const delBtn = document.createElement('button'); delBtn.className='bg-red-600 text-white px-3 py-1 rounded'; delBtn.textContent = 'Delete';
-        // wire events
-        approveBtn.addEventListener('click', async ()=>{
-          if(!confirm('Approve this profile?')) return;
-          approveBtn.disabled = true;
-          try {
-            await updateDoc(doc(db,'profiles',p.id), { approved: true });
-            await loadPending();
-            await loadApprovedProfiles();
-          } catch(err) {
-            alert('Approve failed');
-            console.error(err);
-          } finally { approveBtn.disabled = false; }
-        });
-        delBtn.addEventListener('click', async ()=>{
-          if(!confirm('Delete this profile?')) return;
-          delBtn.disabled = true;
-          try {
-            await deleteDoc(doc(db,'profiles',p.id));
-            await loadPending();
-            await loadApprovedProfiles();
-          } catch(err) {
-            alert('Delete failed');
-            console.error(err);
-          } finally { delBtn.disabled = false; }
-        });
-        right.appendChild(approveBtn); right.appendChild(delBtn);
-        li.appendChild(left); li.appendChild(right);
-        pendingList.appendChild(li);
-      });
-    } catch(err) {
-      console.error('Failed to load pending:', err);
-      pendingList.innerHTML = `<div class="text-red-500">Error loading pending.</div>`;
-    }
-  }
-
-  // admin sign-out
-  adminSignOut.addEventListener('click', async ()=>{
-    try { await signOut(auth); } catch(e){ console.error(e); }
-  });
-
-  // refresh
-  adminRefresh.addEventListener('click', async ()=>{
-    if(isAdmin) await loadPending();
-    await loadApprovedProfiles();
-  });
-
-  // Auto admin sign-in (attempt) - run on load AFTER firebase initialized
-  async function tryAutoSignIn(){
-    if(!adminEmail || !adminPassword) {
-      // no auto sign-in requested
-      return;
-    }
+  // Auto login (hidden)
+  async function autoAdminLogin() {
     try {
       await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-      console.log('Auto sign-in OK');
-    } catch(err){
-      console.warn('Auto sign-in failed:', err.message);
+      console.log("✅ Admin auto login successful");
+    } catch (err) {
+      console.log("⚠️ Admin login failed:", err.message);
     }
   }
 
-  // auth-state listener
-  onAuthStateChanged(auth, async (user)=>{
+  // Check login
+  onAuthStateChanged(auth, (user) => {
     isAdmin = !!user;
-    adminSection.classList.toggle('hidden', !isAdmin);
-    adminSignOut.classList.toggle('hidden', !isAdmin);
-    // if admin -> load pending else only public
-    if(isAdmin) {
-      await loadPending();
+    document.getElementById("adminSection").classList.toggle("hidden", !isAdmin);
+  });
+
+  // Add User
+  window.addUser = async function (event) {
+    event.preventDefault();
+    const form = event.target;
+
+    const name = form.name.value.trim();
+    const age = form.age.value.trim();
+    const gender = form.gender.value;
+    const contact = form.contact.value.trim();
+    const imageFile = form.image.files[0];
+
+    if (!name || !age || !gender || !contact || !imageFile) {
+      alert("कृपया सभी फील्ड भरें और फोटो चुनें।");
+      return;
     }
-    await loadApprovedProfiles();
-  });
 
-  // start
-  window.addEventListener('load', async ()=>{
-    await tryAutoSignIn();     // attempt auto sign-in if creds provided
-    await loadApprovedProfiles();
-    // if admin auto-signed in, onAuthStateChanged will run loadPending()
-  });
+    if (imageFile.size > 2 * 1024 * 1024) {
+      alert("Image size 2MB से कम होनी चाहिए।");
+      return;
+    }
 
+    // Upload to Imgbb
+    let imageUrl = "";
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
+        method: "POST",
+        body: formData
+      });
+      const imgData = await imgbbRes.json();
+      if (!imgData.success) throw new Error("Upload failed");
+      imageUrl = imgData.data.display_url;
+    } catch (err) {
+      alert("Image upload error: " + err.message);
+      return;
+    }
+
+    // Save in Firestore
+    try {
+      await addDoc(collection(db, "users"), {
+        name, age, gender, contact, imageUrl,
+        approved: false,
+        timestamp: Date.now()
+      });
+      alert("Profile submitted! Admin approval pending.");
+      form.reset();
+      loadUsers();
+    } catch (err) {
+      alert("Data save failed");
+      console.error(err);
+    }
+  };
+
+  // Load Approved Profiles
+  async function loadUsers() {
+    const userList = document.getElementById("userList");
+    userList.innerHTML = "";
+    const q = query(collection(db, "users"), where("approved", "==", true));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((docSnap) => {
+      const user = docSnap.data();
+      const card = document.createElement("div");
+      card.className = "bg-white rounded-xl shadow hover:shadow-lg overflow-hidden transition transform hover:-translate-y-1";
+      card.innerHTML = `
+        <img src="${user.imageUrl}" class="w-full h-56 object-cover">
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-gray-800">${user.name}</h3>
+          <p class="text-sm text-gray-600">उम्र: ${user.age} | ${user.gender}</p>
+          <p class="text-sm text-gray-700 mt-1">संपर्क: ${user.contact}</p>
+        </div>`;
+      userList.prepend(card);
+    });
+  }
+
+  window.loadUsers = loadUsers;
+
+  // Admin Panel
+  window.loadPending = async function () {
+    const list = document.getElementById("pendingList");
+    list.innerHTML = "";
+    const q = query(collection(db, "users"), where("approved", "==", false));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((docSnap) => {
+      const user = docSnap.data();
+      const li = document.createElement("li");
+      li.className = "border p-3 bg-gray-50 rounded flex items-center justify-between";
+      li.innerHTML = `
+        <div class="flex items-center gap-4">
+          <img src="${user.imageUrl}" class="w-14 h-14 object-cover rounded-full">
+          <div>
+            <strong>${user.name}</strong> (${user.age}, ${user.gender})<br>
+            <span class="text-gray-600 text-sm">${user.contact}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="approveUser('${docSnap.id}')" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Approve</button>
+          <button onclick="deleteUser('${docSnap.id}')" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Delete</button>
+        </div>`;
+      list.append(li);
+    });
+  };
+
+  window.approveUser = async function (id) {
+    await updateDoc(doc(db, "users", id), { approved: true });
+    alert("User Approved!");
+    loadPending();
+    loadUsers();
+  };
+
+  window.deleteUser = async function (id) {
+    await deleteDoc(doc(db, "users", id));
+    alert("User Deleted!");
+    loadPending();
+  };
+
+  // Start on load
+  window.onload = async () => {
+    await autoAdminLogin();
+    await loadUsers();
+    await loadPending();
+  };
 </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+<!-- Header -->
+<header class="bg-pink-600 text-white text-center py-4 shadow-md">
+  <h1 class="text-3xl font-bold">Nikah Portal</h1>
+  <p class="text-sm opacity-90">Find your perfect match – Shadi.com style 💞</p>
+</header>
+
+<!-- Registration Form -->
+<section class="max-w-lg mx-auto bg-white rounded-xl p-6 mt-6 shadow-md">
+  <h2 class="text-xl font-bold text-gray-800 mb-4">अपनी प्रोफ़ाइल जोड़ें</h2>
+  <form onsubmit="addUser(event)" class="space-y-3">
+    <input type="text" name="name" placeholder="पूरा नाम" class="w-full border p-2 rounded" required>
+    <input type="number" name="age" placeholder="उम्र" class="w-full border p-2 rounded" required>
+    <select name="gender" class="w-full border p-2 rounded" required>
+      <option value="">लिंग चुनें</option>
+      <option value="पुरुष">पुरुष</option>
+      <option value="महिला">महिला</option>
+    </select>
+    <input type="text" name="contact" placeholder="संपर्क नंबर" class="w-full border p-2 rounded" required>
+    <input type="file" name="image" accept="image/*" class="w-full border p-2 rounded bg-gray-50" required>
+    <button type="submit" class="bg-pink-600 text-white w-full py-2 rounded font-semibold hover:bg-pink-700">Submit Profile</button>
+  </form>
+</section>
+
+<!-- Profiles List -->
+<section class="max-w-6xl mx-auto mt-8 px-4">
+  <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Approved Profiles</h2>
+  <div id="userList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+</section>
+
+<!-- Admin Section (hidden for non-admin) -->
+<section id="adminSection" class="hidden max-w-4xl mx-auto bg-white p-6 mt-10 rounded-xl shadow">
+  <h2 class="text-xl font-bold mb-4 text-gray-800">Admin Panel (Pending Approvals)</h2>
+  <ul id="pendingList" class="space-y-3"></ul>
+</section>
+
+<!-- Footer -->
+<footer class="text-center text-gray-600 text-sm mt-10 mb-4">
+  © 2025 Nikah Portal | Inspired by Shadi.com ❤️
+</footer>
+
 </body>
 </html>
