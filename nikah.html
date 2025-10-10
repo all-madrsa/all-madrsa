@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal - Full Working Version</title>
+<title>Nikah Portal - Working Version (Firebase v8)</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"></script>
+
+<!-- ✅ Firebase v8 scripts (browser-compatible) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
 .profile-card {cursor:pointer; transition: transform 0.1s;}
@@ -71,13 +74,9 @@ body {background:#fdf6e3; font-family:sans-serif;}
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
-const firebaseConfig = {
+<script>
+// ✅ Firebase Config
+var firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
   projectId: "all-madrsa",
@@ -85,16 +84,12 @@ const firebaseConfig = {
   messagingSenderId: "619313835874",
   appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const auth = getAuth(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+const auth = firebase.auth();
 
-signInAnonymously(auth);
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-let currentUser=null, allProfiles=[], selectedProfileId=null;
-
-// ELEMENTS
+// Elements
 const postPopup=document.getElementById("postPopup");
 const addPostBtn=document.getElementById("addPostBtn");
 const closePost=document.getElementById("closePost");
@@ -108,7 +103,8 @@ const contactPopup=document.getElementById("contactPopup");
 const closeContact=document.getElementById("closeContact");
 const contactForm=document.getElementById("contactForm");
 
-onAuthStateChanged(auth,u=>{currentUser=u; if(u?.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden"); else adminPanel.classList.add("hidden");});
+const ADMIN_EMAIL="zaradigitalseva@gmail.com";
+let currentUser=null, allProfiles=[], selectedProfileId=null;
 
 // POPUPS
 addPostBtn.onclick=()=>postPopup.style.display="flex";
@@ -117,7 +113,7 @@ closeContact.onclick=()=>contactPopup.style.display="none";
 postPopup.onclick=e=>{if(e.target===postPopup)postPopup.style.display="none";}
 contactPopup.onclick=e=>{if(e.target===contactPopup)contactPopup.style.display="none";}
 
-// POST SUBMIT
+// ✅ POST SUBMIT
 postForm.onsubmit=async e=>{
   e.preventDefault();
   let name=postForm.postName.value.trim();
@@ -129,20 +125,28 @@ postForm.onsubmit=async e=>{
   let photoUrl="";
   try{
     if(photo){
-      const fileRef=ref(storage,`profiles/${Date.now()}_${photo.name}`);
-      await uploadBytes(fileRef,photo);
-      photoUrl=await getDownloadURL(fileRef);
+      const ref=storage.ref("profiles/"+Date.now()+"_"+photo.name);
+      await ref.put(photo);
+      photoUrl=await ref.getDownloadURL();
     }
-    await addDoc(collection(db,"profiles"),{name,age,gender,marital,city,photoUrl,approvals:{name:false,age:false,gender:false,marital:false,city:false,photoUrl:false},likes:0,created:serverTimestamp()});
+    await db.collection("profiles").add({
+      name,age,gender,marital,city,photoUrl,
+      approvals:{name:false,age:false,gender:false,marital:false,city:false,photoUrl:false},
+      likes:0,
+      created:firebase.firestore.FieldValue.serverTimestamp()
+    });
     alert("✅ Profile submitted! Wait for admin approval.");
     postPopup.style.display="none"; postForm.reset();
   }catch(err){alert("❌ Error: "+err.message);}
 };
 
-// SHOW POSTS
-onSnapshot(query(collection(db,"profiles"),orderBy("created","desc")),snap=>{
-  allProfiles=[]; snap.forEach(d=>{let data=d.data(); data.id=d.id; allProfiles.push(data);});
-  renderProfiles(allProfiles); renderAdmin(allProfiles);
+// ✅ SHOW POSTS
+db.collection("profiles").orderBy("created","desc").onSnapshot(snap=>{
+  allProfiles=[];
+  snap.forEach(doc=>{
+    let p=doc.data(); p.id=doc.id; allProfiles.push(p);
+  });
+  renderProfiles(allProfiles);
 });
 
 function renderProfiles(list){
@@ -152,10 +156,10 @@ function renderProfiles(list){
     if(!p.approvals) return;
     if(!Object.values(p.approvals).some(v=>v)) return;
     if(search && !(`${p.name}`.toLowerCase().includes(search)||`${p.city}`.toLowerCase().includes(search)||`${p.marital}`.toLowerCase().includes(search))) return;
-    const card=document.createElement("div");
-    card.className="profile-card bg-white rounded shadow p-2";
+    const div=document.createElement("div");
+    div.className="profile-card bg-white rounded shadow p-2";
     let img=p.photoUrl&&p.approvals.photoUrl?`<img src="${p.photoUrl}" class='w-full h-32 object-cover rounded mb-2'>`:`<div class='w-full h-32 bg-gray-300 flex items-center justify-center text-gray-600'>No Image</div>`;
-    card.innerHTML=`
+    div.innerHTML=`
       ${img}
       <p class="font-bold">${p.approvals.name?p.name:"Private"}</p>
       <p class="text-sm">${p.approvals.age?p.age+" yrs":""}</p>
@@ -164,71 +168,31 @@ function renderProfiles(list){
         <button class='likeBtn bg-pink-500 text-white text-xs px-2 py-1 rounded' data-id='${p.id}'>❤️ ${p.likes||0}</button>
         <button class='contactBtn bg-green-500 text-white text-xs px-2 py-1 rounded' data-id='${p.id}'>📩 Contact</button>
       </div>`;
-    postsList.appendChild(card);
+    postsList.appendChild(div);
   });
 
   document.querySelectorAll(".contactBtn").forEach(b=>{
     b.onclick=()=>{selectedProfileId=b.dataset.id; contactPopup.style.display="flex";}
   });
   document.querySelectorAll(".likeBtn").forEach(b=>{
-    b.onclick=async()=>{const refDoc=doc(db,"profiles",b.dataset.id); const p=allProfiles.find(x=>x.id===b.dataset.id); await updateDoc(refDoc,{likes:(p.likes||0)+1});}
+    b.onclick=async()=>{
+      const ref=db.collection("profiles").doc(b.dataset.id);
+      const p=allProfiles.find(x=>x.id===b.dataset.id);
+      await ref.update({likes:(p.likes||0)+1});
+    }
   });
 }
-
 searchInput.oninput=()=>renderProfiles(allProfiles);
 
-// CONTACT
+// ✅ CONTACT
 contactForm.onsubmit=async e=>{
   e.preventDefault();
   const name=contactForm.contactName.value.trim();
   const address=contactForm.contactAddress.value.trim();
   const whatsapp=contactForm.contactWhatsApp.value.trim();
-  await addDoc(collection(db,"likes"),{profileId:selectedProfileId,name,address,whatsapp,time:serverTimestamp()});
+  await db.collection("likes").add({profileId:selectedProfileId,name,address,whatsapp,time:firebase.firestore.FieldValue.serverTimestamp()});
   contactForm.reset(); contactPopup.style.display="none"; alert("✅ Contact sent to admin!");
 };
-
-// ADMIN PANEL
-function renderAdmin(list){
-  if(!currentUser||currentUser.email!==ADMIN_EMAIL) return;
-  adminList.innerHTML="";
-  list.forEach(p=>{
-    const card=document.createElement("div");
-    card.className="bg-gray-100 p-2 rounded shadow";
-    card.innerHTML=`<p class='font-bold mb-1'>${p.name||"No Name"}</p>
-      <div class='flex flex-wrap gap-2'>
-        ${Object.keys(p.approvals||{}).map(f=>`<label><input type='checkbox' data-id='${p.id}' data-field='${f}' ${p.approvals[f]?"checked":""}> ${f}</label>`).join("")}
-      </div>
-      <button data-id='${p.id}' class='saveBtn bg-blue-500 text-white px-2 py-1 mt-2 rounded'>💾 Save</button>
-      <button data-id='${p.id}' class='deleteBtn bg-red-500 text-white px-2 py-1 mt-2 rounded'>🗑 Delete</button>`;
-    adminList.appendChild(card);
-  });
-
-  document.querySelectorAll(".saveBtn").forEach(b=>{
-    b.onclick=async()=>{
-      const id=b.dataset.id;
-      const boxes=document.querySelectorAll(`input[data-id='${id}']`);
-      let approvals={}; boxes.forEach(x=>approvals[x.dataset.field]=x.checked);
-      await updateDoc(doc(db,"profiles",id),{approvals});
-      alert("✅ Updated!");
-    };
-  });
-  document.querySelectorAll(".deleteBtn").forEach(b=>{
-    b.onclick=async()=>{if(confirm("Delete this profile?")) await deleteDoc(doc(db,"profiles",b.dataset.id));}
-  });
-}
-
-// LIKES DISPLAY
-onSnapshot(collection(db,"likes"),snap=>{
-  if(!currentUser||currentUser.email!==ADMIN_EMAIL) return;
-  likesList.innerHTML="";
-  snap.forEach(d=>{
-    const l=d.data();
-    const div=document.createElement("div");
-    div.className="p-2 bg-yellow-100 rounded shadow mb-1";
-    div.innerHTML=`<p><b>${l.name}</b> (${l.whatsapp})</p><p>${l.address}</p>`;
-    likesList.appendChild(div);
-  });
-});
 </script>
 </body>
 </html>
