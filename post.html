@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Post Nikah Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; background: #f1f1f1; padding: 10px; }
+    form { background: white; padding: 15px; border-radius: 8px; max-width: 400px; margin: auto; }
+    input, textarea { width: 100%; margin-bottom: 10px; padding: 8px; }
+    button { background: #008080; color: white; border: none; padding: 10px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">📤 Post Your Profile</h2>
+  <form id="profileForm">
+    <input type="text" id="name" placeholder="Full Name" required>
+    <input type="number" id="age" placeholder="Age" required>
+    <input type="text" id="city" placeholder="City" required>
+    <input type="file" id="photo" accept="image/*" required>
+    <button type="submit">Submit</button>
+  </form>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+  const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+
+  const form = document.getElementById('profileForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = firebase.auth().currentUser;
+    if (!user) { alert("Login required"); return; }
+
+    const file = document.getElementById('photo').files[0];
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const upload = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
+      method: "POST",
+      body: formData
+    });
+    const imgData = await upload.json();
+
+    await db.collection("nikahProfiles").add({
+      name: document.getElementById('name').value,
+      age: parseInt(document.getElementById('age').value),
+      city: document.getElementById('city').value,
+      photoUrl: imgData.data.url,
+      approved: false,
+      userId: user.uid,
+      createdAt: new Date()
+    });
+
+    alert("Profile submitted for admin approval ✅");
+    form.reset();
+  });
+</script>
+</body>
+</html>
