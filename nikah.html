@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,15 +9,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
 .profile-card {cursor:pointer; transition: transform 0.1s;}
 .profile-card:hover {transform: scale(1.05);}
 #profilePopup, #contactPopup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
-#popupContent, #contactContent, #postFormContainer {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
+#popupContent, #contactContent {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
 #popupContent img, #contactContent img {width:100%; height:auto; border-radius:8px; margin-bottom:10px;}
-#closePopup, #closeContact {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
+#closePopup, #closeContact, #logoutBtn {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
 input[type="file"] {border:1px solid #ccc; padding:5px; border-radius:6px;}
 </style>
 </head>
@@ -24,29 +24,12 @@ input[type="file"] {border:1px solid #ccc; padding:5px; border-radius:6px;}
 
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
+  <button id="logoutBtn" class="hidden">Logout</button>
 </header>
 
 <main class="p-4">
   <!-- Search -->
   <input type="text" id="searchInput" placeholder="Search by Name, Age, Marital Status" class="w-full p-2 rounded border mb-2">
-
-  <!-- Post Form -->
-  <div id="postFormContainer" class="p-4 mb-4 bg-gray-100 rounded shadow hidden">
-    <h2 class="text-lg font-bold mb-2">Add Your Profile</h2>
-    <form id="postForm" class="flex flex-col gap-2">
-      <input type="text" id="postName" placeholder="Full Name" class="border p-2 rounded" required>
-      <input type="number" id="postAge" placeholder="Age" class="border p-2 rounded" required>
-      <select id="postGender" class="border p-2 rounded" required>
-        <option value="">Select Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-      </select>
-      <input type="text" id="postMarital" placeholder="Marital Status" class="border p-2 rounded" required>
-      <input type="text" id="postCity" placeholder="City" class="border p-2 rounded" required>
-      <input type="file" id="postPhoto" accept="image/*">
-      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Post</button>
-    </form>
-  </div>
 
   <!-- Profiles List -->
   <div id="postsList" class="grid gap-2 grid-cols-2 lg:grid-cols-4 mb-4"></div>
@@ -84,9 +67,8 @@ input[type="file"] {border:1px solid #ccc; padding:5px; border-radius:6px;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -100,47 +82,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
-const storage = getStorage();
 
 // Elements
 const postsList = document.getElementById("postsList");
 const profilePopup = document.getElementById("profilePopup");
 const popupBody = document.getElementById("popupBody");
 const closePopup = document.getElementById("closePopup");
+
 const contactPopup = document.getElementById("contactPopup");
 const closeContact = document.getElementById("closeContact");
 const contactForm = document.getElementById("contactForm");
 const contactName = document.getElementById("contactName");
 const contactAddress = document.getElementById("contactAddress");
 const contactWhatsApp = document.getElementById("contactWhatsApp");
+
 const searchInput = document.getElementById("searchInput");
 const adminPanel = document.getElementById("adminPanel");
 const adminList = document.getElementById("adminList");
 const likesList = document.getElementById("likesList");
-const postFormContainer = document.getElementById("postFormContainer");
-const postForm = document.getElementById("postForm");
-const postName = document.getElementById("postName");
-const postAge = document.getElementById("postAge");
-const postGender = document.getElementById("postGender");
-const postMarital = document.getElementById("postMarital");
-const postCity = document.getElementById("postCity");
-const postPhoto = document.getElementById("postPhoto");
+const logoutBtn = document.getElementById("logoutBtn");
 
 let currentUser = null;
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 let allProfiles = [];
 let selectedProfileId = null;
 
-// Anonymous login for any user
-signInAnonymously(auth).catch(console.error);
-
 // Auth state
 onAuthStateChanged(auth, user => {
   currentUser = user;
-  if(currentUser){
-    postFormContainer.classList.remove("hidden");
+  if(user && user.email===ADMIN_EMAIL){
+    adminPanel.classList.remove("hidden");
+    logoutBtn.classList.remove("hidden");
+  } else {
+    adminPanel.classList.add("hidden");
+    logoutBtn.classList.add("hidden");
   }
 });
+
+// Logout
+logoutBtn.addEventListener("click", ()=>{ signOut(auth); });
 
 // Fetch Profiles
 const q = query(collection(db,"profiles"), orderBy("created","desc"));
@@ -174,10 +154,14 @@ function renderProfiles(profiles){
     let imgHtml = imgSrc ? `<img src="${imgSrc}" class="w-full h-32 object-cover rounded mb-1">` :
       `<div class="w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1">No Image</div>`;
 
-    card.innerHTML=`${imgHtml}<p class="text-sm font-bold">${p.approvals.name?p.name:""}</p>
-      <p class="text-xs text-gray-600">${p.approvals.age?p.age:""} years</p>
-      <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
+    card.innerHTML=`
+      ${imgHtml}
+      <p class="text-sm font-bold">${p.approvals.name ? p.name : ""}</p>
+      <p class="text-xs text-gray-600">${p.approvals.age ? p.age : ""} years</p>
+      <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>
+    `;
 
+    // Popup
     card.addEventListener("click", e=>{
       if(!e.target.classList.contains("contactBtn")){
         let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
@@ -191,6 +175,7 @@ function renderProfiles(profiles){
       }
     });
 
+    // Contact button
     card.querySelector(".contactBtn").addEventListener("click", ()=>{
       selectedProfileId=p.id;
       contactName.value="";
@@ -209,55 +194,30 @@ contactForm.addEventListener("submit", async e=>{
   let name = contactName.value.trim();
   let address = contactAddress.value.trim();
   let whatsapp = contactWhatsApp.value.trim();
-  if(!/^\d{10}$/.test(whatsapp)) whatsapp="91"+whatsapp;
+  if(!/^\d{10}$/.test(whatsapp)) whatsapp="91"+whatsapp; // auto +91
   await addDoc(collection(db,"likes"),{profileId:selectedProfileId,name,address,whatsapp,timestamp:serverTimestamp()});
   contactPopup.style.display="none";
   alert("✅ Contact info sent to admin!");
 });
 
-// Post form submit
-postForm.addEventListener("submit", async e=>{
-  e.preventDefault();
-  if(!currentUser) return alert("Login required to post.");
-  let photoUrl="";
-  try{
-    if(postPhoto.files[0]){
-      const storageRef=ref(storage,"profiles/"+Date.now()+"_"+postPhoto.files[0].name);
-      await uploadBytes(storageRef,postPhoto.files[0]);
-      photoUrl = await getDownloadURL(storageRef);
-    }
-    await addDoc(collection(db,"profiles"),{
-      name: postName.value.trim(),
-      age: parseInt(postAge.value),
-      gender: postGender.value,
-      marital: postMarital.value.trim(),
-      city: postCity.value.trim(),
-      photoUrl: photoUrl,
-      approvals:{name:false,age:false,gender:false,marital:false,city:false,photoUrl:false},
-      created: serverTimestamp()
-    });
-    postForm.reset();
-    alert("✅ Profile submitted! Admin will approve.");
-  } catch(err){ console.error(err); alert("Error posting profile."); }
-});
-
 // Admin panel
 function renderAdmin(profiles){
   if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
-  adminPanel.classList.remove("hidden");
   adminList.innerHTML="";
   profiles.forEach(p=>{
     const card=document.createElement("div");
     card.className="p-2 bg-gray-100 rounded shadow";
-    card.innerHTML=`<p class="font-bold">${p.name||"No Name"}</p>
+    card.innerHTML=`
+      <p class="font-bold">${p.name||"No Name"}</p>
       <div class="flex gap-2 flex-wrap">
-      ${Object.keys(p.approvals||{}).map(f=>{
-        const checked=p.approvals[f]?"checked":"";
-        return `<label><input type="checkbox" data-field="${f}" data-id="${p.id}" ${checked}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`;
-      }).join("")}
+        ${Object.keys(p.approvals||{}).map(f=>{
+          const checked = p.approvals[f]?"checked":"";
+          return `<label><input type="checkbox" data-field="${f}" data-id="${p.id}" ${checked}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`;
+        }).join("")}
       </div>
       <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
-      <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
+      <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>
+    `;
     adminList.appendChild(card);
   });
 
@@ -280,16 +240,22 @@ function renderAdmin(profiles){
   });
 }
 
-// Contact requests realtime
+// Contact requests real-time
 onSnapshot(collection(db,"likes"),snapshot=>{
   if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
   likesList.innerHTML="";
   snapshot.forEach(docSnap=>{
-    const data=docSnap.data();
+    const data = docSnap.data();
     const div=document.createElement("div");
     div.className="p-2 bg-yellow-100 rounded shadow mb-1 flex justify-between items-center";
-    div.innerHTML=`<div><p><strong>${data.name}</strong></p><p>${data.address}</p><p>📱 ${data.whatsapp}</p></div>
-      <a href="https://wa.me/${data.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
+    div.innerHTML=`
+      <div>
+        <p><strong>${data.name}</strong></p>
+        <p>${data.address}</p>
+        <p>📱 ${data.whatsapp}</p>
+      </div>
+      <a href="https://wa.me/${data.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>
+    `;
     likesList.appendChild(div);
   });
 });
