@@ -1,205 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Nikah Portal — Post Profile</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Profile - Nikah Portal</title>
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Firebase v8 (browser friendly) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
 <style>
-  body { background:#fdf6e3; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-  .card { max-width:720px; margin:36px auto; padding:20px; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.08); background:#fff; }
-  .preview-img { width:100%; max-height:320px; object-fit:cover; border-radius:8px; }
+body {background:#fdf6e3; font-family:sans-serif;}
+.container {max-width:500px; margin:auto; padding:20px;}
+input, select, button {width:100%;}
+button {cursor:pointer;}
 </style>
 </head>
 <body>
-
-<div class="card">
-  <div class="flex justify-between items-center mb-4">
-    <h1 class="text-2xl font-bold">Post New Profile</h1>
-    <div class="space-x-2">
-      <a href="index.html" class="px-3 py-1 bg-gray-200 rounded">← Back</a>
-      <a href="#" id="statusLink" class="text-sm text-gray-500"></a>
-    </div>
-  </div>
-
-  <form id="postForm" class="space-y-3">
-    <div>
-      <label class="block text-sm font-medium">Full name</label>
-      <input id="postName" required class="w-full border p-2 rounded" placeholder="e.g. Aisha Khan">
-    </div>
-
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-sm font-medium">Age</label>
-        <input id="postAge" type="number" min="18" required class="w-full border p-2 rounded" placeholder="Age">
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Gender</label>
-        <select id="postGender" required class="w-full border p-2 rounded">
-          <option value="">Select</option><option>Male</option><option>Female</option><option>Other</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-sm font-medium">Marital Status</label>
-        <input id="postMarital" required class="w-full border p-2 rounded" placeholder="Single / Divorced / Widowed">
-      </div>
-      <div>
-        <label class="block text-sm font-medium">City</label>
-        <input id="postCity" required class="w-full border p-2 rounded" placeholder="City">
-      </div>
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium mb-1">Photo (optional)</label>
-      <input id="postPhoto" type="file" accept="image/*" class="w-full">
-      <img id="preview" class="preview-img mt-3 hidden" alt="Preview">
-    </div>
-
-    <div class="space-y-2">
-      <div class="w-full bg-gray-200 rounded h-3 overflow-hidden">
-        <div id="progressBar" class="h-3 rounded" style="width:0%; background:linear-gradient(90deg,#34d399,#06b6d4)"></div>
-      </div>
-      <div class="flex justify-between items-center text-sm text-gray-600">
-        <div id="progressText">Idle</div>
-        <div id="errorText" class="text-red-500"></div>
-      </div>
-    </div>
-
-    <div class="flex gap-2">
-      <button id="submitBtn" type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Post Profile</button>
-      <button id="clearBtn" type="button" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
-    </div>
+<div class="container">
+  <h1 class="text-2xl font-bold mb-4">Add New Profile</h1>
+  <form id="postForm" class="flex flex-col gap-2">
+    <input id="name" placeholder="Full Name" required class="border p-2 rounded">
+    <input id="age" placeholder="Age" type="number" required class="border p-2 rounded">
+    <select id="gender" required class="border p-2 rounded">
+      <option value="">Select Gender</option>
+      <option>Male</option>
+      <option>Female</option>
+    </select>
+    <input id="marital" placeholder="Marital Status" required class="border p-2 rounded">
+    <input id="city" placeholder="City" required class="border p-2 rounded">
+    <input id="photo" type="file" accept="image/*" class="border p-2 rounded">
+    <button type="submit" class="bg-blue-500 text-white py-2 rounded">Post Profile</button>
   </form>
-
-  <p class="text-xs text-gray-500 mt-3">
-    Note: After posting, admin will review and approve fields before making them public. If image upload fails, check Firebase Storage CORS & rules.
-  </p>
+  <div id="status" class="mt-4 font-bold"></div>
 </div>
 
 <script>
-  // ======= CONFIG: paste your firebase config below (or keep as is if same) =======
-  var firebaseConfig = {
-    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-    authDomain: "all-madrsa.firebaseapp.com",
-    projectId: "all-madrsa",
-    storageBucket: "all-madrsa.appspot.com",
-    messagingSenderId: "619313835874",
-    appId: "1:619313835874:web:e387e1297663f11fc2463b"
-  };
-  // ===============================================================================
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const storage = firebase.storage();
+const imgbbApiKey = "YOUR_IMGBB_API_KEY"; // <-- yahan apni ImgBB API key daalein
+const form = document.getElementById("postForm");
+const status = document.getElementById("status");
 
-  // Try anonymous sign-in (enable it in Firebase console)
-  auth.signInAnonymously().then(()=> {
-    document.getElementById('statusLink').textContent = "Signed in (anonymous)";
-  }).catch(err=>{
-    document.getElementById('statusLink').textContent = "Auth failed: " + err.code;
-    console.error("Auth error:", err);
-  });
+form.onsubmit = async e => {
+  e.preventDefault();
+  status.textContent = "Uploading image... ⏳";
 
-  // DOM
-  const postForm = document.getElementById('postForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const progressBar = document.getElementById('progressBar');
-  const progressText = document.getElementById('progressText');
-  const errorText = document.getElementById('errorText');
-  const photoInput = document.getElementById('postPhoto');
-  const previewImg = document.getElementById('preview');
+  const name = form.name.value.trim();
+  const age = form.age.value.trim();
+  const gender = form.gender.value;
+  const marital = form.marital.value.trim();
+  const city = form.city.value.trim();
+  const photo = form.photo.files[0];
 
-  // Preview image
-  photoInput.addEventListener('change', e=>{
-    const f = e.target.files[0];
-    if(!f){ previewImg.classList.add('hidden'); previewImg.src = ''; return; }
-    const url = URL.createObjectURL(f);
-    previewImg.src = url; previewImg.classList.remove('hidden');
-  });
+  if(!photo){ alert("Please select an image!"); return; }
 
-  clearBtn.addEventListener('click', ()=>{
-    postForm.reset();
-    previewImg.src = ''; previewImg.classList.add('hidden');
-    progressBar.style.width = '0%'; progressText.textContent = 'Idle';
-    errorText.textContent = '';
-  });
-
-  postForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    errorText.textContent = '';
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Posting...';
-    progressBar.style.width = '0%';
-    progressText.textContent = 'Preparing...';
-
-    const name = document.getElementById('postName').value.trim();
-    const age = document.getElementById('postAge').value.trim();
-    const gender = document.getElementById('postGender').value;
-    const marital = document.getElementById('postMarital').value.trim();
-    const city = document.getElementById('postCity').value.trim();
-    const photo = photoInput.files[0];
-
+  const reader = new FileReader();
+  reader.readAsDataURL(photo);
+  reader.onload = async () => {
     try {
-      let photoUrl = "";
-      if(photo){
-        progressText.textContent = 'Uploading image...';
-        const path = 'profiles/' + Date.now() + '_' + photo.name.replace(/\s+/g,'_');
-        const storageRef = storage.ref().child(path);
-
-        // upload with progress
-        photoUrl = await new Promise((resolve, reject) => {
-          const uploadTask = storageRef.put(photo);
-          uploadTask.on('state_changed',
-            (snapshot) => {
-              const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-              progressBar.style.width = pct + '%';
-              progressText.textContent = 'Uploading image: ' + pct + '%';
-            },
-            (err) => { reject(err); },
-            async () => {
-              try {
-                const url = await uploadTask.snapshot.ref.getDownloadURL();
-                resolve(url);
-              } catch(err2) { reject(err2); }
-            }
-          );
-        });
-      }
-
-      // Create document in Firestore
-      progressText.textContent = 'Saving profile...';
-      await db.collection('profiles').add({
-        name, age, gender, marital, city, photoUrl,
-        approvals: { name:false, age:false, gender:false, marital:false, city:false, photoUrl:false },
-        likes: 0,
-        created: firebase.firestore.FieldValue.serverTimestamp()
+      const formData = new FormData();
+      formData.append("image", reader.result.split(",")[1]);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+        method: "POST",
+        body: formData
       });
+      const data = await res.json();
+      if(data.success){
+        const imageUrl = data.data.url;
+        // Ab aap is URL ko Firebase ya Firestore me save kar sakte ho
+        console.log("Image URL:", imageUrl);
 
-      progressBar.style.width = '100%';
-      progressText.textContent = 'Profile submitted!';
-      alert('✅ Profile submitted successfully! Wait for admin approval.');
-      postForm.reset();
-      previewImg.src = ''; previewImg.classList.add('hidden');
-    } catch(err) {
-      console.error("Post error:", err);
-      errorText.textContent = err.message || err.toString();
-      alert('❌ Error: ' + (err.message || err.toString()));
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Post Profile';
+        status.textContent = "✅ Profile ready! Image uploaded.";
+        form.reset();
+      } else {
+        status.textContent = "❌ Upload failed!";
+      }
+    } catch(err){
+      console.error(err);
+      status.textContent = "❌ Error uploading!";
     }
-  });
+  }
+};
 </script>
 </body>
 </html>
