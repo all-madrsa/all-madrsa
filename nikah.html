@@ -269,16 +269,20 @@ function renderAdmin(){
     adminList.appendChild(card);
   });
 
-  document.querySelectorAll(".saveBtn").forEach(btn=>{
-    btn.onclick=async()=>{
-      const id=btn.dataset.id;
-      const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
-      let approvals={};
-      checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
-      await updateDoc(doc(db,"profiles",id),{approvals});
-      alert("✅ Approvals Updated");
-    };
-  });
+document.querySelectorAll(".saveBtn").forEach(btn=>{
+  btn.onclick=async()=>{
+    const id=btn.dataset.id;
+    const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
+    let approvals={};
+    checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
+    await updateDoc(doc(db,"profiles",id),{approvals});
+    alert("✅ Approvals Updated");
+    
+    // Sudhar yaha
+    renderProfiles(); // Frontend ko turant update karne ke liye
+  };
+});
+
 
   document.querySelectorAll(".deleteBtn").forEach(btn=>{
     btn.onclick=async()=>{
