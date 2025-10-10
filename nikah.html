@@ -12,10 +12,10 @@
 body {background:#fdf6e3; font-family:sans-serif;}
 .profile-card {cursor:pointer; transition: transform 0.1s;}
 .profile-card:hover {transform: scale(1.05);}
-#profilePopup, #contactPopup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
-#popupContent, #contactContent {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
-#popupContent img, #contactContent img {width:100%; height:auto; border-radius:8px; margin-bottom:10px;}
-#closePopup, #closeContact, #logoutBtn {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
+#profilePopup, #contactPopup, #postPopup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
+#popupContent, #contactContent, #postContent {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
+#popupContent img, #contactContent img, #postContent img {width:100%; height:auto; border-radius:8px; margin-bottom:10px;}
+#closePopup, #closeContact, #closePost, #logoutBtn {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
 input[type="file"] {border:1px solid #ccc; padding:5px; border-radius:6px;}
 </style>
 </head>
@@ -23,14 +23,14 @@ input[type="file"] {border:1px solid #ccc; padding:5px; border-radius:6px;}
 
 <header class="bg-blue-600 p-4 flex justify-between items-center text-white">
   <h1 class="text-2xl font-bold">Nikah Portal</h1>
-  <button id="logoutBtn" class="hidden">Logout</button>
+  <div>
+    <button id="addPostBtn" class="hidden mr-2 bg-green-600 px-2 py-1 rounded">➕ Add Profile</button>
+    <button id="logoutBtn" class="hidden">Logout</button>
+  </div>
 </header>
 
 <main class="p-4">
-  <!-- Search -->
   <input type="text" id="searchInput" placeholder="Search by Name, Age, Marital Status" class="w-full p-2 rounded border mb-2">
-
-  <!-- Profiles List -->
   <div id="postsList" class="grid gap-2 grid-cols-2 lg:grid-cols-4 mb-4"></div>
 </main>
 
@@ -64,12 +64,28 @@ input[type="file"] {border:1px solid #ccc; padding:5px; border-radius:6px;}
   </div>
 </div>
 
+<!-- Post Popup -->
+<div id="postPopup">
+  <div id="postContent">
+    <button id="closePost">❌ Close</button>
+    <h2 class="text-xl font-bold mb-2">Add New Profile</h2>
+    <form id="postForm" class="flex flex-col gap-2">
+      <input type="text" id="postName" placeholder="Name" class="border p-2 rounded" required>
+      <input type="number" id="postAge" placeholder="Age" class="border p-2 rounded" required>
+      <input type="text" id="postGender" placeholder="Gender" class="border p-2 rounded" required>
+      <input type="text" id="postMarital" placeholder="Marital Status" class="border p-2 rounded" required>
+      <input type="text" id="postCity" placeholder="City" class="border p-2 rounded">
+      <input type="text" id="postPhotoUrl" placeholder="Photo URL" class="border p-2 rounded">
+      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Post Profile</button>
+    </form>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -95,11 +111,22 @@ const contactName = document.getElementById("contactName");
 const contactAddress = document.getElementById("contactAddress");
 const contactWhatsApp = document.getElementById("contactWhatsApp");
 
+const postPopup = document.getElementById("postPopup");
+const closePost = document.getElementById("closePost");
+const postForm = document.getElementById("postForm");
+const postName = document.getElementById("postName");
+const postAge = document.getElementById("postAge");
+const postGender = document.getElementById("postGender");
+const postMarital = document.getElementById("postMarital");
+const postCity = document.getElementById("postCity");
+const postPhotoUrl = document.getElementById("postPhotoUrl");
+
 const searchInput = document.getElementById("searchInput");
 const adminPanel = document.getElementById("adminPanel");
 const adminList = document.getElementById("adminList");
 const likesList = document.getElementById("likesList");
 const logoutBtn = document.getElementById("logoutBtn");
+const addPostBtn = document.getElementById("addPostBtn");
 
 let currentUser = null;
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
@@ -112,14 +139,21 @@ onAuthStateChanged(auth, user => {
   if(user && user.email===ADMIN_EMAIL){
     adminPanel.classList.remove("hidden");
     logoutBtn.classList.remove("hidden");
+    addPostBtn.classList.remove("hidden");
   } else {
     adminPanel.classList.add("hidden");
     logoutBtn.classList.add("hidden");
+    addPostBtn.classList.add("hidden");
   }
 });
 
 // Logout
 logoutBtn.addEventListener("click", ()=>{ signOut(auth); });
+
+// Open Post Popup
+addPostBtn.addEventListener("click", ()=>{ postPopup.style.display="flex"; });
+closePost.addEventListener("click", ()=>{ postPopup.style.display="none"; });
+postPopup.addEventListener("click", e=>{if(e.target===postPopup) postPopup.style.display="none";});
 
 // Fetch Profiles
 const q = query(collection(db,"profiles"), orderBy("created","desc"));
@@ -160,7 +194,6 @@ function renderProfiles(profiles){
       <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>
     `;
 
-    // Popup
     card.addEventListener("click", e=>{
       if(!e.target.classList.contains("contactBtn")){
         let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
@@ -174,7 +207,6 @@ function renderProfiles(profiles){
       }
     });
 
-    // Contact button
     card.querySelector(".contactBtn").addEventListener("click", ()=>{
       selectedProfileId=p.id;
       contactName.value="";
@@ -193,10 +225,29 @@ contactForm.addEventListener("submit", async e=>{
   let name = contactName.value.trim();
   let address = contactAddress.value.trim();
   let whatsapp = contactWhatsApp.value.trim();
-  if(!/^\d{10}$/.test(whatsapp)) whatsapp="91"+whatsapp; // auto +91
+  if(!/^\d{10}$/.test(whatsapp)) whatsapp="91"+whatsapp;
   await addDoc(collection(db,"likes"),{profileId:selectedProfileId,name,address,whatsapp,timestamp:serverTimestamp()});
   contactPopup.style.display="none";
   alert("✅ Contact info sent to admin!");
+});
+
+// Post form submit (Admin only)
+postForm.addEventListener("submit", async e=>{
+  e.preventDefault();
+  if(!currentUser || currentUser.email!==ADMIN_EMAIL) return alert("Login as admin to post");
+  let name = postName.value.trim();
+  let age = parseInt(postAge.value.trim());
+  let gender = postGender.value.trim();
+  let marital = postMarital.value.trim();
+  let city = postCity.value.trim();
+  let photoUrl = postPhotoUrl.value.trim();
+  await addDoc(collection(db,"profiles"),{
+    name, age, gender, marital, city, photoUrl,
+    approvals:{name:true, age:true, gender:true, marital:true, city:true, photoUrl:true},
+    created:serverTimestamp()
+  });
+  postPopup.style.display="none";
+  alert("✅ Profile posted!");
 });
 
 // Admin panel
