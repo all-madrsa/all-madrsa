@@ -179,18 +179,24 @@ function renderProfiles(){
     card.innerHTML=`${imgHtml}<p class="text-sm font-bold">${p.approvals.name?p.name:"Private"}</p><p class="text-xs text-gray-600">${p.approvals.age?p.age:""} yrs</p>
     <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
 
-    card.onclick=e=>{
-      if(!e.target.classList.contains("contactBtn")){
-        let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
-        if(p.photoUrl && p.approvals.photo) html+=`<img src="${p.photoUrl}">`;
-        const fields=["age","gender","marital","city","father","mother","siblings","education","occupation","income","height","weight","diet"];
-        fields.forEach(f=>{
-          if(p.approvals[f] && p[f]) html+=`<p>• ${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`;
-        });
-        profileBody.innerHTML=html;
-        profilePopup.style.display="flex";
-      }
-    };
+card.onclick = e => {
+  if (!e.target.classList.contains("contactBtn")) {
+    let html = `<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
+
+    // Photo dikhe hamesha
+    if (p.photoUrl) html += `<img src="${p.photoUrl}">`;
+
+    // Sirf approved fields dikhen
+    const fields = ["age","gender","marital","city","father","mother","siblings","education","occupation","income","height","weight","diet"];
+    fields.forEach(f => {
+      if (p.approvals?.[f] && p[f]) html += `<p>• ${f.charAt(0).toUpperCase() + f.slice(1)}: ${p[f]}</p>`;
+    });
+
+    profileBody.innerHTML = html;
+    profilePopup.style.display = "flex";
+  }
+};
+
 
     card.querySelector(".contactBtn").onclick=()=>{
       selectedProfileId=p.id;
