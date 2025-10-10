@@ -95,7 +95,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -160,7 +159,7 @@ onSnapshot(q,snapshot=>{
   renderAdmin();
 });
 
-// Render profiles
+// ✅ FIXED: Render profiles with image approval check
 function renderProfiles(){
   const search=searchInput.value.toLowerCase();
   postsList.innerHTML="";
@@ -171,13 +170,22 @@ function renderProfiles(){
 
     const card=document.createElement("div");
     card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
-    let imgHtml=p.photoUrls?.length?`<img src="${p.photoUrls[0]}" class="w-full h-32 object-cover rounded mb-1">`:`<div class='w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1'>No Image</div>`;
-    card.innerHTML=`${imgHtml}<p class="font-bold">${p.approvals.name?p.name:"Private"}</p><p class="text-xs">${p.approvals.age?p.age:""} yrs</p><p class="text-xs text-gray-500">${p.approvals.city?p.city:""}</p><button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
+    let imgHtml = (p.approvals.photoUrls && p.photoUrls?.length)
+      ? `<img src="${p.photoUrls[0]}" class="w-full h-32 object-cover rounded mb-1">`
+      : `<div class='w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1'>No Image</div>`;
+
+    card.innerHTML=`${imgHtml}
+    <p class="font-bold">${p.approvals.name?p.name:"Private"}</p>
+    <p class="text-xs">${p.approvals.age?p.age:""} yrs</p>
+    <p class="text-xs text-gray-500">${p.approvals.city?p.city:""}</p>
+    <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
 
     card.onclick=e=>{
       if(!e.target.classList.contains("contactBtn")){
         let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
-        if(p.photoUrls?.length) p.photoUrls.forEach(url=>{html+=`<img src="${url}">`});
+        if(p.approvals.photoUrls && p.photoUrls?.length){
+          p.photoUrls.forEach(url=>{html+=`<img src="${url}">`});
+        }
         ["age","gender","marital","city","height","weight","diet","education","occupation","income","father","mother","siblings","about"].forEach(f=>{
           if(p.approvals?.[f] && p[f]) html+=`<p>• ${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`;
         });
@@ -266,7 +274,7 @@ function renderAdmin(){
       let approvals={};
       checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
       await updateDoc(doc(db,"profiles",id),{approvals});
-      renderProfiles(); // real-time reflect
+      renderProfiles();
       alert("✅ Approvals updated!");
     };
   });
