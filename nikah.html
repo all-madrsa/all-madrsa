@@ -10,8 +10,8 @@ body {background:#fdf6e3; font-family:sans-serif;}
 .profile-card {cursor:pointer; transition: transform 0.1s;}
 .profile-card:hover {transform: scale(1.05);}
 .popup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
-.popup-content {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
-.popup-content img {width:100%; border-radius:8px; margin-bottom:10px;}
+.popup-content {background:white; max-width:500px; width:95%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
+.popup-content img {width:100%; border-radius:8px; margin-bottom:10px; object-fit:cover;}
 .close-btn {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
 input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
 </style>
@@ -28,50 +28,52 @@ input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
   <div id="postsList" class="grid gap-2 grid-cols-2 lg:grid-cols-4 mb-4"></div>
 </main>
 
-<section id="adminPanel" class="hidden p-4 border-t mt-4">
+<section id="adminPanel" class="hidden p-4 border-t mt-4 bg-white">
   <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
   <div id="adminList" class="grid gap-4"></div>
   <h3 class="text-lg font-bold mt-4">Contact / Likes Requests</h3>
   <div id="likesList"></div>
 </section>
 
-<!-- Popups -->
+<!-- POPUPS -->
+<div id="postPopup" class="popup">
+  <div class="popup-content">
+    <button id="closePost" class="close-btn">❌ Close</button>
+    <h2 class="text-xl font-bold mb-2">Add New Profile</h2>
+    <form id="postForm" class="flex flex-col gap-2">
+      <h3 class="font-bold">Personal Info</h3>
+      <input type="text" name="name" placeholder="Full Name" required>
+      <input type="number" name="age" placeholder="Age" required>
+      <select name="gender" required>
+        <option value="">Select Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+      <input type="text" name="marital" placeholder="Marital Status" required>
+      <input type="text" name="city" placeholder="City">
+      <h3 class="font-bold">Photo</h3>
+      <input type="file" name="photo" accept="image/*" required>
+      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Submit Profile</button>
+    </form>
+  </div>
+</div>
+
 <div id="profilePopup" class="popup">
   <div class="popup-content">
-    <button id="closePopup" class="close-btn">❌ Close</button>
-    <div id="popupBody"></div>
+    <button id="closeProfile" class="close-btn">❌ Close</button>
+    <div id="profileBody"></div>
   </div>
 </div>
 
 <div id="contactPopup" class="popup">
   <div class="popup-content">
     <button id="closeContact" class="close-btn">❌ Close</button>
-    <h2 class="text-xl font-bold mb-2">Contact This Profile</h2>
+    <h2 class="text-xl font-bold mb-2">Contact Profile</h2>
     <form id="contactForm" class="flex flex-col gap-2">
-      <input type="text" id="contactName" placeholder="Your Name" class="border p-2 rounded" required>
-      <input type="text" id="contactAddress" placeholder="Your Address" class="border p-2 rounded" required>
-      <input type="text" id="contactWhatsApp" placeholder="WhatsApp Number" class="border p-2 rounded" required>
-      <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded">Submit</button>
-    </form>
-  </div>
-</div>
-
-<div id="postPopup" class="popup">
-  <div class="popup-content">
-    <button id="closePost" class="close-btn">❌ Close</button>
-    <h2 class="text-xl font-bold mb-2">Add New Profile</h2>
-    <form id="postForm" class="flex flex-col gap-2">
-      <input type="text" id="postName" placeholder="Full Name" class="border p-2 rounded" required>
-      <input type="number" id="postAge" placeholder="Age" class="border p-2 rounded" required>
-      <select id="postGender" class="border p-2 rounded" required>
-        <option value="">Select Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-      </select>
-      <input type="text" id="postMarital" placeholder="Marital Status" class="border p-2 rounded" required>
-      <input type="text" id="postCity" placeholder="City" class="border p-2 rounded">
-      <input type="file" id="postPhoto" accept="image/*" required>
-      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Post Profile</button>
+      <input type="text" id="contactName" placeholder="Your Name" required>
+      <input type="text" id="contactAddress" placeholder="Your Address" required>
+      <input type="text" id="contactWhatsApp" placeholder="WhatsApp Number" required>
+      <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded">Send</button>
     </form>
   </div>
 </div>
@@ -79,12 +81,12 @@ input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
 <script>
 const IMG_API_KEY = 'd12c2e4a8650157b2b6b9fe85336ea43';
 const ADMIN_EMAIL = 'zaradigitalseva@gmail.com';
-let currentUser = { email: ADMIN_EMAIL }; // Admin for testing
+let currentUser = { email: ADMIN_EMAIL }; // Test admin
 
 const postsList = document.getElementById('postsList');
 const profilePopup = document.getElementById('profilePopup');
-const popupBody = document.getElementById('popupBody');
-const closePopup = document.getElementById('closePopup');
+const profileBody = document.getElementById('profileBody');
+const closeProfile = document.getElementById('closeProfile');
 
 const contactPopup = document.getElementById('contactPopup');
 const closeContact = document.getElementById('closeContact');
@@ -109,38 +111,41 @@ addPostBtn.onclick = () => postPopup.style.display='flex';
 closePost.onclick = () => postPopup.style.display='none';
 postPopup.onclick = e=>{if(e.target===postPopup) postPopup.style.display='none';};
 
-closePopup.onclick = () => profilePopup.style.display='none';
+closeProfile.onclick = () => profilePopup.style.display='none';
 profilePopup.onclick = e=>{if(e.target===profilePopup) profilePopup.style.display='none';};
 
 closeContact.onclick = () => contactPopup.style.display='none';
 contactPopup.onclick = e=>{if(e.target===contactPopup) contactPopup.style.display='none';};
 
-// Post profile
-postForm.onsubmit = async e => {
+// Add profile
+postForm.onsubmit = async e=>{
   e.preventDefault();
-  const name = postForm.postName.value;
-  const age = postForm.postAge.value;
-  const gender = postForm.postGender.value;
-  const marital = postForm.postMarital.value;
-  const city = postForm.postCity.value;
-  const photoFile = postForm.postPhoto.files[0];
+  const formData = new FormData(postForm);
+  const photoFile = formData.get('photo');
+  
+  // Upload photo to ImgBB
+  let uploadData = new FormData();
+  uploadData.append('image', photoFile);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {method:'POST', body: uploadData});
+  const data = await res.json();
+  const photoUrl = data.data.url;
 
-  // Upload to ImgBB
-  let formData = new FormData();
-  formData.append('image', photoFile);
-  let res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {method:'POST', body: formData});
-  let data = await res.json();
-  let photoUrl = data.data.url;
-
-  let profile = {
+  const profile = {
     id:Date.now(),
-    name, age, gender, marital, city, photoUrl,
-    approvals:{name:false, age:false, gender:false, marital:false, city:false, photo:true}
+    name: formData.get('name'),
+    age: formData.get('age'),
+    gender: formData.get('gender'),
+    marital: formData.get('marital'),
+    city: formData.get('city'),
+    photoUrl,
+    approvals: { name:false, age:false, gender:false, marital:false, city:false, photo:false }
   };
+
   profilesDB.unshift(profile);
   renderProfiles();
   postPopup.style.display='none';
   postForm.reset();
+  postForm.photo.value=''; // reset file input
 }
 
 // Render profiles
@@ -148,35 +153,45 @@ function renderProfiles(){
   const search = searchInput.value.toLowerCase();
   postsList.innerHTML='';
   profilesDB.forEach(p=>{
+    // Only show approved profiles
     const approvedFields = Object.keys(p.approvals).filter(f=>p.approvals[f]);
-    if(approvedFields.length===0) return;
-    if(search && !(`${p.name} ${p.age} ${p.marital} ${p.city}`.toLowerCase().includes(search))) return;
+    if(approvedFields.length === 0) return;
+
+    // Search filter
+    const text = `${p.name} ${p.age} ${p.marital} ${p.city}`.toLowerCase();
+    if(search && !text.includes(search)) return;
 
     const card = document.createElement('div');
     card.className='profile-card bg-white rounded shadow p-2 flex flex-col items-center';
-    const showName = p.approvals.name ? p.name : 'Private';
-    const showAge = p.approvals.age ? p.age : '';
-    const showCity = p.approvals.city ? p.city : '';
-    card.innerHTML=`<img src='${p.photoUrl}' class='w-full h-32 object-cover rounded mb-1'>
-    <p class='font-bold'>${showName}</p>
-    <p class='text-xs'>${showAge} yrs</p>
-    <p class='text-xs text-gray-500'>${showCity}</p>
-    <button class='bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn'>📩 Contact</button>`;
+    
+    let imgHtml = p.approvals.photo ? `<img src="${p.photoUrl}" class="w-full h-32 object-cover rounded mb-1">` :
+      `<div class="w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1">No Image</div>`;
+    
+    card.innerHTML = `
+      ${imgHtml}
+      <p class="font-bold">${p.approvals.name ? p.name : "Private"}</p>
+      <p class="text-xs">${p.approvals.age ? p.age : ""} yrs</p>
+      <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>
+    `;
 
-    card.querySelector('.contactBtn').onclick=e=>{
+    // Contact button
+    card.querySelector('.contactBtn').onclick = e=>{
       e.stopPropagation();
-      selectedProfileId=p.id;
+      selectedProfileId = p.id;
+      contactForm.reset();
       contactPopup.style.display='flex';
     };
 
+    // Card click
     card.onclick = ()=>{
-      let html = `<h2 class='font-bold text-xl mb-2'>${p.approvals.name?p.name:"Private"}</h2>`;
-      if(p.approvals.photo) html += `<img src='${p.photoUrl}'>`;
-      const fields = ["age","gender","marital","city"];
-      fields.forEach(f=>{
-        if(p.approvals[f]) html+=`<p>${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`;
+      let html = `<h2 class="text-xl font-bold mb-2">${p.approvals.name ? p.name : "Private"}</h2>`;
+      if(p.approvals.photo) html += `<img src="${p.photoUrl}">`;
+
+      ['age','gender','marital','city'].forEach(f=>{
+        if(p.approvals[f]) html += `<p>• ${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`;
       });
-      popupBody.innerHTML = html;
+
+      profileBody.innerHTML = html;
       profilePopup.style.display='flex';
     };
 
@@ -185,12 +200,18 @@ function renderProfiles(){
 }
 
 // Search
-searchInput.oninput=()=>renderProfiles();
+searchInput.oninput = renderProfiles;
 
 // Contact form
-contactForm.onsubmit=e=>{
+contactForm.onsubmit = e=>{
   e.preventDefault();
-  let contact={id:Date.now(), profileId:selectedProfileId, name:contactForm.contactName.value, address:contactForm.contactAddress.value, whatsapp:contactForm.contactWhatsApp.value};
+  const contact = {
+    id:Date.now(),
+    profileId:selectedProfileId,
+    name: contactForm.contactName.value,
+    address: contactForm.contactAddress.value,
+    whatsapp: contactForm.contactWhatsApp.value
+  };
   contactsDB.unshift(contact);
   contactPopup.style.display='none';
   contactForm.reset();
@@ -200,52 +221,58 @@ contactForm.onsubmit=e=>{
 
 // Admin panel
 function renderAdmin(){
-  if(currentUser.email!==ADMIN_EMAIL) return;
+  if(currentUser.email !== ADMIN_EMAIL) return;
   adminPanel.classList.remove('hidden');
   adminList.innerHTML='';
   likesList.innerHTML='';
 
+  // Profiles
   profilesDB.forEach(p=>{
     const card = document.createElement('div');
     card.className='p-2 bg-gray-100 rounded shadow';
-    card.innerHTML=`<p class="font-bold">${p.name}</p>
+    card.innerHTML = `<p class="font-bold">${p.name || "No Name"}</p>
       <div class="flex gap-2 flex-wrap">
-      ${Object.keys(p.approvals).map(f=>`<label><input type="checkbox" data-id="${p.id}" data-field="${f}" ${p.approvals[f]?"checked":""}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`).join("")}
+      ${Object.keys(p.approvals).map(f=>{
+        return `<label><input type="checkbox" data-id="${p.id}" data-field="${f}" ${p.approvals[f] ? "checked" : ""}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`;
+      }).join('')}
       </div>
       <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
       <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
     adminList.appendChild(card);
   });
 
-  document.querySelectorAll(".saveBtn").forEach(btn=>{
-    btn.onclick=()=>{
-      const id=btn.dataset.id;
-      const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
-      checkboxes.forEach(cb=>{
-        const profile = profilesDB.find(p=>p.id==id);
-        profile.approvals[cb.dataset.field] = cb.checked;
-      });
+  // Save buttons
+  document.querySelectorAll('.saveBtn').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.id;
+      const checkboxes = document.querySelectorAll(`input[data-id="${id}"]`);
+      const approvals = {};
+      checkboxes.forEach(cb => approvals[cb.dataset.field] = cb.checked);
+      const profile = profilesDB.find(p=>p.id==id);
+      if(profile) profile.approvals = approvals;
       renderProfiles();
-      renderAdmin();
-    }
+      alert('✅ Approvals updated!');
+    };
   });
 
-  document.querySelectorAll(".deleteBtn").forEach(btn=>{
-    btn.onclick=()=>{
-      const id=btn.dataset.id;
-      if(confirm("Are you sure to delete this profile?")){
+  // Delete buttons
+  document.querySelectorAll('.deleteBtn').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.id;
+      if(confirm('Are you sure to delete this profile?')){
         profilesDB = profilesDB.filter(p=>p.id!=id);
         renderProfiles();
         renderAdmin();
       }
-    }
+    };
   });
 
-  // Render contacts
+  // Contacts
   contactsDB.forEach(c=>{
-    let div = document.createElement('div');
-    div.className='p-2 bg-yellow-100 rounded shadow mb-1';
-    div.innerHTML=`<p><b>${c.name}</b></p><p>${c.address}</p><p>📱 ${c.whatsapp}</p>`;
+    const div = document.createElement('div');
+    div.className='p-2 bg-yellow-100 rounded shadow mb-1 flex justify-between items-center';
+    div.innerHTML = `<div><b>${c.name}</b><p>${c.address}</p><p>📱 ${c.whatsapp}</p></div>
+      <a href="https://wa.me/${c.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
     likesList.appendChild(div);
   });
 }
