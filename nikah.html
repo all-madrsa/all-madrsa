@@ -11,7 +11,7 @@ body {background:#fdf6e3; font-family:sans-serif;}
 .profile-card:hover {transform: scale(1.05);}
 .popup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
 .popup-content {background:white; max-width:500px; width:95%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
-.popup-content img {width:100%; border-radius:8px; margin-bottom:10px;}
+.popup-content img {width:100%; max-height:300px; object-fit:cover; border-radius:8px; margin-bottom:10px;}
 .close-btn {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
 input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
 </style>
@@ -41,7 +41,6 @@ input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
     <button id="closePost" class="close-btn">❌</button>
     <h2 class="text-xl font-bold mb-2">Add New Profile</h2>
     <form id="postForm" class="flex flex-col gap-2">
-      <!-- Personal Details -->
       <h3 class="font-bold">Personal Info</h3>
       <input type="text" name="name" placeholder="Full Name" required>
       <input type="number" name="age" placeholder="Age" required>
@@ -52,26 +51,18 @@ input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
       </select>
       <input type="text" name="marital" placeholder="Marital Status" required>
       <input type="text" name="city" placeholder="City" required>
-
-      <!-- Family Details -->
       <h3 class="font-bold">Family Info</h3>
       <input type="text" name="father" placeholder="Father's Name">
       <input type="text" name="mother" placeholder="Mother's Name">
       <input type="text" name="siblings" placeholder="Siblings">
-
-      <!-- Education & Occupation -->
       <h3 class="font-bold">Education & Occupation</h3>
       <input type="text" name="education" placeholder="Highest Education">
       <input type="text" name="occupation" placeholder="Occupation">
       <input type="text" name="income" placeholder="Annual Income">
-
-      <!-- Lifestyle -->
       <h3 class="font-bold">Lifestyle</h3>
       <input type="text" name="height" placeholder="Height">
       <input type="text" name="weight" placeholder="Weight">
       <input type="text" name="diet" placeholder="Diet Preference">
-
-      <!-- Photo -->
       <h3 class="font-bold">Photo</h3>
       <input type="file" name="photo" accept="image/*" required>
       <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Submit Profile</button>
@@ -104,7 +95,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-// Firebase config
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -119,6 +110,7 @@ const auth = getAuth();
 signInAnonymously(auth);
 
 const ADMIN_EMAIL="zaradigitalseva@gmail.com";
+
 let allProfiles=[], selectedProfileId=null, currentUser=null;
 
 // Elements
@@ -157,9 +149,9 @@ profilePopup.onclick=e=>{if(e.target===profilePopup) profilePopup.style.display=
 closeContact.onclick=()=>contactPopup.style.display="none";
 contactPopup.onclick=e=>{if(e.target===contactPopup) contactPopup.style.display="none";}
 
-// Fetch & render profiles
-const q = query(collection(db,"profiles"), orderBy("created","desc"));
-onSnapshot(q, snapshot=>{
+// Fetch profiles
+const q=query(collection(db,"profiles"),orderBy("created","desc"));
+onSnapshot(q,snapshot=>{
   allProfiles=[];
   snapshot.forEach(docSnap=>{
     const data=docSnap.data();
@@ -175,29 +167,30 @@ function renderProfiles(){
   const search=searchInput.value.toLowerCase();
   postsList.innerHTML="";
   allProfiles.forEach(p=>{
-    const approvedFields=p.approvals||{};
-    if(Object.values(approvedFields).every(f=>!f)) return; // ignore if nothing approved
+    if(!p.approvals) return;
+    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
+    if(approvedFields.length===0) return;
     if(search && !((p.name&&p.name.toLowerCase().includes(search)) || (p.age&&p.age.toString().includes(search)) || (p.marital&&p.marital.toLowerCase().includes(search)))) return;
 
     const card=document.createElement("div");
     card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
-    const imgHtml=p.photoUrl && approvedFields.photo ? `<img src="${p.photoUrl}" class="w-full h-32 object-cover rounded mb-1">` :
-      `<div class="w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1">No Image</div>`;
-    card.innerHTML=`${imgHtml}<p class="text-sm font-bold">${approvedFields.name?p.name:"Private"}</p>
-    <p class="text-xs text-gray-600">${approvedFields.age?p.age:""} yrs</p>
+
+    let imgHtml=p.photoUrl && p.approvals.photo?"<img src='"+p.photoUrl+"' class='w-full h-32 object-cover rounded mb-1'>":"<div class='w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1'>No Image</div>";
+    card.innerHTML=`${imgHtml}<p class="text-sm font-bold">${p.approvals.name?p.name:"Private"}</p><p class="text-xs text-gray-600">${p.approvals.age?p.age:""} yrs</p>
     <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
 
-    card.addEventListener("click", e=>{
+    card.onclick=e=>{
       if(!e.target.classList.contains("contactBtn")){
-        let html=`<h2 class="text-xl font-bold mb-2">${approvedFields.name?p.name:"Private"}</h2>`;
-        if(p.photoUrl && approvedFields.photo) html+=`<img src="${p.photoUrl}">`;
-        for(const f of ["age","gender","marital","city","father","mother","siblings","education","occupation","income","height","weight","diet"]){
-          if(approvedFields[f] && p[f]) html+=`<p>• ${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`;
-        }
+        let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
+        if(p.photoUrl && p.approvals.photo) html+=`<img src="${p.photoUrl}">`;
+        const fields=["age","gender","marital","city","father","mother","siblings","education","occupation","income","height","weight","diet"];
+        fields.forEach(f=>{
+          if(p.approvals[f] && p[f]) html+=`<p>• ${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`;
+        });
         profileBody.innerHTML=html;
         profilePopup.style.display="flex";
       }
-    });
+    };
 
     card.querySelector(".contactBtn").onclick=()=>{
       selectedProfileId=p.id;
@@ -223,7 +216,7 @@ contactForm.onsubmit=async e=>{
   alert("✅ Contact sent to admin!");
 };
 
-// Post form submit with ImgBB
+// Post Form submit with ImgBB
 postForm.onsubmit=async e=>{
   e.preventDefault();
   const imgbbAPIKey="d12c2e4a8650157b2b6b9fe85336ea43";
@@ -245,13 +238,13 @@ postForm.onsubmit=async e=>{
   for(const key in profileData) profileData.approvals[key]=false;
   profileData.created=serverTimestamp();
 
-  await addDoc(collection(db,"profiles"), profileData);
+  await addDoc(collection(db,"profiles"),profileData);
   postPopup.style.display="none";
   postForm.reset();
   alert("✅ Profile submitted! Admin will approve.");
 };
 
-// Admin render
+// Admin
 function renderAdmin(){
   if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
   adminList.innerHTML="";
@@ -267,35 +260,35 @@ function renderAdmin(){
     adminList.appendChild(card);
   });
 
-document.querySelectorAll(".saveBtn").forEach(btn=>{
-  btn.onclick=async()=>{
-    const id=btn.dataset.id;
-    const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
-    let approvals={};
-    checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
-    await updateDoc(doc(db,"profiles",id),{approvals});
-    alert("✅ Approvals Updated");
-    renderProfiles();
-  };
-});
+  document.querySelectorAll(".saveBtn").forEach(btn=>{
+    btn.onclick=async()=>{
+      const id=btn.dataset.id;
+      const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
+      let approvals={};
+      checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
+      await updateDoc(doc(db,"profiles",id),{approvals});
+      alert("✅ Approvals Updated");
+      renderProfiles();
+    };
+  });
 
-document.querySelectorAll(".deleteBtn").forEach(btn=>{
-  btn.onclick=async()=>{
-    const id=btn.dataset.id;
-    if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
-  };
-});
+  document.querySelectorAll(".deleteBtn").forEach(btn=>{
+    btn.onclick=async()=>{
+      const id=btn.dataset.id;
+      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
+    };
+  });
+}
 
 // Likes display
-onSnapshot(collection(db,"likes"), snapshot=>{
+onSnapshot(collection(db,"likes"),snapshot=>{
   if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
   likesList.innerHTML="";
   snapshot.forEach(docSnap=>{
     const l=docSnap.data();
     const div=document.createElement("div");
     div.className="p-2 bg-yellow-100 rounded shadow mb-1 flex justify-between items-center";
-    div.innerHTML=`<div><b>${l.name}</b><p>${l.address}</p><p>📱 ${l.whatsapp}</p></div>
-    <a href="https://wa.me/${l.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
+    div.innerHTML=`<div><b>${l.name}</b><p>${l.address}</p><p>📱 ${l.whatsapp}</p></div><a href="https://wa.me/${l.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
     likesList.appendChild(div);
   });
 });
