@@ -1,110 +1,524 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Nikah Profiles - View</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nikah Portal — Single Page (Admin)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f8f8f8; }
-    header {
-      background: #008080;
-      color: white;
-      padding: 10px 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    header h1 { font-size: 18px; margin: 0; }
-    header .btn {
-      background: white;
-      color: #008080;
-      padding: 5px 10px;
-      border-radius: 5px;
-      text-decoration: none;
-      font-size: 14px;
-    }
-    .profile-card {
-      background: white;
-      margin: 10px;
-      border-radius: 8px;
-      padding: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .profile-card img {
-      width: 100%;
-      max-height: 200px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .profile-card h3 { margin: 8px 0 4px; }
-    .profile-card p { margin: 2px 0; font-size: 14px; }
-    .view-btn {
-      display: inline-block;
-      margin-top: 6px;
-      background: #008080;
-      color: white;
-      padding: 5px 10px;
-      text-decoration: none;
-      border-radius: 5px;
-      font-size: 13px;
-    }
+    body{background:#f8fafc}
+    .card{transition:transform .12s}
+    .card:hover{transform:scale(1.02)}
+    .popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:60}
+    .popup .box{background:white;padding:16px;border-radius:10px;max-width:720px;width:96%;max-height:90vh;overflow:auto}
+    .closeBtn{position:absolute;right:12px;top:8px;background:#ef4444;color:white;border-radius:6px;padding:6px 8px;border:none;cursor:pointer}
+    input,select,textarea{border:1px solid #e5e7eb;padding:8px;border-radius:6px}
   </style>
 </head>
-<body>
+<body class="font-sans">
 
-<header>
-  <h1>💍 Nikah Profiles</h1>
-  <div id="header-buttons"></div>
+<header class="bg-indigo-600 text-white p-4 flex justify-between items-center">
+  <div class="text-xl font-semibold">Nikah Portal</div>
+  <div class="flex items-center gap-3">
+    <div id="adminStatus" class="text-sm"></div>
+    <button id="adminLoginBtn" class="bg-white text-indigo-600 px-3 py-1 rounded text-sm">Admin Login</button>
+    <button id="adminLogoutBtn" class="bg-red-500 text-white px-3 py-1 rounded text-sm hidden">Logout</button>
+  </div>
 </header>
 
-<div id="profiles-container"></div>
+<main class="max-w-5xl mx-auto p-4">
+  <section class="mb-4">
+    <input id="searchInput" placeholder="Search by name / city / education..." class="w-full p-2 rounded" />
+  </section>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Left column: Create profile + contact quick -->
+    <div class="space-y-4">
+      <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-semibold mb-2">Create Profile</h3>
+        <form id="profileForm" class="space-y-2">
+          <input id="name" placeholder="Full name" required />
+          <div class="grid grid-cols-2 gap-2">
+            <input id="age" type="number" placeholder="Age" required />
+            <select id="gender" required>
+              <option value="">Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <input id="marital" placeholder="Marital status (e.g. Unmarried)" required />
+          <input id="city" placeholder="City" />
+          <input id="education" placeholder="Highest education" />
+          <input id="occupation" placeholder="Occupation" />
+          <input id="diet" placeholder="Diet (Veg/Non-Veg)" />
+          <input id="photo" type="file" accept="image/*" />
+          <div class="text-xs text-gray-500">Photo (optional). If omitted, profile shows no image.</div>
+          <div class="flex gap-2">
+            <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded">Submit Profile</button>
+            <button type="button" id="clearForm" class="px-3 py-1 border rounded">Clear</button>
+          </div>
+        </form>
+      </div>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-    authDomain: "all-madrsa.firebaseapp.com",
-    projectId: "all-madrsa",
-    storageBucket: "all-madrsa.appspot.com",
-    messagingSenderId: "619313835874",
-    appId: "1:619313835874:web:e387e1297663f11fc2463b"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const auth = firebase.auth();
-  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+      <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-semibold mb-2">Quick Contact Admin</h3>
+        <form id="quickContactForm" class="space-y-2">
+          <input id="qcName" placeholder="Your name" required />
+          <input id="qcWhatsapp" placeholder="WhatsApp number" required />
+          <textarea id="qcMessage" placeholder="Message / request" rows="3"></textarea>
+          <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded">Send</button>
+        </form>
+      </div>
+    </div>
 
-  auth.onAuthStateChanged(user => {
-    const headerBtns = document.getElementById('header-buttons');
-    headerBtns.innerHTML = '';
-    if (user) {
-      if (user.email === ADMIN_EMAIL) {
-        headerBtns.innerHTML = `<a href="admin.html" class="btn">Admin Panel</a>`;
-      } else {
-        headerBtns.innerHTML = `<a href="post.html" class="btn">Post Profile</a>`;
-      }
+    <!-- Middle: Profiles grid -->
+    <div class="lg:col-span-2">
+      <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+    </div>
+  </section>
+
+  <!-- Admin Panel (visible only when admin signed in) -->
+  <section id="adminPanel" class="hidden mt-6 bg-white p-4 rounded shadow">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-semibold">Admin Panel</h3>
+      <div class="flex gap-2">
+        <button id="showAllBtn" class="px-2 py-1 border rounded">All</button>
+        <button id="showPendingBtn" class="px-2 py-1 border rounded">Pending</button>
+        <button id="showApprovedBtn" class="px-2 py-1 border rounded">Approved</button>
+      </div>
+    </div>
+
+    <div id="adminList" class="space-y-3"></div>
+  </section>
+</main>
+
+<!-- Profile Popup -->
+<div id="profilePopup" class="popup">
+  <div class="box relative">
+    <button class="closeBtn" onclick="closePopup('profilePopup')">Close</button>
+    <div id="profileContent"></div>
+  </div>
+</div>
+
+<!-- Admin Login Popup -->
+<div id="loginPopup" class="popup">
+  <div class="box">
+    <button class="closeBtn" onclick="closePopup('loginPopup')">Close</button>
+    <h3 class="text-xl font-semibold mb-2">Admin Login</h3>
+    <form id="loginForm" class="space-y-2">
+      <input id="loginEmail" type="email" placeholder="Admin email" required />
+      <input id="loginPass" type="password" placeholder="Password" required />
+      <div class="flex gap-2">
+        <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded">Sign in</button>
+        <button type="button" id="cancelLogin" class="px-3 py-1 border rounded">Cancel</button>
+      </div>
+      <div class="text-xs text-gray-500">(Use admin email to sign in. If account not created, create via Firebase console.)</div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+/* ==========================
+   CONFIG — REPLACE THESE
+   ========================== */
+// Put your Firebase config here (replace placeholders)
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+  projectId: "YOUR_FIREBASE_PROJECT_ID",
+  storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_FIREBASE_MSG_SENDER",
+  appId: "YOUR_FIREBASE_APPID"
+};
+
+// Put your ImgBB API key here (for client-side uploads)
+const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY";
+
+// Which email is treated as admin (change if needed)
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
+/* ==========================
+   IMPORT FIREBASE (v9 modular)
+   ========================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc,
+  query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+/* ==========================
+   INIT
+   ========================== */
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const profilesCol = collection(db, "nikah_profiles");
+const contactsCol = collection(db, "nikah_contacts");
+
+/* ==========================
+   DOM refs
+   ========================== */
+const profileForm = document.getElementById("profileForm");
+const profilesGrid = document.getElementById("profilesGrid");
+const searchInput = document.getElementById("searchInput");
+const profilePopup = document.getElementById("profilePopup");
+const profileContent = document.getElementById("profileContent");
+const adminPanel = document.getElementById("adminPanel");
+const adminList = document.getElementById("adminList");
+const adminLoginBtn = document.getElementById("adminLoginBtn");
+const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+const adminStatus = document.getElementById("adminStatus");
+const loginPopup = document.getElementById("loginPopup");
+const loginForm = document.getElementById("loginForm");
+const cancelLogin = document.getElementById("cancelLogin");
+const showAllBtn = document.getElementById("showAllBtn");
+const showPendingBtn = document.getElementById("showPendingBtn");
+const showApprovedBtn = document.getElementById("showApprovedBtn");
+const quickContactForm = document.getElementById("quickContactForm");
+const clearFormBtn = document.getElementById("clearForm");
+
+let allProfiles = [];         // live cache
+let viewFilter = "approved";  // default public view
+
+/* ==========================
+   Utility: open/close popup
+   ========================== */
+window.closePopup = id => document.getElementById(id).style.display = "none";
+function openPopup(id){ document.getElementById(id).style.display = "flex"; }
+
+/* ==========================
+   Auth: Admin sign-in handling
+   ========================== */
+adminLoginBtn.onclick = () => openPopup('loginPopup');
+cancelLogin.onclick = () => closePopup('loginPopup');
+loginForm.onsubmit = async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    closePopup('loginPopup');
+  } catch(err){
+    alert("Login failed: " + err.message);
+  }
+};
+adminLogoutBtn.onclick = async () => {
+  await signOut(auth);
+};
+
+/* show/hide admin UI based on auth state */
+onAuthStateChanged(auth, user => {
+  if(user && user.email === ADMIN_EMAIL){
+    adminPanel.classList.remove("hidden");
+    adminLoginBtn.classList.add("hidden");
+    adminLogoutBtn.classList.remove("hidden");
+    adminStatus.innerText = "Admin: " + user.email;
+  } else {
+    adminPanel.classList.add("hidden");
+    adminLoginBtn.classList.remove("hidden");
+    adminLogoutBtn.classList.add("hidden");
+    adminStatus.innerText = "";
+  }
+});
+
+/* ==========================
+   ImgBB upload helper
+   ========================== */
+async function uploadToImgBB(file){
+  if(!file) return null;
+  const form = new FormData();
+  form.append("image", file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: form });
+  const j = await res.json();
+  if(j && j.data && j.data.url) return j.data.url;
+  return null;
+}
+
+/* ==========================
+   Profile create — public form
+   ========================== */
+profileForm.onsubmit = async (e) => {
+  e.preventDefault();
+  const fileEl = document.getElementById("photo");
+  const file = fileEl.files && fileEl.files[0];
+  let photoUrl = null;
+  try {
+    if(file) {
+      photoUrl = await uploadToImgBB(file);
     }
+  } catch(err){
+    console.warn("ImgBB upload failed:", err);
+  }
+
+  const payload = {
+    name: document.getElementById("name").value.trim(),
+    age: document.getElementById("age").value.trim(),
+    gender: document.getElementById("gender").value,
+    marital: document.getElementById("marital").value.trim(),
+    city: document.getElementById("city").value.trim(),
+    education: document.getElementById("education").value.trim(),
+    occupation: document.getElementById("occupation").value.trim(),
+    diet: document.getElementById("diet").value.trim(),
+    photoUrl: photoUrl || null,
+    created: serverTimestamp(),
+    // Important: when user uploads, approvals SHOULD be false (pending)
+    approvals: {
+      name: false, age: false, gender: false, marital: false, city: false,
+      education: false, occupation: false, diet: false, photo: false
+    }
+  };
+
+  try {
+    await addDoc(profilesCol, payload);
+    alert("Profile submitted — admin will review and approve fields.");
+    profileForm.reset();
+  } catch(err){
+    alert("Failed to save profile: " + err.message);
+  }
+};
+
+/* Quick contact form (sends to admin in Firestore) */
+if(quickContactForm) {
+  quickContactForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const obj = {
+      name: document.getElementById("qcName").value || "",
+      whatsapp: document.getElementById("qcWhatsapp").value || "",
+      message: document.getElementById("qcMessage").value || "",
+      created: serverTimestamp()
+    };
+    try {
+      await addDoc(contactsCol, obj);
+      alert("Message sent to admin.");
+      quickContactForm.reset();
+    } catch(err){
+      alert("Failed: " + err.message);
+    }
+  };
+}
+
+/* Clear form button */
+clearFormBtn.onclick = () => profileForm.reset();
+
+/* ==========================
+   Live snapshot of profiles
+   ========================== */
+const q = query(profilesCol, orderBy("created", "desc"));
+onSnapshot(q, snap => {
+  allProfiles = [];
+  snap.forEach(d => { const o = d.data(); o.id = d.id; allProfiles.push(o); });
+  renderPublicProfiles();
+  renderAdminList();
+});
+
+/* ==========================
+   Render functions
+   ========================== */
+function shouldShowPublic(p){
+  // Show in public if at least one field approved OR you prefer only fully approved -> adapt
+  // Here: show if at least one field approved. You can change to all true if required.
+  return p.approvals && Object.values(p.approvals).some(Boolean);
+}
+
+function renderPublicProfiles(){
+  const qstr = searchInput.value.trim().toLowerCase();
+  profilesGrid.innerHTML = "";
+  const list = allProfiles.filter(p => shouldShowPublic(p));
+  const filtered = list.filter(p => {
+    if(!qstr) return true;
+    const hay = `${p.name||''} ${p.city||''} ${p.education||''}`.toLowerCase();
+    return hay.includes(qstr);
   });
 
-  const container = document.getElementById('profiles-container');
-  db.collection("nikahProfiles").where("approved", "==", true).orderBy("createdAt", "desc").onSnapshot(snapshot => {
-    container.innerHTML = '';
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const card = document.createElement('div');
-      card.className = 'profile-card';
-      card.innerHTML = `
-        <img src="${data.photoUrl || 'https://via.placeholder.com/400x200'}" alt="Profile">
-        <h3>${data.name || 'No Name'}</h3>
-        <p>Age: ${data.age || 'N/A'}</p>
-        <p>City: ${data.city || 'N/A'}</p>
-      `;
-      container.appendChild(card);
-    });
+  filtered.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "card bg-white rounded p-3 shadow cursor-pointer";
+    card.innerHTML = `
+      <div class="h-48 mb-2 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+        ${p.photoUrl ? `<img src="${p.photoUrl}" class="w-full h-full object-cover">` : `<div class="text-sm text-gray-500">No Image</div>`}
+      </div>
+      <div class="font-semibold">${p.approvals.name ? p.name : "Private"}</div>
+      <div class="text-sm text-gray-600">${p.approvals.city ? p.city : ""}</div>
+      <div class="mt-2 flex gap-2">
+        <button class="viewBtn bg-indigo-600 text-white px-3 py-1 rounded text-sm">View</button>
+        <button class="contactBtn bg-green-600 text-white px-3 py-1 rounded text-sm">Contact</button>
+      </div>
+    `;
+
+    // View popup
+    card.querySelector(".viewBtn").onclick = (e) => {
+      e.stopPropagation();
+      openProfilePopup(p);
+    };
+
+    // Contact popup
+    card.querySelector(".contactBtn").onclick = (e) => {
+      e.stopPropagation();
+      // open contact quick modal (re-using profile popup for simplicity)
+      openContactDialog(p.id);
+    };
+
+    profilesGrid.appendChild(card);
   });
+}
+
+/* Open profile popup showing only approved fields */
+function openProfilePopup(p){
+  const f = p.approvals || {};
+  const html = `
+    ${p.photoUrl && f.photo ? `<img src="${p.photoUrl}" class="w-full rounded mb-3"/>` : ""}
+    <div><strong>Name:</strong> ${f.name ? p.name : "<em>Private</em>"}</div>
+    <div><strong>Age:</strong> ${f.age ? p.age : "<em>Private</em>"}</div>
+    <div><strong>Gender:</strong> ${f.gender ? p.gender : "<em>Private</em>"}</div>
+    <div><strong>Marital:</strong> ${f.marital ? p.marital : "<em>Private</em>"}</div>
+    <div><strong>City:</strong> ${f.city ? p.city : "<em>Private</em>"}</div>
+    <div><strong>Education:</strong> ${f.education ? p.education : "<em>Private</em>"}</div>
+    <div><strong>Occupation:</strong> ${f.occupation ? p.occupation : "<em>Private</em>"}</div>
+    <div><strong>Diet:</strong> ${f.diet ? p.diet : "<em>Private</em>"}</div>
+    <div class="mt-2 text-xs text-gray-500">(Only fields approved by admin are visible)</div>
+  `;
+  profileContent.innerHTML = html;
+  openPopup('profilePopup');
+}
+
+/* Contact dialog (simple: sends a contact doc linking profileId) */
+function openContactDialog(profileId){
+  // reuse profilePopup but show contact form
+  profileContent.innerHTML = `
+    <h3 class="text-lg font-semibold mb-2">Contact for profile</h3>
+    <form id="profileContactForm" class="space-y-2">
+      <input id="cName" placeholder="Your name" required />
+      <input id="cWhats" placeholder="WhatsApp or phone" required />
+      <textarea id="cMsg" placeholder="Message (interest/relation details)" rows="3"></textarea>
+      <div class="flex gap-2">
+        <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded">Send</button>
+        <button type="button" class="px-3 py-1 border rounded" onclick="closePopup('profilePopup')">Cancel</button>
+      </div>
+    </form>
+  `;
+  openPopup('profilePopup');
+  document.getElementById("profileContactForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const obj = {
+      profileId,
+      name: document.getElementById("cName").value,
+      whatsapp: document.getElementById("cWhats").value,
+      message: document.getElementById("cMsg").value,
+      created: serverTimestamp()
+    };
+    try {
+      await addDoc(contactsCol, obj);
+      alert("Contact request sent to admin.");
+      closePopup('profilePopup');
+    } catch(err){
+      alert("Failed to send: " + err.message);
+    }
+  };
+}
+
+/* ==========================
+   Admin: render list + approve/reject UI
+   ========================== */
+function renderAdminList(){
+  adminList.innerHTML = "";
+  // filter based on viewFilter
+  let list = [...allProfiles];
+  if(viewFilter === "pending") list = list.filter(p => p.approvals && !Object.values(p.approvals).every(Boolean));
+  if(viewFilter === "approved") list = list.filter(p => p.approvals && Object.values(p.approvals).every(Boolean));
+
+  list.forEach(p => {
+    const row = document.createElement("div");
+    row.className = "p-3 rounded border flex gap-3 items-start";
+    row.innerHTML = `
+      <div style="width:120px;flex-shrink:0">
+        ${p.photoUrl ? `<img src="${p.photoUrl}" class="w-full h-24 object-cover rounded" />` : `<div class="w-full h-24 bg-gray-100 flex items-center justify-center text-xs">No Image</div>`}
+      </div>
+      <div class="flex-1">
+        <div class="flex justify-between items-start gap-3">
+          <div>
+            <div class="font-semibold">${p.name || "(no name)"}</div>
+            <div class="text-xs text-gray-500">${p.city || ""} • ${p.education || ""}</div>
+          </div>
+          <div class="text-xs text-gray-500">${p.created ? new Date(p.created.seconds*1000).toLocaleString() : ""}</div>
+        </div>
+
+        <div class="mt-2 grid grid-cols-2 gap-2">
+          <!-- per-field approval checkboxes -->
+          <label><input type="checkbox" class="ap-name" ${p.approvals && p.approvals.name ? "checked":""}/> Name</label>
+          <label><input type="checkbox" class="ap-age" ${p.approvals && p.approvals.age ? "checked":""}/> Age</label>
+          <label><input type="checkbox" class="ap-gender" ${p.approvals && p.approvals.gender ? "checked":""}/> Gender</label>
+          <label><input type="checkbox" class="ap-marital" ${p.approvals && p.approvals.marital ? "checked":""}/> Marital</label>
+          <label><input type="checkbox" class="ap-city" ${p.approvals && p.approvals.city ? "checked":""}/> City</label>
+          <label><input type="checkbox" class="ap-education" ${p.approvals && p.approvals.education ? "checked":""}/> Education</label>
+          <label><input type="checkbox" class="ap-occupation" ${p.approvals && p.approvals.occupation ? "checked":""}/> Occupation</label>
+          <label><input type="checkbox" class="ap-diet" ${p.approvals && p.approvals.diet ? "checked":""}/> Diet</label>
+          <label><input type="checkbox" class="ap-photo" ${p.approvals && p.approvals.photo ? "checked":""}/> Photo</label>
+        </div>
+
+        <div class="mt-3 flex gap-2">
+          <button class="approveAll bg-green-600 text-white px-3 py-1 rounded text-sm">Approve All</button>
+          <button class="saveApprovals bg-indigo-600 text-white px-3 py-1 rounded text-sm">Save</button>
+          <button class="rejectProfile bg-red-500 text-white px-3 py-1 rounded text-sm">Reject (Delete)</button>
+        </div>
+      </div>
+    `;
+    // Attach actions
+    // Save approvals
+    row.querySelector(".saveApprovals").onclick = async () => {
+      const approvals = {
+        name: !!row.querySelector(".ap-name").checked,
+        age: !!row.querySelector(".ap-age").checked,
+        gender: !!row.querySelector(".ap-gender").checked,
+        marital: !!row.querySelector(".ap-marital").checked,
+        city: !!row.querySelector(".ap-city").checked,
+        education: !!row.querySelector(".ap-education").checked,
+        occupation: !!row.querySelector(".ap-occupation").checked,
+        diet: !!row.querySelector(".ap-diet").checked,
+        photo: !!row.querySelector(".ap-photo").checked
+      };
+      try {
+        await updateDoc(doc(db, "nikah_profiles", p.id), { approvals });
+        alert("Approvals saved.");
+      } catch(err){ alert("Save failed: " + err.message); }
+    };
+
+    // Approve all
+    row.querySelector(".approveAll").onclick = async () => {
+      const approvals = { name:true, age:true, gender:true, marital:true, city:true, education:true, occupation:true, diet:true, photo:true };
+      try {
+        await updateDoc(doc(db, "nikah_profiles", p.id), { approvals });
+        alert("Profile fully approved.");
+      } catch(err){ alert("Approve failed: " + err.message); }
+    };
+
+    // Reject/delete
+    row.querySelector(".rejectProfile").onclick = async () => {
+      if(!confirm("Delete this profile? This action cannot be undone.")) return;
+      try {
+        await deleteDoc(doc(db, "nikah_profiles", p.id));
+        alert("Profile deleted.");
+      } catch(err){ alert("Delete failed: "+err.message); }
+    };
+
+    adminList.appendChild(row);
+  });
+}
+
+/* Admin filter buttons */
+showAllBtn.onclick = () => { viewFilter="all"; renderAdminList(); };
+showPendingBtn.onclick = () => { viewFilter="pending"; renderAdminList(); };
+showApprovedBtn.onclick = () => { viewFilter="approved"; renderAdminList(); };
+
+/* Search input -> re-render public */
+searchInput.oninput = () => renderPublicProfiles();
+
+/* initial render helpers */
+renderPublicProfiles();
+renderAdminList();
+
 </script>
 </body>
 </html>
