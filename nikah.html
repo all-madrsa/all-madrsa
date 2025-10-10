@@ -79,7 +79,7 @@
         <h3 class="text-lg font-semibold">Public Profiles</h3>
         <div class="text-sm text-gray-500">Filtered & approved profiles yahan dikhte hain.</div>
       </div>
-      <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <div id="profilesGrid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
     </section>
   </div>
 
@@ -117,7 +117,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -129,8 +129,8 @@ const firebaseConfig = {
 };
 const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
 
-const adminEmail = "";      // admin email
-const adminPassword = "";   // admin password
+const adminEmail = "";
+const adminPassword = "";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -217,7 +217,7 @@ async function loadApprovedProfiles(){
   });
 
   if(filtered.length===0){
-    profilesGrid.innerHTML = `<div class="col-span-1 lg:col-span-3 bg-white p-6 rounded text-gray-500">No profiles found.</div>`;
+    profilesGrid.innerHTML = `<div class="col-span-1 lg:col-span-4 bg-white p-6 rounded text-gray-500">No profiles found.</div>`;
     return;
   }
 
@@ -229,11 +229,9 @@ async function loadApprovedProfiles(){
         <img src="${esc(p.imageUrl)}" alt="${esc(p.name)}" class="w-full h-full object-cover">
       </div>
       <div class="p-4">
-        <div class="flex items-start justify-between">
-          <div>
-            <h4 class="font-semibold text-lg">${esc(p.name)}, <span class="text-sm font-medium text-gray-600">${esc(p.age)}</span></h4>
-            <div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div>
-          </div>
+        <div class="flex flex-wrap items-center justify-between gap-1">
+          <h4 class="font-semibold text-lg truncate">${esc(p.name)}, <span class="text-sm font-medium text-gray-600">${esc(p.age)}</span></h4>
+          <div class="text-sm text-gray-500 truncate">${esc(p.city||'')} · ${esc(p.gender)}</div>
         </div>
         <p class="mt-3 text-sm text-gray-600">${esc(p.about||'')}</p>
         <div class="mt-3 text-sm text-gray-700">${p.contact ? 'Contact: '+esc(p.contact) : ''}</div>
@@ -340,12 +338,14 @@ async function refreshData(){
   }
 }
 
+// --- Admin Panel open/close ---
 adminBtn.addEventListener('click', ()=> {
   adminPanel.classList.remove('hidden');
+  adminPanel.classList.add('flex');
 });
-
 adminClose.addEventListener('click', ()=> {
   adminPanel.classList.add('hidden');
+  adminPanel.classList.remove('flex');
 });
 
 // ---------------- Admin silent login ----------------
