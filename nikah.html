@@ -13,10 +13,11 @@
 body {background:#fdf6e3; font-family:sans-serif;}
 .profile-card {cursor:pointer; transition: transform 0.1s;}
 .profile-card:hover {transform: scale(1.05);}
-#profilePopup, #contactPopup, #postPopup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
-#popupContent, #contactContent, #postContent {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
-#popupContent img, #contactContent img, #postContent img {width:100%; height:auto; border-radius:8px; margin-bottom:10px;}
-#closePopup, #closeContact, #closePost {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
+#profilePopup, #contactPopup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
+#popupContent, #contactContent, #postFormContainer {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
+#popupContent img, #contactContent img {width:100%; height:auto; border-radius:8px; margin-bottom:10px;}
+#closePopup, #closeContact {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
+input[type="file"] {border:1px solid #ccc; padding:5px; border-radius:6px;}
 </style>
 </head>
 <body class="text-black">
@@ -26,22 +27,28 @@ body {background:#fdf6e3; font-family:sans-serif;}
 </header>
 
 <main class="p-4">
+  <!-- Search -->
   <input type="text" id="searchInput" placeholder="Search by Name, Age, Marital Status" class="w-full p-2 rounded border mb-2">
-  
+
   <!-- Post Form -->
-  <div id="postFormContainer" class="mb-4 p-2 border rounded bg-white hidden">
-    <h2 class="text-lg font-bold mb-2">Post New Profile</h2>
+  <div id="postFormContainer" class="p-4 mb-4 bg-gray-100 rounded shadow hidden">
+    <h2 class="text-lg font-bold mb-2">Add Your Profile</h2>
     <form id="postForm" class="flex flex-col gap-2">
-      <input type="text" id="postName" placeholder="Name" class="border p-2 rounded" required>
+      <input type="text" id="postName" placeholder="Full Name" class="border p-2 rounded" required>
       <input type="number" id="postAge" placeholder="Age" class="border p-2 rounded" required>
-      <input type="text" id="postGender" placeholder="Gender" class="border p-2 rounded" required>
+      <select id="postGender" class="border p-2 rounded" required>
+        <option value="">Select Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
       <input type="text" id="postMarital" placeholder="Marital Status" class="border p-2 rounded" required>
-      <input type="text" id="postCity" placeholder="City" class="border p-2 rounded">
-      <input type="file" id="postPhotoFile" accept="image/*" class="border p-2 rounded">
-      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Post Profile</button>
+      <input type="text" id="postCity" placeholder="City" class="border p-2 rounded" required>
+      <input type="file" id="postPhoto" accept="image/*">
+      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Post</button>
     </form>
   </div>
 
+  <!-- Profiles List -->
   <div id="postsList" class="grid gap-2 grid-cols-2 lg:grid-cols-4 mb-4"></div>
 </main>
 
@@ -77,10 +84,11 @@ body {background:#fdf6e3; font-family:sans-serif;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -99,14 +107,16 @@ const postsList = document.getElementById("postsList");
 const profilePopup = document.getElementById("profilePopup");
 const popupBody = document.getElementById("popupBody");
 const closePopup = document.getElementById("closePopup");
-
 const contactPopup = document.getElementById("contactPopup");
 const closeContact = document.getElementById("closeContact");
 const contactForm = document.getElementById("contactForm");
 const contactName = document.getElementById("contactName");
 const contactAddress = document.getElementById("contactAddress");
 const contactWhatsApp = document.getElementById("contactWhatsApp");
-
+const searchInput = document.getElementById("searchInput");
+const adminPanel = document.getElementById("adminPanel");
+const adminList = document.getElementById("adminList");
+const likesList = document.getElementById("likesList");
 const postFormContainer = document.getElementById("postFormContainer");
 const postForm = document.getElementById("postForm");
 const postName = document.getElementById("postName");
@@ -114,48 +124,44 @@ const postAge = document.getElementById("postAge");
 const postGender = document.getElementById("postGender");
 const postMarital = document.getElementById("postMarital");
 const postCity = document.getElementById("postCity");
-const postPhotoFile = document.getElementById("postPhotoFile");
-
-const searchInput = document.getElementById("searchInput");
-const adminPanel = document.getElementById("adminPanel");
-const adminList = document.getElementById("adminList");
-const likesList = document.getElementById("likesList");
+const postPhoto = document.getElementById("postPhoto");
 
 let currentUser = null;
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 let allProfiles = [];
 let selectedProfileId = null;
 
-// Auth state
-onAuthStateChanged(auth,user=>{
-  currentUser=user;
-  if(user) postFormContainer.classList.remove("hidden");
-  else postFormContainer.classList.add("hidden");
+// Anonymous login for any user
+signInAnonymously(auth).catch(console.error);
 
-  if(user && user.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
-  else adminPanel.classList.add("hidden");
+// Auth state
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  if(currentUser){
+    postFormContainer.classList.remove("hidden");
+  }
 });
 
-// Fetch profiles
-const q = query(collection(db,"profiles"),orderBy("created","desc"));
+// Fetch Profiles
+const q = query(collection(db,"profiles"), orderBy("created","desc"));
 onSnapshot(q,snapshot=>{
   allProfiles=[];
   snapshot.forEach(docSnap=>{
-    const data=docSnap.data();
-    data.id=docSnap.id;
+    const data = docSnap.data();
+    data.id = docSnap.id;
     allProfiles.push(data);
   });
   renderProfiles(allProfiles);
   renderAdmin(allProfiles);
 });
 
-// Render profiles
+// Render Profiles
 function renderProfiles(profiles){
-  const search=searchInput.value.toLowerCase();
+  const search = searchInput.value.toLowerCase();
   postsList.innerHTML="";
   profiles.forEach(p=>{
     if(!p.approvals) return;
-    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
+    const approvedFields = Object.keys(p.approvals).filter(f=>p.approvals[f]);
     if(approvedFields.length===0) return;
     if(search && !((p.name && p.name.toLowerCase().includes(search)) ||
                   (p.age && p.age.toString().includes(search)) ||
@@ -168,27 +174,24 @@ function renderProfiles(profiles){
     let imgHtml = imgSrc ? `<img src="${imgSrc}" class="w-full h-32 object-cover rounded mb-1">` :
       `<div class="w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1">No Image</div>`;
 
-    card.innerHTML=`
-      ${imgHtml}
-      <p class="text-sm font-bold">${p.name||""}</p>
-      <p class="text-xs text-gray-600">${p.age||""} years</p>
-      <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>
-    `;
+    card.innerHTML=`${imgHtml}<p class="text-sm font-bold">${p.approvals.name?p.name:""}</p>
+      <p class="text-xs text-gray-600">${p.approvals.age?p.age:""} years</p>
+      <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
 
-    card.addEventListener("click",e=>{
+    card.addEventListener("click", e=>{
       if(!e.target.classList.contains("contactBtn")){
         let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
-        if(p.photoUrl) html+=`<img src="${p.photoUrl}">`;
-        if(p.age) html+=`<p>🎂 Age: ${p.age}</p>`;
-        if(p.gender) html+=`<p>🚻 Gender: ${p.gender}</p>`;
-        if(p.marital) html+=`<p>📌 Marital Status: ${p.marital}</p>`;
-        if(p.city) html+=`<p>🏙️ City: ${p.city}</p>`;
+        if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}">`;
+        if(p.approvals.age) html+=`<p>🎂 Age: ${p.age}</p>`;
+        if(p.approvals.gender) html+=`<p>🚻 Gender: ${p.gender}</p>`;
+        if(p.approvals.marital) html+=`<p>📌 Marital Status: ${p.marital}</p>`;
+        if(p.approvals.city) html+=`<p>🏙️ City: ${p.city}</p>`;
         popupBody.innerHTML=html;
         profilePopup.style.display="flex";
       }
     });
 
-    card.querySelector(".contactBtn").addEventListener("click",()=>{
+    card.querySelector(".contactBtn").addEventListener("click", ()=>{
       selectedProfileId=p.id;
       contactName.value="";
       contactAddress.value="";
@@ -200,38 +203,9 @@ function renderProfiles(profiles){
   });
 }
 
-// Post form submit with image upload
-postForm.addEventListener("submit", async e=>{
-  e.preventDefault();
-  if(!currentUser) return alert("Login required to post.");
-
-  let photoUrl = "";
-  const file = postPhotoFile.files[0];
-  if(file){
-    const storageRef = ref(storage, `profiles/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    photoUrl = await getDownloadURL(storageRef);
-  }
-
-  const name=postName.value.trim();
-  const age=postAge.value.trim();
-  const gender=postGender.value.trim();
-  const marital=postMarital.value.trim();
-  const city=postCity.value.trim();
-
-  await addDoc(collection(db,"profiles"),{
-    name, age, gender, marital, city, photoUrl,
-    created:serverTimestamp(),
-    approvals:{name:false, age:false, gender:false, marital:false, city:false, photoUrl:false}
-  });
-  postForm.reset();
-  alert("✅ Profile posted! Waiting admin approval.");
-});
-
 // Contact submit
-contactForm.addEventListener("submit",async e=>{
+contactForm.addEventListener("submit", async e=>{
   e.preventDefault();
-  if(!selectedProfileId) return;
   let name = contactName.value.trim();
   let address = contactAddress.value.trim();
   let whatsapp = contactWhatsApp.value.trim();
@@ -241,13 +215,94 @@ contactForm.addEventListener("submit",async e=>{
   alert("✅ Contact info sent to admin!");
 });
 
+// Post form submit
+postForm.addEventListener("submit", async e=>{
+  e.preventDefault();
+  if(!currentUser) return alert("Login required to post.");
+  let photoUrl="";
+  try{
+    if(postPhoto.files[0]){
+      const storageRef=ref(storage,"profiles/"+Date.now()+"_"+postPhoto.files[0].name);
+      await uploadBytes(storageRef,postPhoto.files[0]);
+      photoUrl = await getDownloadURL(storageRef);
+    }
+    await addDoc(collection(db,"profiles"),{
+      name: postName.value.trim(),
+      age: parseInt(postAge.value),
+      gender: postGender.value,
+      marital: postMarital.value.trim(),
+      city: postCity.value.trim(),
+      photoUrl: photoUrl,
+      approvals:{name:false,age:false,gender:false,marital:false,city:false,photoUrl:false},
+      created: serverTimestamp()
+    });
+    postForm.reset();
+    alert("✅ Profile submitted! Admin will approve.");
+  } catch(err){ console.error(err); alert("Error posting profile."); }
+});
+
 // Admin panel
 function renderAdmin(profiles){
   if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
+  adminPanel.classList.remove("hidden");
   adminList.innerHTML="";
   profiles.forEach(p=>{
     const card=document.createElement("div");
     card.className="p-2 bg-gray-100 rounded shadow";
-    card.innerHTML=`
-      <p class="font-bold">${p.name||"No Name"}</p>
-      <div
+    card.innerHTML=`<p class="font-bold">${p.name||"No Name"}</p>
+      <div class="flex gap-2 flex-wrap">
+      ${Object.keys(p.approvals||{}).map(f=>{
+        const checked=p.approvals[f]?"checked":"";
+        return `<label><input type="checkbox" data-field="${f}" data-id="${p.id}" ${checked}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`;
+      }).join("")}
+      </div>
+      <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
+      <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
+    adminList.appendChild(card);
+  });
+
+  document.querySelectorAll(".saveBtn").forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
+      const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
+      let approvals={};
+      checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
+      await updateDoc(doc(db,"profiles",id),{approvals});
+      alert("✅ Approvals Updated");
+    };
+  });
+
+  document.querySelectorAll(".deleteBtn").forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
+      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
+    };
+  });
+}
+
+// Contact requests realtime
+onSnapshot(collection(db,"likes"),snapshot=>{
+  if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
+  likesList.innerHTML="";
+  snapshot.forEach(docSnap=>{
+    const data=docSnap.data();
+    const div=document.createElement("div");
+    div.className="p-2 bg-yellow-100 rounded shadow mb-1 flex justify-between items-center";
+    div.innerHTML=`<div><p><strong>${data.name}</strong></p><p>${data.address}</p><p>📱 ${data.whatsapp}</p></div>
+      <a href="https://wa.me/${data.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
+    likesList.appendChild(div);
+  });
+});
+
+// Search
+searchInput.addEventListener("input", ()=> renderProfiles(allProfiles));
+
+// Popup close
+closePopup.addEventListener("click", ()=> profilePopup.style.display="none");
+profilePopup.addEventListener("click", e=>{if(e.target===profilePopup) profilePopup.style.display="none";});
+closeContact.addEventListener("click", ()=> contactPopup.style.display="none");
+contactPopup.addEventListener("click", e=>{if(e.target===contactPopup) contactPopup.style.display="none";});
+
+</script>
+</body>
+</html>
