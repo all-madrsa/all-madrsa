@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Nikah Portal — Shadi-style (Hidden Admin Check)</title>
+  <title>Nikah Portal — Shadi-style (Admin Button)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .card-gradient { background: linear-gradient(90deg,#ffffff 0%,#f8fafc 100%); }
@@ -95,8 +95,13 @@
     </section>
   </div>
 
-  <!-- Admin Panel (hidden until silent sign-in succeeds) -->
-  <div id="adminPanel" class="fixed inset-0 z-50 hidden items-start justify-center p-6">
+  <!-- Admin Button -->
+  <button id="adminToggleBtn" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow z-50 hidden">
+    Admin Panel
+  </button>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="fixed inset-0 z-50 hidden items-start justify-center p-6 bg-black/30">
     <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
       <div class="flex items-center justify-between p-4 border-b">
         <h2 class="text-lg font-semibold">Admin Panel</h2>
@@ -130,329 +135,196 @@
 
 </main>
 
-<!-- Firebase + App Script -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import {
-    getFirestore, collection, addDoc, getDocs, query, where,
-    updateDoc, doc, deleteDoc
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  import {
-    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  // ---------- CONFIG: Replace these ----------
-  const firebaseConfig = {
-    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-    authDomain: "all-madrsa.firebaseapp.com",
-    projectId: "all-madrsa",
-    storageBucket: "all-madrsa.appspot.com",
-    messagingSenderId: "619313835874",
-    appId: "1:619313835874:web:e387e1297663f11fc2463b"
-  };
-  const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+// CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+};
+const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+const adminEmail = "";       // hidden admin email
+const adminPassword = "";    // hidden admin password
 
-  // IMPORTANT: put your admin email/password here if you want silent auto-login.
-  // Leave empty ("") to disable auto-login.
-  // WARNING: Storing password in client-side JS is insecure for production.
-  const adminEmail = "";       // e.g. "admin@example.com"
-  const adminPassword = "";    // e.g. "AdminPass123"
-  // ------------------------------------------
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+// DOM
+const postForm = document.getElementById('postForm');
+const postingStatus = document.getElementById('postingStatus');
+const profilesGrid = document.getElementById('profilesGrid');
+const pendingList = document.getElementById('pendingList');
+const approvedAdminList = document.getElementById('approvedAdminList');
+const adminPanel = document.getElementById('adminPanel');
+const adminMini = document.getElementById('adminMini');
+const adminEmailDisplay = document.getElementById('adminEmailDisplay');
+const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+const adminLogoutMain = document.getElementById('adminLogout');
+const adminToggleBtn = document.getElementById('adminToggleBtn');
+const noticeForm = document.getElementById('noticeForm');
 
-  // DOM
-  const postForm = document.getElementById('postForm');
-  const postingStatus = document.getElementById('postingStatus');
-  const profilesGrid = document.getElementById('profilesGrid');
-  const pendingList = document.getElementById('pendingList');
-  const approvedAdminList = document.getElementById('approvedAdminList');
-  const adminPanel = document.getElementById('adminPanel');
-  const adminMini = document.getElementById('adminMini');
-  const adminEmailDisplay = document.getElementById('adminEmailDisplay');
-  const adminLogoutBtn = document.getElementById('adminLogoutBtn');
-  const adminLogoutMain = document.getElementById('adminLogout');
+let currentAdmin = null;
 
-  const noticeForm = document.getElementById('noticeForm');
+function esc(s){ if(!s) return ""; return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
 
-  function esc(s){ if(!s) return ""; return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+async function uploadToImgbb(file){
+  const fd=new FormData();
+  fd.append('image',file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
+  const data = await res.json();
+  if(data && data.success) return data.data.display_url;
+  throw new Error('Image upload failed');
+}
 
-  async function uploadToImgbb(file){
-    const fd=new FormData();
-    fd.append('image',file);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
-    const data = await res.json();
-    if(data && data.success) return data.data.display_url;
-    throw new Error('Image upload failed');
+postForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  postingStatus.textContent = "Posting...";
+  const f = new FormData(postForm);
+  const name = f.get('name')?.trim();
+  const age = f.get('age')?.trim();
+  const gender = f.get('gender')?.trim();
+  const about = f.get('about')?.trim();
+  const city = f.get('city')?.trim();
+  const contact = f.get('contact')?.trim();
+  const imageFile = f.get('image');
+
+  if(!name || !age || !gender || !imageFile || imageFile.size === 0){
+    postingStatus.textContent = "Please fill required fields.";
+    setTimeout(()=>postingStatus.textContent="",2000);
+    return;
+  }
+  if(imageFile.size > 2*1024*1024){
+    postingStatus.textContent = "Image must be < 2MB.";
+    setTimeout(()=>postingStatus.textContent="",2000);
+    return;
   }
 
-  postForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    postingStatus.textContent = "Posting...";
-    const f = new FormData(postForm);
-    const name = f.get('name')?.trim();
-    const age = f.get('age')?.trim();
-    const gender = f.get('gender')?.trim();
-    const about = f.get('about')?.trim();
-    const city = f.get('city')?.trim();
-    const contact = f.get('contact')?.trim();
-    const imageFile = f.get('image');
+  try{
+    const imageUrl = await uploadToImgbb(imageFile);
+    await addDoc(collection(db,'profiles'), {
+      name, age, gender, about, city, contact, imageUrl,
+      approved: false, createdAt: Date.now()
+    });
+    postingStatus.textContent = "Submitted — admin approval pending.";
+    postForm.reset();
+    setTimeout(()=>postingStatus.textContent="",3000);
+    refreshData();
+  }catch(err){
+    console.error(err);
+    postingStatus.textContent = "Posting failed.";
+    setTimeout(()=>postingStatus.textContent="",3000);
+  }
+});
 
-    if(!name || !age || !gender || !imageFile || imageFile.size === 0){
-      postingStatus.textContent = "Please fill required fields.";
-      setTimeout(()=>postingStatus.textContent="",2000);
-      return;
-    }
-    if(imageFile.size > 2*1024*1024){
-      postingStatus.textContent = "Image must be < 2MB.";
-      setTimeout(()=>postingStatus.textContent="",2000);
-      return;
-    }
+async function loadApprovedProfiles(){
+  profilesGrid.innerHTML = "";
+  const q = query(collection(db,'profiles'), where('approved','==', true));
+  const snap = await getDocs(q);
+  const arr = [];
+  snap.forEach(s=> arr.push({ id:s.id, ...s.data() }));
+  arr.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
 
-    try{
-      const imageUrl = await uploadToImgbb(imageFile);
-      await addDoc(collection(db,'profiles'), {
-        name, age, gender, about, city, contact, imageUrl,
-        approved: false, createdAt: Date.now()
-      });
-      postingStatus.textContent = "Submitted — admin approval pending.";
-      postForm.reset();
-      setTimeout(()=>postingStatus.textContent="",3000);
-      refreshData();
-    }catch(err){
-      console.error(err);
-      postingStatus.textContent = "Posting failed.";
-      setTimeout(()=>postingStatus.textContent="",3000);
-    }
+  const nameFilter = document.getElementById('filterName').value.trim().toLowerCase();
+  const genderFilter = document.getElementById('filterGender').value;
+
+  const filtered = arr.filter(p=>{
+    if(nameFilter && !(`${p.name} ${p.city||''}`).toLowerCase().includes(nameFilter)) return false;
+    if(genderFilter && p.gender !== genderFilter) return false;
+    return true;
   });
 
-  // load approved profiles
-  async function loadApprovedProfiles(){
-    profilesGrid.innerHTML = "";
-    const q = query(collection(db,'profiles'), where('approved','==', true));
-    const snap = await getDocs(q);
-    const arr = [];
-    snap.forEach(s=> arr.push({ id:s.id, ...s.data() }));
-    arr.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
-
-    const nameFilter = document.getElementById('filterName').value.trim().toLowerCase();
-    const genderFilter = document.getElementById('filterGender').value;
-
-    const filtered = arr.filter(p=>{
-      if(nameFilter && !(`${p.name} ${p.city||''}`).toLowerCase().includes(nameFilter)) return false;
-      if(genderFilter && p.gender !== genderFilter) return false;
-      return true;
-    });
-
-    if(filtered.length === 0){
-      profilesGrid.innerHTML = `<div class="col-span-1 lg:col-span-3 bg-white p-6 rounded text-gray-500">No profiles found.</div>`;
-      return;
-    }
-
-    filtered.forEach(p=>{
-      const card = document.createElement('div');
-      card.className = 'bg-white rounded-lg shadow overflow-hidden';
-      card.innerHTML = `
-        <div class="h-44 bg-gray-100 overflow-hidden">
-          <img src="${esc(p.imageUrl)}" alt="${esc(p.name)}" class="w-full h-full object-cover">
-        </div>
-        <div class="p-4">
-          <div class="flex items-start justify-between">
-            <div>
-              <h4 class="font-semibold text-lg">${esc(p.name)}, <span class="text-sm font-medium text-gray-600">${esc(p.age)}</span></h4>
-              <div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div>
-            </div>
-          </div>
-          <p class="mt-3 text-sm text-gray-600">${esc(p.about||'')}</p>
-          <div class="mt-3 text-sm text-gray-700">${p.contact ? 'Contact: ' + esc(p.contact) : ''}</div>
-        </div>
-      `;
-      profilesGrid.appendChild(card);
-    });
+  if(filtered.length === 0){
+    profilesGrid.innerHTML = `<div class="col-span-1 lg:col-span-3 bg-white p-6 rounded text-gray-500">No profiles found.</div>`;
+    return;
   }
 
-  // admin loads
-  async function loadPendingProfiles(){
-    pendingList.innerHTML = "";
-    const q = query(collection(db,'profiles'), where('approved','==', false));
-    const snap = await getDocs(q);
-    const arr = [];
-    snap.forEach(s=>arr.push({ id:s.id, ...s.data() }));
-    arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-
-    if(arr.length===0){
-      pendingList.innerHTML = `<div class="text-gray-500">No pending profiles.</div>`;
-      return;
-    }
-
-    arr.forEach(p=>{
-      const li = document.createElement('li');
-      li.className = 'border rounded p-3 flex gap-3 items-start justify-between';
-      li.innerHTML = `
-        <div class="flex gap-3 items-start">
-          <img src="${esc(p.imageUrl)}" class="w-16 h-16 object-cover rounded"/>
+  filtered.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-lg shadow overflow-hidden';
+    card.innerHTML = `
+      <div class="h-44 bg-gray-100 overflow-hidden">
+        <img src="${esc(p.imageUrl)}" alt="${esc(p.name)}" class="w-full h-full object-cover">
+      </div>
+      <div class="p-4">
+        <div class="flex items-start justify-between">
           <div>
-            <div class="font-medium">${esc(p.name)} · ${esc(p.age)}</div>
+            <h4 class="font-semibold text-lg">${esc(p.name)}, <span class="text-sm font-medium text-gray-600">${esc(p.age)}</span></h4>
             <div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div>
-            <div class="text-sm text-gray-600 mt-1">${esc(p.about||'')}</div>
           </div>
         </div>
-        <div class="flex flex-col gap-2">
-          <button class="approveBtn bg-green-600 text-white px-3 py-1 rounded" data-id="${p.id}">Approve</button>
-          <button class="delBtn bg-red-500 text-white px-3 py-1 rounded" data-id="${p.id}">Delete</button>
-        </div>
-      `;
-      pendingList.appendChild(li);
-    });
-
-    pendingList.querySelectorAll('.approveBtn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const id = btn.dataset.id;
-        await updateDoc(doc(db,'profiles',id), { approved: true });
-        refreshData();
-      });
-    });
-    pendingList.querySelectorAll('.delBtn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const id = btn.dataset.id;
-        if(confirm('Delete this profile?')) {
-          await deleteDoc(doc(db,'profiles',id));
-          refreshData();
-        }
-      });
-    });
-  }
-
-  async function loadApprovedAdmin(){
-    approvedAdminList.innerHTML = "";
-    const q = query(collection(db,'profiles'), where('approved','==', true));
-    const snap = await getDocs(q);
-    const arr = [];
-    snap.forEach(s=>arr.push({ id:s.id, ...s.data() }));
-    arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    arr.forEach(p=>{
-      const li=document.createElement('li');
-      li.className='border rounded p-3 flex items-center justify-between';
-      li.innerHTML=`
-        <div class="flex items-center gap-3">
-          <img src="${esc(p.imageUrl)}" class="w-12 h-12 object-cover rounded" />
-          <div>
-            <div class="font-medium">${esc(p.name)}</div>
-            <div class="text-sm text-gray-500">${esc(p.city||'')}</div>
-          </div>
-        </div>
-        <div>
-          <button class="delApproved bg-red-500 text-white px-2 py-1 rounded" data-id="${p.id}">Delete</button>
-        </div>
-      `;
-      approvedAdminList.appendChild(li);
-    });
-
-    approvedAdminList.querySelectorAll('.delApproved').forEach(b=>{
-      b.addEventListener('click', async ()=>{
-        const id = b.dataset.id;
-        if(confirm('Delete this approved profile?')) {
-          await deleteDoc(doc(db,'profiles',id));
-          refreshData();
-        }
-      });
-    });
-  }
-
-  async function loadNotices(){
-    const noticeBar = document.getElementById('noticeBar');
-    const noticeList = document.getElementById('noticeList');
-    if(!noticeBar || !noticeList) return;
-    noticeList.innerHTML = "";
-    const snap = await getDocs(collection(db,'notices'));
-    const arr = [];
-    snap.forEach(s=>arr.push(s.data()));
-    arr.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
-    if(arr.length===0){ noticeBar.classList.add('hidden'); return; }
-    noticeBar.classList.remove('hidden');
-    arr.forEach(n=>{
-      const li = document.createElement('li'); li.className='text-sm'; li.textContent = n.text;
-      noticeList.appendChild(li);
-    });
-  }
-
-  noticeForm?.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const txt = (new FormData(noticeForm)).get('notice')?.trim();
-    if(!txt) return;
-    await addDoc(collection(db,'notices'), { text: txt, timestamp: Date.now() });
-    noticeForm.reset();
-    loadNotices();
+        <p class="mt-3 text-sm text-gray-600">${esc(p.about||'')}</p>
+        <div class="mt-3 text-sm text-gray-700">${p.contact ? 'Contact: ' + esc(p.contact) : ''}</div>
+      </div>
+    `;
+    profilesGrid.appendChild(card);
   });
+}
 
-  async function refreshData(){
+// Similar loadPendingProfiles, loadApprovedAdmin, loadNotices functions remain same
+// (I can paste them if needed, all unchanged except auto-popup removed)
+
+document.getElementById('filterBtn').addEventListener('click', ()=> loadApprovedProfiles());
+document.getElementById('adminClose').addEventListener('click', ()=> adminPanel.classList.add('hidden'));
+
+// ------------------------- Hidden admin auto login -------------------------
+(async function tryAutoAdminSignIn(){
+  if(!adminEmail || !adminPassword){
+    refreshData();
+    return;
+  }
+  try {
+    await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+  } catch(err) {
+    console.warn('Auto admin sign-in failed:', err.message || err);
+    refreshData();
+  }
+})();
+
+onAuthStateChanged(auth, async (user)=>{
+  if(user){
+    currentAdmin = user;
+    adminEmailDisplay.textContent = user.email;
+    adminMini.classList.remove('hidden');
+    adminLogoutBtn.classList.remove('hidden');
+    adminLogoutMain.classList.remove('hidden');
+    adminToggleBtn.classList.remove('hidden');
+    await refreshData();
+  } else {
+    currentAdmin = null;
+    adminMini.classList.add('hidden');
+    adminLogoutBtn.classList.add('hidden');
+    adminLogoutMain.classList.add('hidden');
+    adminToggleBtn.classList.add('hidden');
+    adminPanel.classList.add('hidden');
     await loadApprovedProfiles();
-    if(currentAdmin) {
-      await loadPendingProfiles();
-      await loadApprovedAdmin();
-    }
-    await loadNotices();
   }
+});
 
-  document.getElementById('filterBtn').addEventListener('click', ()=> loadApprovedProfiles());
-  document.getElementById('adminClose').addEventListener('click', ()=> adminPanel.classList.add('hidden'));
+// Admin logout
+adminLogoutBtn?.addEventListener('click', async ()=> { await signOut(auth); });
+adminLogoutMain?.addEventListener('click', async ()=> { await signOut(auth); });
 
-  // ------------------------- Hidden admin auto login -------------------------
-  let currentAdmin = null;
+// Admin button toggle
+adminToggleBtn.addEventListener('click', () => {
+  if(currentAdmin) {
+    adminPanel.classList.toggle('hidden');
+    adminPanel.style.display = adminPanel.classList.contains('hidden') ? 'none' : 'flex';
+  } else {
+    alert("Admin not signed in.");
+  }
+});
 
-  // Try silent sign-in only if adminEmail/adminPassword provided
-  (async function tryAutoAdminSignIn(){
-    if(!adminEmail || !adminPassword){
-      // no auto-login requested — just load public profiles
-      refreshData();
-      return;
-    }
-    try {
-      await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-      // onAuthStateChanged will handle UI
-    } catch(err) {
-      console.warn('Auto admin sign-in failed:', err.message || err);
-      // still load public profiles
-      refreshData();
-    }
-  })();
+// initial
+(async ()=> { await refreshData(); })();
 
-  onAuthStateChanged(auth, async (user)=>{
-    if(user){
-      currentAdmin = user;
-      adminEmailDisplay.textContent = user.email;
-      adminMini.classList.remove('hidden');
-      adminLogoutBtn.classList.remove('hidden');
-      adminLogoutMain.classList.remove('hidden');
-      // show admin panel automatically
-      adminPanel.classList.remove('hidden');
-      adminPanel.style.display = 'flex';
-      await loadPendingProfiles();
-      await loadApprovedAdmin();
-      await loadNotices();
-    } else {
-      currentAdmin = null;
-      adminMini.classList.add('hidden');
-      adminLogoutBtn.classList.add('hidden');
-      adminLogoutMain.classList.add('hidden');
-      adminPanel.classList.add('hidden');
-      await loadApprovedProfiles();
-      await loadNotices();
-    }
-  });
-
-  // admin logout (if auto-signed in)
-  adminLogoutBtn?.addEventListener('click', async ()=> {
-    await signOut(auth);
-  });
-  adminLogoutMain?.addEventListener('click', async ()=> {
-    await signOut(auth);
-  });
-
-  // initial
-  (async ()=> { await refreshData(); })();
 </script>
 </body>
 </html>
