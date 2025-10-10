@@ -1,212 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-<style>
-body {background:#fdf6e3; font-family:sans-serif;}
-.profile-card {cursor:pointer; transition: transform 0.1s;}
-.profile-card:hover {transform: scale(1.05);}
-.popup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
-.popup-content {background:white; max-width:500px; width:95%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
-.popup-content img {width:100%; border-radius:8px; margin-bottom:10px;}
-.close-btn {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
-input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nikah Profiles</title>
+  <style>
+    body {font-family:sans-serif;background:#f7f7f7;margin:0;padding:0;}
+    header {background:#008080;color:#fff;padding:1rem;text-align:center;font-size:1.5rem;}
+    .container {max-width:1000px;margin:1rem auto;padding:1rem;}
+    form {background:#fff;padding:1rem;border-radius:10px;box-shadow:0 0 10px #ccc;margin-bottom:1rem;}
+    form input,form select {width:100%;margin-bottom:10px;padding:8px;}
+    form button {background:#008080;color:#fff;padding:10px;width:100%;border:none;cursor:pointer;font-size:1rem;}
+    .profiles {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;}
+    .card {background:#fff;padding:1rem;border-radius:10px;box-shadow:0 0 8px #ddd;cursor:pointer;transition:transform .2s;}
+    .card:hover {transform:scale(1.02);}
+    .card img {width:100%;height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px;}
+    .popup {position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;}
+    .popup-content {background:#fff;padding:1rem;border-radius:10px;max-width:400px;width:90%;}
+    .close {float:right;cursor:pointer;font-size:1.2rem;}
+    .search-box {margin-bottom:1rem;}
+    .search-box input {width:100%;padding:8px;}
+    .admin-approvals label {display:block;margin-bottom:5px;}
+    .contactBtn {background:#008080;color:#fff;padding:5px 10px;border:none;border-radius:5px;cursor:pointer;width:100%;}
+  </style>
 </head>
-<body class="text-black">
+<body>
+  <header>Nikah Profiles Page</header>
+  <div class="container">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search by name, city, education...">
+    </div>
 
-<header class="bg-blue-600 p-4 flex justify-between items-center text-white">
-  <h1 class="text-2xl font-bold">Nikah Portal</h1>
-  <button id="addPostBtn" class="bg-green-500 px-2 py-1 rounded">➕ Add Profile</button>
-</header>
-
-<main class="p-4">
-  <input type="text" id="searchInput" placeholder="Search by Name, Age, Marital, City, Education" class="w-full p-2 rounded border mb-2">
-  <div id="postsList" class="grid gap-2 grid-cols-2 lg:grid-cols-4 mb-4"></div>
-</main>
-
-<section id="adminPanel" class="hidden p-4 border-t mt-4 bg-white">
-  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
-  <div id="adminList" class="grid gap-4"></div>
-  <h3 class="text-lg font-bold mt-4">Contact Requests</h3>
-  <div id="likesList"></div>
-</section>
-
-<!-- POPUPS -->
-<div id="postPopup" class="popup">
-  <div class="popup-content">
-    <button id="closePost" class="close-btn">❌</button>
-    <h2 class="text-xl font-bold mb-2">Add New Profile</h2>
-    <form id="postForm" class="flex flex-col gap-2">
-      <input type="text" name="name" placeholder="Full Name" required>
-      <input type="number" name="age" placeholder="Age" required>
-      <select name="gender" required>
-        <option value="">Select Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-      </select>
-      <input type="text" name="marital" placeholder="Marital Status" required>
-      <input type="text" name="city" placeholder="City">
-      <input type="text" name="education" placeholder="Highest Education">
-      <input type="text" name="occupation" placeholder="Occupation">
-      <input type="text" name="diet" placeholder="Diet Preference">
-      <input type="file" name="photo" accept="image/*" required>
-      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Submit Profile</button>
+    <!-- Profile Upload Form -->
+    <form id="profileForm">
+      <h3>Create Profile</h3>
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="number" id="age" placeholder="Age" required />
+      <input type="text" id="marital" placeholder="Marital Status" required />
+      <input type="text" id="city" placeholder="City" required />
+      <input type="text" id="education" placeholder="Education" required />
+      <input type="text" id="occupation" placeholder="Occupation" required />
+      <input type="text" id="diet" placeholder="Diet (Veg/Non-Veg)" required />
+      <input type="file" id="photo" accept="image/*" required />
+      
+      <div class="admin-approvals">
+        <strong>Admin Approvals (tick to show):</strong>
+        <label><input type="checkbox" id="approveName" checked>Name</label>
+        <label><input type="checkbox" id="approveAge" checked>Age</label>
+        <label><input type="checkbox" id="approveMarital" checked>Marital</label>
+        <label><input type="checkbox" id="approveCity" checked>City</label>
+        <label><input type="checkbox" id="approveEducation" checked>Education</label>
+        <label><input type="checkbox" id="approveOccupation" checked>Occupation</label>
+        <label><input type="checkbox" id="approveDiet" checked>Diet</label>
+        <label><input type="checkbox" id="approvePhoto" checked>Photo</label>
+      </div>
+      <button type="submit">Upload Profile</button>
     </form>
+
+    <!-- Profiles Display -->
+    <div class="profiles" id="profiles"></div>
   </div>
-</div>
 
-<div id="profilePopup" class="popup">
-  <div class="popup-content">
-    <button id="closeProfile" class="close-btn">❌</button>
-    <div id="profileBody"></div>
+  <!-- Profile Popup -->
+  <div class="popup" id="profilePopup">
+    <div class="popup-content">
+      <span class="close" onclick="closePopup('profilePopup')">&times;</span>
+      <div id="profileDetails"></div>
+    </div>
   </div>
-</div>
 
-<div id="contactPopup" class="popup">
-  <div class="popup-content">
-    <button id="closeContact" class="close-btn">❌</button>
-    <h2 class="text-xl font-bold mb-2">Contact Profile</h2>
-    <form id="contactForm" class="flex flex-col gap-2">
-      <input type="text" id="contactName" placeholder="Your Name" required>
-      <input type="text" id="contactAddress" placeholder="Your Address" required>
-      <input type="text" id="contactWhatsApp" placeholder="WhatsApp Number" required>
-      <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded">Send</button>
-    </form>
+  <!-- Contact Popup -->
+  <div class="popup" id="contactPopup">
+    <div class="popup-content">
+      <span class="close" onclick="closePopup('contactPopup')">&times;</span>
+      <h3>Contact</h3>
+      <form id="contactForm">
+        <input type="text" id="contactName" placeholder="Your Name" required>
+        <input type="text" id="contactMessage" placeholder="Your Message" required>
+        <button type="submit">Send</button>
+      </form>
+    </div>
   </div>
-</div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  <script type="module">
+    // ✅ Your Firebase Config here ↓
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_KEY",
+      authDomain: "YOUR_FIREBASE_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-// ✅ Firebase config apna daalna
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
+    // ✅ ImgBB API Key ↓
+    const IMGBB_KEY = "YOUR_IMGBB_API_KEY";
 
-const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth();
-signInAnonymously(auth);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const profilesCol = collection(db, "nikah_profiles");
+    const contactsCol = collection(db, "nikah_contacts");
 
-const addPostBtn=document.getElementById("addPostBtn"),
-postPopup=document.getElementById("postPopup"),
-closePost=document.getElementById("closePost"),
-postForm=document.getElementById("postForm"),
-postsList=document.getElementById("postsList"),
-searchInput=document.getElementById("searchInput"),
-profilePopup=document.getElementById("profilePopup"),
-profileBody=document.getElementById("profileBody"),
-closeProfile=document.getElementById("closeProfile"),
-contactPopup=document.getElementById("contactPopup"),
-contactForm=document.getElementById("contactForm"),
-closeContact=document.getElementById("closeContact");
+    const profileForm = document.getElementById("profileForm");
+    const profilesDiv = document.getElementById("profiles");
+    const searchInput = document.getElementById("searchInput");
+    const profilePopup = document.getElementById("profilePopup");
+    const profileBody = document.getElementById("profileDetails");
+    const contactPopup = document.getElementById("contactPopup");
 
-let allProfiles=[], selectedProfileId=null;
+    let allProfiles = [];
+    let selectedProfileId = null;
 
-addPostBtn.onclick=()=>postPopup.style.display="flex";
-closePost.onclick=()=>postPopup.style.display="none";
-closeProfile.onclick=()=>profilePopup.style.display="none";
-closeContact.onclick=()=>contactPopup.style.display="none";
-
-postForm.onsubmit=async e=>{
-  e.preventDefault();
-  const formData=new FormData(postForm);
-  const file=formData.get("photo");
-  const imgData=new FormData();
-  imgData.append("image",file);
-  const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`,{method:"POST",body:imgData});
-  const data=await res.json();
-  await addDoc(collection(db,"profiles"),{
-    name:formData.get("name"),
-    age:formData.get("age"),
-    gender:formData.get("gender"),
-    marital:formData.get("marital"),
-    city:formData.get("city"),
-    education:formData.get("education"),
-    occupation:formData.get("occupation"),
-    diet:formData.get("diet"),
-    photoUrl:data.data.url,
-    created:serverTimestamp(),
-    approvals:{
-      name:true, age:true, marital:true, city:true,
-      education:true, occupation:true, diet:true, photo:true
+    async function uploadImage(file) {
+      const form = new FormData();
+      form.append("image", file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: "POST", body: form });
+      const data = await res.json();
+      return data.data.url;
     }
-  });
-  postForm.reset();
-  postPopup.style.display="none";
-};
 
-onSnapshot(query(collection(db,"profiles"),orderBy("created","desc")),snap=>{
-  allProfiles=[];
-  snap.forEach(d=>{let p=d.data();p.id=d.id;allProfiles.push(p);});
-  renderProfiles();
-});
+    profileForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = document.getElementById("photo").files[0];
+      const imgURL = await uploadImage(file);
 
-function renderProfiles(){
-  const search=searchInput.value.toLowerCase();
-  postsList.innerHTML="";
-  allProfiles.forEach(p=>{
-    if(search && !(`${p.name} ${p.age} ${p.marital} ${p.city} ${p.education}`.toLowerCase().includes(search))) return;
-    const card=document.createElement("div");
-    card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
-    card.innerHTML=`
-      <img src="${p.photoUrl}" class="w-full h-32 object-cover rounded mb-1">
-      <p class="font-bold">${p.name}</p>
-      <p class="text-xs">${p.age} yrs</p>
-      <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>
-    `;
-    card.onclick=e=>{
-      if(!e.target.classList.contains("contactBtn")){
-        profileBody.innerHTML=`
-          <img src="${p.photoUrl}">
-          <h2 class="text-xl font-bold mb-2">${p.name}</h2>
-          <p><b>Age:</b> ${p.age}</p>
-          <p><b>Marital:</b> ${p.marital}</p>
-          <p><b>City:</b> ${p.city}</p>
-          <p><b>Education:</b> ${p.education}</p>
-          <p><b>Occupation:</b> ${p.occupation}</p>
-          <p><b>Diet:</b> ${p.diet}</p>
+      const profileData = {
+        name: name.value, age: age.value, marital: marital.value, city: city.value,
+        education: education.value, occupation: occupation.value, diet: diet.value,
+        photoUrl: imgURL,
+        approvals: {
+          name: approveName.checked, age: approveAge.checked, marital: approveMarital.checked,
+          city: approveCity.checked, education: approveEducation.checked, occupation: approveOccupation.checked,
+          diet: approveDiet.checked, photo: approvePhoto.checked
+        }
+      };
+      await addDoc(profilesCol, profileData);
+      profileForm.reset();
+      loadProfiles();
+    });
+
+    async function loadProfiles() {
+      profilesDiv.innerHTML = "";
+      const snapshot = await getDocs(profilesCol);
+      allProfiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderProfiles(allProfiles);
+    }
+
+    function renderProfiles(list) {
+      profilesDiv.innerHTML = "";
+      list.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          ${p.approvals.photo ? `<img src="${p.photoUrl}" />` : ""}
+          <h3>${p.approvals.name ? p.name : "Private"}</h3>
+          <p>${p.approvals.city ? p.city : ""}</p>
+          <button class="contactBtn">📩 Contact</button>
         `;
-        selectedProfileId=p.id;
-        profilePopup.style.display="flex";
-      }
-    };
-    card.querySelector(".contactBtn").onclick=e=>{
-      e.stopPropagation();
-      selectedProfileId=p.id;
-      contactPopup.style.display="flex";
-    };
-    postsList.appendChild(card);
-  });
-}
+        card.onclick = e => {
+          if (!e.target.classList.contains("contactBtn")) {
+            let html = `
+              ${p.approvals.photo ? `<img src="${p.photoUrl}" />` : ""}
+              <h2 class="text-xl font-bold mb-2">${p.approvals.name ? p.name : "Private"}</h2>
+              <p><b>Age:</b> ${p.approvals.age ? p.age : "Private"}</p>
+              <p><b>Marital:</b> ${p.approvals.marital ? p.marital : "Private"}</p>
+              <p><b>City:</b> ${p.approvals.city ? p.city : "Private"}</p>
+              <p><b>Education:</b> ${p.approvals.education ? p.education : "Private"}</p>
+              <p><b>Occupation:</b> ${p.approvals.occupation ? p.occupation : "Private"}</p>
+              <p><b>Diet:</b> ${p.approvals.diet ? p.diet : "Private"}</p>
+            `;
+            profileBody.innerHTML = html;
+            selectedProfileId = p.id;
+            profilePopup.style.display = "flex";
+          }
+        };
+        card.querySelector(".contactBtn").onclick = e => {
+          e.stopPropagation();
+          selectedProfileId = p.id;
+          contactPopup.style.display = "flex";
+        };
+        profilesDiv.appendChild(card);
+      });
+    }
 
-contactForm.onsubmit=async e=>{
-  e.preventDefault();
-  const name=document.getElementById("contactName").value;
-  const address=document.getElementById("contactAddress").value;
-  const whatsapp=document.getElementById("contactWhatsApp").value;
-  await addDoc(collection(db,"contacts"),{profileId:selectedProfileId,name,address,whatsapp,created:serverTimestamp()});
-  contactForm.reset();
-  contactPopup.style.display="none";
-  alert("✅ Contact request sent!");
-};
-</script>
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase();
+      const filtered = allProfiles.filter(p =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.city && p.city.toLowerCase().includes(q)) ||
+        (p.education && p.education.toLowerCase().includes(q))
+      );
+      renderProfiles(filtered);
+    });
 
+    contactForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      await addDoc(contactsCol, {
+        profileId: selectedProfileId,
+        name: contactName.value,
+        message: contactMessage.value,
+        time: new Date()
+      });
+      contactForm.reset();
+      closePopup('contactPopup');
+      alert("Message sent to admin!");
+    });
+
+    function closePopup(id) {
+      document.getElementById(id).style.display = "none";
+    }
+
+    loadProfiles();
+  </script>
 </body>
 </html>
