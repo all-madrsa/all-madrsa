@@ -158,22 +158,27 @@ onSnapshot(q,snapshot=>{
   renderAdmin();
 });
 
+// ✅ Render profiles only if approved by admin
 function renderProfiles(){
-  const search=searchInput.value.toLowerCase();
-  postsList.innerHTML="";
-  allProfiles.forEach(p=>{
-    if(!p.approvals) return;
-    if(Object.keys(p.approvals).every(f=>!p.approvals[f])) return;
-    if(search && !(`${p.name} ${p.age} ${p.marital} ${p.city}`.toLowerCase().includes(search))) return;
+  const search = searchInput.value.toLowerCase();
+  postsList.innerHTML = "";
 
-    const card=document.createElement("div");
-    card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
+  allProfiles.forEach(p => {
+    if(!p.approvals) return;
+
+    // Minimum one field + photoUrls must be approved
+    const approvedFields = Object.keys(p.approvals).filter(f => p.approvals[f]);
+    if(approvedFields.length === 0) return;
+
+    if(search && !(`${p.name} ${p.age} ${p.marital} ${p.city}`.toLowerCase().includes(search))) return;
 
     let imgHtml = (p.approvals.photoUrls && p.photoUrls?.length)
       ? `<img src="${p.photoUrls[0]}" class="w-full h-32 object-cover rounded mb-1">`
       : `<div class='w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1'>No Image</div>`;
 
-    card.innerHTML=`
+    const card = document.createElement("div");
+    card.className = "profile-card bg-white rounded shadow p-2 flex flex-col items-center";
+    card.innerHTML = `
       ${imgHtml}
       <p class="font-bold">${p.approvals.name?p.name:"Private"}</p>
       <p class="text-xs">${p.approvals.age?p.age:""} yrs</p>
@@ -181,21 +186,19 @@ function renderProfiles(){
       <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>
     `;
 
-    // Card click for full profile
-    card.onclick=e=>{
+    card.onclick = e => {
       if(e.target.classList.contains("contactBtn")) return;
       let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
       if(p.approvals.photoUrls && p.photoUrls?.length){
         p.photoUrls.forEach(url=>{html+=`<img src="${url}">`});
       }
       ["age","gender","marital","city","height","weight","diet","education","occupation","income","father","mother","siblings","about"].forEach(f=>{
-        if(p.approvals?.[f] && p[f]) html+=`<p>• ${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`;
+        if(p.approvals[f] && p[f]) html+=`<p>• ${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`;
       });
       profileBody.innerHTML=html;
       profilePopup.style.display="flex";
     };
 
-    // Contact button click
     card.querySelector(".contactBtn").onclick=async ()=>{
       selectedProfileId=p.id;
       contactForm.reset();
@@ -262,7 +265,7 @@ postForm.onsubmit=async e=>{
   alert("✅ Profile submitted! Admin will approve.");
 };
 
-// Admin render
+// Admin panel
 function renderAdmin(){
   if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
   adminList.innerHTML="";
@@ -285,6 +288,12 @@ function renderAdmin(){
       const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
       let approvals={};
       checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
+
+      if(!approvals.photoUrls){
+        alert("Profile image approval is required for it to be visible.");
+        return;
+      }
+
       await updateDoc(doc(db,"profiles",id),{approvals});
       renderProfiles();
       alert("✅ Approvals updated!");
