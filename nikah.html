@@ -5,80 +5,217 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nikah Portal</title>
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
+
+  const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Add User
+  window.addUser = async function(event){
+    event.preventDefault();
+    const form = event.target;
+
+    const name = form.name.value.trim();
+    const age = form.age.value.trim();
+    const gender = form.gender.value;
+    const contact = form.contact.value.trim();
+    const imageFile = form.image.files[0];
+
+    // Input validation
+    if(!name || !age || !gender || !contact || !imageFile){
+      alert("सभी फील्ड भरें और image select करें।");
+      return;
+    }
+
+    if(imageFile.size > 2*1024*1024){
+      alert("Image size should be less than 2MB");
+      return;
+    }
+
+    // Upload image to Imgbb
+    let imageUrl = "";
+    try{
+      const formData = new FormData();
+      formData.append("image", imageFile);
+
+      const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
+        method: "POST",
+        body: formData
+      });
+
+      const imgData = await imgbbRes.json();
+      if(imgData.success){
+        imageUrl = imgData.data.display_url;
+      } else {
+        alert("Image upload failed");
+        return;
+      }
+    } catch(err){
+      alert("Image upload error");
+      return;
+    }
+
+    // Save to Firestore with approved=false
+    try{
+      await addDoc(collection(db, "users"), {
+        name, age, gender, contact, imageUrl,
+        approved: false,
+        timestamp: Date.now()
+      });
+      alert("Registration submitted! Admin approval pending.");
+      form.reset();
+    } catch(err){
+      alert("Failed to save user data");
+      console.error(err);
+    }
+  }
+
+  // Load approved users
+  async function loadUsers(){
+    const userList = document.getElementById('userList');
+    userList.innerHTML = "";
+
+    const q = query(collection(db, "users"), where("approved", "==", true));
+    const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach(docSnap => {
+      const user = docSnap.data();
+      const li = document.createElement('li');
+      li.className = "border p-2 rounded bg-gray-50 flex items-center gap-4";
+      li.innerHTML = `<img src="${user.imageUrl}" class="w-12 h-12 rounded-full object-cover">
+        <div><strong>${user.name}</strong> | उम्र: ${user.age} | लिंग: ${user.gender} | संपर्क: ${user.contact}</div>`;
+      userList.prepend(li);
+    });
+  }
+
+  window.loadUsers = loadUsers;
+  window.onload = loadUsers;
+
+  // Admin Functions
+  window.loadAdminUsers = async function(){
+    const adminList = document.getElementById('adminUserList');
+    adminList.innerHTML = "";
+
+    const q = query(collection(db, "users"), where("approved", "==", false));
+    const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach(docSnap => {
+      const user = docSnap.data();
+      const li = document.createElement('li');
+      li.className = "border p-2 rounded bg-gray-50 flex items-center justify-between";
+      li.innerHTML = `<div class="flex items-center gap-4">
+        <img src="${user.imageUrl}" class="w-12 h-12 rounded-full object-cover">
+        <div><strong>${user.name}</strong> | उम्र: ${user.age} | लिंग: ${user.gender} | संपर्क: ${user.contact}</div>
+      </div>
+      <button onclick="approveUser('${docSnap.id}')" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Approve</button>`;
+      adminList.prepend(li);
+    });
+  }
+
+  window.approveUser = async function(userId){
+    await updateDoc(doc(db, "users", userId), { approved: true });
+    alert("User Approved!");
+    loadAdminUsers();
+    loadUsers();
+  }
+
+  // Admin Notice
+  window.postNotice = async function(event){
+    event.preventDefault();
+    const notice = event.target.notice.value.trim();
+    if(!notice) return alert("Notice cannot be empty!");
+
+    await addDoc(collection(db, "notices"), { text: notice, timestamp: Date.now() });
+    event.target.reset();
+    alert("Notice Posted!");
+    loadNotices();
+  }
+
+  async function loadNotices(){
+    const noticeList = document.getElementById('noticeList');
+    noticeList.innerHTML = "";
+
+    const querySnapshot = await getDocs(collection(db, "notices"));
+    querySnapshot.forEach(docSnap => {
+      const n = docSnap.data();
+      const li = document.createElement('li');
+      li.className = "border p-2 rounded bg-yellow-50";
+      li.textContent = n.text;
+      noticeList.prepend(li);
+    });
+  }
+
+  window.loadNotices = loadNotices;
+  window.onload = function(){
+    loadUsers();
+    loadNotices();
+    loadAdminUsers();
+  }
+</script>
+
 </head>
 <body class="bg-gray-100">
 
-<!-- Header -->
 <header class="bg-green-600 text-white p-4 text-center text-2xl font-bold">
   Nikah Portal
 </header>
 
-<!-- Notice Bar -->
-<div class="bg-yellow-300 p-2 text-center font-semibold">
-  📢 नई सूचनाएँ जल्द ही उपलब्ध होंगी!
-</div>
+<!-- Notices -->
+<section class="max-w-xl mx-auto bg-yellow-100 p-4 mt-4 rounded shadow">
+  <h2 class="font-bold text-lg mb-2">Notices</h2>
+  <ul id="noticeList" class="space-y-2"></ul>
+</section>
 
-<!-- User Registration Form -->
+<!-- Registration Form -->
 <section class="max-w-xl mx-auto bg-white p-6 mt-6 rounded shadow">
   <h2 class="text-xl font-bold mb-4">रजिस्ट्रेशन फॉर्म</h2>
-  <form id="registrationForm" class="space-y-4">
-    <div>
-      <label class="block mb-1 font-semibold">पूरा नाम</label>
-      <input type="text" name="name" class="w-full border p-2 rounded" required>
-    </div>
-    <div>
-      <label class="block mb-1 font-semibold">उम्र</label>
-      <input type="number" name="age" class="w-full border p-2 rounded" required>
-    </div>
-    <div>
-      <label class="block mb-1 font-semibold">लिंग</label>
-      <select name="gender" class="w-full border p-2 rounded" required>
-        <option value="">चुनें</option>
-        <option value="पुरुष">पुरुष</option>
-        <option value="महिला">महिला</option>
-      </select>
-    </div>
-    <div>
-      <label class="block mb-1 font-semibold">संपर्क नंबर</label>
-      <input type="text" name="contact" class="w-full border p-2 rounded" required>
-    </div>
-    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-      रजिस्टर करें
-    </button>
+  <form onsubmit="addUser(event)" class="space-y-4">
+    <input type="text" name="name" placeholder="पूरा नाम" class="w-full border p-2 rounded" required>
+    <input type="number" name="age" placeholder="उम्र" class="w-full border p-2 rounded" required>
+    <select name="gender" class="w-full border p-2 rounded" required>
+      <option value="">लिंग चुनें</option>
+      <option value="पुरुष">पुरुष</option>
+      <option value="महिला">महिला</option>
+    </select>
+    <input type="text" name="contact" placeholder="संपर्क नंबर" class="w-full border p-2 rounded" required>
+    <input type="file" name="image" accept="image/*" class="w-full border p-2 rounded" required>
+    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">रजिस्टर करें</button>
   </form>
 </section>
 
-<!-- Registered Users List -->
+<!-- Approved Users List -->
 <section class="max-w-xl mx-auto bg-white p-6 mt-6 rounded shadow">
   <h2 class="text-xl font-bold mb-4">सभी रजिस्टर उपयोगकर्ता</h2>
-  <ul id="userList" class="space-y-2">
-    <!-- Users will appear here -->
-  </ul>
+  <ul id="userList" class="space-y-2"></ul>
 </section>
 
-<script>
-  const form = document.getElementById('registrationForm');
-  const userList = document.getElementById('userList');
+<!-- Admin Panel -->
+<section class="max-w-xl mx-auto bg-gray-50 p-6 mt-6 rounded shadow">
+  <h2 class="text-xl font-bold mb-4">Admin Panel</h2>
 
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
+  <h3 class="font-semibold mb-2">Pending Users</h3>
+  <ul id="adminUserList" class="space-y-2 mb-4"></ul>
 
-    const formData = new FormData(form);
-    const user = {
-      name: formData.get('name'),
-      age: formData.get('age'),
-      gender: formData.get('gender'),
-      contact: formData.get('contact')
-    };
-
-    const li = document.createElement('li');
-    li.className = 'border p-2 rounded bg-gray-50';
-    li.textContent = `${user.name} | उम्र: ${user.age} | लिंग: ${user.gender} | संपर्क: ${user.contact}`;
-    userList.prepend(li);
-
-    form.reset();
-  });
-</script>
+  <form onsubmit="postNotice(event)" class="space-y-2">
+    <input type="text" name="notice" placeholder="Post a notice..." class="w-full border p-2 rounded">
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Post Notice</button>
+  </form>
+</section>
 
 </body>
 </html>
