@@ -101,7 +101,7 @@ const firebaseConfig = {
   projectId: "all-madrsa",
   storageBucket: "all-madrsa.appspot.com",
   messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663b"
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -140,11 +140,11 @@ onAuthStateChanged(auth,user=>{
 // Popups
 addPostBtn.onclick=()=>postPopup.style.display="flex";
 closePost.onclick=()=>postPopup.style.display="none";
-postPopup.onclick=e=>{if(e.target===postPopup) postPopup.style.display="none";};
+postPopup.onclick=e=>{if(e.target===postPopup) postPopup.style.display="none";}
 closeProfile.onclick=()=>profilePopup.style.display="none";
-profilePopup.onclick=e=>{if(e.target===profilePopup) profilePopup.style.display="none";};
+profilePopup.onclick=e=>{if(e.target===profilePopup) profilePopup.style.display="none";}
 closeContact.onclick=()=>contactPopup.style.display="none";
-contactPopup.onclick=e=>{if(e.target===contactPopup) contactPopup.style.display="none";};
+contactPopup.onclick=e=>{if(e.target===contactPopup) contactPopup.style.display="none";}
 
 // Fetch & render profiles
 const q=query(collection(db,"profiles"),orderBy("created","desc"));
@@ -164,22 +164,21 @@ function renderProfiles(){
   const search=searchInput.value.toLowerCase();
   postsList.innerHTML="";
   allProfiles.forEach(p=>{
-    if(!p.approvals) return;
+    // Show profile even if some approvals false (images always visible)
     if(search && !(`${p.name} ${p.age} ${p.marital} ${p.city}`.toLowerCase().includes(search))) return;
 
     const card=document.createElement("div");
     card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
 
-    // ✅ Image always show
-    let imgHtml = (p.photoUrls && p.photoUrls.length > 0)
+    let imgHtml = (p.photoUrls && p.photoUrls.length)
       ? `<img src="${p.photoUrls[0]}" class="w-full h-32 object-cover rounded mb-1">`
       : `<div class='w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1'>No Image</div>`;
 
     card.innerHTML=`${imgHtml}
-      <p class="font-bold">${p.approvals.name?p.name:"Private"}</p>
-      <p class="text-xs">${p.approvals.age?p.age:""} yrs</p>
-      <p class="text-xs text-gray-500">${p.approvals.city?p.city:""}</p>
-      <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
+    <p class="font-bold">${p.approvals?.name?p.name:"Private"}</p>
+    <p class="text-xs">${p.approvals?.age?p.age:""} yrs</p>
+    <p class="text-xs text-gray-500">${p.approvals?.city?p.city:""}</p>
+    <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
 
     card.onclick=e=>{
       if(!e.target.classList.contains("contactBtn")){
@@ -242,7 +241,7 @@ postForm.onsubmit=async e=>{
   for(const key of formData.keys()) profileData[key]=formData.get(key);
   profileData.photoUrls=photoUrls;
   profileData.approvals={};
-  for(const key in profileData) profileData.approvals[key]=false;
+  for(const key in profileData) if(key!=="photoUrls") profileData.approvals[key]=false;
   profileData.created=serverTimestamp();
 
   await addDoc(collection(db,"profiles"),profileData);
