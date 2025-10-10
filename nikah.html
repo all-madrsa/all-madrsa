@@ -5,18 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nikah Portal</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <style>
 body {background:#fdf6e3; font-family:sans-serif;}
 .profile-card {cursor:pointer; transition: transform 0.1s;}
 .profile-card:hover {transform: scale(1.05);}
 .popup {position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:50; display:none;}
-.popup-content {background:white; max-width:600px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
-.popup-content img {width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin-bottom:10px;}
+.popup-content {background:white; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; padding:20px; border-radius:12px; position:relative;}
+.popup-content img {width:100%; border-radius:8px; margin-bottom:10px;}
 .close-btn {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
-input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
 </style>
 </head>
 <body class="text-black">
@@ -31,18 +27,18 @@ input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
   <div id="postsList" class="grid gap-2 grid-cols-2 lg:grid-cols-4 mb-4"></div>
 </main>
 
-<section id="adminPanel" class="hidden p-4 border-t mt-4 bg-white">
+<section id="adminPanel" class="hidden p-4 border-t mt-4">
   <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
-  <div id="adminList" class="grid gap-4 mb-4"></div>
+  <div id="adminList" class="grid gap-4"></div>
   <h3 class="text-lg font-bold mt-4">Contact / Likes Requests</h3>
   <div id="likesList"></div>
 </section>
 
-<!-- POPUPS -->
+<!-- Popups -->
 <div id="profilePopup" class="popup">
   <div class="popup-content">
-    <button id="closeProfile" class="close-btn">❌ Close</button>
-    <div id="profileBody"></div>
+    <button id="closePopup" class="close-btn">❌ Close</button>
+    <div id="popupBody"></div>
   </div>
 </div>
 
@@ -51,10 +47,10 @@ input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
     <button id="closeContact" class="close-btn">❌ Close</button>
     <h2 class="text-xl font-bold mb-2">Contact This Profile</h2>
     <form id="contactForm" class="flex flex-col gap-2">
-      <input type="text" id="contactName" placeholder="Your Name" required>
-      <input type="text" id="contactAddress" placeholder="Your Address" required>
-      <input type="text" id="contactWhatsApp" placeholder="WhatsApp Number" required>
-      <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded">Send</button>
+      <input type="text" id="contactName" placeholder="Your Name" class="border p-2 rounded" required>
+      <input type="text" id="contactAddress" placeholder="Your Address" class="border p-2 rounded" required>
+      <input type="text" id="contactWhatsApp" placeholder="WhatsApp Number" class="border p-2 rounded" required>
+      <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded">Submit</button>
     </form>
   </div>
 </div>
@@ -64,123 +60,128 @@ input, select {border:1px solid #ccc; padding:5px; border-radius:6px;}
     <button id="closePost" class="close-btn">❌ Close</button>
     <h2 class="text-xl font-bold mb-2">Add New Profile</h2>
     <form id="postForm" class="flex flex-col gap-2">
-      <input type="text" name="name" placeholder="Full Name" required>
-      <input type="number" name="age" placeholder="Age" required>
-      <select name="gender" required>
+      <input type="text" name="name" placeholder="Full Name" class="border p-2 rounded" required>
+      <input type="number" name="age" placeholder="Age" class="border p-2 rounded" required>
+      <select name="gender" class="border p-2 rounded" required>
         <option value="">Select Gender</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
       </select>
-      <input type="text" name="marital" placeholder="Marital Status" required>
-      <input type="text" name="city" placeholder="City">
+      <input type="text" name="marital" placeholder="Marital Status" class="border p-2 rounded" required>
+      <input type="text" name="city" placeholder="City" class="border p-2 rounded">
       <input type="file" name="photo" accept="image/*" required>
-      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Submit Profile</button>
+      <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Post Profile</button>
     </form>
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+<script>
+const IMG_API_KEY = 'd12c2e4a8650157b2b6b9fe85336ea43';
+const ADMIN_EMAIL = 'zaradigitalseva@gmail.com';
+let currentUser = { email: ADMIN_EMAIL }; // Admin for testing
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth();
-signInAnonymously(auth);
+const postsList = document.getElementById('postsList');
+const profilePopup = document.getElementById('profilePopup');
+const popupBody = document.getElementById('popupBody');
+const closePopup = document.getElementById('closePopup');
 
-const IMG_API_KEY="d12c2e4a8650157b2b6b9fe85336ea43";
-const ADMIN_EMAIL="zaradigitalseva@gmail.com";
-let currentUser=null;
-let selectedProfileId=null;
+const contactPopup = document.getElementById('contactPopup');
+const closeContact = document.getElementById('closeContact');
+const contactForm = document.getElementById('contactForm');
 
-// Elements
-const postsList=document.getElementById("postsList");
-const searchInput=document.getElementById("searchInput");
-const postPopup=document.getElementById("postPopup");
-const addPostBtn=document.getElementById("addPostBtn");
-const closePost=document.getElementById("closePost");
-const postForm=document.getElementById("postForm");
+const postPopup = document.getElementById('postPopup');
+const closePost = document.getElementById('closePost');
+const addPostBtn = document.getElementById('addPostBtn');
+const postForm = document.getElementById('postForm');
 
-const profilePopup=document.getElementById("profilePopup");
-const profileBody=document.getElementById("profileBody");
-const closeProfile=document.getElementById("closeProfile");
+const searchInput = document.getElementById('searchInput');
+const adminPanel = document.getElementById('adminPanel');
+const adminList = document.getElementById('adminList');
+const likesList = document.getElementById('likesList');
 
-const contactPopup=document.getElementById("contactPopup");
-const contactForm=document.getElementById("contactForm");
-const closeContact=document.getElementById("closeContact");
+let profilesDB = [];
+let contactsDB = [];
+let selectedProfileId = null;
 
-const adminPanel=document.getElementById("adminPanel");
-const adminList=document.getElementById("adminList");
-const likesList=document.getElementById("likesList");
+// Popup handlers
+addPostBtn.onclick = () => postPopup.style.display='flex';
+closePost.onclick = () => postPopup.style.display='none';
+postPopup.onclick = e=>{if(e.target===postPopup) postPopup.style.display='none';};
 
-// Auth check
-onAuthStateChanged(auth,user=>{
-  currentUser=user;
-  if(user?.email===ADMIN_EMAIL) adminPanel.classList.remove("hidden");
-  else adminPanel.classList.add("hidden");
-});
+closePopup.onclick = () => profilePopup.style.display='none';
+profilePopup.onclick = e=>{if(e.target===profilePopup) profilePopup.style.display='none';};
 
-// Popups
-addPostBtn.onclick=()=>postPopup.style.display="flex";
-closePost.onclick=()=>postPopup.style.display="none";
-postPopup.onclick=e=>{if(e.target===postPopup) postPopup.style.display="none";};
+closeContact.onclick = () => contactPopup.style.display='none';
+contactPopup.onclick = e=>{if(e.target===contactPopup) contactPopup.style.display='none';};
 
-closeProfile.onclick=()=>profilePopup.style.display="none";
-profilePopup.onclick=e=>{if(e.target===profilePopup) profilePopup.style.display="none";};
+// Post profile
+postForm.onsubmit = async e => {
+  e.preventDefault();
+  const formData = new FormData(postForm);
+  const photoFile = formData.get('photo');
 
-closeContact.onclick=()=>contactPopup.style.display="none";
-contactPopup.onclick=e=>{if(e.target===contactPopup) contactPopup.style.display="none";};
+  // Upload to ImgBB
+  let imgData = new FormData();
+  imgData.append('image', photoFile);
+  let res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {method:'POST', body: imgData});
+  let data = await res.json();
+  let photoUrl = data.data.url;
 
-// Fetch profiles
-const q=query(collection(db,"profiles"),orderBy("created","desc"));
-onSnapshot(q,snapshot=>{
-  let allProfiles=[];
-  snapshot.forEach(docSnap=>{
-    const data=docSnap.data();
-    data.id=docSnap.id;
-    allProfiles.push(data);
-  });
-  renderProfiles(allProfiles);
-  renderAdmin(allProfiles);
-});
+  let profile = {
+    id:Date.now(),
+    name: formData.get('name'),
+    age: formData.get('age'),
+    gender: formData.get('gender'),
+    marital: formData.get('marital'),
+    city: formData.get('city'),
+    photoUrl,
+    approvals: {name:false,age:false,gender:false,marital:false,city:false,photo:false}
+  };
+  profilesDB.unshift(profile);
+  renderProfiles();
+  postPopup.style.display='none';
+  postForm.reset();
+}
 
 // Render profiles
-function renderProfiles(list){
-  const search=searchInput.value.toLowerCase();
-  postsList.innerHTML="";
-  list.forEach(p=>{
-    if(!p.approvals) return;
-    const approvedFields=Object.keys(p.approvals).filter(f=>p.approvals[f]);
+function renderProfiles(){
+  const search = searchInput.value.toLowerCase();
+  postsList.innerHTML='';
+
+  profilesDB.forEach(p=>{
+    // Check if at least one field is approved
+    const approvedFields = Object.keys(p.approvals).filter(f=>p.approvals[f]);
     if(approvedFields.length===0) return;
+
     if(search && !(`${p.name} ${p.age} ${p.marital} ${p.city}`.toLowerCase().includes(search))) return;
 
-    const card=document.createElement("div");
-    card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
+    const card = document.createElement('div');
+    card.className='profile-card bg-white rounded shadow p-2 flex flex-col items-center';
 
-    let imgHtml = p.photoUrl ? `<img src="${p.photoUrl}" class="w-full h-32 object-cover rounded mb-1">` : `<div class="w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1">No Image</div>`;
-    card.innerHTML=`${imgHtml}<p class="text-sm font-bold">${p.approvals.name?p.name:"Private"}</p>
-    <p class="text-xs text-gray-600">${p.approvals.age?p.age:""} yrs</p>
-    <button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
+    // Photo only if approved
+    if(p.approvals.photo && p.photoUrl) card.innerHTML=`<img src='${p.photoUrl}' class='w-full h-32 object-cover rounded mb-1'>`;
+    else card.innerHTML=`<div class='w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1'>No Image</div>`;
 
-    card.querySelector(".contactBtn").onclick=()=>{selectedProfileId=p.id; contactForm.reset(); contactPopup.style.display="flex";};
+    card.innerHTML += `<p class='font-bold'>${p.approvals.name?p.name:"Private"}</p>`;
+    if(p.approvals.age) card.innerHTML += `<p class='text-xs'>${p.age} yrs</p>`;
+    if(p.approvals.gender) card.innerHTML += `<p class='text-xs'>${p.gender}</p>`;
+    if(p.approvals.marital) card.innerHTML += `<p class='text-xs'>${p.marital}</p>`;
+    if(p.approvals.city) card.innerHTML += `<p class='text-xs text-gray-500'>${p.city}</p>`;
+    card.innerHTML += `<button class='bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn'>📩 Contact</button>`;
 
-    card.onclick=e=>{
-      if(!e.target.classList.contains("contactBtn")){
-        let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
-        if(p.photoUrl) html+=`<img src="${p.photoUrl}">`;
-        const fields=["age","gender","marital","city"];
-        fields.forEach(f=>{if(p.approvals?.[f] && p[f]) html+=`<p>• ${f.charAt(0).toUpperCase()+f.slice(1)}: ${p[f]}</p>`});
-        profileBody.innerHTML=html;
-        profilePopup.style.display="flex";
+    card.querySelector('.contactBtn').onclick=()=>{selectedProfileId=p.id; contactPopup.style.display='flex';};
+
+    card.onclick = e => {
+      if(!e.target.classList.contains('contactBtn')){
+        let html = '';
+        if(p.approvals.photo && p.photoUrl) html += `<img src='${p.photoUrl}'>`;
+        html += `<h2 class='font-bold text-xl mb-2'>${p.approvals.name?p.name:"Private"}</h2>`;
+        if(p.approvals.age) html += `<p>Age: ${p.age}</p>`;
+        if(p.approvals.gender) html += `<p>Gender: ${p.gender}</p>`;
+        if(p.approvals.marital) html += `<p>Marital: ${p.marital}</p>`;
+        if(p.approvals.city) html += `<p>City: ${p.city}</p>`;
+        popupBody.innerHTML = html;
+        profilePopup.style.display='flex';
       }
     };
 
@@ -189,100 +190,59 @@ function renderProfiles(list){
 }
 
 // Search
-searchInput.oninput=()=>onSnapshot(q,snapshot=>{
-  let allProfiles=[];
-  snapshot.forEach(docSnap=>{const data=docSnap.data(); data.id=docSnap.id; allProfiles.push(data);});
-  renderProfiles(allProfiles);
-});
+searchInput.oninput=renderProfiles;
 
-// Contact form
-contactForm.onsubmit=async e=>{
+// Contact
+contactForm.onsubmit=e=>{
   e.preventDefault();
-  await addDoc(collection(db,"likes"),{
-    profileId:selectedProfileId,
-    name:contactForm.contactName.value,
-    address:contactForm.contactAddress.value,
-    whatsapp:contactForm.contactWhatsApp.value,
-    timestamp:serverTimestamp()
-  });
-  contactPopup.style.display="none";
+  let contact={id:Date.now(), profileId:selectedProfileId, name:contactForm.contactName.value, address:contactForm.contactAddress.value, whatsapp:contactForm.contactWhatsApp.value};
+  contactsDB.unshift(contact);
+  contactPopup.style.display='none';
   contactForm.reset();
-  alert("✅ Contact sent!");
-};
-
-// Post form
-postForm.onsubmit=async e=>{
-  e.preventDefault();
-  const formData=new FormData(postForm);
-  const photoFile=formData.get("photo");
-  let photoUrl="";
-  if(photoFile && photoFile.size>0){
-    const data=new FormData();
-    data.append("image",photoFile);
-    const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`,{method:"POST",body:data});
-    const result=await res.json();
-    photoUrl=result.data.url;
-  }
-  const profileData={};
-  for(const key of formData.keys()) profileData[key]=formData.get(key);
-  profileData.photoUrl=photoUrl;
-  profileData.approvals={};
-  for(const key in profileData) profileData.approvals[key]=false;
-  profileData.created=serverTimestamp();
-  await addDoc(collection(db,"profiles"),profileData);
-  postPopup.style.display="none";
-  postForm.reset();
-  alert("✅ Profile submitted! Admin will approve.");
-};
+  alert('✅ Contact sent!');
+  renderAdminContacts();
+}
 
 // Admin panel
-function renderAdmin(list){
-  if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
-  adminPanel.classList.remove("hidden");
-  adminList.innerHTML="";
-  list.forEach(p=>{
-    const card=document.createElement("div");
-    card.className="p-2 bg-gray-100 rounded shadow";
-    card.innerHTML=`<p class="font-bold">${p.name||"No Name"}</p>
+function renderAdminContacts(){
+  if(currentUser.email!==ADMIN_EMAIL) return;
+  adminPanel.classList.remove('hidden');
+  adminList.innerHTML='';
+  likesList.innerHTML='';
+
+  contactsDB.forEach(c=>{
+    let div = document.createElement('div');
+    div.className='p-2 bg-yellow-100 rounded shadow mb-1';
+    div.innerHTML=`<p><b>${c.name}</b></p><p>${c.address}</p><p>📱 ${c.whatsapp}</p>`;
+    likesList.appendChild(div);
+  });
+
+  // Admin: Approve fields
+  adminList.innerHTML='';
+  profilesDB.forEach(p=>{
+    let div = document.createElement('div');
+    div.className='p-2 bg-gray-100 rounded shadow';
+    div.innerHTML=`<p class="font-bold">${p.name}</p>
     <div class="flex gap-2 flex-wrap">
-    ${Object.keys(p.approvals||{}).map(f=>`<label><input type="checkbox" data-id="${p.id}" data-field="${f}" ${p.approvals[f]?"checked":""}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`).join("")}
-    </div>
-    <button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button>
-    <button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
-    adminList.appendChild(card);
+      ${Object.keys(p.approvals).map(f=>`<label><input type="checkbox" data-id="${p.id}" data-field="${f}" ${p.approvals[f]?"checked":""}> ${f.charAt(0).toUpperCase()+f.slice(1)}</label>`).join("")}
+    </div>`;
+    adminList.appendChild(div);
   });
 
-  document.querySelectorAll(".saveBtn").forEach(btn=>{
-    btn.onclick=async()=>{
-      const id=btn.dataset.id;
-      const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
-      let approvals={};
-      checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
-      await updateDoc(doc(db,"profiles",id),{approvals});
-      alert("✅ Approvals Updated");
+  // Admin checkbox changes
+  adminList.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange = ()=>{
+      let id = cb.dataset.id;
+      let field = cb.dataset.field;
+      let profile = profilesDB.find(p=>p.id==id);
+      if(profile) profile.approvals[field] = cb.checked;
+      renderProfiles();
     };
-  });
-
-  document.querySelectorAll(".deleteBtn").forEach(btn=>{
-    btn.onclick=async()=>{
-      const id=btn.dataset.id;
-      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
-    };
-  });
-
-  // Display likes/contacts
-  onSnapshot(collection(db,"likes"),snapshot=>{
-    likesList.innerHTML="";
-    snapshot.forEach(docSnap=>{
-      const l=docSnap.data();
-      const div=document.createElement("div");
-      div.className="p-2 bg-yellow-100 rounded shadow mb-1 flex justify-between items-center";
-      div.innerHTML=`<div><b>${l.name}</b><p>${l.address}</p><p>📱 ${l.whatsapp}</p></div>
-      <a href="https://wa.me/${l.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
-      likesList.appendChild(div);
-    });
   });
 }
+
+// Initial render
+renderProfiles();
 </script>
 </body>
 </html>
