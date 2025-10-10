@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; background: #f4f4f4; }
+    h2 { text-align: center; }
+    .card { background: white; margin: 10px; padding: 10px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    img { width: 100%; max-height: 200px; object-fit: cover; }
+    button { margin-top: 5px; padding: 6px; width: 48%; border: none; border-radius: 4px; }
+    .approve { background: green; color: white; }
+    .delete { background: red; color: white; }
+  </style>
+</head>
+<body>
+  <h2>🛠 Admin Approval Panel</h2>
+  <div id="admin-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrsa.firebaseapp.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+  const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
+  auth.onAuthStateChanged(user => {
+    if (!user || user.email !== ADMIN_EMAIL) {
+      document.body.innerHTML = "<h3 style='text-align:center;color:red;'>Access Denied 🚫</h3>";
+    }
+  });
+
+  const container = document.getElementById('admin-container');
+  db.collection("nikahProfiles").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+    container.innerHTML = '';
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${data.photoUrl}" alt="">
+        <h3>${data.name}</h3>
+        <p>Age: ${data.age}</p>
+        <p>City: ${data.city}</p>
+        <button class="approve">Approve</button>
+        <button class="delete">Delete</button>
+      `;
+      card.querySelector('.approve').onclick = () => {
+        db.collection("nikahProfiles").doc(doc.id).update({ approved: true });
+      };
+      card.querySelector('.delete').onclick = () => {
+        db.collection("nikahProfiles").doc(doc.id).delete();
+      };
+      container.appendChild(card);
+    });
+  });
+</script>
+</body>
+</html>
