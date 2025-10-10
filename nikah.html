@@ -1,376 +1,161 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-body {background:#fdf6e3; font-family:sans-serif;}
-.profile-card {cursor:pointer; transition: transform 0.1s;}
-.profile-card:hover {transform: scale(1.05);}
-#profilePopup, #contactPopup {
-  position:fixed; top:0; left:0; right:0; bottom:0;
-  background:rgba(0,0,0,0.8);
-  display:flex; align-items:center; justify-content:center;
-  z-index:50; display:none;
-}
-#popupContent, #contactContent {
-  background:white; max-width:400px; width:90%; max-height:90vh;
-  overflow-y:auto; padding:20px; border-radius:12px; position:relative;
-}
-#popupContent img, #contactContent img {width:100%; height:auto; border-radius:8px; margin-bottom:10px;}
-#closePopup, #closeContact {position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;}
-.btn-3d {
-  background: linear-gradient(90deg,#ff4d4d,#4d94ff);
-  color: white; font-weight:700;
-  box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 14px rgba(0,0,0,0.25);
-  transition:transform .1s, box-shadow .1s, background .3s;
-}
-.btn-3d:hover {background: linear-gradient(90deg,#ff6666,#66a3ff);}
-.btn-3d:active {transform: translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.25);}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nikah Profiles | Talimi Ittehad</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #f1f5f9; font-family: 'Poppins', sans-serif; }
+    header { background: #2563eb; color: white; padding: 1rem; text-align: center; font-weight: bold; font-size: 1.5rem; }
+    section { background: white; border-radius: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 1rem; margin-bottom: 1rem; }
+    button { transition: all 0.2s; }
+    button:hover { opacity: 0.9; }
+  </style>
 </head>
-<body class="text-black">
+<body>
+<header>💍 Nikah Profile Portal</header>
 
-<header class="bg-blue-600" style="height:100px;">
-  <div class="max-w-6xl mx-auto px-4 py-2 h-full flex flex-col justify-between">
-
-    <!-- Top: 3D Buttons -->
-    <div class="flex justify-center gap-4">
-      <a href="nikah-Conditions.html">
-        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#ff4d4d,#ff914d);">📜 Rules</button>
-      </a>
-      <a href="news.html">
-        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#4dffb8,#4d94ff);">📰 News</button>
-      </a>
-      <a href="hadees.html">
-        <button class="btn-3d-special btn-small" style="background: linear-gradient(90deg,#d24dff,#ff4dd2);">📜 Hadees</button>
-      </a>
-    </div>
-
-    <!-- Middle: Logo / Title with Home Button -->
-    <div class="flex justify-center items-center h-full mt-1 gap-2">
-      <div class="text-white font-bold text-2xl" 
-           style="text-shadow:2px 2px 8px rgba(0,0,0,.9);">
-        Nikah
-      </div>
-      <!-- Home Button -->
-      <a href="index.html" class="btn-3d-home-circle flex items-center justify-center">
-        🏠
-      </a>
-    </div>
-
-  </div>
-</header>
-
-<style>
-/* Circular 3D Home Button */
-.btn-3d-home-circle {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(145deg, #4f9cf9, #1c3fa0);
-  color: white;
-  font-size: 18px;
-  font-weight: 700;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2), 0 8px 12px rgba(0,0,0,0.15);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease;
-}
-
-.btn-3d-home-circle:hover {
-  background: linear-gradient(145deg, #66b0ff, #3a55c3);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.2);
-}
-
-.btn-3d-home-circle:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.15);
-}
-
-/* 3D Buttons Base */
-.btn-3d-special {
-  color:white;
-  font-weight: 700;
-  border-radius: 10px;
-  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.btn-3d-special:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
-}
-
-/* Small variant for top header buttons */
-.btn-small {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
-}
-</style>
-
-
-<style>
-/* Circular 3D Home Button */
-.btn-3d-home-circle {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(145deg, #4f9cf9, #1c3fa0);
-  color: white;
-  font-size: 18px;
-  font-weight: 700;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2), 0 8px 12px rgba(0,0,0,0.15);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease;
-}
-
-.btn-3d-home-circle:hover {
-  background: linear-gradient(145deg, #66b0ff, #3a55c3);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.2);
-}
-
-.btn-3d-home-circle:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.15);
-}
-
-/* 3D Buttons Base */
-.btn-3d-special {
-  color:white;
-  font-weight: 700;
-  border-radius: 10px;
-  box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.btn-3d-special:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
-}
-
-/* Small variant for top header buttons */
-.btn-small {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
-}
-</style>
-
-
-<!-- Main -->
-<main class="p-4">
-  <input type="text" id="searchInput" placeholder="Search by Name, Age, Marital Status" class="w-full p-2 rounded border mb-2">
-  <div id="postsList" class="grid gap-2 grid-cols-2 lg:grid-cols-4"></div>
-</main>
-
-<!-- Admin Panel -->
-<section id="adminPanel" class="hidden p-4 border-t mt-4">
-  <h2 class="text-xl font-bold mb-2">Admin Panel</h2>
-  <div id="adminList" class="grid gap-4"></div>
-  <h3 class="text-lg font-bold mt-4">Contact Requests</h3>
-  <div id="likesList"></div>
+<!-- 📝 User Profile Form -->
+<section id="postSection" class="max-w-md mx-auto mt-4">
+  <h2 class="text-xl font-bold mb-2 text-center">📝 Add Your Profile</h2>
+  <form id="postForm" class="flex flex-col gap-2">
+    <input type="text" id="name" placeholder="Full Name" class="border p-2 rounded" required>
+    <input type="number" id="age" placeholder="Age" class="border p-2 rounded" required>
+    <select id="gender" class="border p-2 rounded" required>
+      <option value="">Select Gender</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
+    <input type="text" id="marital" placeholder="Marital Status (Single/Married/Divorced)" class="border p-2 rounded" required>
+    <input type="text" id="city" placeholder="City" class="border p-2 rounded" required>
+    <input type="url" id="photoUrl" placeholder="Photo URL (ImgBB link)" class="border p-2 rounded">
+    <button type="submit" class="bg-blue-600 text-white font-bold py-2 rounded">Submit Profile</button>
+  </form>
 </section>
 
-<!-- Profile Popup -->
-<div id="profilePopup">
-  <div id="popupContent">
-    <button id="closePopup">❌ Close</button>
-    <div id="popupBody"></div>
-  </div>
-</div>
+<!-- 👀 All Profiles -->
+<section id="profilesList" class="max-w-6xl mx-auto mt-4">
+  <h2 class="text-xl font-bold mb-2 text-center">👤 All Profiles</h2>
+  <div id="profilesContainer" class="grid md:grid-cols-3 sm:grid-cols-2 gap-4"></div>
+</section>
 
-<!-- Contact Popup -->
-<div id="contactPopup">
-  <div id="contactContent">
-    <button id="closeContact">❌ Close</button>
-    <h2 class="text-xl font-bold mb-2">Contact This Profile</h2>
-    <form id="contactForm" class="flex flex-col gap-2">
-      <input type="text" id="contactName" placeholder="Your Name" class="border p-2 rounded" required>
-      <input type="text" id="contactAddress" placeholder="Your Address" class="border p-2 rounded" required>
-      <input type="text" id="contactWhatsApp" placeholder="WhatsApp Number" class="border p-2 rounded" required>
-      <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded">Submit</button>
-    </form>
-  </div>
-</div>
+<!-- 🛠️ Admin Panel -->
+<section id="adminPanel" class="max-w-6xl mx-auto mt-4 hidden">
+  <h2 class="text-xl font-bold mb-2 text-center">🛠️ Admin Panel (Approvals)</h2>
+  <div id="adminProfiles" class="grid md:grid-cols-2 gap-4"></div>
+</section>
 
 <script type="module">
-// Firebase Config
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+// ✅ Firebase Imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
+// 🔧 Firebase Config (replace with your project details)
 const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore();
+const db = getFirestore(app);
 
-const postsList = document.getElementById("postsList");
-const profilePopup = document.getElementById("profilePopup");
-const popupBody = document.getElementById("popupBody");
-const closePopup = document.getElementById("closePopup");
-
-const contactPopup = document.getElementById("contactPopup");
-const closeContact = document.getElementById("closeContact");
-const contactForm = document.getElementById("contactForm");
-const contactName = document.getElementById("contactName");
-const contactAddress = document.getElementById("contactAddress");
-const contactWhatsApp = document.getElementById("contactWhatsApp");
-
-const searchInput = document.getElementById("searchInput");
+// ✅ DOM References
+const postForm = document.getElementById("postForm");
+const profilesContainer = document.getElementById("profilesContainer");
 const adminPanel = document.getElementById("adminPanel");
-const adminList = document.getElementById("adminList");
-const likesList = document.getElementById("likesList");
+const adminProfiles = document.getElementById("adminProfiles");
 
-let currentUser = null;
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-let allProfiles = [];
-let selectedProfileId = null;
-
-// Silent login check
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  if(user && user.email === ADMIN_EMAIL) adminPanel.classList.remove("hidden");
-  else adminPanel.classList.add("hidden");
-});
-
-// Fetch Profiles
-const q = query(collection(db, "profiles"), orderBy("created", "desc"));
-onSnapshot(q, snapshot => {
-  allProfiles = [];
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    data.id = docSnap.id;
-    allProfiles.push(data);
-  });
-  renderProfiles(allProfiles);
-  renderAdmin(allProfiles);
-});
-
-// Render Profiles
-function renderProfiles(profiles){
-  const search = searchInput.value.toLowerCase();
-  postsList.innerHTML = "";
-  profiles.forEach(p=>{
-    if(!p.approvals) return;
-    const approvedFields = Object.keys(p.approvals).filter(f=>p.approvals[f]);
-    if(approvedFields.length===0) return;
-    if(search && !((p.name && p.name.toLowerCase().includes(search)) ||
-                  (p.age && p.age.toString().includes(search)) ||
-                  (p.marital && p.marital.toLowerCase().includes(search)))) return;
-
-    const card = document.createElement("div");
-    card.className="profile-card bg-white rounded shadow p-2 flex flex-col items-center";
-
-    let imgSrc = p.photoUrl && p.approvals.photoUrl ? p.photoUrl : "";
-    let imgHtml = imgSrc ? `<img src="${imgSrc}" class="w-full h-32 object-cover rounded mb-1">` : `<div class="w-full h-32 flex items-center justify-center bg-gray-300 text-gray-700 rounded mb-1">No Image</div>`;
-
-    card.innerHTML = `${imgHtml}<p class="text-sm font-bold">${p.approvals.name?p.name:""}</p><p class="text-xs text-gray-600">${p.approvals.age?p.age:""} years</p><button class="bg-green-500 text-white px-2 py-1 mt-1 rounded contactBtn">📩 Contact</button>`;
-
-    // Popup
-    card.addEventListener("click", e=>{
-      if(!e.target.classList.contains("contactBtn")){
-        let html=`<h2 class="text-xl font-bold mb-2">${p.name||""}</h2>`;
-        if(p.approvals.photoUrl && p.photoUrl) html+=`<img src="${p.photoUrl}">`;
-        if(p.approvals.age) html+=`<p>🎂 Age: ${p.age}</p>`;
-        if(p.approvals.gender) html+=`<p>🚻 Gender: ${p.gender}</p>`;
-        if(p.approvals.marital) html+=`<p>📌 Marital Status: ${p.marital}</p>`;
-        if(p.approvals.city) html+=`<p>🏙️ City: ${p.city}</p>`;
-        popupBody.innerHTML = html;
-        profilePopup.style.display="flex";
-      }
-    });
-
-    card.querySelector(".contactBtn").addEventListener("click", ()=>{
-      selectedProfileId=p.id;
-      contactName.value="";
-      contactAddress.value="";
-      contactWhatsApp.value="";
-      contactPopup.style.display="flex";
-    });
-
-    postsList.appendChild(card);
-  });
-}
-
-// Contact Form Submit
-contactForm.addEventListener("submit", async e=>{
+// 🧾 Form Submission (Add New Profile)
+postForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const name = contactName.value.trim();
-  const address = contactAddress.value.trim();
-  const whatsapp = contactWhatsApp.value.trim();
-  if(!/^\d{10}$/.test(whatsapp)) return alert("Enter valid 10-digit WhatsApp number");
-  await addDoc(collection(db,"likes"),{profileId:selectedProfileId,name,address,whatsapp,timestamp:new Date()});
-  contactPopup.style.display="none";
-  alert("✅ Contact info sent to admin!");
+  const name = postForm.name.value.trim();
+  const age = parseInt(postForm.age.value);
+  const gender = postForm.gender.value.trim();
+  const marital = postForm.marital.value.trim();
+  const city = postForm.city.value.trim();
+  const photoUrl = postForm.photoUrl.value.trim();
+
+  if (!name || !age || !gender || !marital || !city) {
+    alert("Please fill all required fields.");
+    return;
+  }
+
+  await addDoc(collection(db, "profiles"), {
+    name, age, gender, marital, city, photoUrl,
+    approvals: { name: false, age: false, gender: false, marital: false, city: false, photoUrl: false },
+    created: new Date()
+  });
+
+  alert("✅ Profile submitted! Wait for admin approval.");
+  postForm.reset();
+  loadProfiles();
 });
 
-// Admin Panel
-function renderAdmin(profiles){
-  if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
-  adminList.innerHTML="";
-  profiles.forEach(p=>{
-    const card = document.createElement("div");
-    card.className="p-2 bg-gray-100 rounded shadow";
-    card.innerHTML=`<p class="font-bold">${p.name||"No Name"}</p><div class="flex gap-2 flex-wrap">${Object.keys(p.approvals||{}).map(f=>{const checked=p.approvals[f]?"checked":""; return `<label><input type="checkbox" data-field="${f}" data-id="${p.id}" ${checked}> ${f}</label>`}).join("")}</div><button data-id="${p.id}" class="bg-blue-500 text-white px-2 py-1 mt-2 saveBtn rounded">💾 Save</button><button data-id="${p.id}" class="bg-red-500 text-white px-2 py-1 mt-2 deleteBtn rounded">🗑 Delete</button>`;
-    adminList.appendChild(card);
+// 👀 Load Profiles
+async function loadProfiles() {
+  profilesContainer.innerHTML = "";
+  const querySnapshot = await getDocs(collection(db, "profiles"));
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const card = `
+      <div class="border rounded p-3 bg-white shadow">
+        <img src="${data.photoUrl || 'https://via.placeholder.com/150'}" class="w-full h-48 object-cover rounded mb-2">
+        <h3 class="font-bold text-lg">${data.name}</h3>
+        <p>${data.age} yrs, ${data.gender}</p>
+        <p>${data.marital}</p>
+        <p>${data.city}</p>
+      </div>`;
+    profilesContainer.innerHTML += card;
   });
+}
+loadProfiles();
 
-  document.querySelectorAll(".saveBtn").forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      const checkboxes=document.querySelectorAll(`input[data-id="${id}"]`);
-      let approvals={};
-      checkboxes.forEach(cb=>approvals[cb.dataset.field]=cb.checked);
-      await updateDoc(doc(db,"profiles",id),{approvals});
-      alert("✅ Approvals Updated");
-    };
-  });
+// 🧑‍💼 Admin Login (Simple email check)
+const adminEmail = prompt("Enter admin email (for approval access):");
+if (adminEmail === "zaradigitalseva@gmail.com") {
+  adminPanel.classList.remove("hidden");
+  loadAdminPanel();
+}
 
-  document.querySelectorAll(".deleteBtn").forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      if(confirm("Are you sure to delete this profile?")) await deleteDoc(doc(db,"profiles",id));
-    };
+// 🛠️ Load Admin Panel Data
+async function loadAdminPanel() {
+  adminProfiles.innerHTML = "";
+  const querySnapshot = await getDocs(collection(db, "profiles"));
+  querySnapshot.forEach((docSnap) => {
+    const id = docSnap.id;
+    const data = docSnap.data();
+    const card = `
+      <div class="border rounded p-3 bg-white shadow">
+        <h3 class="font-bold text-lg">${data.name}</h3>
+        <p>${data.age} yrs, ${data.gender}, ${data.marital}, ${data.city}</p>
+        <button class="bg-green-600 text-white px-2 py-1 rounded" onclick="approveField('${id}', 'name')">Approve</button>
+        <button class="bg-red-600 text-white px-2 py-1 rounded" onclick="deleteProfile('${id}')">Delete</button>
+      </div>`;
+    adminProfiles.innerHTML += card;
   });
 }
 
-// Contact Requests realtime for admin
-onSnapshot(collection(db,"likes"), snapshot=>{
-  if(!currentUser || currentUser.email!==ADMIN_EMAIL) return;
-  likesList.innerHTML="";
-  snapshot.forEach(docSnap=>{
-    const data=docSnap.data();
-    const div=document.createElement("div");
-    div.className="p-2 bg-yellow-100 rounded shadow mb-1 flex justify-between items-center";
-    div.innerHTML=`<div><p><strong>${data.name}</strong></p><p>${data.address}</p><p>📱 ${data.whatsapp}</p></div><a href="https://wa.me/${data.whatsapp}" target="_blank" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</a>`;
-    likesList.appendChild(div);
+// ✅ Approve Field
+window.approveField = async (docId, field) => {
+  const docRef = doc(db, "profiles", docId);
+  await updateDoc(docRef, {
+    [`approvals.${field}`]: true
   });
-});
+  alert(`✅ ${field} approved`);
+  loadAdminPanel();
+};
 
-// Search
-searchInput.addEventListener("input", ()=> renderProfiles(allProfiles));
-
-// Popup Close
-closePopup.addEventListener("click", ()=> profilePopup.style.display="none");
-profilePopup.addEventListener("click", e=>{if(e.target===profilePopup) profilePopup.style.display="none";});
-closeContact.addEventListener("click", ()=> contactPopup.style.display="none");
-contactPopup.addEventListener("click", e=>{if(e.target===contactPopup) contactPopup.style.display="none";});
-
+// ❌ Delete Profile
+window.deleteProfile = async (docId) => {
+  if (!confirm("Delete this profile?")) return;
+  await deleteDoc(doc(db, "profiles", docId));
+  alert("🗑️ Profile deleted");
+  loadAdminPanel();
+};
 </script>
 </body>
 </html>
