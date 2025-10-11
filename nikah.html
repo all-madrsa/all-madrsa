@@ -23,11 +23,12 @@
   </header>
 
   <main class="max-w-6xl mx-auto p-4">
+    <!-- NEW PROFILE FORM -->
     <section class="bg-white p-4 rounded shadow mb-6">
-      <h2 class="font-semibold mb-3">New Profile (will be visible only after admin approval)</h2>
+      <h2 class="font-semibold mb-3">New Profile (Admin Approval Required)</h2>
       <form id="postForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input type="text" id="name" placeholder="Name" required class="p-2 border rounded" />
-        <input type="number" id="age" placeholder="Age" class="p-2 border rounded" min="18" max="100" />
+        <input type="number" id="age" placeholder="Age" class="p-2 border rounded" min="18" max="100" required />
         <input type="text" id="city" placeholder="City" class="p-2 border rounded" />
         <input type="text" id="phone" placeholder="Phone (WhatsApp)" class="p-2 border rounded" />
         <input type="text" id="address" placeholder="Address" class="p-2 border rounded" />
@@ -41,12 +42,14 @@
       </form>
     </section>
 
+    <!-- PROFILES GRID -->
     <section>
-      <h2 class="font-semibold mb-3">Profiles (approved only)</h2>
-      <div id="profilesGrid" class="grid gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-4"></div>
+      <h2 class="font-semibold mb-3">Profiles</h2>
+      <div id="profilesGrid" class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"></div>
     </section>
   </main>
 
+  <!-- CONTACT MODAL -->
   <div id="contactModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
     <div class="bg-white rounded-lg p-4 max-w-md w-full shadow-lg">
       <div class="flex justify-between items-start">
@@ -144,6 +147,9 @@
           await updateDoc(doc(db,'profiles',editingId), {
             name, age, city, phone, address, about, ...(imgURL?{image:imgURL}:{})
           });
+          // update local cache
+          profilesCache = profilesCache.map(p=>p.id===editingId?{...p,name,age,city,phone,address,about,image:imgURL||p.image}:p);
+          renderProfiles();
           alert('Profile updated');
           editingId = null;
         } else {
@@ -222,7 +228,7 @@
             await updateDoc(doc(db,'profiles',profile.id), { approved: !profile.approved });
           });
           card.querySelector('.deleteBtn')?.addEventListener('click', async ()=>{
-            if(confirm('Delete this profile?')){
+            if(confirm(`Delete profile "${profile.name}"?`)){
               try{ await deleteDoc(doc(db,'profiles',profile.id)); }
               catch(e){ console.error(e); alert('Failed to delete profile'); }
             }
