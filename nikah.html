@@ -1,377 +1,246 @@
 <!doctype html>
-<html lang="hi">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nikah Portal — Mobile Friendly</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-.card-gradient { background: linear-gradient(90deg,#ffffff 0%,#f8fafc 100%); }
-.button-3d {
-  perspective: 500px;
-}
-.button-3d button {
-  transform: translateZ(0);
-  transition: transform 0.2s;
-}
-.button-3d button:active {
-  transform: translateZ(8px);
-}
-</style>
-</head>
-<body class="bg-gray-50 text-gray-800">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All India Muslim Personal Board</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
+    header { background:#004080; color:white; text-align:center; padding:15px; }
+    header h1 { margin:0; font-size:22px; }
+    main { max-width:900px; margin:auto; padding:20px; }
+    .member-card {
+      display:flex; align-items:center;
+      background:white; margin:10px 0; padding:10px;
+      border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    }
+    .member-card img {
+      width:80px; height:80px; border-radius:50%;
+      margin-right:15px; object-fit:cover;
+    }
+    .member-card button {
+      margin-left: 5px;
+      padding: 5px 8px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .edit-btn { background: #ffc107; color: #000; }
+    .delete-btn { background: #dc3545; color: #fff; }
 
-<header class="bg-white shadow sticky top-0 z-40">
-  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold text-xl">N</div>
-      <div>
-        <h1 class="text-xl font-semibold">Nikah Portal</h1>
-        <p class="text-sm text-gray-500">Shadi-style matrimonial site</p>
-      </div>
-    </div>
-    <button id="adminBtn" class="hidden bg-blue-600 text-white px-3 py-1 rounded text-sm">Admin Panel</button>
-  </div>
+    form {
+      display:none; background:white; padding:20px;
+      border-radius:8px; margin-top:20px;
+    }
+    form input { width:100%; margin:8px 0; padding:10px; }
+    form button {
+      background:#004080; color:white; border:none;
+      padding:10px; cursor:pointer; border-radius:5px;
+    }
+    #loginBtn {
+      margin:20px auto; display:block; background:#db4437; color:white;
+      padding:10px 20px; border:none; border-radius:5px; cursor:pointer;
+      font-size:16px;
+    }
+    #msg { color:red; margin-top:10px; text-align:center; }
+
+    /* 3D Home Button */
+    .btn-3d-home {
+      background: linear-gradient(90deg,#ff4d4d,#4d94ff);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    .btn-3d-home:active {
+      transform: translateY(3px);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>All Members List</h1>
 </header>
 
-<main class="max-w-6xl mx-auto px-4 py-6">
-  <!-- Hero -->
-  <section class="bg-white rounded-lg shadow p-6 mb-6 card-gradient">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-bold">Apni shaadi ka safar yahin se shuru karein</h2>
-        <p class="text-gray-600 mt-1">Profile upload karein — admin approval ke baad public honge.</p>
-      </div>
-      <div class="w-full md:w-1/2">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <input id="filterName" type="text" placeholder="Name / City" class="border rounded px-3 py-2" />
-          <select id="filterGender" class="border rounded px-3 py-2">
-            <option value="">Gender</option>
-            <option value="पुरुष">पुरुष</option>
-            <option value="महिला">महिला</option>
-          </select>
-          <button id="filterBtn" class="bg-green-600 text-white rounded px-3 py-2">Filter</button>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- Home Button -->
+<a href="index.html" class="btn-3d-home">🏠 Home</a>
 
-  <div class="flex justify-end mb-4">
-    <button id="showPostFormBtn" class="bg-green-600 text-white px-4 py-2 rounded hidden">Post Profile</button>
-  </div>
+<main>
+  <h2>Members List</h2>
+  <div id="members"></div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Left: Post form -->
-    <aside id="postFormContainer" class="lg:col-span-1 hidden">
-      <div class="bg-white rounded-lg shadow p-5">
-        <h3 class="text-lg font-semibold mb-3">Profile Post Karein</h3>
-        <form id="postForm" class="space-y-3">
-          <input name="name" placeholder="पूरा नाम" class="w-full border rounded px-3 py-2" required />
-          <input name="age" type="number" placeholder="उम्र" class="w-full border rounded px-3 py-2" required />
-          <input name="city" placeholder="City" class="w-full border rounded px-3 py-2" />
-          <select name="gender" class="w-full border rounded px-3 py-2" required>
-            <option value="">लिंग चुनें</option>
-            <option value="पुरुष">पुरुष</option>
-            <option value="महिला">महिला</option>
-          </select>
-          <textarea name="about" rows="3" placeholder="Thoda sa intro (optional)" class="w-full border rounded px-3 py-2"></textarea>
-          <input name="contact" placeholder="Contact (optional)" class="w-full border rounded px-3 py-2" />
-          <input name="fatherName" placeholder="Father Name" class="w-full border rounded px-3 py-2" />
-          <input name="motherName" placeholder="Mother Name" class="w-full border rounded px-3 py-2" />
-          <input name="address" placeholder="Address" class="w-full border rounded px-3 py-2" />
-          <label class="block text-sm text-gray-600">Profile Photo (max 2MB)</label>
-          <input name="image" type="file" accept="image/*" class="w-full" required />
-          <div class="flex items-center gap-2">
-            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Post Profile</button>
-            <div id="postingStatus" class="text-sm text-gray-600"></div>
-          </div>
-        </form>
-      </div>
-    </aside>
+  <!-- Google Login Button -->
+  <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
+  <p id="msg"></p>
 
-    <!-- Profiles -->
-    <section class="lg:col-span-2">
-      <div class="bg-white rounded-lg shadow p-4 mb-4">
-        <h3 class="text-lg font-semibold">Public Profiles</h3>
-        <div class="text-sm text-gray-500">Filtered & approved profiles yahan dikhte hain.</div>
-      </div>
-      <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-    </section>
-  </div>
-
-  <!-- Full Profile Modal -->
-  <div id="profileModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-xl rounded-lg shadow-lg overflow-auto max-h-[90vh] p-4 relative">
-      <button id="closeProfileModal" class="absolute top-2 right-2 text-gray-600">X</button>
-      <div id="profileModalContent"></div>
-    </div>
-  </div>
-
-  <!-- Admin Panel -->
-  <div id="adminPanel" class="fixed inset-0 z-50 hidden items-start justify-center p-6 bg-black/50">
-    <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
-      <div class="flex items-center justify-between p-4 border-b">
-        <h2 class="text-lg font-semibold">Admin Panel</h2>
-        <button id="adminClose" class="text-gray-600 px-3 py-1">Close</button>
-      </div>
-
-      <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div>
-          <h3 class="font-semibold mb-2">Pending Profiles</h3>
-          <ul id="pendingList" class="space-y-3 max-h-80 overflow-auto"></ul>
-        </div>
-
-        <div>
-          <h3 class="font-semibold mb-2">Approved Profiles (Admin View)</h3>
-          <ul id="approvedAdminList" class="space-y-3 max-h-80 overflow-auto"></ul>
-
-          <div class="mt-4">
-            <h4 class="font-medium mb-2">Post Notice</h4>
-            <form id="noticeForm" class="flex gap-2">
-              <input name="notice" placeholder="Notice text..." class="flex-1 border rounded px-3 py-2" />
-              <button class="bg-blue-600 text-white px-3 py-2 rounded">Post</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Add Member Form -->
+  <form id="memberForm">
+    <h3>Add Member</h3>
+    <input type="text" id="name" placeholder="Member Name" required>
+    <input type="file" id="photoFile" accept="image/*" required>
+    <button type="button" onclick="addMember()">Add Member</button>
+  </form>
 </main>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
-const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+<script>
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrasa.firebaseapp.com",
+    databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
 
-const adminEmail = "";
-const adminPassword = "";
+  const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+  // Init Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-const postForm = document.getElementById('postForm');
-const postingStatus = document.getElementById('postingStatus');
-const profilesGrid = document.getElementById('profilesGrid');
-const pendingList = document.getElementById('pendingList');
-const approvedAdminList = document.getElementById('approvedAdminList');
-const adminPanel = document.getElementById('adminPanel');
-const adminBtn = document.getElementById('adminBtn');
-const adminClose = document.getElementById('adminClose');
-const noticeForm = document.getElementById('noticeForm');
-const showPostFormBtn = document.getElementById('showPostFormBtn');
-const postFormContainer = document.getElementById('postFormContainer');
-const profileModal = document.getElementById('profileModal');
-const profileModalContent = document.getElementById('profileModalContent');
-const closeProfileModal = document.getElementById('closeProfileModal');
+  const adminEmails = ["zaradigitalseva@gmail.com","secondadmin@gmail.com"];
 
-let currentAdmin = null;
-let currentUser = null;
+  const membersContainer = document.getElementById("members");
+  const loginBtn = document.getElementById("loginBtn");
+  const memberForm = document.getElementById("memberForm");
+  const msg = document.getElementById("msg");
 
-function esc(s){ if(!s) return ""; return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+  // Load Members
+  function loadMembers() {
+    db.collection("members").orderBy("name").onSnapshot(snapshot => {
+      membersContainer.innerHTML = "";
+      snapshot.forEach(doc => {
+        let m = doc.data();
+        let card = document.createElement("div");
+        card.className = "member-card";
 
-async function uploadToImgbb(file){
-  const fd = new FormData();
-  fd.append('image',file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
-  const data = await res.json();
-  if(data && data.success) return data.data.display_url;
-  throw new Error('Image upload failed');
-}
+        let img = document.createElement("img");
+        img.src = m.photo;
+        img.alt = m.name;
 
-postForm.addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  postingStatus.textContent = "Posting...";
-  const f = new FormData(postForm);
-  const name = f.get('name')?.trim();
-  const age = f.get('age')?.trim();
-  const gender = f.get('gender')?.trim();
-  const about = f.get('about')?.trim();
-  const city = f.get('city')?.trim();
-  const contact = f.get('contact')?.trim();
-  const fatherName = f.get('fatherName')?.trim();
-  const motherName = f.get('motherName')?.trim();
-  const address = f.get('address')?.trim();
-  const imageFile = f.get('image');
+        let span = document.createElement("span");
+        span.textContent = m.name;
 
-  if(!name || !age || !gender || !imageFile || imageFile.size===0){
-    postingStatus.textContent = "Please fill required fields.";
-    setTimeout(()=>postingStatus.textContent="",2000);
-    return;
-  }
-  if(imageFile.size>2*1024*1024){
-    postingStatus.textContent = "Image must be < 2MB.";
-    setTimeout(()=>postingStatus.textContent="",2000);
-    return;
-  }
+        card.appendChild(img);
+        card.appendChild(span);
 
-  try{
-    const imageUrl = await uploadToImgbb(imageFile);
-    await addDoc(collection(db,'profiles'), {
-      name, age, gender, about, city, contact, fatherName, motherName, address, imageUrl,
-      approved: false, createdAt: Date.now()
-    });
-    postingStatus.textContent = "Submitted — admin approval pending.";
-    postForm.reset();
-    setTimeout(()=>postingStatus.textContent="",3000);
-    refreshData();
-  }catch(err){
-    console.error(err);
-    postingStatus.textContent = "Posting failed.";
-    setTimeout(()=>postingStatus.textContent="",3000);
-  }
-});
+        // Admin buttons
+        auth.onAuthStateChanged(user => {
+          if (user && adminEmails.includes(user.email)) {
+            let editBtn = document.createElement("button");
+            editBtn.textContent = "✏️ Edit";
+            editBtn.className = "edit-btn";
+            editBtn.onclick = () => editMember(doc.id, m.name, m.photo);
 
-// ---------------------- Load Profiles ---------------------
-async function loadApprovedProfiles(){
-  profilesGrid.innerHTML = "";
-  const q = query(collection(db,'profiles'), where('approved','==', true));
-  const snap = await getDocs(q);
-  const arr = [];
-  snap.forEach(s=> arr.push({ id:s.id, ...s.data() }));
-  arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+            let delBtn = document.createElement("button");
+            delBtn.textContent = "🗑 Delete";
+            delBtn.className = "delete-btn";
+            delBtn.onclick = () => deleteMember(doc.id);
 
-  const nameFilter = document.getElementById('filterName').value.trim().toLowerCase();
-  const genderFilter = document.getElementById('filterGender').value;
-
-  const filtered = arr.filter(p=>{
-    if(nameFilter && !(`${p.name} ${p.city||''}`).toLowerCase().includes(nameFilter)) return false;
-    if(genderFilter && p.gender!==genderFilter) return false;
-    return true;
-  });
-
-  if(filtered.length===0){
-    profilesGrid.innerHTML = `<div class="col-span-1 lg:col-span-4 bg-white p-6 rounded text-gray-500">No profiles found.</div>`;
-    return;
-  }
-
-  filtered.forEach(p=>{
-    const card = document.createElement('div');
-    card.className = 'bg-white rounded-lg shadow overflow-hidden cursor-pointer';
-    card.innerHTML = `
-      <div class="h-44 bg-gray-100 overflow-hidden">
-        <img src="${esc(p.imageUrl)}" alt="${esc(p.name)}" class="w-full h-full object-cover">
-      </div>
-      <div class="p-4">
-        <div>
-          <h4 class="font-semibold text-lg">${esc(p.name)}, <span class="text-sm font-medium text-gray-600">${esc(p.age)}</span></h4>
-          <div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div>
-        </div>
-      </div>
-    `;
-    card.addEventListener('click', ()=>{
-      showProfileModal(p);
-    });
-    profilesGrid.appendChild(card);
-  });
-}
-
-// ---------------- Profile Modal -------------------
-function showProfileModal(profile){
-  profileModalContent.innerHTML = `
-    <img src="${esc(profile.imageUrl)}" class="w-full h-64 object-cover rounded mb-2">
-    <h3 class="text-xl font-semibold">${esc(profile.name)}, ${esc(profile.age)}</h3>
-    <p class="text-gray-600">${esc(profile.gender)} · ${esc(profile.city||'')}</p>
-    <p class="mt-2">${esc(profile.about||'')}</p>
-    <p class="text-sm mt-1">Father: ${esc(profile.fatherName||'')}</p>
-    <p class="text-sm">Mother: ${esc(profile.motherName||'')}</p>
-    <p class="text-sm">Address: ${esc(profile.address||'')}</p>
-    ${currentUser ? `<div class="mt-4 button-3d">
-      <button id="contactBtn" class="bg-green-600 text-white px-4 py-2 rounded">Contact Poster</button>
-    </div>` : `<div class="mt-4 text-sm text-gray-500">Login to contact poster.</div>`}
-  `;
-  profileModal.classList.remove('hidden');
-
-  const contactBtn = document.getElementById('contactBtn');
-  if(contactBtn){
-    contactBtn.addEventListener('click', async ()=>{
-      const name = prompt("Apna naam daalein:");
-      const whatsapp = prompt("WhatsApp number:");
-      const address = prompt("Address:");
-      if(name && whatsapp){
-        await addDoc(collection(db,'contactRequests'), {
-          profileId: profile.id, name, whatsapp, address, timestamp: Date.now()
+            card.appendChild(editBtn);
+            card.appendChild(delBtn);
+          }
         });
-        alert("Request sent to admin!");
-      }
+
+        membersContainer.appendChild(card);
+      });
     });
   }
-}
+  loadMembers();
 
-closeProfileModal.addEventListener('click', ()=>{
-  profileModal.classList.add('hidden');
-});
+  // Auth state
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (adminEmails.includes(user.email)) {
+        loginBtn.style.display = "none";
+        memberForm.style.display = "block";
+        msg.innerText = "";
+      } else {
+        loginBtn.style.display = "none";
+        memberForm.style.display = "none";
+        msg.innerText = "aap bhi jude aaj hi aur abhi ";
+      }
+    } else {
+      loginBtn.style.display = "block";
+      memberForm.style.display = "none";
+      msg.innerText = "";
+    }
+  });
 
-// ---------------- Admin Functions --------------------
-adminBtn.addEventListener('click', ()=> { adminPanel.classList.remove('hidden'); });
-adminClose.addEventListener('click', ()=> { adminPanel.classList.add('hidden'); });
-
-async function loadPendingProfiles(){ /* same as before */ }
-async function loadApprovedAdmin(){ /* same as before */ }
-
-async function refreshData(){
-  await loadApprovedProfiles();
-  if(currentAdmin){
-    await loadPendingProfiles();
-    await loadApprovedAdmin();
+  // Google Login
+  function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(err => alert("Login Failed: "+err.message));
   }
-}
 
-// ---------------- Admin / User Auth -------------------
-(async function tryAutoAdminSignIn(){
-  if(!adminEmail || !adminPassword){
-    refreshData();
-    return;
+  // Upload image to imgbb
+  async function uploadImage(file) {
+    let formData = new FormData();
+    formData.append("image", file);
+    let res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
+      method: "POST",
+      body: formData
+    });
+    let data = await res.json();
+    return data.data.url;
   }
-  try{ await signInWithEmailAndPassword(auth, adminEmail, adminPassword); }
-  catch(err){ console.warn('Auto admin sign-in failed:', err.message||err); refreshData(); }
-})();
 
-onAuthStateChanged(auth, async (user)=>{
-  currentUser = user;
-  showPostFormBtn.classList.toggle('hidden', !user);
-  if(user){
-    currentAdmin = (user.email===adminEmail)?user:null;
-    adminBtn.classList.toggle('hidden', !currentAdmin);
-  } else {
-    currentAdmin = null;
-    adminBtn.classList.add('hidden');
+  // Add Member
+  async function addMember() {
+    let name = document.getElementById("name").value;
+    let file = document.getElementById("photoFile").files[0];
+    if(!file){ alert("कृपया फोटो चुनें"); return; }
+    let photoUrl = await uploadImage(file);
+    db.collection("members").add({name, photo: photoUrl})
+      .then(()=> document.getElementById("memberForm").reset())
+      .catch(err=>alert("Error: "+err.message));
   }
-  refreshData();
-});
 
-// ---------------- Post Form Button -------------------
-showPostFormBtn.addEventListener('click', ()=>{
-  if(!currentUser){
-    alert("Please login first.");
-    window.location.href = "/index.html";
-    return;
+  // Edit Member
+  function editMember(id, oldName, oldPhoto){
+    let newName = prompt("Update Name:", oldName);
+    if(!newName) return;
+    db.collection("members").doc(id).update({name: newName})
+      .then(()=>alert("✅ Name updated!"))
+      .catch(err=>alert("Error: "+err.message));
   }
-  postFormContainer.classList.toggle('hidden');
-});
 
-// ---------------- Filter ------------------
-document.getElementById('filterBtn').addEventListener('click', refreshData);
-
-noticeForm?.addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const txt = (new FormData(noticeForm)).get('notice')?.trim();
-  if(!txt) return;
-  await addDoc(collection(db,'notices'), { text: txt, timestamp: Date.now() });
-  noticeForm.reset();
-});
-
-(async ()=>{ await refreshData(); })();
+  // Delete Member
+  function deleteMember(id){
+    if(confirm("Are you sure you want to delete this member?")){
+      db.collection("members").doc(id).delete()
+        .then(()=>alert("✅ Member deleted!"))
+        .catch(err=>alert("Error: "+err.message));
+    }
+  }
 </script>
+
+  <script type="module" src="auth-protect.js"></script>
+<!-- Fixed Donate Button -->
+<a href="https://all-madrsa.netlify.app/upi" 
+   class="fixed top-1/2 right-4 transform -translate-y-1/2 
+          bg-yellow-400 text-black font-bold px-5 py-3 
+          rounded-lg shadow-lg hover:bg-yellow-300 z-50">
+   💝 Donate
+</a>
+
 </body>
 </html>
