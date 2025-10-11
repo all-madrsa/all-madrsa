@@ -19,19 +19,10 @@
       display:none;
     }
 
-    .top-btn { display:flex; justify-content:center; margin:15px 0; }
-    .whatsapp-btn {
-      background:#25d366; color:white; text-decoration:none;
-      padding:10px 20px; font-weight:bold; border-radius:8px;
-      display:inline-flex; align-items:center; gap:8px;
-      box-shadow:0 4px 6px rgba(0,0,0,0.2);
-    }
-    .whatsapp-btn:hover { background:#1eb856; }
-
     main { max-width:1100px; margin:auto; padding:15px; }
     .grid {
       display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap:15px;
     }
     .card {
@@ -42,50 +33,50 @@
     }
     .card:hover { transform:translateY(-4px); }
     .card img { width:100%; height:220px; object-fit:cover; background:#eee; }
-    .card-body { padding:10px; text-align:center; }
+    .card-body { padding:10px; text-align:center; width:100%; }
     .card-body h3 { margin:6px 0; font-size:18px; color:#116530; }
     .card-body p { margin:4px 0; font-size:14px; color:#555; }
-    .card-actions { display:flex; justify-content:center; gap:8px; padding:10px; }
-    .card-actions button { border:none; padding:6px 10px; border-radius:6px; font-size:13px; cursor:pointer; }
+    .card-actions { display:flex; justify-content:center; gap:8px; padding:10px; flex-wrap:wrap; }
+    .card-actions button, .card-actions a {
+      border:none; padding:6px 10px; border-radius:6px; font-size:13px; cursor:pointer;
+      text-decoration:none; display:inline-block;
+    }
+    .contact-btn { background:#25d366; color:white; }
     .edit-btn { background:#ffc107; }
     .delete-btn { background:#dc3545; color:white; }
 
-    form {
-      display:none; background:white; padding:20px;
-      border-radius:12px; margin-top:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1);
-    }
-    form h3 { margin-top:0; color:#116530; }
-    form input {
-      width:100%; margin:8px 0; padding:10px;
-      border:1px solid #ccc; border-radius:6px;
-    }
-    form button {
-      background:#116530; color:white; border:none;
-      padding:10px 15px; border-radius:6px; cursor:pointer;
-      font-size:15px;
-    }
-
-    #loginBtn {
-      display:block; margin:20px auto; background:#4285F4;
-      color:white; padding:10px 20px; border:none; border-radius:6px;
-      cursor:pointer;
-    }
-    #msg { text-align:center; color:red; }
-
-    /* Edit Popup */
-    #editPopup {
+    /* Contact Popup */
+    #contactPopup {
       position:fixed; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center;
     }
-    #editBox {
-      background:white; padding:20px; border-radius:12px; width:90%; max-width:400px;
+    #contactBox {
+      background:white; padding:20px; border-radius:12px; width:90%; max-width:350px;
       box-shadow:0 4px 10px rgba(0,0,0,0.3);
     }
-    #editBox h3 { margin-top:0; color:#116530; }
-    #editBox input { width:100%; margin:8px 0; padding:10px; border:1px solid #ccc; border-radius:6px; }
-    #editBox button { margin-top:10px; padding:10px; border:none; border-radius:6px; cursor:pointer; }
-    #saveEditBtn { background:#116530; color:white; width:100%; }
-    #cancelEditBtn { background:#999; color:white; width:100%; margin-top:5px; }
+    #contactBox h3 { margin-top:0; color:#116530; }
+    #contactBox input {
+      width:100%; margin:8px 0; padding:10px; border:1px solid #ccc; border-radius:6px;
+    }
+    #contactBox button {
+      margin-top:10px; padding:10px; border:none; border-radius:6px; cursor:pointer; width:100%;
+    }
+    #submitContact { background:#116530; color:white; }
+    #cancelContact { background:#999; color:white; }
+
+    .interested {
+      background:#f9f9f9; border-top:1px solid #ddd; width:100%; padding:10px;
+    }
+    .interested h4 { margin:0 0 8px; font-size:14px; color:#116530; }
+    .interested-item {
+      display:flex; justify-content:space-between; align-items:center;
+      background:white; padding:6px; margin:4px 0; border-radius:6px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      font-size:13px;
+    }
+    .interested-item a {
+      background:#25d366; color:white; padding:4px 8px; border-radius:4px; text-decoration:none; font-size:12px;
+    }
   </style>
 </head>
 <body>
@@ -95,38 +86,19 @@
   <button id="logoutBtn" onclick="logout()">Logout</button>
 </header>
 
-<div class="top-btn">
-  <a class="whatsapp-btn" href="https://wa.me/919112170192?text=Main%20Nikah%20Profile%20mein%20shamil%20hona%20chahta/chahti%20hoon">
-    📱 WhatsApp se Join Karein
-  </a>
-</div>
-
 <main>
   <div class="grid" id="members"></div>
-
-  <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
-  <p id="msg"></p>
-
-  <form id="memberForm">
-    <h3>नई प्रोफाइल जोड़ें</h3>
-    <input type="text" id="name" placeholder="पूरा नाम" required>
-    <input type="text" id="age" placeholder="उम्र" required>
-    <input type="text" id="city" placeholder="शहर" required>
-    <input type="file" id="photoFile" accept="image/*" required>
-    <button type="button" onclick="addMember()">Add Profile</button>
-  </form>
 </main>
 
-<!-- Edit Popup -->
-<div id="editPopup">
-  <div id="editBox">
-    <h3>प्रोफाइल एडिट करें</h3>
-    <input type="text" id="editName" placeholder="पूरा नाम">
-    <input type="text" id="editAge" placeholder="उम्र">
-    <input type="text" id="editCity" placeholder="शहर">
-    <input type="file" id="editPhoto" accept="image/*">
-    <button id="saveEditBtn" onclick="saveEdit()">Save</button>
-    <button id="cancelEditBtn" onclick="closeEdit()">Cancel</button>
+<!-- Contact Popup -->
+<div id="contactPopup">
+  <div id="contactBox">
+    <h3>📞 संपर्क जानकारी</h3>
+    <input type="text" id="cName" placeholder="आपका नाम">
+    <input type="text" id="cAddress" placeholder="पता (City)">
+    <input type="text" id="cWhatsapp" placeholder="WhatsApp नंबर (91...)" maxlength="12">
+    <button id="submitContact">Submit</button>
+    <button id="cancelContact" onclick="closeContact()">Cancel</button>
   </div>
 </div>
 
@@ -144,22 +116,15 @@
     messagingSenderId: "619313835874",
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
-  const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
-
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.firestore();
 
-  const adminEmails = ["zaradigitalseva@gmail.com"]; // अपने admin emails डालो
+  const adminEmails = ["zaradigitalseva@gmail.com"];
+  let currentContactProfile = null;
 
   const membersContainer = document.getElementById("members");
-  const loginBtn = document.getElementById("loginBtn");
-  const memberForm = document.getElementById("memberForm");
-  const logoutBtn = document.getElementById("logoutBtn");
 
-  let currentEditId = null;
-
-  // Load profiles
+  // Load profiles with interested list
   db.collection("members").orderBy("name").onSnapshot(snapshot=>{
     membersContainer.innerHTML="";
     snapshot.forEach(doc=>{
@@ -172,126 +137,69 @@
 
       const body = document.createElement("div");
       body.className="card-body";
-      body.innerHTML = `<h3>${d.name}</h3>
-                        <p>उम्र: ${d.age || "-"} वर्ष</p>
-                        <p>शहर: ${d.city || "-"}</p>`;
+      body.innerHTML = `<h3>${d.name}</h3><p>उम्र: ${d.age}</p><p>शहर: ${d.city}</p>`;
 
       const actions = document.createElement("div");
       actions.className="card-actions";
 
-      const contact = document.createElement("a");
-      contact.href = `https://wa.me/91XXXXXXXXXX?text=Mujhe%20${encodeURIComponent(d.name)}%20ki%20profile%20mein%20interest%20hai`;
-      contact.textContent = "📞 Contact";
-      contact.style.background="#25d366";
-      contact.style.color="white";
-      contact.style.padding="6px 10px";
-      contact.style.borderRadius="6px";
-      contact.style.fontSize="13px";
-      contact.style.textDecoration="none";
-      actions.appendChild(contact);
-
-      if(auth.currentUser && adminEmails.includes(auth.currentUser.email)){
-        const edit = document.createElement("button");
-        edit.className="edit-btn";
-        edit.textContent="✏️ Edit";
-        edit.onclick=()=>openEdit(doc.id,d);
-        const del = document.createElement("button");
-        del.className="delete-btn";
-        del.textContent="🗑 Delete";
-        del.onclick=()=>deleteMember(doc.id);
-        actions.appendChild(edit);
-        actions.appendChild(del);
-      }
+      const contactBtn = document.createElement("button");
+      contactBtn.className="contact-btn";
+      contactBtn.textContent="📞 Contact";
+      contactBtn.onclick=()=>openContact(doc.id);
+      actions.appendChild(contactBtn);
 
       card.appendChild(img);
       card.appendChild(body);
       card.appendChild(actions);
+
+      // Interested People (for Admin)
+      const interestedDiv = document.createElement("div");
+      interestedDiv.className="interested";
+
+      db.collection("members").doc(doc.id).collection("interested").get().then(subSnap=>{
+        if(!subSnap.empty){
+          interestedDiv.innerHTML="<h4>Interested People:</h4>";
+          subSnap.forEach(p=>{
+            const person=p.data();
+            const item=document.createElement("div");
+            item.className="interested-item";
+            item.innerHTML=`<span>${person.name} - ${person.address}</span>
+            <a href="https://wa.me/${person.whatsapp}" target="_blank">WhatsApp</a>`;
+            interestedDiv.appendChild(item);
+          });
+          card.appendChild(interestedDiv);
+        }
+      });
+
       membersContainer.appendChild(card);
     });
   });
 
-  auth.onAuthStateChanged(user=>{
-    if(user){
-      if(adminEmails.includes(user.email)){
-        loginBtn.style.display="none";
-        logoutBtn.style.display="block";
-        memberForm.style.display="block";
-      } else {
-        loginBtn.style.display="none";
-        logoutBtn.style.display="block";
-        memberForm.style.display="none";
-      }
-    } else {
-      loginBtn.style.display="block";
-      logoutBtn.style.display="none";
-      memberForm.style.display="none";
-    }
-  });
-
-  function googleLogin(){
-    const provider=new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
+  function openContact(profileId){
+    currentContactProfile = profileId;
+    document.getElementById("contactPopup").style.display="flex";
   }
 
-  function logout(){
-    auth.signOut();
+  function closeContact(){
+    document.getElementById("contactPopup").style.display="none";
+    currentContactProfile=null;
+    document.getElementById("cName").value="";
+    document.getElementById("cAddress").value="";
+    document.getElementById("cWhatsapp").value="";
   }
 
-  async function uploadImage(file){
-    const fd=new FormData();
-    fd.append("image", file);
-    const res=await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`,{ method:"POST", body:fd });
-    const data=await res.json();
-    return data.data.url;
-  }
+  document.getElementById("submitContact").onclick = async ()=>{
+    const name=document.getElementById("cName").value.trim();
+    const address=document.getElementById("cAddress").value.trim();
+    const whatsapp=document.getElementById("cWhatsapp").value.trim();
+    if(!name || !address || !whatsapp) return alert("कृपया सभी जानकारी भरें");
 
-  async function addMember(){
-    const name=document.getElementById("name").value;
-    const age=document.getElementById("age").value;
-    const city=document.getElementById("city").value;
-    const file=document.getElementById("photoFile").files[0];
-    if(!file) return alert("फोटो चुनें");
-    const photo=await uploadImage(file);
-    await db.collection("members").add({name, age, city, photo});
-    memberForm.reset();
-    alert("✅ प्रोफाइल जोड़ी गई!");
-  }
+    await db.collection("members").doc(currentContactProfile)
+      .collection("interested")
+      .add({name,address,whatsapp,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
 
-  function openEdit(id,data){
-    currentEditId = id;
-    document.getElementById("editName").value = data.name;
-    document.getElementById("editAge").value = data.age;
-    document.getElementById("editCity").value = data.city;
-    document.getElementById("editPopup").style.display = "flex";
-  }
-
-  function closeEdit(){
-    document.getElementById("editPopup").style.display = "none";
-    currentEditId = null;
-  }
-
-  async function saveEdit(){
-    if(!currentEditId) return;
-    const name=document.getElementById("editName").value;
-    const age=document.getElementById("editAge").value;
-    const city=document.getElementById("editCity").value;
-    const file=document.getElementById("editPhoto").files[0];
-
-    let updateData={name,age,city};
-    if(file){
-      const photo = await uploadImage(file);
-      updateData.photo = photo;
-    }
-
-    await db.collection("members").doc(currentEditId).update(updateData);
-    closeEdit();
-    alert("✅ प्रोफाइल अपडेट हो गया");
-  }
-
-  function deleteMember(id){
-    if(confirm("क्या आप वाकई इस प्रोफाइल को डिलीट करना चाहते हैं?")){
-      db.collection("members").doc(id).delete();
-    }
+    alert("✅ आपकी जानकारी भेज दी गई है");
+    closeContact();
   }
 </script>
 
