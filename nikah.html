@@ -1,17 +1,27 @@
-<!doctype html>
-<html lang="hi">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nikah Portal — Admin Posts</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Post Profile</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase v9 modular SDK (CDN) -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+</head>
+<body class="bg-gray-100 p-4">
+  <h1 class="text-2xl font-bold mb-4">Post Your Profile</h1>
 
-    // --- CONFIG: Replace with provided / keep as-is ---
+  <form id="profileForm" class="bg-white p-4 rounded shadow max-w-md mx-auto space-y-3">
+    <input type="text" id="name" placeholder="Name" class="border p-2 w-full rounded" required>
+    <input type="number" id="age" placeholder="Age" class="border p-2 w-full rounded" required>
+    <input type="text" id="city" placeholder="City" class="border p-2 w-full rounded" required>
+    <input type="text" id="whatsapp" placeholder="WhatsApp Number" class="border p-2 w-full rounded" required>
+    <input type="file" id="imageInput" class="border p-2 w-full rounded" accept="image/*" required>
+    <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded w-full">Submit</button>
+  </form>
+
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
       authDomain: "all-madrsa.firebaseapp.com",
@@ -20,276 +30,63 @@
       messagingSenderId: "619313835874",
       appId: "1:619313835874:web:e387e1297663f11fc2463b"
     };
-    const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // imgbb key provided
-    const ADMIN_EMAIL = 'zaradigitalseva@gmail.com';
+    const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
 
-    // Initialize
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    // DOM refs
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const adminFormWrap = document.getElementById('adminFormWrap');
-    const profileForm = document.getElementById('profileForm');
-    const profilesContainer = document.getElementById('profilesContainer');
-    const statusText = document.getElementById('statusText');
+    let editId = null;
 
-    // Auth
-    loginBtn.addEventListener('click', async () => {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (e) {
-        alert('Login failed: ' + e.message);
-      }
-    });
-    logoutBtn.addEventListener('click', async () => {
-      await signOut(auth);
-    });
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        statusText.textContent = `Signed in: ${user.email}`;
-        loginBtn.classList.add('hidden');
-        logoutBtn.classList.remove('hidden');
-        // show admin form only to admin
-        if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          adminFormWrap.classList.remove('hidden');
-        } else {
-          adminFormWrap.classList.add('hidden');
-        }
-      } else {
-        statusText.textContent = 'Not signed in';
-        loginBtn.classList.remove('hidden');
-        logoutBtn.classList.add('hidden');
-        adminFormWrap.classList.add('hidden');
-      }
-    });
-
-    // Upload helper (imgbb)
-    async function uploadImageToImgbb(file) {
-      const form = new FormData();
-      form.append('image', file);
-      // imgbb requires base64 OR file via formdata? The endpoint accepts multipart/form-data with 'image' as file
-      const url = `https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`;
-      const res = await fetch(url, { method: 'POST', body: form });
-      const data = await res.json();
-      if (!data.success) throw new Error('Image upload failed');
-      return data.data.url; // direct image url
+    // Edit mode check
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('edit')) {
+      editId = urlParams.get('edit');
+      loadProfileForEdit(editId);
     }
 
-    // Submit profile (admin only)
-    profileForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Posting...';
-
-      try {
-        // gather fields
-        const name = document.getElementById('name').value.trim();
-        const age = document.getElementById('age').value.trim();
-        const gender = document.getElementById('gender').value;
-        const religion = document.getElementById('religion').value.trim();
-        const motherTongue = document.getElementById('motherTongue').value.trim();
-        const city = document.getElementById('city').value.trim();
-        const education = document.getElementById('education').value.trim();
-        const occupation = document.getElementById('occupation').value.trim();
-        const about = document.getElementById('about').value.trim();
-
-        // images
-        const files = document.getElementById('images').files;
-        const imageUrls = [];
-        for (let i = 0; i < files.length; i++) {
-          const url = await uploadImageToImgbb(files[i]);
-          imageUrls.push(url);
-        }
-
-        // add to Firestore
-        await addDoc(collection(db, 'profiles'), {
-          name, age, gender, religion, motherTongue, city, education, occupation, about,
-          images: imageUrls,
-          createdAt: serverTimestamp()
-        });
-
-        alert('Profile posted successfully');
-        profileForm.reset();
-      } catch (err) {
-        console.error(err);
-        alert('Failed to post: ' + err.message);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Post Profile';
-      }
-    });
-
-    // Real-time listener to load profiles (visible to everyone)
-    const q = query(collection(db, 'profiles'), orderBy('createdAt', 'desc'));
-    onSnapshot(q, (snapshot) => {
-      profilesContainer.innerHTML = '';
-      snapshot.forEach(doc => {
+    async function loadProfileForEdit(id) {
+      const doc = await db.collection('profiles').doc(id).get();
+      if (doc.exists) {
         const data = doc.data();
-        const card = createProfileCard(data);
-        profilesContainer.appendChild(card);
-      });
-    });
-
-    function createProfileCard(data) {
-      const wrap = document.createElement('div');
-      wrap.className = 'bg-white rounded-lg shadow p-4';
-
-      // image
-      const img = document.createElement('img');
-      img.src = (data.images && data.images[0]) ? data.images[0] : 'https://via.placeholder.com/300x200?text=No+Image';
-      img.alt = data.name || 'Profile Image';
-      img.className = 'w-full h-48 object-cover rounded';
-
-      const h = document.createElement('h3');
-      h.className = 'mt-3 text-lg font-semibold';
-      h.textContent = data.name + ' (' + (data.age || '-') + ')';
-
-      const p1 = document.createElement('p');
-      p1.className = 'text-sm text-gray-600';
-      p1.textContent = `${data.religion || '-'} • ${data.motherTongue || '-'} • ${data.city || '-'}`;
-
-      const btnWrap = document.createElement('div');
-      btnWrap.className = 'mt-3 flex gap-2';
-
-      // View full profile (modal)
-      const viewBtn = document.createElement('button');
-      viewBtn.className = 'px-3 py-1 rounded border';
-      viewBtn.textContent = 'पूरा प्रोफ़ाइल';
-      viewBtn.addEventListener('click', () => openProfileModal(data));
-
-      // WhatsApp button
-      const waBtn = document.createElement('a');
-      const text = encodeURIComponent('नमस्ते, परिवार के लिए रिश्ता जोड़ने के बारे में जानकारी चाहिए — प्रोफ़ाइल: ' + (data.name || '–'));
-      waBtn.href = `https://wa.me/9112170192?text=${text}`;
-      waBtn.target = '_blank';
-      waBtn.rel = 'noopener';
-      waBtn.className = 'px-3 py-1 rounded bg-green-600 text-white';
-      waBtn.textContent = 'रिश्ते जोड़े';
-
-      btnWrap.appendChild(viewBtn);
-      btnWrap.appendChild(waBtn);
-
-      wrap.appendChild(img);
-      wrap.appendChild(h);
-      wrap.appendChild(p1);
-      wrap.appendChild(btnWrap);
-
-      return wrap;
+        document.getElementById('name').value = data.name || '';
+        document.getElementById('age').value = data.age || '';
+        document.getElementById('city').value = data.city || '';
+        document.getElementById('whatsapp').value = data.whatsapp || '';
+      }
     }
 
-    // Modal code
-    const modal = document.getElementById('profileModal');
-    const modalContent = document.getElementById('modalContent');
-    const closeModalBtn = document.getElementById('closeModal');
-    function openProfileModal(data) {
-      modal.classList.remove('hidden');
-      modalContent.innerHTML = '';
-      const title = document.createElement('h2');
-      title.className = 'text-xl font-bold mb-2';
-      title.textContent = data.name + ' — ' + (data.age || '-');
-      const ul = document.createElement('div');
-      ul.className = 'space-y-1 text-sm text-gray-700';
-      ul.innerHTML = `
-        <p><strong>लिंग:</strong> ${data.gender || '-'}</p>
-        <p><strong>धर्म:</strong> ${data.religion || '-'}</p>
-        <p><strong>मातृभाषा:</strong> ${data.motherTongue || '-'}</p>
-        <p><strong>शहर:</strong> ${data.city || '-'}</p>
-        <p><strong>शिक्षा:</strong> ${data.education || '-'}</p>
-        <p><strong>पेशा:</strong> ${data.occupation || '-'}</p>
-        <p><strong>बायो:</strong> ${data.about || '-'}</p>
-      `;
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const age = document.getElementById('age').value;
+      const city = document.getElementById('city').value;
+      const whatsapp = document.getElementById('whatsapp').value;
+      const file = document.getElementById('imageInput').files[0];
 
-      // image carousel (simple)
-      const gallery = document.createElement('div');
-      gallery.className = 'mt-3 grid grid-cols-2 gap-2';
-      if (data.images && data.images.length) {
-        data.images.forEach(u => {
-          const im = document.createElement('img');
-          im.src = u;
-          im.className = 'w-full h-32 object-cover rounded';
-          gallery.appendChild(im);
+      let imageURL = '';
+      if (file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
+          method: 'POST',
+          body: formData
         });
+        const json = await res.json();
+        imageURL = json.data?.url || '';
       }
 
-      modalContent.appendChild(title);
-      modalContent.appendChild(ul);
-      modalContent.appendChild(gallery);
-    }
-    closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+      const data = { name, age, city, whatsapp, imageURL, approved: false, createdAt: new Date() };
 
-    // Close modal on outside click
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.add('hidden');
+      if (editId) {
+        await db.collection('profiles').doc(editId).update(data);
+        alert('Profile updated!');
+      } else {
+        await db.collection('profiles').add(data);
+        alert('Profile submitted for approval');
+      }
+      window.location.href = 'index.html';
     });
-
   </script>
-</head>
-<body class="bg-gray-100 min-h-screen">
-  <header class="bg-white shadow">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <img src="https://via.placeholder.com/48x48?text=NP" alt="logo" class="rounded-full" />
-        <div>
-          <h1 class="font-bold text-lg">Nikah Portal</h1>
-          <p class="text-sm text-gray-600">सभी प्रोफ़ाइल यहाँ दिखाई देंगी — पोस्ट केवल एडमिन कर सकेगा</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <span id="statusText" class="text-sm text-gray-600">Not signed in</span>
-        <button id="loginBtn" class="px-3 py-2 border rounded">Sign in (Google)</button>
-        <button id="logoutBtn" class="px-3 py-2 border rounded hidden">Logout</button>
-        <!-- Header WhatsApp button -->
-        <a href="https://wa.me/9112170192?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87%2C%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%95%E0%A4%BE%E0%A4%B0%20%E0%A4%AC%E0%A4%BE%E0%A4%B0%E0%A5%80%20%E0%A4%B0%E0%A4%BF%E0%A4%B6%E0%A5%8D%E0%A4%A4%E0%A5%87%20%E0%A4%9C%E0%A5%8B%E0%A4%A1%E0%A5%87" target="_blank" class="ml-3 bg-green-600 text-white px-4 py-2 rounded">रिश्ते जोड़े</a>
-      </div>
-    </div>
-  </header>
-
-  <main class="max-w-6xl mx-auto p-4">
-    <!-- Admin form (only visible to admin user) -->
-    <section id="adminFormWrap" class="hidden bg-white rounded shadow p-4 mb-6">
-      <h2 class="font-bold text-lg">नया प्रोफ़ाइल पोस्ट करें (केवल एडमिन)</h2>
-      <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-        <input id="name" class="border p-2 rounded" placeholder="पूरा नाम" required />
-        <input id="age" type="number" class="border p-2 rounded" placeholder="उम्र" />
-        <select id="gender" class="border p-2 rounded">
-          <option value="">लिंग चुनें</option>
-          <option value="Male">पुरुष</option>
-          <option value="Female">महिला</option>
-          <option value="Other">अन्य</option>
-        </select>
-        <input id="religion" class="border p-2 rounded" placeholder="धर्म" />
-        <input id="motherTongue" class="border p-2 rounded" placeholder="मातृभाषा" />
-        <input id="city" class="border p-2 rounded" placeholder="शहर" />
-        <input id="education" class="border p-2 rounded" placeholder="शिक्षा" />
-        <input id="occupation" class="border p-2 rounded" placeholder="पेशा" />
-        <textarea id="about" class="border p-2 rounded md:col-span-2" placeholder="आत्म-परिचय / बायो"></textarea>
-        <input id="images" type="file" accept="image/*" multiple class="md:col-span-2" />
-        <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded md:col-span-2">Post Profile</button>
-      </form>
-    </section>
-
-    <!-- Profiles grid -->
-    <section>
-      <h2 class="font-bold text-lg mb-3">प्रोफ़ाइल्स</h2>
-      <div id="profilesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    </section>
-  </main>
-
-  <!-- Modal -->
-  <div id="profileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-3xl w-full p-4 relative">
-      <button id="closeModal" class="absolute right-3 top-3 text-gray-600">✖</button>
-      <div id="modalContent"></div>
-    </div>
-  </div>
-
-  <!-- Note: The Firebase app & logic are in the ES module above. This is a single-file starting point. -->
 </body>
 </html>
