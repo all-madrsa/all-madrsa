@@ -3,71 +3,147 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nikah Portal — Admin Posts</title>
+  <title>Nikah Portal — Jeevansathi-style</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* small visual tweaks to mimic a matrimonial listing feel */
+    .filter-card { background: linear-gradient(180deg,#ffffff,#f8fafc); }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-
+<body class="bg-gray-100 min-h-screen text-gray-800">
   <!-- HEADER -->
   <header class="bg-white shadow">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <img src="https://via.placeholder.com/48x48?text=NP" alt="logo" class="rounded-full" />
+        <img src="https://via.placeholder.com/56x56?text=NP" alt="logo" class="rounded-full" />
         <div>
-          <h1 class="font-bold text-lg">Nikah Portal</h1>
-          <p class="text-sm text-gray-600">सभी प्रोफ़ाइल यहाँ दिखाई देंगी — पोस्ट केवल एडमिन कर सकेगा</p>
+          <h1 class="font-bold text-2xl">Nikah Portal</h1>
+          <p class="text-sm text-gray-600">Jeevansathi जैसी खोज और प्रोफ़ाइल सूची</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <span id="statusText" class="text-sm text-gray-600">Not signed in</span>
-        <button id="loginBtn" class="px-3 py-2 border rounded">Sign in (Google)</button>
+        <a href="https://wa.me/9112170192?text=नमस्ते,%20रिश्ते%20जोड़ने%20के%20लिए%20संपर्क%20करें" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded">रिश्ते जोड़े</a>
+        <button id="loginBtn" class="px-3 py-2 border rounded">Sign in</button>
         <button id="logoutBtn" class="px-3 py-2 border rounded hidden">Logout</button>
-        <a href="https://wa.me/9112170192?text=नमस्ते,%20रिश्ते%20जोड़ने%20के%20लिए%20संपर्क%20करना%20है" target="_blank" class="ml-3 bg-green-600 text-white px-4 py-2 rounded">रिश्ते जोड़े</a>
       </div>
     </div>
   </header>
 
-  <!-- MAIN -->
-  <main class="max-w-6xl mx-auto p-4">
-    <!-- Admin Form -->
-    <section id="adminFormWrap" class="hidden bg-white rounded shadow p-4 mb-6">
-      <h2 class="font-bold text-lg mb-2">नया प्रोफ़ाइल पोस्ट करें (केवल एडमिन)</h2>
-      <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-        <input id="name" class="border p-2 rounded" placeholder="पूरा नाम" required />
-        <input id="age" type="number" class="border p-2 rounded" placeholder="उम्र" />
-        <select id="gender" class="border p-2 rounded">
-          <option value="">लिंग चुनें</option>
-          <option value="Male">पुरुष</option>
-          <option value="Female">महिला</option>
-          <option value="Other">अन्य</option>
+  <!-- HERO + SEARCH -->
+  <section class="bg-gradient-to-r from-white to-gray-50 py-6">
+    <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Search Filters (left) -->
+      <aside class="filter-card p-4 rounded shadow">
+        <h3 class="font-semibold mb-2">फिल्टर खोजें</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="text-sm">लिंग</label>
+            <select id="fGender" class="w-full border p-2 rounded mt-1">
+              <option value="">कोई नहीं</option>
+              <option value="Male">पुरुष</option>
+              <option value="Female">महिला</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-sm">आयु (न्यूनतम)</label>
+              <input id="fAgeMin" type="number" class="w-full border p-2 rounded mt-1" placeholder="18" />
+            </div>
+            <div>
+              <label class="text-sm">आयु (अधिकतम)</label>
+              <input id="fAgeMax" type="number" class="w-full border p-2 rounded mt-1" placeholder="40" />
+            </div>
+          </div>
+          <div>
+            <label class="text-sm">शहर / शहर के पास</label>
+            <input id="fCity" class="w-full border p-2 rounded mt-1" placeholder="शहर का नाम" />
+          </div>
+          <div>
+            <label class="text-sm">धर्म</label>
+            <input id="fReligion" class="w-full border p-2 rounded mt-1" placeholder="जैसे: मुस्लिम" />
+          </div>
+
+          <div class="flex gap-2">
+            <button id="applyFilters" class="bg-blue-600 text-white px-4 py-2 rounded">खोजें</button>
+            <button id="clearFilters" class="px-4 py-2 border rounded">रीसेट</button>
+          </div>
+        </div>
+
+        <hr class="my-4" />
+        <h4 class="text-sm font-semibold mb-2">सॉर्ट करें</h4>
+        <select id="sortBy" class="w-full border p-2 rounded">
+          <option value="new">नए सबसे पहले</option>
+          <option value="ageAsc">उम्र - कम से ज्यादा</option>
+          <option value="ageDesc">उम्र - ज्यादा से कम</option>
         </select>
-        <input id="religion" class="border p-2 rounded" placeholder="धर्म" />
-        <input id="motherTongue" class="border p-2 rounded" placeholder="मातृभाषा" />
-        <input id="city" class="border p-2 rounded" placeholder="शहर" />
-        <input id="education" class="border p-2 rounded" placeholder="शिक्षा" />
-        <input id="occupation" class="border p-2 rounded" placeholder="पेशा" />
-        <textarea id="about" class="border p-2 rounded md:col-span-2" placeholder="आत्म-परिचय / बायो"></textarea>
-        <input id="images" type="file" accept="image/*" multiple class="md:col-span-2" />
-        <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded md:col-span-2">Post Profile</button>
-      </form>
-    </section>
+      </aside>
 
-    <!-- Profiles -->
-    <section>
-      <h2 class="font-bold text-lg mb-3">प्रोफ़ाइल्स</h2>
-      <div id="profilesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    </section>
-  </main>
+      <!-- Results + Top banner (center/right) -->
+      <div class="lg:col-span-2">
+        <div class="bg-white p-4 rounded shadow mb-4 flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-semibold">प्रोफ़ाइल्स</h2>
+            <p class="text-sm text-gray-600">हमारे सदस्यों में खोज करें — एडमिन पोस्ट करता है</p>
+          </div>
+          <div class="text-sm text-gray-600">Showing <span id="resultCount">0</span> profiles</div>
+        </div>
 
-  <!-- MODAL -->
+        <!-- Grid of profiles -->
+        <div id="profilesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+        <!-- Pagination -->
+        <div class="mt-4 flex items-center justify-center gap-2">
+          <button id="prevPage" class="px-3 py-1 border rounded">Prev</button>
+          <div id="pageInfo" class="px-3 py-1">Page 1</div>
+          <button id="nextPage" class="px-3 py-1 border rounded">Next</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROFILE MODAL -->
   <div id="profileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-3xl w-full p-4 relative">
+    <div class="bg-white rounded-lg max-w-4xl w-full p-4 relative">
       <button id="closeModal" class="absolute right-3 top-3 text-gray-600 text-lg">✖</button>
       <div id="modalContent"></div>
     </div>
   </div>
 
-  <!-- FIREBASE + JS -->
+  <!-- ADMIN POST (floating button) -->
+  <button id="adminFab" class="fixed right-6 bottom-6 bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg">+</button>
+
+  <!-- ADMIN FORM DRAWER -->
+  <div id="adminDrawer" class="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-lg transform translate-x-full transition-transform">
+    <div class="p-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-semibold">नया प्रोफ़ाइल (एडमिन)</h3>
+        <button id="closeDrawer" class="text-gray-600">✖</button>
+      </div>
+      <form id="profileForm" class="mt-3 space-y-2">
+        <input id="name" class="w-full border p-2 rounded" placeholder="पूरा नाम" required />
+        <div class="grid grid-cols-2 gap-2">
+          <input id="age" type="number" class="border p-2 rounded" placeholder="उम्र" />
+          <select id="gender" class="border p-2 rounded">
+            <option value="">लिंग चुनें</option>
+            <option value="Male">पुरुष</option>
+            <option value="Female">महिला</option>
+          </select>
+        </div>
+        <input id="city" class="w-full border p-2 rounded" placeholder="शहर" />
+        <input id="religion" class="w-full border p-2 rounded" placeholder="धर्म" />
+        <input id="education" class="w-full border p-2 rounded" placeholder="शिक्षा" />
+        <input id="occupation" class="w-full border p-2 rounded" placeholder="पेशा" />
+        <textarea id="about" class="w-full border p-2 rounded" placeholder="बायो"></textarea>
+        <input id="images" type="file" accept="image/*" multiple class="w-full" />
+        <div class="flex gap-2">
+          <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Post Profile</button>
+          <button id="drawerCancel" type="button" class="px-4 py-2 border rounded">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPTS: Firebase + App Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -82,42 +158,67 @@
       appId: "1:619313835874:web:e387e1297663f11fc2463b"
     };
     const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
-    const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+    const ADMIN_EMAIL = 'zaradigitalseva@gmail.com';
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
+    // DOM
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    const adminFormWrap = document.getElementById('adminFormWrap');
+    const adminFab = document.getElementById('adminFab');
+    const adminDrawer = document.getElementById('adminDrawer');
+    const closeDrawer = document.getElementById('closeDrawer');
+    const drawerCancel = document.getElementById('drawerCancel');
     const profileForm = document.getElementById('profileForm');
     const profilesContainer = document.getElementById('profilesContainer');
-    const statusText = document.getElementById('statusText');
+    const resultCount = document.getElementById('resultCount');
+    const profileModal = document.getElementById('profileModal');
+    const modalContent = document.getElementById('modalContent');
+    const closeModal = document.getElementById('closeModal');
 
-    // 🔹 LOGIN / LOGOUT
-    loginBtn.onclick = async () => {
-      try { await signInWithPopup(auth, provider); } 
-      catch (e) { alert("Login failed: " + e.message); }
-    };
+    // Filters
+    const fGender = document.getElementById('fGender');
+    const fAgeMin = document.getElementById('fAgeMin');
+    const fAgeMax = document.getElementById('fAgeMax');
+    const fCity = document.getElementById('fCity');
+    const fReligion = document.getElementById('fReligion');
+    const applyFilters = document.getElementById('applyFilters');
+    const clearFilters = document.getElementById('clearFilters');
+    const sortBy = document.getElementById('sortBy');
+
+    // Pagination
+    const prevPage = document.getElementById('prevPage');
+    const nextPage = document.getElementById('nextPage');
+    const pageInfo = document.getElementById('pageInfo');
+    let currentPage = 1, pageSize = 12;
+
+    // Auth
+    loginBtn.onclick = async () => { try { await signInWithPopup(auth, provider); } catch (e) { alert(e.message); } };
     logoutBtn.onclick = async () => { await signOut(auth); };
 
     onAuthStateChanged(auth, user => {
       if (user) {
-        statusText.textContent = `Signed in: ${user.email}`;
-        loginBtn.classList.add('hidden');
-        logoutBtn.classList.remove('hidden');
-        adminFormWrap.classList.toggle('hidden', user.email !== ADMIN_EMAIL);
+        loginBtn.classList.add('hidden'); logoutBtn.classList.remove('hidden');
+        // show admin FAB only to admin
+        if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          adminFab.classList.remove('hidden');
+        } else {
+          adminFab.classList.add('hidden');
+        }
       } else {
-        statusText.textContent = 'Not signed in';
-        loginBtn.classList.remove('hidden');
-        logoutBtn.classList.add('hidden');
-        adminFormWrap.classList.add('hidden');
+        loginBtn.classList.remove('hidden'); logoutBtn.classList.add('hidden');
+        adminFab.classList.add('hidden');
       }
     });
 
-    // 🔹 Image upload helper (imgbb)
+    adminFab.onclick = () => adminDrawer.style.transform = 'translateX(0)';
+    closeDrawer.onclick = () => adminDrawer.style.transform = 'translateX(100%)';
+    drawerCancel.onclick = () => adminDrawer.style.transform = 'translateX(100%)';
+
+    // imgbb upload
     async function uploadImageToImgbb(file) {
       const form = new FormData();
       form.append('image', file);
@@ -127,81 +228,124 @@
       return data.data.url;
     }
 
-    // 🔹 Submit Profile
     profileForm.onsubmit = async (e) => {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = "Posting...";
-
+      btn.disabled = true; btn.textContent = 'Posting...';
       try {
-        const name = nameInput('name'), age = val('age'), gender = val('gender'),
-              religion = val('religion'), motherTongue = val('motherTongue'),
-              city = val('city'), education = val('education'),
-              occupation = val('occupation'), about = val('about');
+        const name = document.getElementById('name').value.trim();
+        const age = document.getElementById('age').value.trim();
+        const gender = document.getElementById('gender').value;
+        const city = document.getElementById('city').value.trim();
+        const religion = document.getElementById('religion').value.trim();
+        const education = document.getElementById('education').value.trim();
+        const occupation = document.getElementById('occupation').value.trim();
+        const about = document.getElementById('about').value.trim();
         const files = document.getElementById('images').files;
         const imageUrls = [];
         for (let f of files) imageUrls.push(await uploadImageToImgbb(f));
 
         await addDoc(collection(db, 'profiles'), {
-          name, age, gender, religion, motherTongue, city, education, occupation, about,
+          name, age, gender, city, religion, education, occupation, about,
           images: imageUrls, createdAt: serverTimestamp()
         });
 
-        alert("✅ Profile Posted Successfully!");
+        alert('Profile posted');
         profileForm.reset();
-      } catch (err) {
-        alert("Error: " + err.message);
-      } finally {
-        btn.disabled = false; btn.textContent = "Post Profile";
-      }
+        adminDrawer.style.transform = 'translateX(100%)';
+      } catch (err) { alert(err.message); }
+      finally { btn.disabled = false; btn.textContent = 'Post Profile'; }
     };
 
-    const val = id => document.getElementById(id).value.trim();
-    const nameInput = id => document.getElementById(id).value.trim();
-
-    // 🔹 Load Profiles Realtime
+    // Load profiles
+    let allProfiles = [];
     const q = query(collection(db, 'profiles'), orderBy('createdAt', 'desc'));
     onSnapshot(q, snap => {
-      profilesContainer.innerHTML = '';
-      snap.forEach(doc => profilesContainer.appendChild(makeCard(doc.data())));
+      allProfiles = [];
+      snap.forEach(doc => allProfiles.push({ id: doc.id, ...doc.data() }));
+      applyAndRender();
     });
 
-    function makeCard(d) {
-      const div = document.createElement('div');
-      div.className = "bg-white rounded-lg shadow p-4 hover:shadow-md";
-      const img = d.images?.[0] || 'https://via.placeholder.com/300x200?text=No+Image';
-      div.innerHTML = `
-        <img src="${img}" class="w-full h-48 object-cover rounded" />
-        <h3 class="mt-3 text-lg font-semibold">${d.name || ''} (${d.age || '-'})</h3>
-        <p class="text-sm text-gray-600">${d.religion || ''} • ${d.motherTongue || ''} • ${d.city || ''}</p>
-        <div class="mt-3 flex gap-2">
-          <button class="px-3 py-1 border rounded" onclick='openProfile(${JSON.stringify(JSON.stringify(d))})'>पूरा प्रोफ़ाइल</button>
-          <a href="https://wa.me/9112170192?text=नमस्ते,%20${encodeURIComponent(d.name)}%20के%20रिश्ते%20के%20लिए%20जानकारी%20चाहिए" target="_blank" class="px-3 py-1 bg-green-600 text-white rounded">रिश्ते जोड़े</a>
-        </div>`;
-      return div;
+    // Filtering, sorting, pagination
+    function applyAndRender() {
+      let list = [...allProfiles];
+      // filters
+      const g = fGender.value; if (g) list = list.filter(x => x.gender === g);
+      const minA = parseInt(fAgeMin.value || '0',10); const maxA = parseInt(fAgeMax.value || '0',10);
+      if (minA) list = list.filter(x => parseInt(x.age||0,10) >= minA);
+      if (maxA) list = list.filter(x => parseInt(x.age||0,10) <= maxA);
+      if (fCity.value.trim()) list = list.filter(x => (x.city||'').toLowerCase().includes(fCity.value.trim().toLowerCase()));
+      if (fReligion.value.trim()) list = list.filter(x => (x.religion||'').toLowerCase().includes(fReligion.value.trim().toLowerCase()));
+
+      // sort
+      if (sortBy.value === 'ageAsc') list.sort((a,b)=> (parseInt(a.age||0)-parseInt(b.age||0)));
+      else if (sortBy.value === 'ageDesc') list.sort((a,b)=> (parseInt(b.age||0)-parseInt(a.age||0)));
+      else list.sort((a,b)=> ( (b.createdAt && b.createdAt.seconds||0) - (a.createdAt && a.createdAt.seconds||0) ));
+
+      // pagination
+      const total = list.length; const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage-1)*pageSize; const pageItems = list.slice(start, start+pageSize);
+
+      // render
+      profilesContainer.innerHTML = '';
+      pageItems.forEach(p => profilesContainer.appendChild(profileCard(p)));
+      resultCount.textContent = total;
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
     }
 
-    // 🔹 Modal logic
-    window.openProfile = (dataStr) => {
-      const data = JSON.parse(dataStr);
-      const modal = document.getElementById('profileModal');
-      const modalContent = document.getElementById('modalContent');
-      modal.classList.remove('hidden');
+    applyFilters.onclick = () => { currentPage = 1; applyAndRender(); };
+    clearFilters.onclick = () => { fGender.value=''; fAgeMin.value=''; fAgeMax.value=''; fCity.value=''; fReligion.value=''; sortBy.value='new'; currentPage=1; applyAndRender(); };
+    sortBy.onchange = () => { currentPage=1; applyAndRender(); };
+    prevPage.onclick = () => { if (currentPage>1) { currentPage--; applyAndRender(); } };
+    nextPage.onclick = () => { currentPage++; applyAndRender(); };
+
+    function profileCard(p) {
+      const wrap = document.createElement('div'); wrap.className = 'bg-white rounded-lg shadow p-3';
+      const img = document.createElement('img'); img.src = (p.images && p.images[0])? p.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'; img.className='w-full h-44 object-cover rounded';
+      const h = document.createElement('h3'); h.className='mt-2 font-semibold'; h.textContent = `${p.name || ''} (${p.age || '-'})`;
+      const sub = document.createElement('p'); sub.className='text-sm text-gray-600'; sub.textContent = `${p.religion||''} • ${p.city||''}`;
+      const actions = document.createElement('div'); actions.className='mt-2 flex gap-2';
+      const view = document.createElement('button'); view.className='px-3 py-1 border rounded'; view.textContent='पूरा प्रोफ़ाइल'; view.onclick = ()=> openModal(p);
+      const wa = document.createElement('a'); wa.className='px-3 py-1 bg-green-600 text-white rounded'; wa.textContent='रिश्ते जोड़े'; wa.target='_blank'; wa.rel='noopener'; wa.href = `https://wa.me/9112170192?text=${encodeURIComponent('नमस्ते, मैं '+(p.name||'')+' के बारे में जानकारी चाहता/चाहती हूँ')}`;
+      actions.appendChild(view); actions.appendChild(wa);
+      wrap.appendChild(img); wrap.appendChild(h); wrap.appendChild(sub); wrap.appendChild(actions);
+      return wrap;
+    }
+
+    function openModal(p) {
+      document.getElementById('profileModal').classList.remove('hidden');
       modalContent.innerHTML = `
-        <h2 class="text-xl font-bold mb-2">${data.name} — ${data.age}</h2>
-        <p><b>लिंग:</b> ${data.gender || '-'}</p>
-        <p><b>धर्म:</b> ${data.religion || '-'}</p>
-        <p><b>मातृभाषा:</b> ${data.motherTongue || '-'}</p>
-        <p><b>शहर:</b> ${data.city || '-'}</p>
-        <p><b>शिक्षा:</b> ${data.education || '-'}</p>
-        <p><b>पेशा:</b> ${data.occupation || '-'}</p>
-        <p><b>बायो:</b> ${data.about || '-'}</p>
-        <div class="grid grid-cols-2 gap-2 mt-3">
-          ${data.images?.map(u => `<img src="${u}" class="w-full h-32 object-cover rounded" />`).join('') || ''}
-        </div>`;
-    };
-    document.getElementById('closeModal').onclick = () => document.getElementById('profileModal').classList.add('hidden');
-    document.getElementById('profileModal').onclick = (e) => { if (e.target.id === 'profileModal') e.target.classList.add('hidden'); };
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-1">
+            <img src="${(p.images && p.images[0])?p.images[0]:'https://via.placeholder.com/300x400?text=No+Image'}" class="w-full h-64 object-cover rounded" />
+            <div class="mt-2 grid grid-cols-3 gap-2">
+              ${(p.images||[]).slice(0,3).map(u=>`<img src="${u}" class="w-full h-20 object-cover rounded"/>`).join('')}
+            </div>
+          </div>
+          <div class="md:col-span-2">
+            <h2 class="text-xl font-bold">${p.name} — ${p.age}</h2>
+            <p class="text-sm text-gray-600">${p.religion || '-'} • ${p.city || '-'}</p>
+            <div class="mt-3 space-y-2 text-sm">
+              <p><b>लिंग:</b> ${p.gender || '-'}</p>
+              <p><b>शिक्षा:</b> ${p.education || '-'}</p>
+              <p><b>पेशा:</b> ${p.occupation || '-'}</p>
+              <p><b>बायो:</b> ${p.about || '-'}</p>
+            </div>
+            <div class="mt-4 flex gap-2">
+              <a href="https://wa.me/9112170192?text=${encodeURIComponent('नमस्ते, '+(p.name||'')+' के बारे में जानकारी चाहिए') }" target="_blank" class="px-4 py-2 bg-green-600 text-white rounded">रिश्ते जोड़े</a>
+              <button class="px-4 py-2 border rounded" onclick="document.getElementById('profileModal').classList.add('hidden')">बंद करें</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    closeModal.onclick = () => document.getElementById('profileModal').classList.add('hidden');
+    document.getElementById('profileModal').onclick = (e)=> { if (e.target.id==='profileModal') e.target.classList.add('hidden'); };
+
+    // initial state: hide admin controls until auth
+    adminFab.classList.add('hidden'); adminDrawer.style.transform = 'translateX(100%)';
   </script>
 </body>
 </html>
