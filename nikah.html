@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Nikah Portal — Shadi.com style (Ready)</title>
+<title>Nikah Portal — Ready</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { background:#f3f4f6; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; }
-  .card { background:#fff; border-radius:12px; overflow:hidden; transition:transform .18s, box-shadow .18s; }
+  body { background:#f3f4f6; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial; }
+  .card { background:#fff; border-radius:10px; overflow:hidden; transition:transform .18s, box-shadow .18s; }
   .card:hover { transform:translateY(-6px); box-shadow:0 12px 30px rgba(2,6,23,0.08); }
-  header { backdrop-filter: blur(6px); background: rgba(255,255,255,0.85); }
+  header { backdrop-filter: blur(6px); background: rgba(255,255,255,0.9); }
   .modal-bg { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:60; padding:1rem; }
-  .modal { background:white; border-radius:12px; max-width:900px; width:100%; max-height:90vh; overflow:auto; padding:1rem; }
+  .modal { background:#fff; border-radius:12px; max-width:920px; width:100%; max-height:90vh; overflow:auto; padding:1rem; }
   .small-modal { max-width:520px; }
   .chip { background:#eef2ff; color:#3730a3; padding:4px 8px; border-radius:999px; font-size:12px; display:inline-block; }
 </style>
@@ -37,7 +37,6 @@
 </header>
 
 <main class="max-w-6xl mx-auto px-4 py-6">
-  <!-- HERO -->
   <section class="bg-white rounded-lg shadow p-6 mb-6 overflow-hidden">
     <div class="md:flex md:items-center md:justify-between gap-4">
       <div>
@@ -58,17 +57,15 @@
     </div>
   </section>
 
-  <!-- Profiles grid -->
   <section>
     <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
   </section>
 
-  <!-- Admin panel (hidden, shown when admin logged in) -->
   <section id="adminPanel" class="hidden mt-6">
     <div class="bg-white p-4 rounded-lg shadow">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold">Admin Dashboard</h3>
-        <div>
+        <div class="flex gap-2">
           <button id="refreshAdmin" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Refresh</button>
           <button id="logoutBtn" class="bg-gray-200 px-3 py-1 rounded text-sm">Logout</button>
         </div>
@@ -154,7 +151,7 @@
 </div>
 
 <script type="module">
-/* ================== CONFIG (you provided these keys) ================== */
+/* ================== CONFIG (your keys inserted) ================== */
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -164,7 +161,13 @@ const firebaseConfig = {
   appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
 const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
-/* ========================================================================= */
+/* ================== Set admin emails ==================
+ Replace with the real admin emails allowed to manage site.
+ Example: const adminEmails = ["admin@yourdomain.com"];
+ If you leave array empty, any authenticated user will NOT be admin.
+================================================================= */
+const adminEmails = ["admin@example.com"]; // <-- CHANGE THIS
+/* ================================================================= */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import {
@@ -204,17 +207,23 @@ const contactList = document.getElementById('contactList');
 const refreshAdmin = document.getElementById('refreshAdmin');
 const logoutBtn = document.getElementById('logoutBtn');
 
-const pm = { modal: document.getElementById('profileModal'), img: document.getElementById('pm_img'), name: document.getElementById('pm_name'), meta: document.getElementById('pm_meta'), about: document.getElementById('pm_about'), requestBtn: document.getElementById('pm_request'), saveBtn: document.getElementById('pm_save') };
+const pm = {
+  modal: document.getElementById('profileModal'),
+  img: document.getElementById('pm_img'),
+  name: document.getElementById('pm_name'),
+  meta: document.getElementById('pm_meta'),
+  about: document.getElementById('pm_about'),
+  requestBtn: document.getElementById('pm_request'),
+  saveBtn: document.getElementById('pm_save')
+};
 const closeProfile = document.getElementById('closeProfile');
 
 let currentUser = null;
 let isAdmin = false;
 let currentProfile = null;
 
-/* small escape helper */
 function esc(s){ return s?String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"):""; }
 
-/* ImgBB upload helper */
 async function uploadToImgbb(file){
   if(!file) throw new Error('No file selected');
   if(file.size > 2*1024*1024) throw new Error('Image must be < 2MB');
@@ -226,7 +235,6 @@ async function uploadToImgbb(file){
   return data.data.display_url || data.data.url;
 }
 
-/* Show / hide modals helpers */
 function show(el){ el.style.display = 'flex'; }
 function hide(el){ el.style.display = 'none'; }
 
@@ -240,13 +248,12 @@ async function loadProfiles(){
     let any=false;
     snap.forEach(docSnap=>{
       const p = docSnap.data();
-      // client-side filter by name/city/gender (small dataset). For large dataset move filter into queries.
       const nameq = filterName.value.trim().toLowerCase();
       const genderq = filterGender.value;
-      if(nameq && !( (p.name||'').toLowerCase().includes(nameq) || (p.city||'').toLowerCase().includes(nameq) )) return;
+      if(nameq && !((p.name||'').toLowerCase().includes(nameq) || (p.city||'').toLowerCase().includes(nameq))) return;
       if(genderq && p.gender !== genderq) return;
 
-      any=true;
+      any = true;
       const card = document.createElement('div');
       card.className = 'card p-3 cursor-pointer';
       card.innerHTML = `
@@ -281,7 +288,7 @@ function openProfileModal(id, p){
 /* Request contact */
 pm.requestBtn.addEventListener('click', async ()=>{
   if(!currentUser){
-    alert('Please login as admin or a registered user to request contact (admin will see request).');
+    alert('Please login (admin or user) to request contact.');
     return;
   }
   try{
@@ -291,7 +298,7 @@ pm.requestBtn.addEventListener('click', async ()=>{
   }catch(err){ console.error(err); alert('Failed to send request.'); }
 });
 
-/* Save (shortlist) -> localStorage */
+/* Save shortlist */
 pm.saveBtn.addEventListener('click', ()=>{
   const list = JSON.parse(localStorage.getItem('shortlist_nikah') || '[]');
   if(!list.find(i=>i.id===currentProfile.id)){
@@ -363,22 +370,11 @@ logoutBtn.addEventListener('click', async ()=>{
 /* ---------------- show admin panel when admin user ---------------- */
 onAuthStateChanged(auth, async (user)=>{
   currentUser = user;
-  if(user){
-    // check admin by email — adjust if you have roles stored in DB
-    const adminEmails = [ /* add admin emails here if you want to predefine */ ];
-    // for now allow any authenticated user to be admin view — you can restrict by checking a list or a firestore role field
-    // We'll show admin panel if user email matches known admin or user manually logs in
-    // OPTIONAL: you can manage adminEmails array from server
-    if(adminEmails.length>0){
-      isAdmin = adminEmails.includes(user.email);
-    } else {
-      // If you want to restrict to a single admin, replace condition below
-      isAdmin = confirm('Are you admin? (click Ok if yes)'); // lightweight; remove in production
-    }
-  } else {
-    isAdmin = false;
-  }
-  document.getElementById('loginBtn').textContent = user ? (isAdmin ? 'Admin' : 'Logged in') : 'Admin Login';
+  if(user && adminEmails.includes(user.email)){
+    isAdmin = true;
+  } else isAdmin = false;
+
+  loginBtn.textContent = user ? (isAdmin ? 'Admin' : 'Logged in') : 'Admin Login';
   adminPanel.style.display = isAdmin ? 'block' : 'none';
   if(isAdmin) loadAdminData();
 });
@@ -437,7 +433,6 @@ async function loadAdminData(){
   }catch(err){ console.error(err); contactList.innerHTML = '<div class="text-red-600">Failed to load requests.</div>'; }
 }
 
-/* refresh admin */
 refreshAdmin.addEventListener('click', ()=> loadAdminData());
 
 /* initial load */
