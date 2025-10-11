@@ -11,25 +11,28 @@
     --card-h:280px;
     --card-radius:12px;
     --muted:#777;
+    --sky1: #6EC1FF;
+    --sky2: #3AA8FF;
   }
-  body { font-family: "Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; }
+  body { font-family: "Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; -webkit-font-smoothing:antialiased; }
+  /* Header - Asmani (sky-blue) */
   header {
-    background:linear-gradient(145deg,var(--green),#095122);
+    background: linear-gradient(135deg, var(--sky1), var(--sky2));
     color:white; padding:12px 16px; display:flex; align-items:center; justify-content:space-between;
-    box-shadow:0 3px 8px rgba(0,0,0,0.18); position:sticky; top:0; z-index:50;
+    box-shadow:0 3px 8px rgba(0,0,0,0.12); position:sticky; top:0; z-index:50;
   }
   .header-left { display:flex; align-items:center; gap:12px; }
   .home-3d {
     display:inline-flex; align-items:center; gap:8px;
-    padding:8px 12px; background:#fff; color:var(--green);
+    padding:8px 12px; background:#fff; color:var(--sky2);
     border-radius:10px; font-weight:600; text-decoration:none;
-    box-shadow:0 6px 0 rgba(0,0,0,0.12), 0 12px 18px rgba(0,0,0,0.08);
+    box-shadow:0 6px 0 rgba(0,0,0,0.08), 0 12px 18px rgba(0,0,0,0.06);
     transform:translateY(0);
   }
   .home-3d:active { transform:translateY(2px); box-shadow:none; }
   .rules-btn {
     background:rgba(255,255,255,0.12); color:white; padding:8px 10px; border-radius:8px; text-decoration:none;
-    border:1px solid rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.08); font-weight:600;
   }
   .header-right { display:flex; align-items:center; gap:10px; }
 
@@ -48,12 +51,14 @@
   /* Card compact */
   .card { background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s; }
   .card:hover { transform:translateY(-4px); }
-  .card .thumb { width:100%; height:150px; object-fit:cover; background:#eee; }
+  /* image wrapper prevents mobile default zoom */
+  .img-wrapper { width:100%; height:150px; overflow:hidden; display:block; cursor:pointer; -webkit-tap-highlight-color: transparent; }
+  .img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; user-select:none; }
   .card-body { padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; width:100%; }
   .card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
   .card-body .meta { color:var(--muted); font-size:13px; }
   .card-footer { padding:10px; display:flex; gap:8px; width:100%; justify-content:flex-start; align-items:center; flex-wrap:wrap; }
-  .btn-wa { background:#25d366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; }
+  .btn-wa { background:#25d366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; cursor:pointer; }
   .btn-connect { background:var(--accent); color:white; padding:8px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
   .admin-small { background:#ffc107; color:#333; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
   .admin-del { background:#dc3545; color:#fff; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
@@ -64,8 +69,8 @@
   #memberForm input, #memberForm textarea, #memberForm select { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; }
 
   /* profile detail popup */
-  #profilePopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); z-index:60; }
-  .profile-card { background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; }
+  #profilePopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
+  .profile-card { background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative; }
   .profile-grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; padding:18px; }
   .profile-photo { width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee; }
   .profile-info { padding:8px 4px; }
@@ -97,8 +102,8 @@
   </div>
 
   <div class="header-right">
-    <button id="loginBtn" onclick="googleLogin()" style="background:white;color:var(--green);padding:8px 10px;border-radius:8px;border:none;cursor:pointer;">Admin Login</button>
-    <button id="logoutBtn" onclick="logout()" style="display:none;background:#fff;color:var(--green);padding:8px 10px;border-radius:8px;border:none;cursor:pointer;">Logout</button>
+    <button id="loginBtn" onclick="googleLogin()" style="background:white;color:var(--sky2);padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;">Admin Login</button>
+    <button id="logoutBtn" onclick="logout()" style="display:none;background:#fff;color:var(--sky2);padding:8px 10px;border-radius:8px;border:none;cursor:pointer;">Logout</button>
   </div>
 </header>
 
@@ -220,9 +225,9 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
-let editingId = null;       // if editing existing profile
-let currentProfileViewId = null; // for profile detail popup
-let connectProfileId = null; // profile being contacted
+let editingId = null;
+let currentProfileViewId = null;
+let connectProfileId = null;
 
 /* DOM refs */
 const membersEl = document.getElementById('members');
@@ -232,7 +237,6 @@ const logoutBtn = document.getElementById('logoutBtn');
 const adminLogs = document.getElementById('adminLogs');
 const logsBody = document.getElementById('logsBody');
 
-/* profile popup refs */
 const profilePopup = document.getElementById('profilePopup');
 const p_photo = document.getElementById('p_photo');
 const p_name = document.getElementById('p_name');
@@ -249,7 +253,6 @@ const p_family = document.getElementById('p_family');
 const p_whatsapp = document.getElementById('p_whatsapp');
 const p_contact_btn = document.getElementById('p_contact_btn');
 
-/* connect popup refs */
 const connectPopup = document.getElementById('connectPopup');
 const submitConnectBtn = document.getElementById('submitConnectBtn');
 
@@ -275,9 +278,8 @@ auth.onAuthStateChanged(user=>{
     memberForm.style.display = 'none';
     adminLogs.style.display = 'none';
   }
-  // reload members so admin-only sections mount/unmount
   loadMembers();
-  loadContactLogs(); // update admin logs if admin
+  loadContactLogs();
 });
 
 /* ----------------- Login/Logout ----------------- */
@@ -296,7 +298,6 @@ async function uploadImageToImgbb(file){
 
 /* ----------------- Render members ----------------- */
 function loadMembers(){
-  // unsubscribe? for simplicity rely on onSnapshot handle
   db.collection("members").orderBy("name").onSnapshot(snapshot=>{
     membersEl.innerHTML = "";
     snapshot.forEach(doc=>{
@@ -304,16 +305,19 @@ function loadMembers(){
       const card = document.createElement('div');
       card.className = 'card';
 
-      // clicking card opens full profile
+      // clicking card opens full profile (but prevent when clicking inner buttons)
       card.addEventListener('click', (e)=>{
-        // avoid triggering when clicking inner buttons (connect/contact/edit/delete)
-        if(e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'a') return;
+        if(e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'a' ) return;
         openProfileDetail(doc.id,d);
       });
 
+      // image wrapper
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'img-wrapper';
       const img = document.createElement('img');
-      img.className = 'thumb';
       img.src = esc(d.photo) || '';
+      img.alt = esc(d.name) || 'profile';
+      imgWrap.appendChild(img);
 
       const body = document.createElement('div');
       body.className = 'card-body';
@@ -322,7 +326,7 @@ function loadMembers(){
       const footer = document.createElement('div');
       footer.className = 'card-footer';
 
-      // Contact (whatsapp) button - opens connect popup for visitor and logs
+      // Contact button opens connect popup and logs
       const contactBtn = document.createElement('button');
       contactBtn.className = 'btn-wa';
       contactBtn.textContent = '📞 Contact';
@@ -331,11 +335,6 @@ function loadMembers(){
         openConnectPopup(doc.id,d.name);
       });
 
-      // Direct WhatsApp quick contact (if you want quick open without logging) - optional; here we do logging flow
-      // const waQuick = document.createElement('a');
-      // waQuick.href = `https://wa.me/${defaultWhatsApp}?text=${encodeURIComponent("Mujhe " + d.name + " ki profile mein interest hai")}`; waQuick.target="_blank";
-
-      // Connect (another button) - keep both if desired
       const connectBtn = document.createElement('button');
       connectBtn.className = 'btn-connect';
       connectBtn.textContent = 'Connect';
@@ -344,7 +343,7 @@ function loadMembers(){
       footer.appendChild(contactBtn);
       footer.appendChild(connectBtn);
 
-      // Admin buttons (edit / delete)
+      // Admin controls
       if(currentUser && adminEmails.includes(currentUser.email)){
         const edit = document.createElement('button');
         edit.className = 'admin-small';
@@ -353,47 +352,42 @@ function loadMembers(){
         const del = document.createElement('button');
         del.className = 'admin-del';
         del.textContent = 'Delete';
-        del.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(confirm("Are you sure delete this profile?")) db.collection("members").doc(doc.id).delete(); });
+        del.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(confirm('Delete this profile?')) db.collection('members').doc(doc.id).delete(); });
         footer.appendChild(edit);
         footer.appendChild(del);
       }
 
-      card.appendChild(img);
+      card.appendChild(imgWrap);
       card.appendChild(body);
       card.appendChild(footer);
 
-      // If admin: append small real-time connects list under the card
+      // admin realtime connects list
       if(currentUser && adminEmails.includes(currentUser.email)){
         const connectsDiv = document.createElement('div');
         connectsDiv.className = 'connects-list';
         connectsDiv.innerHTML = '<strong style="display:block;margin-bottom:6px;color:var(--green)">Interested People:</strong>';
         card.appendChild(connectsDiv);
 
-        // realtime listener per doc (safe because admin only)
-        db.collection("members").doc(doc.id).collection("connections").orderBy("created","desc")
+        db.collection('members').doc(doc.id).collection('connections').orderBy('created','desc')
           .onSnapshot(csnap=>{
-            // clear old connect items
             connectsDiv.querySelectorAll('.connect-item').forEach(n=>n.remove());
             csnap.forEach(cdoc=>{
               const c = cdoc.data();
               const item = document.createElement('div');
               item.className = 'connect-item';
-              const left = document.createElement('div');
-              left.textContent = `${esc(c.name)} — ${esc(c.city)}`;
+              const left = document.createElement('div'); left.textContent = `${esc(c.name)} — ${esc(c.city)}`;
               const a = document.createElement('a');
               a.href = `https://wa.me/${encodeURIComponent(c.whatsapp)}?text=${encodeURIComponent("Hello " + c.name)}`;
-              a.textContent = 'WhatsApp';
-              a.target = '_blank';
-              item.appendChild(left);
-              item.appendChild(a);
+              a.textContent = 'WhatsApp'; a.target='_blank';
+              item.appendChild(left); item.appendChild(a);
               connectsDiv.appendChild(item);
             });
-          }, err=>{ console.error("connects listen err", err); });
+          }, err=>console.error(err));
       }
 
       membersEl.appendChild(card);
     });
-  }, err=>{ console.error("members listen err", err); });
+  }, err=>console.error(err));
 }
 
 /* ----------------- Profile detail popup (read-only) ----------------- */
@@ -401,29 +395,27 @@ function openProfileDetail(id, data){
   currentProfileViewId = id;
   p_photo.src = esc(data.photo) || '';
   p_name.textContent = esc(data.name);
-  p_age.textContent = esc(data.age) + (data.dob ? ' / ' + esc(data.dob) : '');
+  p_age.textContent = (esc(data.age) || '-') + (data.dob ? ' / ' + esc(data.dob) : '');
   p_gender.textContent = esc(data.gender || '-');
   p_height.textContent = esc(data.height || '-');
   p_religion.textContent = esc(data.religion || '-');
-  p_city_state.textContent = (esc(data.city) || '-') + (data.state ? ' / ' + esc(data.state) : '');
+  p_city_state.textContent = ((esc(data.city) || '-') + (data.state ? ' / ' + esc(data.state) : ''));
   p_education.textContent = esc(data.education || '-');
   p_profession.textContent = esc(data.profession || '-');
   p_income.textContent = esc(data.income || '-');
   p_bio.textContent = esc(data.bio || '-');
   p_family.textContent = esc(data.family || '-');
   p_whatsapp.textContent = esc(data.whatsapp || ('+'+defaultWhatsApp));
-  // contact button opens connect popup prefilled
   p_contact_btn.href = `https://wa.me/${defaultWhatsApp}?text=${encodeURIComponent("Mujhe " + (data.name||'') + " ki profile mein interest hai")}`;
-  p_contact_btn.onclick = (ev)=>{ ev.preventDefault(); openConnectPopup(id, data.name); };
+  p_contact_btn.onclick = (ev) => { ev.preventDefault(); openConnectPopup(id, data.name); };
   profilePopup.style.display = 'flex';
 }
 function closeProfile(){ profilePopup.style.display = 'none'; currentProfileViewId = null; }
 
-/* ----------------- Connect popup flow (visitor) ----------------- */
+/* ----------------- Connect popup (visitor) ----------------- */
 function openConnectPopup(profileId, profileName){
   connectProfileId = profileId;
   connectPopup.style.display = 'flex';
-  // optional: prefill with nothing
   document.getElementById('c_name').value = '';
   document.getElementById('c_address').value = '';
   document.getElementById('c_whatsapp').value = '';
@@ -436,13 +428,12 @@ submitConnectBtn.addEventListener('click', async ()=>{
   const vwh = document.getElementById('c_whatsapp').value.trim();
   if(!vname || !vaddr || !vwh) return alert('कृपया सभी फील्ड भरें');
   if(!connectProfileId) return alert('Invalid profile');
-
   try {
-    // 1) save under member subcollection
+    // save under member->connections
     await db.collection('members').doc(connectProfileId).collection('connections').add({
       name: vname, city: vaddr, whatsapp: vwh, created: firebase.firestore.FieldValue.serverTimestamp()
     });
-    // 2) also save in root contactLogs for admin table view
+    // save root contactLogs
     const profileSnap = await db.collection('members').doc(connectProfileId).get();
     const prof = profileSnap.exists ? profileSnap.data().name : '';
     await db.collection('contactLogs').add({
@@ -453,18 +444,15 @@ submitConnectBtn.addEventListener('click', async ()=>{
       visitorWhats: vwh,
       ts: firebase.firestore.FieldValue.serverTimestamp()
     });
-    // 3) open WhatsApp to admin number with message
+    // open WhatsApp to admin number
     const text = encodeURIComponent(`Assalamu Alaikum,\nMujhe ${prof || ''} ki profile mein dilchaspi hai.\nName: ${vname}\nCity: ${vaddr}\nPlease contact: ${vwh}`);
     window.open(`https://wa.me/${defaultWhatsApp}?text=${text}`, '_blank');
     alert('आपकी जानकारी भेज दी गई ✅');
     closeConnect();
-  } catch (e) {
-    console.error(e);
-    alert('Error: ' + (e.message || e));
-  }
+  } catch (e){ console.error(e); alert('Error: ' + (e.message || e)); }
 });
 
-/* ----------------- Admin: Load contact logs (table) ----------------- */
+/* ----------------- Admin logs table ----------------- */
 function loadContactLogs(){
   if(!(currentUser && adminEmails.includes(currentUser.email))){
     logsBody.innerHTML = '';
@@ -484,13 +472,10 @@ function loadContactLogs(){
                       <td><a href="https://wa.me/${encodeURIComponent(d.visitorWhats)}?text=${encodeURIComponent('Hello '+d.visitorName)}" target="_blank" style="background:#25d366;padding:6px 8px;border-radius:6px;color:#fff;text-decoration:none;">Message</a></td>`;
       logsBody.appendChild(tr);
     });
-  }, err => {
-    console.error("contactLogs listen error", err);
-  });
+  }, err=>console.error(err));
 }
 
 /* ----------------- Admin: Add/Edit Profile ----------------- */
-/* SaveProfile handles both add and edit (editingId non-null) */
 async function saveProfile(){
   if(!(currentUser && adminEmails.includes(currentUser.email))) return alert('Admin access required');
   const name = document.getElementById('f_name').value.trim();
@@ -514,34 +499,22 @@ async function saveProfile(){
   try {
     let photoUrl = null;
     if(file){ photoUrl = await uploadImageToImgbb(file); }
-    const payload = {
-      name, dob, gender, age, height, religion, city, state, education, profession, income, whatsapp, bio, family,
-      photo: photoUrl || null
-    };
+    const payload = { name, dob, gender, age, height, religion, city, state, education, profession, income, whatsapp, bio, family };
+    if(photoUrl) payload.photo = photoUrl;
 
     if(editingId){
-      // update: don't overwrite photo if null
-      if(photoUrl) payload.photo = photoUrl;
-      // remove null fields? ok
       await db.collection('members').doc(editingId).update(payload);
       alert('Profile updated ✅');
     } else {
-      // new
-      // if photo missing, it's allowed but better to enforce - here we allow null
       await db.collection('members').add(payload);
       alert('Profile added ✅');
     }
     cancelEdit();
-  } catch (e) {
-    console.error(e);
-    alert('Error saving: ' + (e.message || e));
-  }
+  } catch (e){ console.error(e); alert('Error saving: ' + (e.message || e)); }
 }
 
-/* start editing existing profile */
 function startEditProfile(id, data){
   editingId = id;
-  // fill fields
   document.getElementById('f_name').value = data.name || '';
   document.getElementById('f_dob').value = data.dob || '';
   document.getElementById('f_gender').value = data.gender || '';
@@ -556,16 +529,13 @@ function startEditProfile(id, data){
   document.getElementById('f_whatsapp').value = data.whatsapp || '';
   document.getElementById('f_bio').value = data.bio || '';
   document.getElementById('f_family').value = data.family || '';
-  // show form
   memberForm.scrollIntoView({behavior:'smooth'});
   memberForm.style.display = 'block';
 }
 
-/* cancel edit/add */
 function cancelEdit(){
   editingId = null;
   memberForm.style.display = 'none';
-  // reset fields
   ['f_name','f_dob','f_gender','f_age','f_height','f_religion','f_city','f_state','f_education','f_profession','f_income','f_whatsapp','f_bio','f_family'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_photo').value = '';
 }
