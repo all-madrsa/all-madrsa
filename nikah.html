@@ -1,112 +1,197 @@
 <!doctype html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Nikah Profiles</title>
 <style>
-body { font-family: "Segoe UI", sans-serif; margin:0; background:#f5f7f5; }
-header {
-  background:#116530; color:white; text-align:center;
-  padding:15px; position:sticky; top:0; z-index:100;
-  box-shadow:0 2px 6px rgba(0,0,0,0.2);
-  display:flex; justify-content:space-between; align-items:center;
-}
-header h1 { margin:0; font-size:22px; flex:1; }
-#logoutBtn { background:#dc3545; color:white; border:none; border-radius:6px; padding:6px 10px; cursor:pointer; margin-right:10px; display:none; }
+  :root{
+    --green:#116530;
+    --accent:#008069;
+    --card-h:280px;
+    --card-radius:12px;
+    --muted:#777;
+  }
+  body { font-family: "Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; }
+  header {
+    background:linear-gradient(145deg,var(--green),#095122);
+    color:white; padding:12px 16px; display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 3px 8px rgba(0,0,0,0.18); position:sticky; top:0; z-index:50;
+  }
+  .header-left { display:flex; align-items:center; gap:12px; }
+  .home-3d {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 12px; background:#fff; color:var(--green);
+    border-radius:10px; font-weight:600; text-decoration:none;
+    box-shadow:0 6px 0 rgba(0,0,0,0.12), 0 12px 18px rgba(0,0,0,0.08);
+    transform:translateY(0);
+  }
+  .home-3d:active { transform:translateY(2px); box-shadow:none; }
+  .rules-btn {
+    background:rgba(255,255,255,0.12); color:white; padding:8px 10px; border-radius:8px; text-decoration:none;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .header-right { display:flex; align-items:center; gap:10px; }
 
-.top-btn { display:flex; justify-content:center; margin:15px 0; }
-.whatsapp-btn {
-  background:#25d366; color:white; text-decoration:none;
-  padding:10px 20px; font-weight:bold; border-radius:8px;
-  display:inline-flex; align-items:center; gap:8px;
-  box-shadow:0 4px 6px rgba(0,0,0,0.2);
-}
-.whatsapp-btn:hover { background:#1eb856; }
+  main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 
-main { max-width:1100px; margin:auto; padding:15px; }
-.grid { display:grid; gap:15px; grid-template-columns:repeat(2,1fr);}
-@media (min-width:1024px){ .grid{grid-template-columns:repeat(4,1fr);} }
+  .top-join { display:flex; justify-content:center; margin:6px 0 18px; }
+  .whatsapp-btn {
+    background:#25d366; color:white; text-decoration:none; padding:10px 18px; border-radius:8px; font-weight:700;
+    box-shadow:0 6px 18px rgba(37,211,102,0.14);
+  }
 
-.card {
-  background:white; border-radius:12px; overflow:hidden;
-  box-shadow:0 3px 8px rgba(0,0,0,0.15);
-  display:flex; flex-direction:column; align-items:center;
-  transition:transform 0.2s;
-}
-.card:hover { transform:translateY(-4px); }
-.card img { width:100%; height:220px; object-fit:cover; background:#eee; }
-.card-body { padding:10px; text-align:center; }
-.card-body h3 { margin:6px 0; font-size:18px; color:#116530; }
-.card-body p { margin:4px 0; font-size:14px; color:#555; }
-.card-actions { display:flex; justify-content:center; gap:8px; padding:10px; flex-wrap:wrap; }
-.card-actions button, .card-actions a { font-size:13px; }
+  /* Grid */
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(2,1fr); }
+  @media(min-width:1024px){ .grid { grid-template-columns:repeat(4,1fr); } }
 
-.edit-btn { background:#ffc107; color:#fff; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
-.delete-btn { background:#dc3545; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
-.connect-btn { background:#008069; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
+  /* Card compact */
+  .card { background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s; }
+  .card:hover { transform:translateY(-4px); }
+  .card .thumb { width:100%; height:150px; object-fit:cover; background:#eee; }
+  .card-body { padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; width:100%; }
+  .card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
+  .card-body .meta { color:var(--muted); font-size:13px; }
+  .card-footer { padding:10px; display:flex; gap:8px; width:100%; justify-content:flex-start; align-items:center; flex-wrap:wrap; }
+  .btn-wa { background:#25d366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; }
+  .btn-connect { background:var(--accent); color:white; padding:8px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+  .admin-small { background:#ffc107; color:#333; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
+  .admin-del { background:#dc3545; color:#fff; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
 
-form { display:none; background:white; padding:20px; border-radius:12px; margin-top:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-form h3 { margin-top:0; color:#116530; }
-form input { width:100%; margin:8px 0; padding:10px; border:1px solid #ccc; border-radius:6px; }
-form button { background:#116530; color:white; border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-size:15px; }
+  /* Forms / panels */
+  #memberForm { display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0; }
+  #memberForm .row { display:flex; gap:10px; }
+  #memberForm input, #memberForm textarea, #memberForm select { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; }
 
-#loginBtn { display:block; margin:20px auto; background:#4285F4; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; }
-#msg { text-align:center; color:red; }
+  /* profile detail popup */
+  #profilePopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); z-index:60; }
+  .profile-card { background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; }
+  .profile-grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; padding:18px; }
+  .profile-photo { width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee; }
+  .profile-info { padding:8px 4px; }
+  .profile-info h2 { margin:0 0 8px 0; color:var(--green); }
+  .profile-info .line { margin:6px 0; color:#333; }
+  .close-btn { position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
 
-/* Connect Popup */
-#connectPopup {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center;
-}
-#connectBox {
-  background:white; padding:20px; border-radius:12px; width:90%; max-width:400px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.3);
-}
-#connectBox h3 { margin-top:0; color:#116530; }
-#connectBox input { width:100%; margin:8px 0; padding:10px; border:1px solid #ccc; border-radius:6px; }
-#connectBox button { margin-top:10px; padding:10px; border:none; border-radius:6px; cursor:pointer; width:100%; }
-#submitConnectBtn { background:#116530; color:white; }
-#cancelConnectBtn { background:#999; color:white; margin-top:5px; }
+  /* connect popup */
+  #connectPopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:70; }
+  .connect-box { background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
+  .connect-box input { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
+
+  /* admin logs panel */
+  #adminLogs { display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06); }
+  #logsTable { width:100%; border-collapse:collapse; }
+  #logsTable th, #logsTable td { border-bottom:1px solid #eee; padding:8px 6px; text-align:left; font-size:14px; }
+  #logsTable th { color:var(--green); font-weight:700; }
+
+  /* small helpers */
+  .muted { color:var(--muted); font-size:13px; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>निकाह प्रोफाइल्स</h1>
-  <button id="logoutBtn" onclick="logout()">Logout</button>
+  <div class="header-left">
+    <a class="home-3d" href="index.html" title="Home">🏠 Home</a>
+    <a class="rules-btn" href="nikah-Conditions.html" title="हमारे नियम">📜 हमारे नियम</a>
+  </div>
+
+  <div class="header-right">
+    <button id="loginBtn" onclick="googleLogin()" style="background:white;color:var(--green);padding:8px 10px;border-radius:8px;border:none;cursor:pointer;">Admin Login</button>
+    <button id="logoutBtn" onclick="logout()" style="display:none;background:#fff;color:var(--green);padding:8px 10px;border-radius:8px;border:none;cursor:pointer;">Logout</button>
+  </div>
 </header>
 
-<div class="top-btn">
-  <a class="whatsapp-btn" href="https://wa.me/919112170192?text=Main%20Nikah%20Profile%20mein%20shamil%20hona%20chahta/chahti%20hoon" target="_blank">
-    📱 WhatsApp se Join Karein
-  </a>
-</div>
-
 <main>
+  <div class="top-join">
+    <a class="whatsapp-btn" id="joinBtn" href="https://wa.me/919112170192?text=Main%20Nikah%20Profile%20mein%20shamil%20hona%20chahta/chahti%20hoon" target="_blank">📱 WhatsApp se Join Karein</a>
+  </div>
+
+  <!-- Admin add/edit form -->
+  <section id="memberForm">
+    <h3>प्रोफ़ाइल जोड़ें / संपादित करें (Admin)</h3>
+
+    <!-- fields needed for marriage profile -->
+    <div style="display:grid; grid-template-columns: repeat(2,1fr); gap:10px;">
+      <input id="f_name" placeholder="पूरा नाम">
+      <input id="f_dob" placeholder="Date of Birth (YYYY-MM-DD)">
+      <input id="f_gender" placeholder="लिंग (Male/Female/Other)">
+      <input id="f_age" placeholder="उम्र">
+      <input id="f_height" placeholder="कद (e.g., 5'6&quot; or cm)">
+      <input id="f_religion" placeholder="धर्म / फिरका">
+      <input id="f_city" placeholder="शहर">
+      <input id="f_state" placeholder="राज्य">
+      <input id="f_education" placeholder="शिक्षा">
+      <input id="f_profession" placeholder="पेशा">
+      <input id="f_income" placeholder="मासिक आय (Optional)">
+      <input id="f_whatsapp" placeholder="WhatsApp नंबर (91...)">
+    </div>
+
+    <textarea id="f_bio" rows="3" placeholder="अपने बारे में (Bio)"></textarea>
+    <textarea id="f_family" rows="2" placeholder="परिवार की जानकारी / परिवार से अपेक्षाएँ"></textarea>
+
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input type="file" id="f_photo" accept="image/*">
+      <button onclick="saveProfile()" style="background:var(--green);color:#fff;padding:10px 12px;border:none;border-radius:8px;cursor:pointer;">Save Profile</button>
+      <button onclick="cancelEdit()" style="background:#999;color:#fff;padding:10px 12px;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
+    </div>
+    <div class="muted">Note: फोटो imgbb पर upload होगी।</div>
+  </section>
+
+  <!-- Grid of member cards -->
   <div class="grid" id="members"></div>
 
-  <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
-
-  <form id="memberForm">
-    <h3>नई प्रोफाइल जोड़ें</h3>
-    <input type="text" id="name" placeholder="पूरा नाम" required>
-    <input type="text" id="age" placeholder="उम्र" required>
-    <input type="text" id="city" placeholder="शहर" required>
-    <input type="file" id="photoFile" accept="image/*" required>
-    <button type="button" onclick="addMember()">Add Profile</button>
-  </form>
+  <!-- Admin logs panel -->
+  <section id="adminLogs">
+    <h3>📋 Contact Requests (Admin)</h3>
+    <table id="logsTable">
+      <thead><tr><th>Profile</th><th>Visitor</th><th>Address</th><th>WhatsApp</th><th>Time</th><th></th></tr></thead>
+      <tbody id="logsBody"></tbody>
+    </table>
+  </section>
 </main>
 
-<!-- Connect Popup -->
+<!-- profile detail popup -->
+<div id="profilePopup">
+  <div class="profile-card" role="dialog" aria-modal="true">
+    <button class="close-btn" onclick="closeProfile()">✖</button>
+    <div class="profile-grid">
+      <div style="padding:8px;">
+        <img id="p_photo" class="profile-photo" src="" alt="Profile photo">
+      </div>
+      <div class="profile-info">
+        <h2 id="p_name">Name</h2>
+        <div class="line"><strong>उम्र / जन्मतिथि:</strong> <span id="p_age"></span></div>
+        <div class="line"><strong>लिंग:</strong> <span id="p_gender"></span></div>
+        <div class="line"><strong>कद:</strong> <span id="p_height"></span></div>
+        <div class="line"><strong>धर्म / फिरका:</strong> <span id="p_religion"></span></div>
+        <div class="line"><strong>शहर / राज्य:</strong> <span id="p_city_state"></span></div>
+        <div class="line"><strong>शिक्षा:</strong> <span id="p_education"></span></div>
+        <div class="line"><strong>पेशा:</strong> <span id="p_profession"></span></div>
+        <div class="line"><strong>आय:</strong> <span id="p_income"></span></div>
+        <div class="line"><strong>WhatsApp:</strong> <span id="p_whatsapp"></span></div>
+        <hr>
+        <div class="line"><strong>Bio:</strong> <div id="p_bio"></div></div>
+        <div class="line"><strong>Family:</strong> <div id="p_family"></div></div>
+        <div style="margin-top:12px;">
+          <a id="p_contact_btn" class="btn-wa" href="#" target="_blank">📞 Contact</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- connect popup -->
 <div id="connectPopup">
-  <div id="connectBox">
-    <h3>Connect to Profile</h3>
-    <input type="text" id="connectName" placeholder="Your Name" required>
-    <input type="text" id="connectCity" placeholder="City" required>
-    <input type="text" id="connectWhats" placeholder="WhatsApp" required>
-    <button id="submitConnectBtn">Submit</button>
-    <button id="cancelConnectBtn" onclick="closeConnect()">Cancel</button>
+  <div class="connect-box">
+    <h3>Contact / Connect</h3>
+    <div><input id="c_name" placeholder="आपका नाम"></div>
+    <div><input id="c_address" placeholder="पता / शहर"></div>
+    <div><input id="c_whatsapp" placeholder="WhatsApp (91...)"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button id="submitConnectBtn" style="background:var(--green);color:#fff;padding:10px;border:none;border-radius:8px;cursor:pointer;">Submit & Open WhatsApp</button>
+      <button onclick="closeConnect()" style="background:#999;color:#fff;padding:10px;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -116,6 +201,7 @@ form button { background:#116530; color:white; border:none; padding:10px 15px; b
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
+/* ---------------- CONFIG you've provided ---------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -125,140 +211,369 @@ const firebaseConfig = {
   appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
 const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
+const adminEmails = ["zaradigitalseva@gmail.com"];
+const defaultWhatsApp = "9112170192";
+/* ------------------------------------------------------- */
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const adminEmails = ["zaradigitalseva@gmail.com"];
-const defaultWhatsApp = "9112170192";
 
-const membersContainer = document.getElementById("members");
-const loginBtn = document.getElementById("loginBtn");
-const memberForm = document.getElementById("memberForm");
-const logoutBtn = document.getElementById("logoutBtn");
+let currentUser = null;
+let editingId = null;       // if editing existing profile
+let currentProfileViewId = null; // for profile detail popup
+let connectProfileId = null; // profile being contacted
 
-let currentConnectId = null;
+/* DOM refs */
+const membersEl = document.getElementById('members');
+const memberForm = document.getElementById('memberForm');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const adminLogs = document.getElementById('adminLogs');
+const logsBody = document.getElementById('logsBody');
 
-// Load members
+/* profile popup refs */
+const profilePopup = document.getElementById('profilePopup');
+const p_photo = document.getElementById('p_photo');
+const p_name = document.getElementById('p_name');
+const p_age = document.getElementById('p_age');
+const p_gender = document.getElementById('p_gender');
+const p_height = document.getElementById('p_height');
+const p_religion = document.getElementById('p_religion');
+const p_city_state = document.getElementById('p_city_state');
+const p_education = document.getElementById('p_education');
+const p_profession = document.getElementById('p_profession');
+const p_income = document.getElementById('p_income');
+const p_bio = document.getElementById('p_bio');
+const p_family = document.getElementById('p_family');
+const p_whatsapp = document.getElementById('p_whatsapp');
+const p_contact_btn = document.getElementById('p_contact_btn');
+
+/* connect popup refs */
+const connectPopup = document.getElementById('connectPopup');
+const submitConnectBtn = document.getElementById('submitConnectBtn');
+
+/* Safe esc */
+function esc(s){ return s? String(s) : ""; }
+
+/* ----------------- Auth listener (single place) ----------------- */
+auth.onAuthStateChanged(user=>{
+  currentUser = user;
+  if(user && adminEmails.includes(user.email)){
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-block';
+    memberForm.style.display = 'block';
+    adminLogs.style.display = 'block';
+  } else if(user){
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-block';
+    memberForm.style.display = 'none';
+    adminLogs.style.display = 'none';
+  } else {
+    loginBtn.style.display = 'inline-block';
+    logoutBtn.style.display = 'none';
+    memberForm.style.display = 'none';
+    adminLogs.style.display = 'none';
+  }
+  // reload members so admin-only sections mount/unmount
+  loadMembers();
+  loadContactLogs(); // update admin logs if admin
+});
+
+/* ----------------- Login/Logout ----------------- */
+function googleLogin(){ const p=new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(p); }
+function logout(){ auth.signOut(); }
+
+/* ----------------- Image upload helper (imgbb) ----------------- */
+async function uploadImageToImgbb(file){
+  const fd = new FormData();
+  fd.append("image", file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, { method: "POST", body: fd });
+  const data = await res.json();
+  if(!data || !data.success) throw new Error("Image upload failed");
+  return data.data.url;
+}
+
+/* ----------------- Render members ----------------- */
 function loadMembers(){
+  // unsubscribe? for simplicity rely on onSnapshot handle
   db.collection("members").orderBy("name").onSnapshot(snapshot=>{
-    membersContainer.innerHTML="";
+    membersEl.innerHTML = "";
     snapshot.forEach(doc=>{
       const d=doc.data();
-      const card=document.createElement("div");
-      card.className="card";
+      const card = document.createElement('div');
+      card.className = 'card';
 
-      const img=document.createElement("img"); img.src=d.photo;
-
-      const body=document.createElement("div");
-      body.className="card-body";
-      body.innerHTML=`<h3>${d.name}</h3>
-        <p>उम्र: ${d.age || "-"}</p>
-        <p>शहर: ${d.city || "-"}</p>`;
-
-      const actions=document.createElement("div"); actions.className="card-actions";
-
-      // Contact button
-      const contact=document.createElement("a");
-      contact.href=`https://wa.me/${defaultWhatsApp}?text=Mujhe%20${encodeURIComponent(d.name)}%20ki%20profile%20mein%20interest%20hai`;
-      contact.textContent="📞 Contact";
-      contact.style.background="#25d366"; contact.style.color="white"; contact.style.padding="6px 10px";
-      contact.style.borderRadius="6px"; contact.style.fontSize="13px"; contact.style.textDecoration="none";
-      actions.appendChild(contact);
-
-      // Connect button
-      const connectBtn=document.createElement("button");
-      connectBtn.className="connect-btn"; connectBtn.textContent="Connect";
-      connectBtn.onclick=()=>openConnect(doc.id,d.name);
-      actions.appendChild(connectBtn);
-
-      // Admin buttons
-      auth.onAuthStateChanged(user=>{
-        if(user && adminEmails.includes(user.email)){
-          const edit=document.createElement("button");
-          edit.className="edit-btn"; edit.textContent="✏️ Edit";
-          edit.onclick=()=>editMember(doc.id,d);
-          const del=document.createElement("button");
-          del.className="delete-btn"; del.textContent="🗑 Delete";
-          del.onclick=()=>deleteMember(doc.id);
-          actions.appendChild(edit); actions.appendChild(del);
-
-          // Show submitted connects for admin
-          const connectsDiv=document.createElement("div");
-          connectsDiv.style.width="100%"; connectsDiv.style.marginTop="8px"; connectsDiv.style.fontSize="13px";
-          connectsDiv.style.background="#f1f1f1"; connectsDiv.style.padding="6px"; connectsDiv.style.borderRadius="6px";
-          db.collection("members").doc(doc.id).collection("connections").orderBy("created","desc").onSnapshot(csnap=>{
-            connectsDiv.innerHTML="";
-            csnap.forEach(c=>{
-              const cdata=c.data();
-              const a=document.createElement("a");
-              a.href=`https://wa.me/${cdata.whatsapp}?text=Hello%20${encodeURIComponent(cdata.name)}`;
-              a.textContent=`${cdata.name} (${cdata.city})`;
-              a.target="_blank"; a.style.display="block"; a.style.marginBottom="2px";
-              connectsDiv.appendChild(a);
-            });
-          });
-          card.appendChild(connectsDiv);
-        }
+      // clicking card opens full profile
+      card.addEventListener('click', (e)=>{
+        // avoid triggering when clicking inner buttons (connect/contact/edit/delete)
+        if(e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'a') return;
+        openProfileDetail(doc.id,d);
       });
 
-      card.appendChild(img); card.appendChild(body); card.appendChild(actions);
-      membersContainer.appendChild(card);
+      const img = document.createElement('img');
+      img.className = 'thumb';
+      img.src = esc(d.photo) || '';
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      body.innerHTML = `<h3>${esc(d.name)}</h3><div class="meta">उम्र: ${esc(d.age) || "-"}</div>`;
+
+      const footer = document.createElement('div');
+      footer.className = 'card-footer';
+
+      // Contact (whatsapp) button - opens connect popup for visitor and logs
+      const contactBtn = document.createElement('button');
+      contactBtn.className = 'btn-wa';
+      contactBtn.textContent = '📞 Contact';
+      contactBtn.addEventListener('click',(ev)=>{
+        ev.stopPropagation();
+        openConnectPopup(doc.id,d.name);
+      });
+
+      // Direct WhatsApp quick contact (if you want quick open without logging) - optional; here we do logging flow
+      // const waQuick = document.createElement('a');
+      // waQuick.href = `https://wa.me/${defaultWhatsApp}?text=${encodeURIComponent("Mujhe " + d.name + " ki profile mein interest hai")}`; waQuick.target="_blank";
+
+      // Connect (another button) - keep both if desired
+      const connectBtn = document.createElement('button');
+      connectBtn.className = 'btn-connect';
+      connectBtn.textContent = 'Connect';
+      connectBtn.addEventListener('click',(ev)=>{ ev.stopPropagation(); openConnectPopup(doc.id,d.name); });
+
+      footer.appendChild(contactBtn);
+      footer.appendChild(connectBtn);
+
+      // Admin buttons (edit / delete)
+      if(currentUser && adminEmails.includes(currentUser.email)){
+        const edit = document.createElement('button');
+        edit.className = 'admin-small';
+        edit.textContent = 'Edit';
+        edit.addEventListener('click', (ev)=>{ ev.stopPropagation(); startEditProfile(doc.id,d); });
+        const del = document.createElement('button');
+        del.className = 'admin-del';
+        del.textContent = 'Delete';
+        del.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(confirm("Are you sure delete this profile?")) db.collection("members").doc(doc.id).delete(); });
+        footer.appendChild(edit);
+        footer.appendChild(del);
+      }
+
+      card.appendChild(img);
+      card.appendChild(body);
+      card.appendChild(footer);
+
+      // If admin: append small real-time connects list under the card
+      if(currentUser && adminEmails.includes(currentUser.email)){
+        const connectsDiv = document.createElement('div');
+        connectsDiv.className = 'connects-list';
+        connectsDiv.innerHTML = '<strong style="display:block;margin-bottom:6px;color:var(--green)">Interested People:</strong>';
+        card.appendChild(connectsDiv);
+
+        // realtime listener per doc (safe because admin only)
+        db.collection("members").doc(doc.id).collection("connections").orderBy("created","desc")
+          .onSnapshot(csnap=>{
+            // clear old connect items
+            connectsDiv.querySelectorAll('.connect-item').forEach(n=>n.remove());
+            csnap.forEach(cdoc=>{
+              const c = cdoc.data();
+              const item = document.createElement('div');
+              item.className = 'connect-item';
+              const left = document.createElement('div');
+              left.textContent = `${esc(c.name)} — ${esc(c.city)}`;
+              const a = document.createElement('a');
+              a.href = `https://wa.me/${encodeURIComponent(c.whatsapp)}?text=${encodeURIComponent("Hello " + c.name)}`;
+              a.textContent = 'WhatsApp';
+              a.target = '_blank';
+              item.appendChild(left);
+              item.appendChild(a);
+              connectsDiv.appendChild(item);
+            });
+          }, err=>{ console.error("connects listen err", err); });
+      }
+
+      membersEl.appendChild(card);
     });
+  }, err=>{ console.error("members listen err", err); });
+}
+
+/* ----------------- Profile detail popup (read-only) ----------------- */
+function openProfileDetail(id, data){
+  currentProfileViewId = id;
+  p_photo.src = esc(data.photo) || '';
+  p_name.textContent = esc(data.name);
+  p_age.textContent = esc(data.age) + (data.dob ? ' / ' + esc(data.dob) : '');
+  p_gender.textContent = esc(data.gender || '-');
+  p_height.textContent = esc(data.height || '-');
+  p_religion.textContent = esc(data.religion || '-');
+  p_city_state.textContent = (esc(data.city) || '-') + (data.state ? ' / ' + esc(data.state) : '');
+  p_education.textContent = esc(data.education || '-');
+  p_profession.textContent = esc(data.profession || '-');
+  p_income.textContent = esc(data.income || '-');
+  p_bio.textContent = esc(data.bio || '-');
+  p_family.textContent = esc(data.family || '-');
+  p_whatsapp.textContent = esc(data.whatsapp || ('+'+defaultWhatsApp));
+  // contact button opens connect popup prefilled
+  p_contact_btn.href = `https://wa.me/${defaultWhatsApp}?text=${encodeURIComponent("Mujhe " + (data.name||'') + " ki profile mein interest hai")}`;
+  p_contact_btn.onclick = (ev)=>{ ev.preventDefault(); openConnectPopup(id, data.name); };
+  profilePopup.style.display = 'flex';
+}
+function closeProfile(){ profilePopup.style.display = 'none'; currentProfileViewId = null; }
+
+/* ----------------- Connect popup flow (visitor) ----------------- */
+function openConnectPopup(profileId, profileName){
+  connectProfileId = profileId;
+  connectPopup.style.display = 'flex';
+  // optional: prefill with nothing
+  document.getElementById('c_name').value = '';
+  document.getElementById('c_address').value = '';
+  document.getElementById('c_whatsapp').value = '';
+}
+function closeConnect(){ connectPopup.style.display = 'none'; connectProfileId = null; }
+
+submitConnectBtn.addEventListener('click', async ()=>{
+  const vname = document.getElementById('c_name').value.trim();
+  const vaddr = document.getElementById('c_address').value.trim();
+  const vwh = document.getElementById('c_whatsapp').value.trim();
+  if(!vname || !vaddr || !vwh) return alert('कृपया सभी फील्ड भरें');
+  if(!connectProfileId) return alert('Invalid profile');
+
+  try {
+    // 1) save under member subcollection
+    await db.collection('members').doc(connectProfileId).collection('connections').add({
+      name: vname, city: vaddr, whatsapp: vwh, created: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // 2) also save in root contactLogs for admin table view
+    const profileSnap = await db.collection('members').doc(connectProfileId).get();
+    const prof = profileSnap.exists ? profileSnap.data().name : '';
+    await db.collection('contactLogs').add({
+      profileId: connectProfileId,
+      profileName: prof || '',
+      visitorName: vname,
+      visitorAddress: vaddr,
+      visitorWhats: vwh,
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // 3) open WhatsApp to admin number with message
+    const text = encodeURIComponent(`Assalamu Alaikum,\nMujhe ${prof || ''} ki profile mein dilchaspi hai.\nName: ${vname}\nCity: ${vaddr}\nPlease contact: ${vwh}`);
+    window.open(`https://wa.me/${defaultWhatsApp}?text=${text}`, '_blank');
+    alert('आपकी जानकारी भेज दी गई ✅');
+    closeConnect();
+  } catch (e) {
+    console.error(e);
+    alert('Error: ' + (e.message || e));
+  }
+});
+
+/* ----------------- Admin: Load contact logs (table) ----------------- */
+function loadContactLogs(){
+  if(!(currentUser && adminEmails.includes(currentUser.email))){
+    logsBody.innerHTML = '';
+    return;
+  }
+  db.collection('contactLogs').orderBy('ts','desc').onSnapshot(snapshot=>{
+    logsBody.innerHTML = '';
+    snapshot.forEach(doc=>{
+      const d = doc.data();
+      const tr = document.createElement('tr');
+      const t_time = d.ts && d.ts.toDate ? d.ts.toDate().toLocaleString() : '';
+      tr.innerHTML = `<td>${esc(d.profileName)}</td>
+                      <td>${esc(d.visitorName)}</td>
+                      <td>${esc(d.visitorAddress)}</td>
+                      <td>${esc(d.visitorWhats)}</td>
+                      <td>${t_time}</td>
+                      <td><a href="https://wa.me/${encodeURIComponent(d.visitorWhats)}?text=${encodeURIComponent('Hello '+d.visitorName)}" target="_blank" style="background:#25d366;padding:6px 8px;border-radius:6px;color:#fff;text-decoration:none;">Message</a></td>`;
+      logsBody.appendChild(tr);
+    });
+  }, err => {
+    console.error("contactLogs listen error", err);
   });
 }
 
-// Auth state
-auth.onAuthStateChanged(user=>{
-  if(user){
-    if(adminEmails.includes(user.email)){
-      loginBtn.style.display="none"; logoutBtn.style.display="inline-block"; memberForm.style.display="block";
-    } else { loginBtn.style.display="none"; logoutBtn.style.display="inline-block"; memberForm.style.display="none"; }
-  } else { loginBtn.style.display="block"; logoutBtn.style.display="none"; memberForm.style.display="none"; }
-  loadMembers();
-});
+/* ----------------- Admin: Add/Edit Profile ----------------- */
+/* SaveProfile handles both add and edit (editingId non-null) */
+async function saveProfile(){
+  if(!(currentUser && adminEmails.includes(currentUser.email))) return alert('Admin access required');
+  const name = document.getElementById('f_name').value.trim();
+  const dob = document.getElementById('f_dob').value.trim();
+  const gender = document.getElementById('f_gender').value.trim();
+  const age = document.getElementById('f_age').value.trim();
+  const height = document.getElementById('f_height').value.trim();
+  const religion = document.getElementById('f_religion').value.trim();
+  const city = document.getElementById('f_city').value.trim();
+  const state = document.getElementById('f_state').value.trim();
+  const education = document.getElementById('f_education').value.trim();
+  const profession = document.getElementById('f_profession').value.trim();
+  const income = document.getElementById('f_income').value.trim();
+  const whatsapp = document.getElementById('f_whatsapp').value.trim();
+  const bio = document.getElementById('f_bio').value.trim();
+  const family = document.getElementById('f_family').value.trim();
+  const file = document.getElementById('f_photo').files[0];
 
-// Firebase login/logout
-function googleLogin(){ const provider=new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(provider); }
-function logout(){ auth.signOut(); }
+  if(!name || !age || !city) return alert('कम से कम नाम, उम्र और शहर भरें');
 
-// Upload image
-async function uploadImage(file){
-  const fd=new FormData(); fd.append("image",file);
-  const res=await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`,{method:"POST",body:fd});
-  const data=await res.json(); return data.data.url;
-}
+  try {
+    let photoUrl = null;
+    if(file){ photoUrl = await uploadImageToImgbb(file); }
+    const payload = {
+      name, dob, gender, age, height, religion, city, state, education, profession, income, whatsapp, bio, family,
+      photo: photoUrl || null
+    };
 
-// Add member
-async function addMember(){
-  const name=document.getElementById("name").value;
-  const age=document.getElementById("age").value;
-  const city=document.getElementById("city").value;
-  const file=document.getElementById("photoFile").files[0];
-  if(!file) return alert("फोटो चुनें");
-  const photo=await uploadImage(file);
-  await db.collection("members").add({name,age,city,photo});
-  memberForm.reset();
-}
-
-// Edit/Delete
-function editMember(id,data){ const newName=prompt("Name",data.name); if(newName) db.collection("members").doc(id).update({name:newName}); }
-function deleteMember(id){ if(confirm("Delete this profile?")) db.collection("members").doc(id).delete(); }
-
-// Connect popup
-function openConnect(id,name){ currentConnectId=id; document.getElementById("connectPopup").style.display="flex"; }
-function closeConnect(){ document.getElementById("connectPopup").style.display="none"; currentConnectId=null; document.getElementById("connectName").value=''; document.getElementById("connectCity").value=''; document.getElementById("connectWhats").value=''; }
-
-document.getElementById("submitConnectBtn").onclick=async function(){
-  const name=document.getElementById("connectName").value;
-  const city=document.getElementById("connectCity").value;
-  const whatsapp=document.getElementById("connectWhats").value;
-  if(!name||!city||!whatsapp){ alert("सब फ़ील्ड भरें"); return; }
-  if(currentConnectId){
-    await db.collection("members").doc(currentConnectId).collection("connections").add({name,city,whatsapp,created:Date.now()});
-    alert("✅ Submitted");
-    closeConnect();
+    if(editingId){
+      // update: don't overwrite photo if null
+      if(photoUrl) payload.photo = photoUrl;
+      // remove null fields? ok
+      await db.collection('members').doc(editingId).update(payload);
+      alert('Profile updated ✅');
+    } else {
+      // new
+      // if photo missing, it's allowed but better to enforce - here we allow null
+      await db.collection('members').add(payload);
+      alert('Profile added ✅');
+    }
+    cancelEdit();
+  } catch (e) {
+    console.error(e);
+    alert('Error saving: ' + (e.message || e));
   }
 }
+
+/* start editing existing profile */
+function startEditProfile(id, data){
+  editingId = id;
+  // fill fields
+  document.getElementById('f_name').value = data.name || '';
+  document.getElementById('f_dob').value = data.dob || '';
+  document.getElementById('f_gender').value = data.gender || '';
+  document.getElementById('f_age').value = data.age || '';
+  document.getElementById('f_height').value = data.height || '';
+  document.getElementById('f_religion').value = data.religion || '';
+  document.getElementById('f_city').value = data.city || '';
+  document.getElementById('f_state').value = data.state || '';
+  document.getElementById('f_education').value = data.education || '';
+  document.getElementById('f_profession').value = data.profession || '';
+  document.getElementById('f_income').value = data.income || '';
+  document.getElementById('f_whatsapp').value = data.whatsapp || '';
+  document.getElementById('f_bio').value = data.bio || '';
+  document.getElementById('f_family').value = data.family || '';
+  // show form
+  memberForm.scrollIntoView({behavior:'smooth'});
+  memberForm.style.display = 'block';
+}
+
+/* cancel edit/add */
+function cancelEdit(){
+  editingId = null;
+  memberForm.style.display = 'none';
+  // reset fields
+  ['f_name','f_dob','f_gender','f_age','f_height','f_religion','f_city','f_state','f_education','f_profession','f_income','f_whatsapp','f_bio','f_family'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_photo').value = '';
+}
+
+/* ----------------- initial load ----------------- */
+loadMembers();
+loadContactLogs();
+
 </script>
-</
+</body>
+</html>
