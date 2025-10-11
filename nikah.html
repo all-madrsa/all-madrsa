@@ -4,12 +4,10 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Nikah Profiles</title>
-
 <style>
 :root{
   --green:#116530;
   --accent:#008069;
-  --card-h:280px;
   --card-radius:12px;
   --muted:#777;
   --sky1:#6EC1FF;
@@ -21,138 +19,112 @@ body{ font-family:"Segoe UI",sans-serif; margin:0; background:#f5f7f5; color:#22
 .site-header{
   position:sticky; top:0; z-index:60;
   background: linear-gradient(135deg,var(--sky1),var(--sky2));
-  padding:10px 14px; box-shadow:0 6px 18px rgba(0,0,0,0.12);
-  display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; box-shadow:0 4px 12px rgba(0,0,0,0.12);
 }
-.logo-row{text-align:center;margin-bottom:6px;}
 .logo-3d{
-  display:inline-block; font-size:34px; font-weight:900; color:#fff;
-  letter-spacing:2px; padding:6px 14px; border-radius:8px;
+  font-size:28px; font-weight:900; color:#fff; display:inline-block; padding:4px 10px; border-radius:6px;
   text-shadow:0 2px 0 rgba(0,0,0,0.15),0 6px 0 rgba(0,0,0,0.12),0 12px 20px rgba(0,0,0,0.25);
-  transform: perspective(400px) rotateX(6deg); -webkit-font-smoothing:antialiased;
+  transform: perspective(400px) rotateX(5deg);
 }
 .button-row{
-  display:flex; gap:10px; justify-content:center; align-items:center;
-  flex-wrap:nowrap; overflow-x:auto; padding:6px 0;
+  display:flex; gap:6px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:6px;
 }
 .header-btn{
-  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
-  background:#fff; color:#0b63a6; padding:8px 12px; border-radius:8px; border:none; text-decoration:none; font-weight:700; cursor:pointer;
-  box-shadow:0 6px 12px rgba(0,0,0,0.06);
+  display:inline-flex; align-items:center; gap:4px;
+  background:#fff; color:#0b63a6; padding:6px 10px; border-radius:6px; border:none; text-decoration:none;
+  font-size:13px; font-weight:600; cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
 .header-btn:active{ transform:translateY(1px);}
-.header-btn:hover{ filter:brightness(0.98);}
-.button-row::-webkit-scrollbar{ height:6px;}
-.button-row::-webkit-scrollbar-thumb{ background:rgba(0,0,0,0.12); border-radius:6px;}
-@media(max-width:420px){ .logo-3d{ font-size:26px;padding:4px 10px;} .header-btn{padding:7px 10px;font-size:13px;} }
+.header-btn:hover{ filter:brightness(0.95);}
+.button-row::-webkit-scrollbar{ height:5px;}
+.button-row::-webkit-scrollbar-thumb{ background:rgba(0,0,0,0.12); border-radius:6px; }
 
 /* MAIN GRID */
-main{ max-width:1100px; margin:18px auto; padding:0 16px 60px; }
-.top-join{ display:flex; justify-content:center; margin:6px 0 18px;}
-.whatsapp-btn{ background:#25d366; color:white; text-decoration:none; padding:10px 18px; border-radius:8px; font-weight:700; box-shadow:0 6px 18px rgba(37,211,102,0.14); }
+main{ max-width:1100px; margin:14px auto; padding:0 12px 40px; }
+.top-join{ display:flex; justify-content:center; margin:8px 0 14px;}
+.whatsapp-btn{ background:#25d366; color:white; text-decoration:none; padding:8px 14px; border-radius:8px; font-weight:600; font-size:14px; }
 
 /* GRID CARDS */
-.grid{ display:grid; gap:14px; grid-template-columns:repeat(2,1fr);}
+.grid{ display:grid; gap:12px; grid-template-columns:repeat(2,1fr);}
+@media(min-width:480px){ .grid{ grid-template-columns:repeat(2,1fr);} }
+@media(min-width:768px){ .grid{ grid-template-columns:repeat(3,1fr);} }
 @media(min-width:1024px){ .grid{ grid-template-columns:repeat(4,1fr);} }
-.card{ background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s;}
-.card:hover{ transform:translateY(-4px);}
-.img-wrapper{ width:100%; height:150px; overflow:hidden; display:block; cursor:pointer; -webkit-tap-highlight-color: transparent;}
-.img-wrapper img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; user-select:none;}
-.card-body{ padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; width:100%;}
-.card-body h3{ margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;}
-.card-body .meta{ color:var(--muted); font-size:13px;}
-.card-footer{ padding:10px; display:flex; gap:8px; width:100%; justify-content:flex-start; align-items:center; flex-wrap:wrap;}
-.btn-wa{ background:#25d366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; cursor:pointer;}
-.btn-connect{ background:var(--accent); color:white; padding:8px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600;}
-.admin-small{ background:#ffc107; color:#333; padding:6px 8px; border-radius:6px; border:none; cursor:pointer;}
-.admin-del{ background:#dc3545; color:#fff; padding:6px 8px; border-radius:6px; border:none; cursor:pointer;}
-
-/* Forms */
-#memberForm{ display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0;}
-#memberForm input,#memberForm textarea,#memberForm select{ width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px;}
-#memberForm .row{ display:flex; gap:10px; }
+.card{ background:white; border-radius:var(--card-radius); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 12px rgba(0,0,0,0.06); cursor:pointer; transition:transform .15s;}
+.card:hover{ transform:translateY(-3px);}
+.img-wrapper{ width:100%; height:140px; overflow:hidden;}
+.img-wrapper img{ width:100%; height:100%; object-fit:cover; display:block;}
+.card-body{ padding:8px; display:flex; flex-direction:column; gap:4px;}
+.card-body h3{ margin:0; font-size:15px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.card-body .meta{ color:var(--muted); font-size:12px;}
+.card-footer{ padding:8px; display:flex; gap:6px; flex-wrap:wrap;}
+.btn-wa, .btn-connect{ font-size:12px; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; font-weight:600;}
+.btn-wa{ background:#25d366; color:white;}
+.btn-connect{ background:var(--accent); color:white;}
 
 /* profile popup */
-#profilePopup{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
-.profile-card{ background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative;}
-.profile-grid{ display:grid; grid-template-columns:320px 1fr; gap:16px; padding:18px;}
-.profile-photo{ width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee;}
-.profile-info{ padding:8px 4px;}
-.profile-info h2{ margin:0 0 8px 0; color:var(--green);}
-.profile-info .line{ margin:6px 0; color:#333;}
-.close-btn{ position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer;}
+#profilePopup{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60;}
+.profile-card{ background:white; width:95%; max-width:400px; border-radius:12px; padding:14px; position:relative;}
+.profile-card img{ width:100%; height:250px; object-fit:cover; border-radius:8px; margin-bottom:10px;}
+.profile-card h2{ margin:0 0 6px 0; color:var(--green);}
+.profile-card .line{ margin:4px 0; font-size:14px;}
+.close-btn{ position:absolute; top:10px; right:10px; background:#eee; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:14px;}
 
-/* connect popup */
-#connectPopup{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:70;}
-.connect-box{ background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2);}
-.connect-box input{ width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
-
-/* admin logs */
-#adminLogs{ display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06);}
-#logsTable{ width:100%; border-collapse:collapse;}
-#logsTable th,#logsTable td{ border-bottom:1px solid #eee; padding:8px 6px; text-align:left; font-size:14px;}
-#logsTable th{ color:var(--green); font-weight:700;}
-.muted{ color:var(--muted); font-size:13px;}
+/* Admin form */
+#memberForm{ display:none; background:white; padding:12px; border-radius:12px; margin:12px 0; box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+#memberForm input,#memberForm textarea{ width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #ddd; font-size:13px; box-sizing:border-box;}
+#memberForm .row{ display:flex; gap:6px; flex-wrap:wrap;}
+#memberForm button{ padding:8px 12px; background:var(--accent); color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px;}
 </style>
 </head>
-
 <body>
 
 <header class="site-header">
-  <div class="logo-row"><div class="logo-3d">निकाह</div></div>
-  <nav class="button-row">
-    <a class="header-btn" href="index.html" title="Home">🏠 Home</a>
-    <a class="header-btn" href="nikah-Conditions.html" title="हमारे नियम">📜 हमारे नियम</a>
-    <a class="header-btn" id="joinBtn" href="https://wa.me/919112170192" target="_blank">📱 WhatsApp Join</a>
+  <div class="logo-3d">निकाह</div>
+  <div class="button-row">
+    <a class="header-btn" href="#">🏠 Home</a>
+    <a class="header-btn" href="#">📜 हमारे नियम</a>
+    <a class="header-btn" href="https://wa.me/919112170192" target="_blank">📱 Join WhatsApp</a>
     <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
-    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
-  </nav>
+    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
+  </div>
 </header>
 
 <main>
   <div class="top-join">
-    <a class="whatsapp-btn" href="https://wa.me/919112170192" target="_blank">📱 WhatsApp से Join करें</a>
+    <a class="whatsapp-btn" href="https://wa.me/919112170192" target="_blank">📱 WhatsApp Join करें</a>
   </div>
 
-  <!-- Admin form -->
   <section id="memberForm">
-    <h3>प्रोफ़ाइल जोड़ें / संपादित करें (Admin)</h3>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+    <h3>प्रोफ़ाइल जोड़ें (Admin)</h3>
+    <div class="row">
       <input id="f_name" placeholder="पूरा नाम">
-      <input id="f_dob" placeholder="जन्मतिथि (YYYY-MM-DD)">
-      <input id="f_gender" placeholder="लिंग (Male/Female)">
       <input id="f_age" placeholder="उम्र">
+      <input id="f_gender" placeholder="लिंग">
       <input id="f_image" placeholder="इमेज URL">
       <input id="f_location" placeholder="स्थान">
       <input id="f_mobile" placeholder="मोबाइल नंबर">
       <input id="f_status" placeholder="Marital Status">
     </div>
     <textarea id="f_desc" placeholder="विवरण / शौक"></textarea>
-    <button class="btn-connect" onclick="saveMember()">Save</button>
+    <button onclick="saveMember()">Save Profile</button>
   </section>
 
-  <!-- Members grid -->
-  <div class="grid" id="membersGrid">
-    <!-- dynamically added cards -->
-  </div>
+  <div class="grid" id="membersGrid"></div>
 </main>
 
 <!-- Profile Popup -->
 <div id="profilePopup">
   <div class="profile-card">
     <button class="close-btn" onclick="closeProfile()">✖</button>
-    <div class="profile-grid">
-      <img class="profile-photo" id="popupPhoto" src="" alt="Profile Photo">
-      <div class="profile-info">
-        <h2 id="popupName"></h2>
-        <div class="line" id="popupAge"></div>
-        <div class="line" id="popupGender"></div>
-        <div class="line" id="popupLocation"></div>
-        <div class="line" id="popupStatus"></div>
-        <div class="line" id="popupDesc"></div>
-        <button class="btn-wa" id="popupWA">WhatsApp Connect</button>
-      </div>
-    </div>
+    <img id="popupPhoto" src="">
+    <h2 id="popupName"></h2>
+    <div class="line" id="popupAge"></div>
+    <div class="line" id="popupGender"></div>
+    <div class="line" id="popupLocation"></div>
+    <div class="line" id="popupStatus"></div>
+    <div class="line" id="popupDesc"></div>
+    <a id="popupWA" class="btn-wa" href="#" target="_blank">WhatsApp Connect</a>
   </div>
 </div>
 
@@ -172,7 +144,7 @@ function renderMembers(){
         <div class="meta">${m.age} yrs | ${m.gender}</div>
       </div>
       <div class="card-footer">
-        <button class="btn-connect" onclick="showProfile(${i})">View Profile</button>
+        <button class="btn-connect" onclick="showProfile(${i})">View</button>
         <a class="btn-wa" href="https://wa.me/${m.mobile}" target="_blank">WhatsApp</a>
       </div>`;
     grid.appendChild(card);
@@ -209,7 +181,6 @@ function showProfile(i){
 }
 function closeProfile(){ document.getElementById('profilePopup').style.display='none'; }
 
-// Admin login/logout dummy
 function googleLogin(){
   alert('Admin logged in');
   document.getElementById('loginBtn').style.display='none';
