@@ -6,8 +6,9 @@
   <title>Nikah Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .card-image { height: 180px; object-fit: cover; }
+    .card-image { height: 180px; object-fit: cover; width: 100%; }
     .modal-backdrop { background: rgba(0,0,0,0.5); }
+    #imagePreview { max-height: 180px; object-fit: cover; margin-top: 0.5rem; border-radius: 0.25rem; }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -30,9 +31,10 @@
         <input type="text" id="phone" placeholder="Phone (WhatsApp)" class="p-2 border rounded" />
         <input type="text" id="address" placeholder="Address" class="p-2 border rounded" />
         <input type="file" id="image" accept="image/*" class="p-2" />
+        <img id="imagePreview" src="" class="hidden" />
         <textarea id="about" placeholder="Short about / message" class="p-2 border rounded sm:col-span-2"></textarea>
         <div class="sm:col-span-2 flex gap-2">
-          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Post</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Post / Update</button>
           <button type="button" id="clearBtn" class="px-4 py-2 bg-gray-200 rounded">Clear</button>
         </div>
       </form>
@@ -85,8 +87,26 @@
     const contactModal = document.getElementById('contactModal');
     const closeModal = document.getElementById('closeModal');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
 
-    let currentUserEmail = ADMIN_EMAIL; // auto-admin check, no login button
+    let currentUserEmail = ADMIN_EMAIL;
+    let editingId = null;
+
+    imageInput.addEventListener('change', ()=>{
+      const file = imageInput.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = e=>{
+          imagePreview.src = e.target.result;
+          imagePreview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        imagePreview.src='';
+        imagePreview.classList.add('hidden');
+      }
+    });
 
     async function uploadImage(file){
       if(!file) return null;
@@ -100,7 +120,7 @@
       return null;
     }
 
-    postForm.addEventListener('submit', async (e)=>{
+    postForm.addEventListener('submit', async e=>{
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const age = document.getElementById('age').value.trim();
@@ -108,22 +128,38 @@
       const phone = document.getElementById('phone').value.trim();
       const address = document.getElementById('address').value.trim();
       const about = document.getElementById('about').value.trim();
-      const imageFile = document.getElementById('image').files[0];
+      const imageFile = imageInput.files[0];
 
       if(!name) return alert('Name required');
+      if(phone && !/^\d{7,15}$/.test(phone)) return alert('Enter valid phone number');
+
       const imgURL = await uploadImage(imageFile);
+
       try{
-        await addDoc(collection(db,'profiles'),{
-          name, age, city, phone, address, about, image: imgURL || null,
-          approved:false,
-          createdAt: serverTimestamp()
-        });
-        alert('Posted — waiting for admin approval');
+        if(editingId){
+          await updateDoc(doc(db,'profiles',editingId), {
+            name, age, city, phone, address, about, ...(imgURL?{image:imgURL}:{})
+          });
+          alert('Profile updated');
+          editingId = null;
+        } else {
+          await addDoc(collection(db,'profiles'),{
+            name, age, city, phone, address, about, image: imgURL || null,
+            approved:false,
+            createdAt: serverTimestamp()
+          });
+          alert('Posted — waiting for admin approval');
+        }
         postForm.reset();
-      }catch(e){ console.error(e); alert('Failed to post'); }
+        imagePreview.src=''; imagePreview.classList.add('hidden');
+      }catch(e){ console.error(e); alert('Failed to save profile'); }
     });
 
-    document.getElementById('clearBtn').addEventListener('click', ()=>postForm.reset());
+    document.getElementById('clearBtn').addEventListener('click', ()=>{
+      postForm.reset();
+      editingId=null;
+      imagePreview.src=''; imagePreview.classList.add('hidden');
+    });
 
     function loadAndRenderProfiles(){
       const q = query(collection(db,'profiles'), orderBy('createdAt','desc'));
@@ -135,113 +171,3 @@
     }
 
     function renderProfiles(list){
-      profilesGrid.innerHTML='';
-      const visible = list.filter(p=>p.approved===true || currentUserEmail===ADMIN_EMAIL);
-      if(visible.length===0){ profilesGrid.innerHTML='<p class="text-sm text-slate-500">Koi profile nahin mila.</p>'; return; }
-
-      visible.forEach(profile=>{
-        const card=document.createElement('div');
-        card.className='bg-white rounded shadow overflow-hidden';
-        card.innerHTML=`
-          <div class="h-44 overflow-hidden bg-slate-100">
-            <img src="${profile.image||'https://via.placeholder.com/400x300?text=No+Image'}" alt="${escapeHtml(profile.name)}" class="w-full h-full object-cover card-image">
-          </div>
-          <div class="p-3">
-            <h3 class="font-semibold">${escapeHtml(profile.name)} <span class="text-xs text-slate-500">${profile.age?'• '+escapeHtml(profile.age):''}</span></h3>
-            <p class="text-sm text-slate-500">${escapeHtml(profile.city||'')}</p>
-            <p class="text-sm mt-2">${escapeHtml((profile.about||'').slice(0,120))}${(profile.about&&profile.about.length>120)?'...':''}</p>
-            <div class="mt-3 flex flex-col gap-2">
-              <button class="contactBtn px-3 py-1 rounded border text-sm">Contact</button>
-              ${currentUserEmail===ADMIN_EMAIL?`<div class="flex flex-wrap gap-2">`+
-                `${profile.approved?'<span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">Approved</span>':'<span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Pending</span>'}`+
-                `<button class="approveBtn px-2 py-1 text-sm rounded ${profile.approved?'bg-gray-200':'bg-blue-600 text-white'}">${profile.approved?'Unapprove':'Approve'}</button>`+
-                `<button class="editBtn px-2 py-1 text-sm rounded bg-indigo-600 text-white">Edit</button>`+
-                `<button class="deleteBtn px-2 py-1 text-sm rounded bg-red-600 text-white">Delete</button>`+
-              `</div>`:''}
-            </div>
-          </div>
-        `;
-
-        card.querySelector('.contactBtn').addEventListener('click',()=>{
-          if(currentUserEmail===ADMIN_EMAIL){ openContactModal(profile); }
-          else{ alert('Contact details visible to admin only'); }
-        });
-
-        if(currentUserEmail===ADMIN_EMAIL){
-          const approveBtn=card.querySelector('.approveBtn');
-          const deleteBtn=card.querySelector('.deleteBtn');
-          const editBtn=card.querySelector('.editBtn');
-          if(approveBtn) approveBtn.addEventListener('click', async ()=>{
-            await updateDoc(doc(db,'profiles',profile.id), { approved: !profile.approved });
-          });
-          if(deleteBtn) deleteBtn.addEventListener('click', async ()=>{
-            if(confirm('Delete this profile?')) await deleteDoc(doc(db,'profiles',profile.id));
-          });
-          if(editBtn) editBtn.addEventListener('click', ()=>{
-            document.getElementById('name').value = profile.name || '';
-            document.getElementById('age').value = profile.age || '';
-            document.getElementById('city').value = profile.city || '';
-            document.getElementById('phone').value = profile.phone || '';
-            document.getElementById('address').value = profile.address || '';
-            document.getElementById('about').value = profile.about || '';
-            // Optionally mark editing id globally
-            window.editingId = profile.id;
-            window.scrollTo({top:0, behavior:'smooth'});
-          });
-        }
-
-        profilesGrid.appendChild(card);
-      });
-    }
-
-    function openContactModal(profile){
-      document.getElementById('modalName').textContent=profile.name||'';
-      document.getElementById('modalAgeCity').textContent=`${profile.age||''} • ${profile.city||''}`;
-      document.getElementById('modalAddress').textContent=profile.address||'';
-      document.getElementById('modalPhone').textContent=profile.phone||'N/A';
-      document.getElementById('whatsappLink').href=profile.phone?`https://wa.me/${profile.phone.replace(/[^0-9]/g,'')}`:'#';
-      contactModal.classList.remove('hidden'); contactModal.classList.add('flex');
-    }
-
-    closeModal.addEventListener('click',()=>{ contactModal.classList.add('hidden'); contactModal.classList.remove('flex'); });
-    modalCloseBtn.addEventListener('click',()=>{ contactModal.classList.add('hidden'); contactModal.classList.remove('flex'); });
-
-    function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s]); }
-
-    loadAndRenderProfiles();
-
-    // Submit edits if editingId exists
-    postForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const name = document.getElementById('name').value.trim();
-      const age = document.getElementById('age').value.trim();
-      const city = document.getElementById('city').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const address = document.getElementById('address').value.trim();
-      const about = document.getElementById('about').value.trim();
-      const imageFile = document.getElementById('image').files[0];
-
-      if(!name) return alert('Name required');
-      const imgURL = await uploadImage(imageFile);
-
-      try{
-        if(window.editingId){
-          await updateDoc(doc(db,'profiles',window.editingId),{
-            name, age, city, phone, address, about, ...(imgURL?{image:imgURL}:{})
-          });
-          window.editingId=null;
-          alert('Profile updated');
-        } else {
-          await addDoc(collection(db,'profiles'),{
-            name, age, city, phone, address, about, image: imgURL || null,
-            approved:false,
-            createdAt: serverTimestamp()
-          });
-          alert('Posted — waiting for admin approval');
-        }
-        postForm.reset();
-      }catch(e){ console.error(e); alert('Failed to save profile'); }
-    });
-  </script>
-</body>
-</html>
