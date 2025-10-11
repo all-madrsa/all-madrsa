@@ -1,187 +1,249 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Nikah Profiles</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nikah Profile</title>
   <style>
-    body { font-family:"Segoe UI",sans-serif; margin:0; background:#f5f7f5; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+    }
     header {
-      background:#116530; color:white; text-align:center;
-      padding:15px; position:sticky; top:0; z-index:100;
-      box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      display:flex; justify-content:space-between; align-items:center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background: #008069;
+      color: #fff;
     }
-    header h1 { margin:0; font-size:22px; flex:1; }
-    #logoutBtn {
-      background:#dc3545; color:white; border:none; border-radius:6px;
-      padding:6px 10px; cursor:pointer; margin-right:10px; display:none;
+    header h1 {
+      font-size: 20px;
     }
-    .grid {
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap:15px; max-width:1100px; margin:auto; padding:15px;
+    header button {
+      background: #fff;
+      color: #008069;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 4px;
     }
-    .card {
-      background:white; border-radius:12px; overflow:hidden;
-      box-shadow:0 3px 8px rgba(0,0,0,0.15);
-      display:flex; flex-direction:column; align-items:center;
+    #form-section {
+      background: #fff;
+      padding: 15px;
+      margin: 15px;
+      border-radius: 6px;
+      display: none; /* केवल admin के लिए दिखेगा */
     }
-    .card img { width:100%; height:220px; object-fit:cover; background:#eee; }
-    .card-body { padding:10px; text-align:center; }
-    .card-body h3 { margin:6px 0; font-size:18px; color:#116530; }
-    .card-actions { display:flex; gap:8px; padding:10px; }
-    .card-actions a, .card-actions button {
-      background:#25d366; color:white; padding:6px 10px; border-radius:6px;
-      font-size:13px; text-decoration:none; cursor:pointer; border:none;
+    #form-section input {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      box-sizing: border-box;
     }
-    .contact-list { width:100%; padding:10px; font-size:13px; }
-    .contact-item { background:#f0f0f0; margin:5px 0; padding:5px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; }
-
-    /* Popup */
-    #contactPopup {
-      position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center;
+    #members-list {
+      display: grid;
+      gap: 1rem;
+      padding: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
-    #popupBox {
-      background:white; padding:20px; border-radius:12px; width:90%; max-width:400px;
+    @media (min-width: 768px) {
+      #members-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
-    #popupBox input {
-      width:100%; margin:8px 0; padding:10px;
-      border:1px solid #ccc; border-radius:6px;
+    @media (min-width: 1024px) {
+      #members-list {
+        grid-template-columns: repeat(4, 1fr);
+      }
     }
-    #popupBox button { width:100%; margin-top:10px; padding:10px; border:none; border-radius:6px; cursor:pointer; }
-    #submitContactBtn { background:#116530; color:white; }
-    #closePopupBtn { background:#999; color:white; margin-top:5px; }
+    .member-card {
+      background: #fff;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .member-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .member-card h3 {
+      margin: 8px 0 4px;
+    }
+    .whatsapp-btn {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 6px 12px;
+      background: #25D366;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .admin-btn {
+      margin: 5px 3px 0;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .edit-btn {
+      background: #ffa500;
+      color: #fff;
+    }
+    .delete-btn {
+      background: #d9534f;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>निकाह प्रोफाइल्स</h1>
-  <button id="logoutBtn" onclick="logout()">Logout</button>
+  <h1>Nikah Profiles</h1>
+  <div>
+    <button id="login-btn" onclick="login()">Login as Admin</button>
+    <button id="logout-btn" onclick="logout()" style="display:none;">Logout</button>
+  </div>
 </header>
 
-<div class="grid" id="members"></div>
+<!-- Admin Add Form -->
+<section id="form-section">
+  <h3>Add New Profile</h3>
+  <input type="text" id="name" placeholder="Name" required>
+  <input type="number" id="age" placeholder="Age" required>
+  <input type="text" id="city" placeholder="City" required>
+  <input type="file" id="photo" accept="image/*" required>
+  <button onclick="addMember()">Add Profile</button>
+</section>
 
-<!-- Contact Popup -->
-<div id="contactPopup">
-  <div id="popupBox">
-    <h3>अपनी जानकारी भरें</h3>
-    <input type="text" id="contactName" placeholder="आपका नाम">
-    <input type="text" id="contactAddress" placeholder="पता">
-    <input type="text" id="contactWhatsapp" placeholder="WhatsApp नंबर">
-    <button id="submitContactBtn" onclick="submitContact()">Submit</button>
-    <button id="closePopupBtn" onclick="closePopup()">Cancel</button>
-  </div>
-</div>
+<!-- Profiles -->
+<section id="members-list"></section>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
+  // 🔸 अपनी Firebase config डालें
   const firebaseConfig = {
-    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-    authDomain: "all-madrsa.firebaseapp.com",
-    projectId: "all-madrsa",
-    storageBucket: "all-madrsa.appspot.com",
-    messagingSenderId: "619313835874",
-    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MSG_ID",
+    appId: "YOUR_APP_ID"
   };
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.firestore();
+  const auth = firebase.auth();
 
-  const adminEmails = ["zaradigitalseva@gmail.com"];
-  const membersContainer = document.getElementById("members");
+  const adminEmails = ["youremail@gmail.com"]; // 🔸 अपना Admin Email डालें
+  let currentUser = null;
 
-  let currentContactProfileId = null;
-
-  // Load profiles
-  db.collection("members").orderBy("name").onSnapshot(async snapshot=>{
-    membersContainer.innerHTML="";
-    for(const doc of snapshot.docs){
-      const d = doc.data();
-      const card = document.createElement("div");
-      card.className="card";
-
-      const img = document.createElement("img");
-      img.src = d.photo;
-
-      const body = document.createElement("div");
-      body.className="card-body";
-      body.innerHTML = `<h3>${d.name}</h3><p>उम्र: ${d.age}</p><p>${d.city}</p>`;
-
-      const actions = document.createElement("div");
-      actions.className="card-actions";
-
-      const contactBtn = document.createElement("button");
-      contactBtn.textContent = "📞 Connect";
-      contactBtn.onclick = ()=>openPopup(doc.id);
-      actions.appendChild(contactBtn);
-
-      card.appendChild(img);
-      card.appendChild(body);
-      card.appendChild(actions);
-
-      // Admin view: Show contacts
-      if(auth.currentUser && adminEmails.includes(auth.currentUser.email)){
-        const listDiv = document.createElement("div");
-        listDiv.className = "contact-list";
-        const contactsSnap = await db.collection("members").doc(doc.id).collection("contacts").get();
-        contactsSnap.forEach(c=>{
-          const cd = c.data();
-          const item = document.createElement("div");
-          item.className="contact-item";
-          item.innerHTML = `
-            <div>
-              <strong>${cd.name}</strong><br>
-              ${cd.address}<br>
-              ${cd.whatsapp}
-            </div>
-            <a href="https://wa.me/${cd.whatsapp}" target="_blank">WhatsApp</a>
-          `;
-          listDiv.appendChild(item);
-        });
-        card.appendChild(listDiv);
-      }
-
-      membersContainer.appendChild(card);
+  auth.onAuthStateChanged(user => {
+    currentUser = user;
+    if (user && adminEmails.includes(user.email)) {
+      document.getElementById('form-section').style.display = 'block';
+      document.getElementById('login-btn').style.display = 'none';
+      document.getElementById('logout-btn').style.display = 'inline-block';
+    } else {
+      document.getElementById('form-section').style.display = 'none';
+      document.getElementById('login-btn').style.display = 'inline-block';
+      document.getElementById('logout-btn').style.display = 'none';
     }
+    loadMembers();
   });
 
-  function openPopup(profileId){
-    currentContactProfileId = profileId;
-    document.getElementById("contactPopup").style.display="flex";
+  function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider);
   }
-
-  function closePopup(){
-    document.getElementById("contactPopup").style.display="none";
-    currentContactProfileId = null;
-    document.getElementById("contactName").value="";
-    document.getElementById("contactAddress").value="";
-    document.getElementById("contactWhatsapp").value="";
-  }
-
-  async function submitContact(){
-    const name=document.getElementById("contactName").value;
-    const address=document.getElementById("contactAddress").value;
-    const whatsapp=document.getElementById("contactWhatsapp").value;
-    if(!name || !address || !whatsapp) return alert("सब जानकारी भरें");
-
-    await db.collection("members")
-      .doc(currentContactProfileId)
-      .collection("contacts")
-      .add({name,address,whatsapp, created: new Date()});
-
-    closePopup();
-    alert("✅ जानकारी भेज दी गई!");
-  }
-
-  function logout(){
+  function logout() {
     auth.signOut();
+  }
+
+  async function addMember() {
+    const name = document.getElementById('name').value;
+    const age = document.getElementById('age').value;
+    const city = document.getElementById('city').value;
+    const photo = document.getElementById('photo').files[0];
+
+    if (!name || !age || !city || !photo) return alert('Please fill all fields');
+
+    // 🔸 imgbb Image Upload
+    const formData = new FormData();
+    formData.append("image", photo);
+    const res = await fetch("https://api.imgbb.com/1/upload?key=YOUR_IMGBB_KEY", {
+      method: "POST",
+      body: formData
+    });
+    const result = await res.json();
+    const photoURL = result.data.url;
+
+    await db.collection("members").add({ name, age, city, photoURL });
+    alert("Profile Added ✅");
+    document.getElementById('name').value = '';
+    document.getElementById('age').value = '';
+    document.getElementById('city').value = '';
+    document.getElementById('photo').value = '';
+  }
+
+  function loadMembers() {
+    const list = document.getElementById('members-list');
+    list.innerHTML = '';
+    db.collection("members").onSnapshot(snapshot => {
+      list.innerHTML = '';
+      snapshot.forEach(doc => renderCard(doc));
+    });
+  }
+
+  function renderCard(doc) {
+    const d = doc.data();
+    const div = document.createElement('div');
+    div.className = 'member-card';
+    div.innerHTML = `
+      <img src="${d.photoURL}" alt="${d.name}">
+      <h3>${d.name}</h3>
+      <p>Age: ${d.age}</p>
+      <p>City: ${d.city}</p>
+      <a class="whatsapp-btn" href="https://wa.me/91XXXXXXXXXX?text=Mujhe%20${encodeURIComponent(d.name)}%20ki%20profile%20mein%20interest%20hai" target="_blank">WhatsApp</a>
+    `;
+
+    // ✅ अगर admin है तो edit/delete दिखाओ
+    if (currentUser && adminEmails.includes(currentUser.email)) {
+      const editBtn = document.createElement('button');
+      editBtn.textContent = '✏ Edit';
+      editBtn.className = 'admin-btn edit-btn';
+      editBtn.onclick = () => editMember(doc.id, d);
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '🗑 Delete';
+      delBtn.className = 'admin-btn delete-btn';
+      delBtn.onclick = () => deleteMember(doc.id);
+
+      div.appendChild(editBtn);
+      div.appendChild(delBtn);
+    }
+
+    document.getElementById('members-list').appendChild(div);
+  }
+
+  function editMember(id, data) {
+    const newName = prompt("Edit Name", data.name);
+    if (newName) {
+      db.collection("members").doc(id).update({ name: newName });
+    }
+  }
+
+  function deleteMember(id) {
+    if (confirm("Are you sure to delete this profile?")) {
+      db.collection("members").doc(id).delete();
+    }
   }
 </script>
 
