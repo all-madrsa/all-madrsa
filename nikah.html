@@ -4,555 +4,224 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Nikah Profiles</title>
+
 <style>
-  :root{
-    --green:#116530;
-    --accent:#008069;
-    --card-h:280px;
-    --card-radius:12px;
-    --muted:#777;
-    --sky1: #6EC1FF;
-    --sky2: #3AA8FF;
-  }
-  body { font-family: "Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; -webkit-font-smoothing:antialiased; }
-  /* Header - Asmani (sky-blue) */
-  header {
-    background: linear-gradient(135deg, var(--sky1), var(--sky2));
-    color:white; padding:12px 16px; display:flex; align-items:center; justify-content:space-between;
-    box-shadow:0 3px 8px rgba(0,0,0,0.12); position:sticky; top:0; z-index:50;
-  }
-  .header-left { display:flex; align-items:center; gap:12px; }
-  .home-3d {
-    display:inline-flex; align-items:center; gap:8px;
-    padding:8px 12px; background:#fff; color:var(--sky2);
-    border-radius:10px; font-weight:600; text-decoration:none;
-    box-shadow:0 6px 0 rgba(0,0,0,0.08), 0 12px 18px rgba(0,0,0,0.06);
-    transform:translateY(0);
-  }
-  .home-3d:active { transform:translateY(2px); box-shadow:none; }
-  .rules-btn {
-    background:rgba(255,255,255,0.12); color:white; padding:8px 10px; border-radius:8px; text-decoration:none;
-    border:1px solid rgba(255,255,255,0.08); font-weight:600;
-  }
-  .header-right { display:flex; align-items:center; gap:10px; }
+:root{
+  --green:#116530;
+  --accent:#008069;
+  --card-h:280px;
+  --card-radius:12px;
+  --muted:#777;
+  --sky1:#6EC1FF;
+  --sky2:#3AA8FF;
+}
+body{ font-family:"Segoe UI",sans-serif; margin:0; background:#f5f7f5; color:#222; -webkit-font-smoothing:antialiased; }
 
-  main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
+/* HEADER */
+.site-header{
+  position:sticky; top:0; z-index:60;
+  background: linear-gradient(135deg,var(--sky1),var(--sky2));
+  padding:10px 14px; box-shadow:0 6px 18px rgba(0,0,0,0.12);
+  display:flex; flex-direction:column; align-items:center;
+}
+.logo-row{text-align:center;margin-bottom:6px;}
+.logo-3d{
+  display:inline-block; font-size:34px; font-weight:900; color:#fff;
+  letter-spacing:2px; padding:6px 14px; border-radius:8px;
+  text-shadow:0 2px 0 rgba(0,0,0,0.15),0 6px 0 rgba(0,0,0,0.12),0 12px 20px rgba(0,0,0,0.25);
+  transform: perspective(400px) rotateX(6deg); -webkit-font-smoothing:antialiased;
+}
+.button-row{
+  display:flex; gap:10px; justify-content:center; align-items:center;
+  flex-wrap:nowrap; overflow-x:auto; padding:6px 0;
+}
+.header-btn{
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  background:#fff; color:#0b63a6; padding:8px 12px; border-radius:8px; border:none; text-decoration:none; font-weight:700; cursor:pointer;
+  box-shadow:0 6px 12px rgba(0,0,0,0.06);
+}
+.header-btn:active{ transform:translateY(1px);}
+.header-btn:hover{ filter:brightness(0.98);}
+.button-row::-webkit-scrollbar{ height:6px;}
+.button-row::-webkit-scrollbar-thumb{ background:rgba(0,0,0,0.12); border-radius:6px;}
+@media(max-width:420px){ .logo-3d{ font-size:26px;padding:4px 10px;} .header-btn{padding:7px 10px;font-size:13px;} }
 
-  .top-join { display:flex; justify-content:center; margin:6px 0 18px; }
-  .whatsapp-btn {
-    background:#25d366; color:white; text-decoration:none; padding:10px 18px; border-radius:8px; font-weight:700;
-    box-shadow:0 6px 18px rgba(37,211,102,0.14);
-  }
+/* MAIN GRID */
+main{ max-width:1100px; margin:18px auto; padding:0 16px 60px; }
+.top-join{ display:flex; justify-content:center; margin:6px 0 18px;}
+.whatsapp-btn{ background:#25d366; color:white; text-decoration:none; padding:10px 18px; border-radius:8px; font-weight:700; box-shadow:0 6px 18px rgba(37,211,102,0.14); }
 
-  /* Grid */
-  .grid { display:grid; gap:14px; grid-template-columns:repeat(2,1fr); }
-  @media(min-width:1024px){ .grid { grid-template-columns:repeat(4,1fr); } }
+/* GRID CARDS */
+.grid{ display:grid; gap:14px; grid-template-columns:repeat(2,1fr);}
+@media(min-width:1024px){ .grid{ grid-template-columns:repeat(4,1fr);} }
+.card{ background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s;}
+.card:hover{ transform:translateY(-4px);}
+.img-wrapper{ width:100%; height:150px; overflow:hidden; display:block; cursor:pointer; -webkit-tap-highlight-color: transparent;}
+.img-wrapper img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; user-select:none;}
+.card-body{ padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; width:100%;}
+.card-body h3{ margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;}
+.card-body .meta{ color:var(--muted); font-size:13px;}
+.card-footer{ padding:10px; display:flex; gap:8px; width:100%; justify-content:flex-start; align-items:center; flex-wrap:wrap;}
+.btn-wa{ background:#25d366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; cursor:pointer;}
+.btn-connect{ background:var(--accent); color:white; padding:8px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600;}
+.admin-small{ background:#ffc107; color:#333; padding:6px 8px; border-radius:6px; border:none; cursor:pointer;}
+.admin-del{ background:#dc3545; color:#fff; padding:6px 8px; border-radius:6px; border:none; cursor:pointer;}
 
-  /* Card compact */
-  .card { background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s; }
-  .card:hover { transform:translateY(-4px); }
-  /* image wrapper prevents mobile default zoom */
-  .img-wrapper { width:100%; height:150px; overflow:hidden; display:block; cursor:pointer; -webkit-tap-highlight-color: transparent; }
-  .img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; user-select:none; }
-  .card-body { padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; width:100%; }
-  .card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
-  .card-body .meta { color:var(--muted); font-size:13px; }
-  .card-footer { padding:10px; display:flex; gap:8px; width:100%; justify-content:flex-start; align-items:center; flex-wrap:wrap; }
-  .btn-wa { background:#25d366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; cursor:pointer; }
-  .btn-connect { background:var(--accent); color:white; padding:8px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
-  .admin-small { background:#ffc107; color:#333; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
-  .admin-del { background:#dc3545; color:#fff; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
+/* Forms */
+#memberForm{ display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0;}
+#memberForm input,#memberForm textarea,#memberForm select{ width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px;}
+#memberForm .row{ display:flex; gap:10px; }
 
-  /* Forms / panels */
-  #memberForm { display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0; }
-  #memberForm .row { display:flex; gap:10px; }
-  #memberForm input, #memberForm textarea, #memberForm select { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; }
+/* profile popup */
+#profilePopup{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
+.profile-card{ background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative;}
+.profile-grid{ display:grid; grid-template-columns:320px 1fr; gap:16px; padding:18px;}
+.profile-photo{ width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee;}
+.profile-info{ padding:8px 4px;}
+.profile-info h2{ margin:0 0 8px 0; color:var(--green);}
+.profile-info .line{ margin:6px 0; color:#333;}
+.close-btn{ position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer;}
 
-  /* profile detail popup */
-  #profilePopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
-  .profile-card { background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative; }
-  .profile-grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; padding:18px; }
-  .profile-photo { width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee; }
-  .profile-info { padding:8px 4px; }
-  .profile-info h2 { margin:0 0 8px 0; color:var(--green); }
-  .profile-info .line { margin:6px 0; color:#333; }
-  .close-btn { position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+/* connect popup */
+#connectPopup{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:70;}
+.connect-box{ background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2);}
+.connect-box input{ width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
 
-  /* connect popup */
-  #connectPopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:70; }
-  .connect-box { background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
-  .connect-box input { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
-
-  /* admin logs panel */
-  #adminLogs { display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06); }
-  #logsTable { width:100%; border-collapse:collapse; }
-  #logsTable th, #logsTable td { border-bottom:1px solid #eee; padding:8px 6px; text-align:left; font-size:14px; }
-  #logsTable th { color:var(--green); font-weight:700; }
-
-  /* small helpers */
-  .muted { color:var(--muted); font-size:13px; }
+/* admin logs */
+#adminLogs{ display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06);}
+#logsTable{ width:100%; border-collapse:collapse;}
+#logsTable th,#logsTable td{ border-bottom:1px solid #eee; padding:8px 6px; text-align:left; font-size:14px;}
+#logsTable th{ color:var(--green); font-weight:700;}
+.muted{ color:var(--muted); font-size:13px;}
 </style>
 </head>
+
 <body>
-<header style="background:linear-gradient(90deg,#6ec6ff,#4da3ff);color:white;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-  <div class="header-left" style="display:flex;align-items:center;gap:15px;">
-    <a class="home-3d" href="index.html" title="Home" style="font-size:16px;font-weight:bold;color:white;text-decoration:none;transform:perspective(200px) rotateX(10deg);text-shadow:2px 2px 4px rgba(0,0,0,0.3);">
-      🏠 Home
-    </a>
-    <a class="rules-btn" href="nikah-Conditions.html" title="हमारे नियम" style="font-size:16px;font-weight:bold;color:white;text-decoration:none;transform:perspective(200px) rotateX(10deg);text-shadow:2px 2px 4px rgba(0,0,0,0.3);">
-      📜 हमारे नियम
-    </a>
-  </div>
 
-  <!-- 3D Text Logo -->
-  <div class="logo" style="font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:2px;text-shadow:2px 2px 0 #004a99,4px 4px 0 #003366;">
-    Nikah
-  </div>
-
-  <div class="header-right" style="display:flex;align-items:center;gap:10px;">
-    <button id="loginBtn" onclick="googleLogin()" style="background:white;color:#2196f3;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;">Admin Login</button>
-    <button id="logoutBtn" onclick="logout()" style="display:none;background:#fff;color:#2196f3;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;">Logout</button>
-  </div>
+<header class="site-header">
+  <div class="logo-row"><div class="logo-3d">निकाह</div></div>
+  <nav class="button-row">
+    <a class="header-btn" href="index.html" title="Home">🏠 Home</a>
+    <a class="header-btn" href="nikah-Conditions.html" title="हमारे नियम">📜 हमारे नियम</a>
+    <a class="header-btn" id="joinBtn" href="https://wa.me/919112170192" target="_blank">📱 WhatsApp Join</a>
+    <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
+    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
+  </nav>
 </header>
-
 
 <main>
   <div class="top-join">
-    <a class="whatsapp-btn" id="joinBtn" href="https://wa.me/919112170192?text=Main%20Nikah%20Profile%20mein%20shamil%20hona%20chahta/chahti%20hoon" target="_blank">📱 WhatsApp se Join Karein</a>
+    <a class="whatsapp-btn" href="https://wa.me/919112170192" target="_blank">📱 WhatsApp से Join करें</a>
   </div>
 
-  <!-- Admin add/edit form -->
+  <!-- Admin form -->
   <section id="memberForm">
     <h3>प्रोफ़ाइल जोड़ें / संपादित करें (Admin)</h3>
-
-    <!-- fields needed for marriage profile -->
-    <div style="display:grid; grid-template-columns: repeat(2,1fr); gap:10px;">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
       <input id="f_name" placeholder="पूरा नाम">
-      <input id="f_dob" placeholder="Date of Birth (YYYY-MM-DD)">
-      <input id="f_gender" placeholder="लिंग (Male/Female/Other)">
+      <input id="f_dob" placeholder="जन्मतिथि (YYYY-MM-DD)">
+      <input id="f_gender" placeholder="लिंग (Male/Female)">
       <input id="f_age" placeholder="उम्र">
-      <input id="f_height" placeholder="कद (e.g., 5'6&quot; or cm)">
-      <input id="f_religion" placeholder="धर्म / फिरका">
-      <input id="f_city" placeholder="शहर">
-      <input id="f_state" placeholder="राज्य">
-      <input id="f_education" placeholder="शिक्षा">
-      <input id="f_profession" placeholder="पेशा">
-      <input id="f_income" placeholder="मासिक आय (Optional)">
-      <input id="f_whatsapp" placeholder="WhatsApp नंबर (91...)">
+      <input id="f_image" placeholder="इमेज URL">
+      <input id="f_location" placeholder="स्थान">
+      <input id="f_mobile" placeholder="मोबाइल नंबर">
+      <input id="f_status" placeholder="Marital Status">
     </div>
-
-    <textarea id="f_bio" rows="3" placeholder="अपने बारे में (Bio)"></textarea>
-    <textarea id="f_family" rows="2" placeholder="परिवार की जानकारी / परिवार से अपेक्षाएँ"></textarea>
-
-    <div style="display:flex;gap:10px;align-items:center;">
-      <input type="file" id="f_photo" accept="image/*">
-      <button onclick="saveProfile()" style="background:var(--green);color:#fff;padding:10px 12px;border:none;border-radius:8px;cursor:pointer;">Save Profile</button>
-      <button onclick="cancelEdit()" style="background:#999;color:#fff;padding:10px 12px;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
-    </div>
-    <div class="muted">Note: फोटो imgbb पर upload होगी।</div>
+    <textarea id="f_desc" placeholder="विवरण / शौक"></textarea>
+    <button class="btn-connect" onclick="saveMember()">Save</button>
   </section>
 
-  <!-- Grid of member cards -->
-  <div class="grid" id="members"></div>
-
-  <!-- Admin logs panel -->
-  <section id="adminLogs">
-    <h3>📋 Contact Requests (Admin)</h3>
-    <table id="logsTable">
-      <thead><tr><th>Profile</th><th>Visitor</th><th>Address</th><th>WhatsApp</th><th>Time</th><th></th></tr></thead>
-      <tbody id="logsBody"></tbody>
-    </table>
-  </section>
+  <!-- Members grid -->
+  <div class="grid" id="membersGrid">
+    <!-- dynamically added cards -->
+  </div>
 </main>
 
-<!-- profile detail popup -->
+<!-- Profile Popup -->
 <div id="profilePopup">
-  <div class="profile-card" role="dialog" aria-modal="true">
+  <div class="profile-card">
     <button class="close-btn" onclick="closeProfile()">✖</button>
     <div class="profile-grid">
-      <div style="padding:8px;">
-        <img id="p_photo" class="profile-photo" src="" alt="Profile photo">
-      </div>
+      <img class="profile-photo" id="popupPhoto" src="" alt="Profile Photo">
       <div class="profile-info">
-        <h2 id="p_name">Name</h2>
-        <div class="line"><strong>उम्र / जन्मतिथि:</strong> <span id="p_age"></span></div>
-        <div class="line"><strong>लिंग:</strong> <span id="p_gender"></span></div>
-        <div class="line"><strong>कद:</strong> <span id="p_height"></span></div>
-        <div class="line"><strong>धर्म / फिरका:</strong> <span id="p_religion"></span></div>
-        <div class="line"><strong>शहर / राज्य:</strong> <span id="p_city_state"></span></div>
-        <div class="line"><strong>शिक्षा:</strong> <span id="p_education"></span></div>
-        <div class="line"><strong>पेशा:</strong> <span id="p_profession"></span></div>
-        <div class="line"><strong>आय:</strong> <span id="p_income"></span></div>
-        <div class="line"><strong>WhatsApp:</strong> <span id="p_whatsapp"></span></div>
-        <hr>
-        <div class="line"><strong>Bio:</strong> <div id="p_bio"></div></div>
-        <div class="line"><strong>Family:</strong> <div id="p_family"></div></div>
-        <div style="margin-top:12px;">
-          <a id="p_contact_btn" class="btn-wa" href="#" target="_blank">📞 Contact</a>
-        </div>
+        <h2 id="popupName"></h2>
+        <div class="line" id="popupAge"></div>
+        <div class="line" id="popupGender"></div>
+        <div class="line" id="popupLocation"></div>
+        <div class="line" id="popupStatus"></div>
+        <div class="line" id="popupDesc"></div>
+        <button class="btn-wa" id="popupWA">WhatsApp Connect</button>
       </div>
     </div>
   </div>
 </div>
-
-<!-- connect popup -->
-<div id="connectPopup">
-  <div class="connect-box">
-    <h3>Contact / Connect</h3>
-    <div><input id="c_name" placeholder="आपका नाम"></div>
-    <div><input id="c_address" placeholder="पता / शहर"></div>
-    <div><input id="c_whatsapp" placeholder="WhatsApp (91...)"></div>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button id="submitConnectBtn" style="background:var(--green);color:#fff;padding:10px;border:none;border-radius:8px;cursor:pointer;">Submit & Open WhatsApp</button>
-      <button onclick="closeConnect()" style="background:#999;color:#fff;padding:10px;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-/* ---------------- CONFIG you've provided ---------------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
-const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
-const adminEmails = ["zaradigitalseva@gmail.com"];
-const defaultWhatsApp = "9112170192";
-/* ------------------------------------------------------- */
+let members=[];
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-let currentUser = null;
-let editingId = null;
-let currentProfileViewId = null;
-let connectProfileId = null;
-
-/* DOM refs */
-const membersEl = document.getElementById('members');
-const memberForm = document.getElementById('memberForm');
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const adminLogs = document.getElementById('adminLogs');
-const logsBody = document.getElementById('logsBody');
-
-const profilePopup = document.getElementById('profilePopup');
-const p_photo = document.getElementById('p_photo');
-const p_name = document.getElementById('p_name');
-const p_age = document.getElementById('p_age');
-const p_gender = document.getElementById('p_gender');
-const p_height = document.getElementById('p_height');
-const p_religion = document.getElementById('p_religion');
-const p_city_state = document.getElementById('p_city_state');
-const p_education = document.getElementById('p_education');
-const p_profession = document.getElementById('p_profession');
-const p_income = document.getElementById('p_income');
-const p_bio = document.getElementById('p_bio');
-const p_family = document.getElementById('p_family');
-const p_whatsapp = document.getElementById('p_whatsapp');
-const p_contact_btn = document.getElementById('p_contact_btn');
-
-const connectPopup = document.getElementById('connectPopup');
-const submitConnectBtn = document.getElementById('submitConnectBtn');
-
-/* Safe esc */
-function esc(s){ return s? String(s) : ""; }
-
-/* ----------------- Auth listener (single place) ----------------- */
-auth.onAuthStateChanged(user=>{
-  currentUser = user;
-  if(user && adminEmails.includes(user.email)){
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'inline-block';
-    memberForm.style.display = 'block';
-    adminLogs.style.display = 'block';
-  } else if(user){
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'inline-block';
-    memberForm.style.display = 'none';
-    adminLogs.style.display = 'none';
-  } else {
-    loginBtn.style.display = 'inline-block';
-    logoutBtn.style.display = 'none';
-    memberForm.style.display = 'none';
-    adminLogs.style.display = 'none';
-  }
-  loadMembers();
-  loadContactLogs();
-});
-
-/* ----------------- Login/Logout ----------------- */
-function googleLogin(){ const p=new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(p); }
-function logout(){ auth.signOut(); }
-
-/* ----------------- Image upload helper (imgbb) ----------------- */
-async function uploadImageToImgbb(file){
-  const fd = new FormData();
-  fd.append("image", file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, { method: "POST", body: fd });
-  const data = await res.json();
-  if(!data || !data.success) throw new Error("Image upload failed");
-  return data.data.url;
+function renderMembers(){
+  const grid=document.getElementById('membersGrid');
+  grid.innerHTML='';
+  members.forEach((m,i)=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <div class="img-wrapper"><img src="${m.image}" alt="${m.name}"></div>
+      <div class="card-body">
+        <h3>${m.name}</h3>
+        <div class="meta">${m.age} yrs | ${m.gender}</div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-connect" onclick="showProfile(${i})">View Profile</button>
+        <a class="btn-wa" href="https://wa.me/${m.mobile}" target="_blank">WhatsApp</a>
+      </div>`;
+    grid.appendChild(card);
+  });
 }
 
-/* ----------------- Render members ----------------- */
-function loadMembers(){
-  db.collection("members").orderBy("name").onSnapshot(snapshot=>{
-    membersEl.innerHTML = "";
-    snapshot.forEach(doc=>{
-      const d=doc.data();
-      const card = document.createElement('div');
-      card.className = 'card';
-
-      // clicking card opens full profile (but prevent when clicking inner buttons)
-      card.addEventListener('click', (e)=>{
-        if(e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'a' ) return;
-        openProfileDetail(doc.id,d);
-      });
-
-      // image wrapper
-      const imgWrap = document.createElement('div');
-      imgWrap.className = 'img-wrapper';
-      const img = document.createElement('img');
-      img.src = esc(d.photo) || '';
-      img.alt = esc(d.name) || 'profile';
-      imgWrap.appendChild(img);
-
-      const body = document.createElement('div');
-      body.className = 'card-body';
-      body.innerHTML = `<h3>${esc(d.name)}</h3><div class="meta">उम्र: ${esc(d.age) || "-"}</div>`;
-
-      const footer = document.createElement('div');
-      footer.className = 'card-footer';
-
-      // Contact button opens connect popup and logs
-      const contactBtn = document.createElement('button');
-      contactBtn.className = 'btn-wa';
-      contactBtn.textContent = '📞 Contact';
-      contactBtn.addEventListener('click',(ev)=>{
-        ev.stopPropagation();
-        openConnectPopup(doc.id,d.name);
-      });
-
-      const connectBtn = document.createElement('button');
-      connectBtn.className = 'btn-connect';
-      connectBtn.textContent = 'Connect';
-      connectBtn.addEventListener('click',(ev)=>{ ev.stopPropagation(); openConnectPopup(doc.id,d.name); });
-
-      footer.appendChild(contactBtn);
-      footer.appendChild(connectBtn);
-
-      // Admin controls
-      if(currentUser && adminEmails.includes(currentUser.email)){
-        const edit = document.createElement('button');
-        edit.className = 'admin-small';
-        edit.textContent = 'Edit';
-        edit.addEventListener('click', (ev)=>{ ev.stopPropagation(); startEditProfile(doc.id,d); });
-        const del = document.createElement('button');
-        del.className = 'admin-del';
-        del.textContent = 'Delete';
-        del.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(confirm('Delete this profile?')) db.collection('members').doc(doc.id).delete(); });
-        footer.appendChild(edit);
-        footer.appendChild(del);
-      }
-
-      card.appendChild(imgWrap);
-      card.appendChild(body);
-      card.appendChild(footer);
-
-      // admin realtime connects list
-      if(currentUser && adminEmails.includes(currentUser.email)){
-        const connectsDiv = document.createElement('div');
-        connectsDiv.className = 'connects-list';
-        connectsDiv.innerHTML = '<strong style="display:block;margin-bottom:6px;color:var(--green)">Interested People:</strong>';
-        card.appendChild(connectsDiv);
-
-        db.collection('members').doc(doc.id).collection('connections').orderBy('created','desc')
-          .onSnapshot(csnap=>{
-            connectsDiv.querySelectorAll('.connect-item').forEach(n=>n.remove());
-            csnap.forEach(cdoc=>{
-              const c = cdoc.data();
-              const item = document.createElement('div');
-              item.className = 'connect-item';
-              const left = document.createElement('div'); left.textContent = `${esc(c.name)} — ${esc(c.city)}`;
-              const a = document.createElement('a');
-              a.href = `https://wa.me/${encodeURIComponent(c.whatsapp)}?text=${encodeURIComponent("Hello " + c.name)}`;
-              a.textContent = 'WhatsApp'; a.target='_blank';
-              item.appendChild(left); item.appendChild(a);
-              connectsDiv.appendChild(item);
-            });
-          }, err=>console.error(err));
-      }
-
-      membersEl.appendChild(card);
-    });
-  }, err=>console.error(err));
+function saveMember(){
+  const m={
+    name:document.getElementById('f_name').value,
+    age:document.getElementById('f_age').value,
+    gender:document.getElementById('f_gender').value,
+    image:document.getElementById('f_image').value,
+    location:document.getElementById('f_location').value,
+    mobile:document.getElementById('f_mobile').value,
+    status:document.getElementById('f_status').value,
+    desc:document.getElementById('f_desc').value
+  };
+  members.push(m);
+  renderMembers();
+  alert('Profile saved!');
 }
 
-/* ----------------- Profile detail popup (read-only) ----------------- */
-function openProfileDetail(id, data){
-  currentProfileViewId = id;
-  p_photo.src = esc(data.photo) || '';
-  p_name.textContent = esc(data.name);
-  p_age.textContent = (esc(data.age) || '-') + (data.dob ? ' / ' + esc(data.dob) : '');
-  p_gender.textContent = esc(data.gender || '-');
-  p_height.textContent = esc(data.height || '-');
-  p_religion.textContent = esc(data.religion || '-');
-  p_city_state.textContent = ((esc(data.city) || '-') + (data.state ? ' / ' + esc(data.state) : ''));
-  p_education.textContent = esc(data.education || '-');
-  p_profession.textContent = esc(data.profession || '-');
-  p_income.textContent = esc(data.income || '-');
-  p_bio.textContent = esc(data.bio || '-');
-  p_family.textContent = esc(data.family || '-');
-  p_whatsapp.textContent = esc(data.whatsapp || ('+'+defaultWhatsApp));
-  p_contact_btn.href = `https://wa.me/${defaultWhatsApp}?text=${encodeURIComponent("Mujhe " + (data.name||'') + " ki profile mein interest hai")}`;
-  p_contact_btn.onclick = (ev) => { ev.preventDefault(); openConnectPopup(id, data.name); };
-  profilePopup.style.display = 'flex';
+function showProfile(i){
+  const m=members[i];
+  document.getElementById('popupPhoto').src=m.image;
+  document.getElementById('popupName').textContent=m.name;
+  document.getElementById('popupAge').textContent='Age: '+m.age;
+  document.getElementById('popupGender').textContent='Gender: '+m.gender;
+  document.getElementById('popupLocation').textContent='Location: '+m.location;
+  document.getElementById('popupStatus').textContent='Status: '+m.status;
+  document.getElementById('popupDesc').textContent=m.desc;
+  document.getElementById('popupWA').href='https://wa.me/'+m.mobile;
+  document.getElementById('profilePopup').style.display='flex';
 }
-function closeProfile(){ profilePopup.style.display = 'none'; currentProfileViewId = null; }
+function closeProfile(){ document.getElementById('profilePopup').style.display='none'; }
 
-/* ----------------- Connect popup (visitor) ----------------- */
-function openConnectPopup(profileId, profileName){
-  connectProfileId = profileId;
-  connectPopup.style.display = 'flex';
-  document.getElementById('c_name').value = '';
-  document.getElementById('c_address').value = '';
-  document.getElementById('c_whatsapp').value = '';
+// Admin login/logout dummy
+function googleLogin(){
+  alert('Admin logged in');
+  document.getElementById('loginBtn').style.display='none';
+  document.getElementById('logoutBtn').style.display='inline-flex';
+  document.getElementById('memberForm').style.display='block';
 }
-function closeConnect(){ connectPopup.style.display = 'none'; connectProfileId = null; }
-
-submitConnectBtn.addEventListener('click', async ()=>{
-  const vname = document.getElementById('c_name').value.trim();
-  const vaddr = document.getElementById('c_address').value.trim();
-  const vwh = document.getElementById('c_whatsapp').value.trim();
-  if(!vname || !vaddr || !vwh) return alert('कृपया सभी फील्ड भरें');
-  if(!connectProfileId) return alert('Invalid profile');
-  try {
-    // save under member->connections
-    await db.collection('members').doc(connectProfileId).collection('connections').add({
-      name: vname, city: vaddr, whatsapp: vwh, created: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    // save root contactLogs
-    const profileSnap = await db.collection('members').doc(connectProfileId).get();
-    const prof = profileSnap.exists ? profileSnap.data().name : '';
-    await db.collection('contactLogs').add({
-      profileId: connectProfileId,
-      profileName: prof || '',
-      visitorName: vname,
-      visitorAddress: vaddr,
-      visitorWhats: vwh,
-      ts: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    // open WhatsApp to admin number
-    const text = encodeURIComponent(`Assalamu Alaikum,\nMujhe ${prof || ''} ki profile mein dilchaspi hai.\nName: ${vname}\nCity: ${vaddr}\nPlease contact: ${vwh}`);
-    window.open(`https://wa.me/${defaultWhatsApp}?text=${text}`, '_blank');
-    alert('आपकी जानकारी भेज दी गई ✅');
-    closeConnect();
-  } catch (e){ console.error(e); alert('Error: ' + (e.message || e)); }
-});
-
-/* ----------------- Admin logs table ----------------- */
-function loadContactLogs(){
-  if(!(currentUser && adminEmails.includes(currentUser.email))){
-    logsBody.innerHTML = '';
-    return;
-  }
-  db.collection('contactLogs').orderBy('ts','desc').onSnapshot(snapshot=>{
-    logsBody.innerHTML = '';
-    snapshot.forEach(doc=>{
-      const d = doc.data();
-      const tr = document.createElement('tr');
-      const t_time = d.ts && d.ts.toDate ? d.ts.toDate().toLocaleString() : '';
-      tr.innerHTML = `<td>${esc(d.profileName)}</td>
-                      <td>${esc(d.visitorName)}</td>
-                      <td>${esc(d.visitorAddress)}</td>
-                      <td>${esc(d.visitorWhats)}</td>
-                      <td>${t_time}</td>
-                      <td><a href="https://wa.me/${encodeURIComponent(d.visitorWhats)}?text=${encodeURIComponent('Hello '+d.visitorName)}" target="_blank" style="background:#25d366;padding:6px 8px;border-radius:6px;color:#fff;text-decoration:none;">Message</a></td>`;
-      logsBody.appendChild(tr);
-    });
-  }, err=>console.error(err));
+function logout(){
+  document.getElementById('loginBtn').style.display='inline-flex';
+  document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('memberForm').style.display='none';
 }
-
-/* ----------------- Admin: Add/Edit Profile ----------------- */
-async function saveProfile(){
-  if(!(currentUser && adminEmails.includes(currentUser.email))) return alert('Admin access required');
-  const name = document.getElementById('f_name').value.trim();
-  const dob = document.getElementById('f_dob').value.trim();
-  const gender = document.getElementById('f_gender').value.trim();
-  const age = document.getElementById('f_age').value.trim();
-  const height = document.getElementById('f_height').value.trim();
-  const religion = document.getElementById('f_religion').value.trim();
-  const city = document.getElementById('f_city').value.trim();
-  const state = document.getElementById('f_state').value.trim();
-  const education = document.getElementById('f_education').value.trim();
-  const profession = document.getElementById('f_profession').value.trim();
-  const income = document.getElementById('f_income').value.trim();
-  const whatsapp = document.getElementById('f_whatsapp').value.trim();
-  const bio = document.getElementById('f_bio').value.trim();
-  const family = document.getElementById('f_family').value.trim();
-  const file = document.getElementById('f_photo').files[0];
-
-  if(!name || !age || !city) return alert('कम से कम नाम, उम्र और शहर भरें');
-
-  try {
-    let photoUrl = null;
-    if(file){ photoUrl = await uploadImageToImgbb(file); }
-    const payload = { name, dob, gender, age, height, religion, city, state, education, profession, income, whatsapp, bio, family };
-    if(photoUrl) payload.photo = photoUrl;
-
-    if(editingId){
-      await db.collection('members').doc(editingId).update(payload);
-      alert('Profile updated ✅');
-    } else {
-      await db.collection('members').add(payload);
-      alert('Profile added ✅');
-    }
-    cancelEdit();
-  } catch (e){ console.error(e); alert('Error saving: ' + (e.message || e)); }
-}
-
-function startEditProfile(id, data){
-  editingId = id;
-  document.getElementById('f_name').value = data.name || '';
-  document.getElementById('f_dob').value = data.dob || '';
-  document.getElementById('f_gender').value = data.gender || '';
-  document.getElementById('f_age').value = data.age || '';
-  document.getElementById('f_height').value = data.height || '';
-  document.getElementById('f_religion').value = data.religion || '';
-  document.getElementById('f_city').value = data.city || '';
-  document.getElementById('f_state').value = data.state || '';
-  document.getElementById('f_education').value = data.education || '';
-  document.getElementById('f_profession').value = data.profession || '';
-  document.getElementById('f_income').value = data.income || '';
-  document.getElementById('f_whatsapp').value = data.whatsapp || '';
-  document.getElementById('f_bio').value = data.bio || '';
-  document.getElementById('f_family').value = data.family || '';
-  memberForm.scrollIntoView({behavior:'smooth'});
-  memberForm.style.display = 'block';
-}
-
-function cancelEdit(){
-  editingId = null;
-  memberForm.style.display = 'none';
-  ['f_name','f_dob','f_gender','f_age','f_height','f_religion','f_city','f_state','f_education','f_profession','f_income','f_whatsapp','f_bio','f_family'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f_photo').value = '';
-}
-
-/* ----------------- initial load ----------------- */
-loadMembers();
-loadContactLogs();
-
 </script>
+
 </body>
 </html>
