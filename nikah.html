@@ -1,254 +1,246 @@
 <!doctype html>
-<html lang="hi">
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Nikah Portal</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-.card-image { height: 180px; object-fit: cover; width: 100%; }
-.modal-backdrop { background: rgba(0,0,0,0.5); }
-.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-#imagePreview { max-height: 180px; object-fit: cover; margin-top: 0.5rem; border-radius: 0.25rem; }
-</style>
-</head>
-<body class="bg-slate-50 min-h-screen">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All India Muslim Personal Board</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f8f9fa; }
+    header { background:#004080; color:white; text-align:center; padding:15px; }
+    header h1 { margin:0; font-size:22px; }
+    main { max-width:900px; margin:auto; padding:20px; }
+    .member-card {
+      display:flex; align-items:center;
+      background:white; margin:10px 0; padding:10px;
+      border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    }
+    .member-card img {
+      width:80px; height:80px; border-radius:50%;
+      margin-right:15px; object-fit:cover;
+    }
+    .member-card button {
+      margin-left: 5px;
+      padding: 5px 8px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .edit-btn { background: #ffc107; color: #000; }
+    .delete-btn { background: #dc3545; color: #fff; }
 
-<header class="bg-white shadow p-4 sticky top-0 z-30">
-  <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-xl font-semibold">Nikah Portal</h1>
-      <p class="text-sm text-slate-500">Admin: <span id="adminEmailText" class="font-medium">zardigitalseva@gmail.com</span></p>
-    </div>
-  </div>
+    form {
+      display:none; background:white; padding:20px;
+      border-radius:8px; margin-top:20px;
+    }
+    form input { width:100%; margin:8px 0; padding:10px; }
+    form button {
+      background:#004080; color:white; border:none;
+      padding:10px; cursor:pointer; border-radius:5px;
+    }
+    #loginBtn {
+      margin:20px auto; display:block; background:#db4437; color:white;
+      padding:10px 20px; border:none; border-radius:5px; cursor:pointer;
+      font-size:16px;
+    }
+    #msg { color:red; margin-top:10px; text-align:center; }
+
+    /* 3D Home Button */
+    .btn-3d-home {
+      background: linear-gradient(90deg,#ff4d4d,#4d94ff);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 14px rgba(0,0,0,0.25);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    .btn-3d-home:active {
+      transform: translateY(3px);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>All Members List</h1>
 </header>
 
-<main class="max-w-6xl mx-auto p-4">
-  <!-- NEW PROFILE FORM -->
-  <section class="bg-white p-4 rounded shadow mb-6">
-    <h2 class="font-semibold mb-3">New Profile (Admin Approval Required)</h2>
-    <form id="postForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <input type="text" id="name" placeholder="Name" required class="p-2 border rounded" />
-      <input type="number" id="age" placeholder="Age" class="p-2 border rounded" min="18" max="100" required />
-      <input type="text" id="city" placeholder="City" class="p-2 border rounded" />
-      <input type="text" id="phone" placeholder="Phone (WhatsApp)" class="p-2 border rounded" />
-      <input type="text" id="address" placeholder="Address" class="p-2 border rounded" />
-      <input type="file" id="image" accept="image/*" class="p-2" />
-      <img id="imagePreview" src="" class="hidden" />
-      <textarea id="about" placeholder="Short about / message" class="p-2 border rounded sm:col-span-2"></textarea>
-      <div class="sm:col-span-2 flex gap-2">
-        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Post / Update</button>
-        <button type="button" id="clearBtn" class="px-4 py-2 bg-gray-200 rounded">Clear</button>
-      </div>
-    </form>
-  </section>
+<!-- Home Button -->
+<a href="index.html" class="btn-3d-home">🏠 Home</a>
 
-  <!-- PROFILES GRID -->
-  <section>
-    <h2 class="font-semibold mb-3">Profiles</h2>
-    <div id="profilesGrid" class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"></div>
-  </section>
+<main>
+  <h2>Members List</h2>
+  <div id="members"></div>
+
+  <!-- Google Login Button -->
+  <button id="loginBtn" onclick="googleLogin()">Login with Google</button>
+  <p id="msg"></p>
+
+  <!-- Add Member Form -->
+  <form id="memberForm">
+    <h3>Add Member</h3>
+    <input type="text" id="name" placeholder="Member Name" required>
+    <input type="file" id="photoFile" accept="image/*" required>
+    <button type="button" onclick="addMember()">Add Member</button>
+  </form>
 </main>
 
-<!-- CONTACT MODAL -->
-<div id="contactModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
-  <div class="bg-white rounded-lg p-4 max-w-md w-full shadow-lg">
-    <div class="flex justify-between items-start">
-      <h3 id="modalName" class="font-semibold text-lg">Name</h3>
-      <button id="closeModal" class="text-slate-500">✕</button>
-    </div>
-    <div class="mt-3">
-      <p id="modalAgeCity" class="text-sm text-slate-600"></p>
-      <p id="modalAddress" class="mt-2 text-sm"></p>
-      <p class="mt-2 text-sm">Phone: <span id="modalPhone" class="font-medium"></span></p>
-      <div class="mt-4 flex gap-2">
-        <a id="whatsappLink" target="_blank" class="px-3 py-2 rounded border inline-block">Open WhatsApp</a>
-        <button id="modalCloseBtn" class="px-3 py-2 rounded bg-gray-200">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<script type="module">
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
-const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
-const ADMIN_EMAIL = 'zardigitalseva@gmail.com';
+<script>
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+    authDomain: "all-madrasa.firebaseapp.com",
+    databaseURL: "https://all-madrsa-default-rtdb.firebaseio.com",
+    projectId: "all-madrsa",
+    storageBucket: "all-madrsa.appspot.com",
+    messagingSenderId: "619313835874",
+    appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  };
 
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+  const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  // Init Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-const postForm = document.getElementById('postForm');
-const profilesGrid = document.getElementById('profilesGrid');
-const contactModal = document.getElementById('contactModal');
-const closeModal = document.getElementById('closeModal');
-const modalCloseBtn = document.getElementById('modalCloseBtn');
-const imageInput = document.getElementById('image');
-const imagePreview = document.getElementById('imagePreview');
+  const adminEmails = ["zaradigitalseva@gmail.com","secondadmin@gmail.com"];
 
-let currentUserEmail = ADMIN_EMAIL;
-let editingId = null;
-let profilesCache = [];
+  const membersContainer = document.getElementById("members");
+  const loginBtn = document.getElementById("loginBtn");
+  const memberForm = document.getElementById("memberForm");
+  const msg = document.getElementById("msg");
 
-// IMAGE PREVIEW
-imageInput.addEventListener('change', ()=>{
-  const file = imageInput.files[0];
-  if(file){
-    const reader = new FileReader();
-    reader.onload = e=>{
-      imagePreview.src = e.target.result;
-      imagePreview.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-  } else {
-    imagePreview.src='';
-    imagePreview.classList.add('hidden');
+  // Load Members
+  function loadMembers() {
+    db.collection("members").orderBy("name").onSnapshot(snapshot => {
+      membersContainer.innerHTML = "";
+      snapshot.forEach(doc => {
+        let m = doc.data();
+        let card = document.createElement("div");
+        card.className = "member-card";
+
+        let img = document.createElement("img");
+        img.src = m.photo;
+        img.alt = m.name;
+
+        let span = document.createElement("span");
+        span.textContent = m.name;
+
+        card.appendChild(img);
+        card.appendChild(span);
+
+        // Admin buttons
+        auth.onAuthStateChanged(user => {
+          if (user && adminEmails.includes(user.email)) {
+            let editBtn = document.createElement("button");
+            editBtn.textContent = "✏️ Edit";
+            editBtn.className = "edit-btn";
+            editBtn.onclick = () => editMember(doc.id, m.name, m.photo);
+
+            let delBtn = document.createElement("button");
+            delBtn.textContent = "🗑 Delete";
+            delBtn.className = "delete-btn";
+            delBtn.onclick = () => deleteMember(doc.id);
+
+            card.appendChild(editBtn);
+            card.appendChild(delBtn);
+          }
+        });
+
+        membersContainer.appendChild(card);
+      });
+    });
   }
-});
+  loadMembers();
 
-// IMAGE UPLOAD
-async function uploadImage(file){
-  if(!file) return null;
-  try {
-    const fd = new FormData();
-    fd.append('image', file);
-    const resp = await fetch('https://api.imgbb.com/1/upload?key='+IMG_API_KEY, {method:'POST', body:fd});
-    const j = await resp.json();
-    if(j && j.data && j.data.url) return j.data.url;
-  }catch(e){ console.warn('imgbb failed'); }
-  return null;
-}
-
-// FORM SUBMIT
-postForm.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const name = document.getElementById('name').value.trim();
-  const age = document.getElementById('age').value.trim();
-  const city = document.getElementById('city').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const address = document.getElementById('address').value.trim();
-  const about = document.getElementById('about').value.trim();
-  const imageFile = imageInput.files[0];
-
-  if(!name) return alert('Name required');
-  if(phone && !/^\+?\d{7,15}$/.test(phone)) return alert('Enter valid phone number');
-
-  const imgURL = await uploadImage(imageFile);
-
-  try{
-    if(editingId){
-      await updateDoc(doc(db,'profiles',editingId), { name, age, city, phone, address, about, ...(imgURL?{image:imgURL}:{}) });
-      profilesCache = profilesCache.map(p=>p.id===editingId?{...p,name,age,city,phone,address,about,image:imgURL||p.image}:p);
-      renderProfiles();
-      alert('Profile updated');
-      editingId = null;
+  // Auth state
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (adminEmails.includes(user.email)) {
+        loginBtn.style.display = "none";
+        memberForm.style.display = "block";
+        msg.innerText = "";
+      } else {
+        loginBtn.style.display = "none";
+        memberForm.style.display = "none";
+        msg.innerText = "aap bhi jude aaj hi aur abhi ";
+      }
     } else {
-      const docRef = await addDoc(collection(db,'profiles'),{
-        name, age, city, phone, address, about, image: imgURL||null,
-        approved:false,
-        createdAt: serverTimestamp()
-      });
-      profilesCache = [{ id: docRef.id, name, age, city, phone, address, about, image: imgURL||null, approved:false }, ...profilesCache];
-      renderProfiles();
-      alert('Posted — waiting for admin approval');
+      loginBtn.style.display = "block";
+      memberForm.style.display = "none";
+      msg.innerText = "";
     }
-    postForm.reset();
-    imagePreview.src=''; imagePreview.classList.add('hidden');
-  }catch(e){ console.error(e); alert('Failed to save profile'); }
-});
-
-// CLEAR FORM
-document.getElementById('clearBtn').addEventListener('click', ()=>{
-  postForm.reset(); editingId=null; imagePreview.src=''; imagePreview.classList.add('hidden');
-});
-
-// LOAD PROFILES
-function loadAndRenderProfiles(){
-  const q = query(collection(db,'profiles'), orderBy('createdAt','desc'));
-  onSnapshot(q, snapshot=>{
-    profilesCache = [];
-    snapshot.forEach(d=>profilesCache.push({id:d.id,...d.data()}));
-    renderProfiles();
   });
-}
 
-function renderProfiles(){
-  profilesGrid.innerHTML='';
-  const visible = profilesCache.filter(p=>p.approved || currentUserEmail===ADMIN_EMAIL);
-  if(visible.length===0){ profilesGrid.innerHTML='<p class="text-sm text-slate-500">Koi profile nahin mila.</p>'; return; }
+  // Google Login
+  function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(err => alert("Login Failed: "+err.message));
+  }
 
-  visible.forEach(profile=>{
-    const card = document.createElement('div');
-    card.className='bg-white rounded shadow overflow-hidden flex flex-col';
-    card.innerHTML=`
-      <div class="overflow-hidden bg-slate-100">
-        <img src="${profile.image||'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-44 object-cover card-image">
-      </div>
-      <div class="p-3 flex flex-col flex-grow">
-        <h3 class="font-semibold">${profile.name} <span class="text-xs text-slate-500">${profile.age?'• '+profile.age:''}</span></h3>
-        <p class="text-sm text-slate-500">${profile.city||''}</p>
-        <p class="text-sm mt-2 line-clamp-3">${profile.about||''}</p>
-        <div class="mt-3 flex flex-wrap gap-2 items-center justify-between">
-          ${currentUserEmail===ADMIN_EMAIL?`
-            <button class="contactBtn px-3 py-1 rounded border text-sm">Contact</button>
-            <div class="flex flex-wrap gap-2 items-center">
-              ${profile.approved?'<span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">Approved</span>'
-              :'<span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Pending</span>'}
-              <button class="approveBtn px-2 py-1 text-sm rounded ${profile.approved?'bg-gray-200':'bg-blue-600 text-white'}">${profile.approved?'Unapprove':'Approve'}</button>
-              <button class="editBtn px-2 py-1 text-sm rounded bg-indigo-600 text-white">Edit</button>
-              <button class="deleteBtn px-2 py-1 text-sm rounded bg-red-600 text-white">Delete</button>
-            </div>` : ''}
-        </div>
-      </div>
-    `;
+  // Upload image to imgbb
+  async function uploadImage(file) {
+    let formData = new FormData();
+    formData.append("image", file);
+    let res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
+      method: "POST",
+      body: formData
+    });
+    let data = await res.json();
+    return data.data.url;
+  }
 
-    // ADMIN BUTTONS
-    if(currentUserEmail===ADMIN_EMAIL){
-      card.querySelector('.contactBtn')?.addEventListener('click', ()=> openContactModal(profile));
-      card.querySelector('.approveBtn')?.addEventListener('click', async ()=> await updateDoc(doc(db,'profiles',profile.id), { approved: !profile.approved }));
-      card.querySelector('.deleteBtn')?.addEventListener('click', async ()=>{
-        if(confirm(`Delete profile "${profile.name}"?`)){ try{ await deleteDoc(doc(db,'profiles',profile.id)); }catch(e){ alert('Failed to delete'); } }
-      });
-      card.querySelector('.editBtn')?.addEventListener('click', ()=>{
-        editingId = profile.id;
-        document.getElementById('name').value = profile.name || '';
-        document.getElementById('age').value = profile.age || '';
-        document.getElementById('city').value = profile.city || '';
-        document.getElementById('phone').value = profile.phone || '';
-        document.getElementById('address').value = profile.address || '';
-        document.getElementById('about').value = profile.about || '';
-        if(profile.image){ imagePreview.src=profile.image; imagePreview.classList.remove('hidden'); }
-        else { imagePreview.src=''; imagePreview.classList.add('hidden'); }
-      });
+  // Add Member
+  async function addMember() {
+    let name = document.getElementById("name").value;
+    let file = document.getElementById("photoFile").files[0];
+    if(!file){ alert("कृपया फोटो चुनें"); return; }
+    let photoUrl = await uploadImage(file);
+    db.collection("members").add({name, photo: photoUrl})
+      .then(()=> document.getElementById("memberForm").reset())
+      .catch(err=>alert("Error: "+err.message));
+  }
+
+  // Edit Member
+  function editMember(id, oldName, oldPhoto){
+    let newName = prompt("Update Name:", oldName);
+    if(!newName) return;
+    db.collection("members").doc(id).update({name: newName})
+      .then(()=>alert("✅ Name updated!"))
+      .catch(err=>alert("Error: "+err.message));
+  }
+
+  // Delete Member
+  function deleteMember(id){
+    if(confirm("Are you sure you want to delete this member?")){
+      db.collection("members").doc(id).delete()
+        .then(()=>alert("✅ Member deleted!"))
+        .catch(err=>alert("Error: "+err.message));
     }
-
-    profilesGrid.appendChild(card);
-  });
-}
-
-// MODAL
-function openContactModal(profile){
-  document.getElementById('modalName').textContent = profile.name;
-  document.getElementById('modalAgeCity').textContent = `${profile.age?profile.age+' yrs':''}${profile.city?' • '+profile.city:''}`;
-  document.getElementById('modalAddress').textContent = profile.address || '';
-  document.getElementById('modalPhone').textContent = profile.phone || '';
-  document.getElementById('whatsappLink').href = profile.phone ? `https://wa.me/${profile.phone}` : '#';
-  contactModal.classList.remove('hidden'); contactModal.classList.add('flex');
-}
-closeModal.addEventListener('click', ()=> contactModal.classList.add('hidden'));
-modalCloseBtn.addEventListener('click', ()=> contactModal.classList.add('hidden'));
-contactModal.addEventListener('click', e=>{ if(e.target===contactModal) contactModal.classList.add('hidden'); });
-
-loadAndRenderProfiles();
+  }
 </script>
+
+  <script type="module" src="auth-protect.js"></script>
+<!-- Fixed Donate Button -->
+<a href="https://all-madrsa.netlify.app/upi" 
+   class="fixed top-1/2 right-4 transform -translate-y-1/2 
+          bg-yellow-400 text-black font-bold px-5 py-3 
+          rounded-lg shadow-lg hover:bg-yellow-300 z-50">
+   💝 Donate
+</a>
+
 </body>
 </html>
