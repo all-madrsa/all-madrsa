@@ -97,9 +97,15 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 </style>
 </head>
 <body>
-
 <header class="site-header">
-  <div class="logo-row"><div class="logo-3d">निकाह</div></div>
+  <div class="logo-row" style="display:flex; align-items:center; justify-content:space-between;">
+    <div class="logo-3d">निकाह</div>
+    <!-- WhatsApp Button -->
+    <a href="https://wa.me/9112170192" target="_blank" class="header-btn" style="background:#25d366; color:white; padding:12px 18px; font-size:16px; border-radius:10px; font-weight:700;">
+      📱 रिश्ते जोड़े
+    </a>
+  </div>
+
   <nav class="button-row" role="navigation">
     <a class="header-btn" href="index.html">🏠 Home</a>
     <a class="header-btn" href="nikah-Conditions.html">📜 हमारे नियम</a>
