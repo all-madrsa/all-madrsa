@@ -1,181 +1,72 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nikah Profiles</title>
 <style>
 :root{
-  --green:#116530;
-  --accent:#008069;
-  --card-h:280px;
-  --card-radius:12px;
-  --muted:#777;
-  --sky1:#6EC1FF;
-  --sky2:#3AA8FF;
+  --green:#116530; --accent:#008069; --card-h:280px; --card-radius:12px; --muted:#777;
+  --sky1:#6EC1FF; --sky2:#3AA8FF;
 }
-
-body{
-  font-family:"Segoe UI",sans-serif;
-  margin:0;
-  background:#f5f7f5;
-  color:#222;
-  -webkit-font-smoothing:antialiased;
-}
-
+body{margin:0; font-family:"Segoe UI",sans-serif; background:#f5f7f5; color:#222;}
 /* Header */
 .site-header{
-  position:sticky;
-  top:0;
-  z-index:60;
-  background:linear-gradient(135deg,var(--sky1),var(--sky2));
-  padding:10px 14px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  box-shadow:0 6px 18px rgba(0,0,0,0.12);
+  position:sticky; top:0; z-index:60; background: linear-gradient(135deg,var(--sky1),var(--sky2));
+  padding:10px 14px; box-shadow:0 6px 18px rgba(0,0,0,0.12);
 }
-
-/* Logo + Admin */
-.header-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  width:100%;
-  max-width:1100px;
-}
+.logo-row{ text-align:center; margin-bottom:8px; }
 .logo-3d{
-  font-size:34px;
-  font-weight:900;
-  color:#fff;
-  letter-spacing:2px;
-  padding:6px 14px;
+  display:inline-block; font-size:34px; font-weight:900; color:#fff; letter-spacing:2px; padding:6px 14px;
   border-radius:8px;
-  text-shadow:
-    0 2px 0 rgba(0,0,0,0.15),
-    0 6px 0 rgba(0,0,0,0.12),
-    0 12px 20px rgba(0,0,0,0.25);
+  text-shadow:0 2px 0 rgba(0,0,0,0.15),0 6px 0 rgba(0,0,0,0.12),0 12px 20px rgba(0,0,0,0.25);
   transform: perspective(400px) rotateX(6deg);
 }
-
-/* Buttons row */
 .button-row{
-  display:flex;
-  gap:10px;
-  justify-content:center;
-  flex-wrap:nowrap;
-  overflow-x:auto;
-  margin-top:8px;
-  padding-bottom:6px;
-  width:100%;
+  display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding:6px 4px;
 }
 .header-btn{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  white-space:nowrap;
-  background:#fff;
-  color:var(--sky2);
-  padding:8px 12px;
-  border-radius:8px;
-  border:none;
-  text-decoration:none;
-  font-weight:700;
-  cursor:pointer;
-  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+  display:inline-flex; align-items:center; gap:8px; white-space:nowrap; background:#fff; color:#0b63a6;
+  padding:6px 10px; border-radius:8px; border:none; text-decoration:none; font-weight:700; cursor:pointer;
+  box-shadow:0 4px 10px rgba(0,0,0,0.06);
 }
-.header-btn:hover{ filter:brightness(0.97); }
-.header-btn:active{ transform:translateY(1px); }
-
-/* Main content */
-main{
-  max-width:1100px;
-  margin:18px auto;
-  padding:0 16px 60px;
-}
+.header-btn:hover{filter:brightness(0.98);}
+@media(max-width:420px){ .logo-3d{font-size:26px; padding:4px 10px;} .header-btn{padding:5px 8px; font-size:13px;}}
 
 /* Grid */
-.grid{
-  display:grid;
-  gap:14px;
-  grid-template-columns:repeat(2,1fr);
-}
-@media(min-width:768px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+.grid{ display:grid; gap:14px; grid-template-columns:repeat(2,1fr); padding:0 14px; }
 @media(min-width:1024px){ .grid{ grid-template-columns:repeat(4,1fr); } }
-
-/* Card */
-.card{
-  background:white;
-  border-radius:var(--card-radius);
-  overflow:hidden;
-  height:var(--card-h);
-  display:flex;
-  flex-direction:column;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-  cursor:pointer;
-  transition:transform .15s;
-}
-.card:hover{ transform:translateY(-3px); }
-.img-wrapper{ width:100%; height:150px; overflow:hidden; cursor:pointer; }
-.img-wrapper img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; user-select:none; }
-.card-body{ padding:10px; flex:1; }
+.card{ background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s;}
+.card:hover{ transform:translateY(-4px);}
+.img-wrapper{ width:100%; height:150px; overflow:hidden; display:block; }
+.img-wrapper img{ width:100%; height:100%; object-fit:cover; display:block; }
+.card-body{ padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; }
 .card-body h3{ margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .card-body .meta{ color:var(--muted); font-size:13px; }
 .card-footer{ padding:10px; display:flex; gap:8px; flex-wrap:wrap; }
-
-/* Buttons inside card */
-.btn-wa{ background:#25d366; color:white; padding:6px 10px; border-radius:6px; border:none; cursor:pointer; font-weight:600; }
-.btn-connect{ background:var(--accent); color:white; padding:6px 10px; border-radius:6px; border:none; cursor:pointer; font-weight:600; }
+.btn-wa{ background:#25d366; color:white; padding:6px 8px; border-radius:6px; font-weight:600; border:none; cursor:pointer; }
+.btn-connect{ background:var(--accent); color:white; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; font-weight:600; }
 
 /* Profile popup */
-#profilePopup{
-  position:fixed;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,0.55);
-  z-index:70;
-}
-.profile-card{
-  background:white;
-  width:95%;
-  max-width:920px;
-  border-radius:12px;
-  overflow:auto;
-  max-height:90vh;
-  position:relative;
-}
+#profilePopup{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
+.profile-card{ background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative; }
 .profile-grid{ display:grid; grid-template-columns:320px 1fr; gap:16px; padding:18px; }
 .profile-photo{ width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee; }
 .profile-info{ padding:8px 4px; }
 .profile-info h2{ margin:0 0 8px 0; color:var(--green); }
 .profile-info .line{ margin:6px 0; color:#333; }
 .close-btn{ position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
-
-/* Admin / connect */
-.connect-box{ background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
-.connect-box input{ width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; }
-#connectPopup{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:75; }
-
-@media(max-width:420px){
-  .logo-3d{ font-size:26px; padding:4px 10px; }
-  .header-btn{ padding:6px 10px; font-size:13px; }
-}
 </style>
 </head>
 <body>
 
 <header class="site-header">
-  <div class="header-top">
-    <div class="logo-3d">निकाह</div>
-    <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
-    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
-  </div>
+  <div class="logo-row"><div class="logo-3d">निकाह</div></div>
   <nav class="button-row">
     <a class="header-btn" href="index.html">🏠 Home</a>
     <a class="header-btn" href="nikah-Conditions.html">📜 हमारे नियम</a>
-    <a class="header-btn" href="https://wa.me/9112170192" target="_blank">📱 WhatsApp Join</a>
+    <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
+    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
   </nav>
 </header>
 
@@ -183,37 +74,29 @@ main{
   <div class="grid" id="members"></div>
 </main>
 
-<!-- Profile popup -->
 <div id="profilePopup">
   <div class="profile-card">
     <button class="close-btn" onclick="closeProfile()">✖</button>
     <div class="profile-grid">
-      <div>
-        <img id="p_photo" class="profile-photo" src="" alt="Profile photo">
-      </div>
+      <div style="padding:8px;"><img id="p_photo" class="profile-photo"></div>
       <div class="profile-info">
-        <h2 id="p_name">Name</h2>
-        <div class="line"><strong>उम्र / जन्मतिथि:</strong> <span id="p_age"></span></div>
+        <h2 id="p_name"></h2>
+        <div class="line"><strong>उम्र:</strong> <span id="p_age"></span></div>
         <div class="line"><strong>लिंग:</strong> <span id="p_gender"></span></div>
         <div class="line"><strong>कद:</strong> <span id="p_height"></span></div>
-        <div class="line"><strong>धर्म / फिरका:</strong> <span id="p_religion"></span></div>
+        <div class="line"><strong>धर्म:</strong> <span id="p_religion"></span></div>
         <div class="line"><strong>शहर / राज्य:</strong> <span id="p_city_state"></span></div>
         <div class="line"><strong>शिक्षा:</strong> <span id="p_education"></span></div>
         <div class="line"><strong>पेशा:</strong> <span id="p_profession"></span></div>
         <div class="line"><strong>आय:</strong> <span id="p_income"></span></div>
         <div class="line"><strong>WhatsApp:</strong> <span id="p_whatsapp"></span></div>
-        <hr>
-        <div class="line"><strong>Bio:</strong> <div id="p_bio"></div></div>
-        <div class="line"><strong>Family:</strong> <div id="p_family"></div></div>
-        <div style="margin-top:12px;">
-          <a id="p_contact_btn" class="btn-wa" href="#" target="_blank">📞 Contact</a>
-        </div>
+        <div style="margin-top:12px;"><a id="p_contact_btn" class="btn-wa" href="#" target="_blank">📞 Contact</a></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -227,59 +110,118 @@ const firebaseConfig = {
   messagingSenderId: "619313835874",
   appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
-const adminEmails=["zaradigitalseva@gmail.com"];
-const defaultWhatsApp="9112170192";
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const db=firebase.firestore();
-let currentUser=null;
+const auth = firebase.auth();
+const db = firebase.firestore();
+const adminEmails = ["zaradigitalseva@gmail.com"];
+let currentUser = null;
 
-auth.onAuthStateChanged(user=>{
-  currentUser=user;
-  document.getElementById('loginBtn').style.display = (user && adminEmails.includes(user.email)) ? 'none':'inline-block';
-  document.getElementById('logoutBtn').style.display = (user && adminEmails.includes(user.email)) ? 'inline-block':'none';
-  loadMembers();
-});
+/* Header buttons */
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
 
-function googleLogin(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-function logout(){ auth.signOut(); }
+/* Members grid */
+const membersEl = document.getElementById('members');
 
-function esc(s){ return s?String(s):''; }
+/* Profile popup */
+const profilePopup = document.getElementById('profilePopup');
+const p_photo = document.getElementById('p_photo');
+const p_name = document.getElementById('p_name');
+const p_age = document.getElementById('p_age');
+const p_gender = document.getElementById('p_gender');
+const p_height = document.getElementById('p_height');
+const p_religion = document.getElementById('p_religion');
+const p_city_state = document.getElementById('p_city_state');
+const p_education = document.getElementById('p_education');
+const p_profession = document.getElementById('p_profession');
+const p_income = document.getElementById('p_income');
+const p_whatsapp = document.getElementById('p_whatsapp');
+const p_contact_btn = document.getElementById('p_contact_btn');
 
-async function loadMembers(){
-  const membersEl=document.getElementById('members');
-  db.collection("members").orderBy("name").get().then(snapshot=>{
-    membersEl.innerHTML='';
+function openProfileDetail(d){
+  p_photo.src = d.photo;
+  p_name.textContent = d.name;
+  p_age.textContent = d.age;
+  p_gender.textContent = d.gender;
+  p_height.textContent = d.height;
+  p_religion.textContent = d.religion;
+  p_city_state.textContent = d.city_state;
+  p_education.textContent = d.education;
+  p_profession.textContent = d.profession;
+  p_income.textContent = d.income;
+  p_whatsapp.textContent = d.whatsapp;
+  p_contact_btn.href = `https://wa.me/${d.whatsapp}`;
+  profilePopup.style.display = 'flex';
+}
+function closeProfile(){ profilePopup.style.display='none'; }
+
+/* Firebase Auth */
+function googleLogin(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).then(result=>{
+    const user = result.user;
+    if(adminEmails.includes(user.email)){
+      currentUser = user;
+      loginBtn.style.display='none';
+      logoutBtn.style.display='inline-flex';
+      alert('Admin logged in: '+user.email);
+    } else {
+      alert('Access denied: Not admin');
+      auth.signOut();
+    }
+  }).catch(console.error);
+}
+
+function logout(){
+  auth.signOut().then(()=>{
+    currentUser = null;
+    loginBtn.style.display='inline-flex';
+    logoutBtn.style.display='none';
+  });
+}
+
+/* Fetch members */
+function fetchMembers(){
+  membersEl.innerHTML='';
+  db.collection("members").get().then(snapshot=>{
     snapshot.forEach(doc=>{
-      const d=doc.data();
-      const card=document.createElement('div');
+      const d = doc.data();
+      const card = document.createElement('div');
       card.className='card';
-      card.addEventListener('click',()=>openProfileDetail(doc.id,d));
+      card.addEventListener('click',()=>openProfileDetail(d));
 
-      const imgWrap=document.createElement('div');
+      const imgWrap = document.createElement('div');
       imgWrap.className='img-wrapper';
-      const img=document.createElement('img');
-      img.src=esc(d.photo)||'';
+      const img = document.createElement('img');
+      img.src = d.photo;
       imgWrap.appendChild(img);
 
-      const body=document.createElement('div');
+      const body = document.createElement('div');
       body.className='card-body';
-      body.innerHTML=`<h3>${esc(d.name)}</h3><div class="meta">उम्र: ${esc(d.age)||"-"}</div>`;
+      body.innerHTML = `<h3>${d.name}</h3><div class="meta">उम्र: ${d.age}</div>`;
 
-      const footer=document.createElement('div');
+      const footer = document.createElement('div');
       footer.className='card-footer';
-      const contactBtn=document.createElement('button');
+      const contactBtn = document.createElement('button');
       contactBtn.className='btn-wa';
       contactBtn.textContent='📞 Contact';
-      contactBtn.addEventListener('click',(ev)=>{ ev.stopPropagation(); window.open(`https://wa.me/${defaultWhatsApp}`,'_blank'); });
-      const connectBtn=document.createElement('button');
-      connectBtn.className='btn-connect';
-      connectBtn.textContent='Connect';
-      connectBtn.addEventListener('click',(ev)=>{ ev.stopPropagation(); window.open(`https://wa.me/${defaultWhatsApp}`,'_blank'); });
-
+      contactBtn.addEventListener('click', ev=>{
+        ev.stopPropagation();
+        window.open(`https://wa.me/${d.whatsapp}`,'_blank');
+      });
       footer.appendChild(contactBtn);
-      footer.appendChild(connectBtn);
+
       card.appendChild(imgWrap);
       card.appendChild(body);
       card.appendChild(footer);
-     
+      membersEl.appendChild(card);
+    });
+  }).catch(console.error);
+}
+
+/* Load members */
+fetchMembers();
+</script>
+
+</body>
+</html>
