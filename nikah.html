@@ -3,152 +3,66 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nikah Portal — Jeevansathi-style</title>
+  <title>Nikah Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* small visual tweaks to mimic a matrimonial listing feel */
-    .filter-card { background: linear-gradient(180deg,#ffffff,#f8fafc); }
+    .card-image { height: 180px; object-fit: cover; }
+    .modal-backdrop { background: rgba(0,0,0,0.5); }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen text-gray-800">
-  <!-- HEADER -->
-  <header class="bg-white shadow">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <img src="https://via.placeholder.com/56x56?text=NP" alt="logo" class="rounded-full" />
-        <div>
-          <h1 class="font-bold text-2xl">Nikah Portal</h1>
-          <p class="text-sm text-gray-600">Jeevansathi जैसी खोज और प्रोफ़ाइल सूची</p>
-        </div>
-      </div>
+<body class="bg-slate-50 min-h-screen">
+  <header class="bg-white shadow p-4 sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <a href="https://wa.me/9112170192?text=नमस्ते,%20रिश्ते%20जोड़ने%20के%20लिए%20संपर्क%20करें" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded">रिश्ते जोड़े</a>
-        <button id="loginBtn" class="px-3 py-2 border rounded">Sign in</button>
-        <button id="logoutBtn" class="px-3 py-2 border rounded hidden">Logout</button>
+        <h1 class="text-xl font-semibold">Nikah Portal</h1>
+        <p class="text-sm text-slate-500">Admin: <span id="adminEmailText" class="font-medium">zardigitalseva@gmail.com</span></p>
       </div>
     </div>
   </header>
 
-  <!-- HERO + SEARCH -->
-  <section class="bg-gradient-to-r from-white to-gray-50 py-6">
-    <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Search Filters (left) -->
-      <aside class="filter-card p-4 rounded shadow">
-        <h3 class="font-semibold mb-2">फिल्टर खोजें</h3>
-        <div class="space-y-3">
-          <div>
-            <label class="text-sm">लिंग</label>
-            <select id="fGender" class="w-full border p-2 rounded mt-1">
-              <option value="">कोई नहीं</option>
-              <option value="Male">पुरुष</option>
-              <option value="Female">महिला</option>
-            </select>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-sm">आयु (न्यूनतम)</label>
-              <input id="fAgeMin" type="number" class="w-full border p-2 rounded mt-1" placeholder="18" />
-            </div>
-            <div>
-              <label class="text-sm">आयु (अधिकतम)</label>
-              <input id="fAgeMax" type="number" class="w-full border p-2 rounded mt-1" placeholder="40" />
-            </div>
-          </div>
-          <div>
-            <label class="text-sm">शहर / शहर के पास</label>
-            <input id="fCity" class="w-full border p-2 rounded mt-1" placeholder="शहर का नाम" />
-          </div>
-          <div>
-            <label class="text-sm">धर्म</label>
-            <input id="fReligion" class="w-full border p-2 rounded mt-1" placeholder="जैसे: मुस्लिम" />
-          </div>
-
-          <div class="flex gap-2">
-            <button id="applyFilters" class="bg-blue-600 text-white px-4 py-2 rounded">खोजें</button>
-            <button id="clearFilters" class="px-4 py-2 border rounded">रीसेट</button>
-          </div>
-        </div>
-
-        <hr class="my-4" />
-        <h4 class="text-sm font-semibold mb-2">सॉर्ट करें</h4>
-        <select id="sortBy" class="w-full border p-2 rounded">
-          <option value="new">नए सबसे पहले</option>
-          <option value="ageAsc">उम्र - कम से ज्यादा</option>
-          <option value="ageDesc">उम्र - ज्यादा से कम</option>
-        </select>
-      </aside>
-
-      <!-- Results + Top banner (center/right) -->
-      <div class="lg:col-span-2">
-        <div class="bg-white p-4 rounded shadow mb-4 flex items-center justify-between">
-          <div>
-            <h2 class="text-xl font-semibold">प्रोफ़ाइल्स</h2>
-            <p class="text-sm text-gray-600">हमारे सदस्यों में खोज करें — एडमिन पोस्ट करता है</p>
-          </div>
-          <div class="text-sm text-gray-600">Showing <span id="resultCount">0</span> profiles</div>
-        </div>
-
-        <!-- Grid of profiles -->
-        <div id="profilesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-
-        <!-- Pagination -->
-        <div class="mt-4 flex items-center justify-center gap-2">
-          <button id="prevPage" class="px-3 py-1 border rounded">Prev</button>
-          <div id="pageInfo" class="px-3 py-1">Page 1</div>
-          <button id="nextPage" class="px-3 py-1 border rounded">Next</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PROFILE MODAL -->
-  <div id="profileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-4xl w-full p-4 relative">
-      <button id="closeModal" class="absolute right-3 top-3 text-gray-600 text-lg">✖</button>
-      <div id="modalContent"></div>
-    </div>
-  </div>
-
-  <!-- ADMIN POST (floating button) -->
-  <button id="adminFab" class="fixed right-6 bottom-6 bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg">+</button>
-
-  <!-- ADMIN FORM DRAWER -->
-  <div id="adminDrawer" class="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-lg transform translate-x-full transition-transform">
-    <div class="p-4">
-      <div class="flex items-center justify-between">
-        <h3 class="font-semibold">नया प्रोफ़ाइल (एडमिन)</h3>
-        <button id="closeDrawer" class="text-gray-600">✖</button>
-      </div>
-      <form id="profileForm" class="mt-3 space-y-2">
-        <input id="name" class="w-full border p-2 rounded" placeholder="पूरा नाम" required />
-        <div class="grid grid-cols-2 gap-2">
-          <input id="age" type="number" class="border p-2 rounded" placeholder="उम्र" />
-          <select id="gender" class="border p-2 rounded">
-            <option value="">लिंग चुनें</option>
-            <option value="Male">पुरुष</option>
-            <option value="Female">महिला</option>
-          </select>
-        </div>
-        <input id="city" class="w-full border p-2 rounded" placeholder="शहर" />
-        <input id="religion" class="w-full border p-2 rounded" placeholder="धर्म" />
-        <input id="education" class="w-full border p-2 rounded" placeholder="शिक्षा" />
-        <input id="occupation" class="w-full border p-2 rounded" placeholder="पेशा" />
-        <textarea id="about" class="w-full border p-2 rounded" placeholder="बायो"></textarea>
-        <input id="images" type="file" accept="image/*" multiple class="w-full" />
-        <div class="flex gap-2">
-          <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Post Profile</button>
-          <button id="drawerCancel" type="button" class="px-4 py-2 border rounded">Cancel</button>
+  <main class="max-w-6xl mx-auto p-4">
+    <section class="bg-white p-4 rounded shadow mb-6">
+      <h2 class="font-semibold mb-3">New Profile (will be visible only after admin approval)</h2>
+      <form id="postForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input type="text" id="name" placeholder="Name" required class="p-2 border rounded" />
+        <input type="number" id="age" placeholder="Age" class="p-2 border rounded" />
+        <input type="text" id="city" placeholder="City" class="p-2 border rounded" />
+        <input type="text" id="phone" placeholder="Phone (WhatsApp)" class="p-2 border rounded" />
+        <input type="text" id="address" placeholder="Address" class="p-2 border rounded" />
+        <input type="file" id="image" accept="image/*" class="p-2" />
+        <textarea id="about" placeholder="Short about / message" class="p-2 border rounded sm:col-span-2"></textarea>
+        <div class="sm:col-span-2 flex gap-2">
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Post</button>
+          <button type="button" id="clearBtn" class="px-4 py-2 bg-gray-200 rounded">Clear</button>
         </div>
       </form>
+    </section>
+
+    <section>
+      <h2 class="font-semibold mb-3">Profiles (approved only)</h2>
+      <div id="profilesGrid" class="grid gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-4"></div>
+    </section>
+  </main>
+
+  <div id="contactModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
+    <div class="bg-white rounded-lg p-4 max-w-md w-full shadow-lg">
+      <div class="flex justify-between items-start">
+        <h3 id="modalName" class="font-semibold text-lg">Name</h3>
+        <button id="closeModal" class="text-slate-500">✕</button>
+      </div>
+      <div class="mt-3">
+        <p id="modalAgeCity" class="text-sm text-slate-600"></p>
+        <p id="modalAddress" class="mt-2 text-sm"></p>
+        <p class="mt-2 text-sm">Phone: <span id="modalPhone" class="font-medium"></span></p>
+        <div class="mt-4 flex gap-2">
+          <a id="whatsappLink" target="_blank" class="px-3 py-2 rounded border inline-block">Open WhatsApp</a>
+          <button id="modalCloseBtn" class="px-3 py-2 rounded bg-gray-200">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- SCRIPTS: Firebase + App Logic -->
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
-
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
       authDomain: "all-madrsa.firebaseapp.com",
@@ -158,194 +72,130 @@
       appId: "1:619313835874:web:e387e1297663f11fc2463b"
     };
     const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
-    const ADMIN_EMAIL = 'zaradigitalseva@gmail.com';
+    const ADMIN_EMAIL = 'zardigitalseva@gmail.com';
+
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
 
-    // DOM
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const adminFab = document.getElementById('adminFab');
-    const adminDrawer = document.getElementById('adminDrawer');
-    const closeDrawer = document.getElementById('closeDrawer');
-    const drawerCancel = document.getElementById('drawerCancel');
-    const profileForm = document.getElementById('profileForm');
-    const profilesContainer = document.getElementById('profilesContainer');
-    const resultCount = document.getElementById('resultCount');
-    const profileModal = document.getElementById('profileModal');
-    const modalContent = document.getElementById('modalContent');
+    const postForm = document.getElementById('postForm');
+    const profilesGrid = document.getElementById('profilesGrid');
+    const contactModal = document.getElementById('contactModal');
     const closeModal = document.getElementById('closeModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
 
-    // Filters
-    const fGender = document.getElementById('fGender');
-    const fAgeMin = document.getElementById('fAgeMin');
-    const fAgeMax = document.getElementById('fAgeMax');
-    const fCity = document.getElementById('fCity');
-    const fReligion = document.getElementById('fReligion');
-    const applyFilters = document.getElementById('applyFilters');
-    const clearFilters = document.getElementById('clearFilters');
-    const sortBy = document.getElementById('sortBy');
+    let currentUserEmail = ADMIN_EMAIL; // auto-admin check, no login button
 
-    // Pagination
-    const prevPage = document.getElementById('prevPage');
-    const nextPage = document.getElementById('nextPage');
-    const pageInfo = document.getElementById('pageInfo');
-    let currentPage = 1, pageSize = 12;
-
-    // Auth
-    loginBtn.onclick = async () => { try { await signInWithPopup(auth, provider); } catch (e) { alert(e.message); } };
-    logoutBtn.onclick = async () => { await signOut(auth); };
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        loginBtn.classList.add('hidden'); logoutBtn.classList.remove('hidden');
-        // show admin FAB only to admin
-        if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          adminFab.classList.remove('hidden');
-        } else {
-          adminFab.classList.add('hidden');
-        }
-      } else {
-        loginBtn.classList.remove('hidden'); logoutBtn.classList.add('hidden');
-        adminFab.classList.add('hidden');
-      }
-    });
-
-    adminFab.onclick = () => adminDrawer.style.transform = 'translateX(0)';
-    closeDrawer.onclick = () => adminDrawer.style.transform = 'translateX(100%)';
-    drawerCancel.onclick = () => adminDrawer.style.transform = 'translateX(100%)';
-
-    // imgbb upload
-    async function uploadImageToImgbb(file) {
-      const form = new FormData();
-      form.append('image', file);
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method: 'POST', body: form });
-      const data = await res.json();
-      if (!data.success) throw new Error('Image upload failed');
-      return data.data.url;
+    async function uploadImage(file){
+      if(!file) return null;
+      try {
+        const fd = new FormData();
+        fd.append('image', file);
+        const resp = await fetch('https://api.imgbb.com/1/upload?key='+IMG_API_KEY, {method:'POST', body:fd});
+        const j = await resp.json();
+        if(j && j.data && j.data.url) return j.data.url;
+      }catch(e){ console.warn('imgbb failed, fallback'); }
+      return null;
     }
 
-    profileForm.onsubmit = async (e) => {
+    postForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = 'Posting...';
-      try {
-        const name = document.getElementById('name').value.trim();
-        const age = document.getElementById('age').value.trim();
-        const gender = document.getElementById('gender').value;
-        const city = document.getElementById('city').value.trim();
-        const religion = document.getElementById('religion').value.trim();
-        const education = document.getElementById('education').value.trim();
-        const occupation = document.getElementById('occupation').value.trim();
-        const about = document.getElementById('about').value.trim();
-        const files = document.getElementById('images').files;
-        const imageUrls = [];
-        for (let f of files) imageUrls.push(await uploadImageToImgbb(f));
+      const name = document.getElementById('name').value.trim();
+      const age = document.getElementById('age').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const about = document.getElementById('about').value.trim();
+      const imageFile = document.getElementById('image').files[0];
 
-        await addDoc(collection(db, 'profiles'), {
-          name, age, gender, city, religion, education, occupation, about,
-          images: imageUrls, createdAt: serverTimestamp()
+      if(!name) return alert('Name required');
+      const imgURL = await uploadImage(imageFile);
+      try{
+        await addDoc(collection(db,'profiles'),{
+          name, age, city, phone, address, about, image: imgURL || null,
+          approved:false,
+          createdAt: serverTimestamp()
+        });
+        alert('Posted — waiting for admin approval');
+        postForm.reset();
+      }catch(e){ console.error(e); alert('Failed to post'); }
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', ()=>postForm.reset());
+
+    function loadAndRenderProfiles(){
+      const q = query(collection(db,'profiles'), orderBy('createdAt','desc'));
+      onSnapshot(q, snapshot=>{
+        const list=[];
+        snapshot.forEach(d=>list.push({id:d.id,...d.data()}));
+        renderProfiles(list);
+      });
+    }
+
+    function renderProfiles(list){
+      profilesGrid.innerHTML='';
+      const visible = list.filter(p=>p.approved===true || currentUserEmail===ADMIN_EMAIL);
+      if(visible.length===0){ profilesGrid.innerHTML='<p class="text-sm text-slate-500">Koi profile nahin mila.</p>'; return; }
+
+      visible.forEach(profile=>{
+        const card=document.createElement('div');
+        card.className='bg-white rounded shadow overflow-hidden';
+        card.innerHTML=`
+          <div class="h-44 overflow-hidden bg-slate-100">
+            <img src="${profile.image||'https://via.placeholder.com/400x300?text=No+Image'}" alt="${escapeHtml(profile.name)}" class="w-full h-full object-cover card-image">
+          </div>
+          <div class="p-3">
+            <h3 class="font-semibold">${escapeHtml(profile.name)} <span class="text-xs text-slate-500">${profile.age?'• '+escapeHtml(profile.age):''}</span></h3>
+            <p class="text-sm text-slate-500">${escapeHtml(profile.city||'')}</p>
+            <p class="text-sm mt-2">${escapeHtml((profile.about||'').slice(0,120))}${(profile.about&&profile.about.length>120)?'...':''}</p>
+            <div class="mt-3 flex items-center justify-between">
+              <button class="contactBtn px-3 py-1 rounded border text-sm">Contact</button>
+              ${currentUserEmail===ADMIN_EMAIL?`<div class="flex gap-2">`+
+                `${profile.approved?'<span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">Approved</span>':'<span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Pending</span>'}`+
+                `<button class="approveBtn px-2 py-1 text-sm rounded ${profile.approved?'bg-gray-200':'bg-blue-600 text-white'}">${profile.approved?'Unapprove':'Approve'}</button>`+
+                `<button class="deleteBtn px-2 py-1 text-sm rounded bg-red-600 text-white">Delete</button>`+
+              `</div>`:''}
+            </div>
+          </div>
+        `;
+
+        card.querySelector('.contactBtn').addEventListener('click',()=>{
+          if(currentUserEmail===ADMIN_EMAIL){ openContactModal(profile); }
+          else{ alert('Contact details visible to admin only'); }
         });
 
-        alert('Profile posted');
-        profileForm.reset();
-        adminDrawer.style.transform = 'translateX(100%)';
-      } catch (err) { alert(err.message); }
-      finally { btn.disabled = false; btn.textContent = 'Post Profile'; }
-    };
+        if(currentUserEmail===ADMIN_EMAIL){
+          const approveBtn=card.querySelector('.approveBtn');
+          const deleteBtn=card.querySelector('.deleteBtn');
+          approveBtn.addEventListener('click', async ()=>{
+            await updateDoc(doc(db,'profiles',profile.id), { approved: !profile.approved });
+          });
+          deleteBtn.addEventListener('click', async ()=>{
+            if(confirm('Delete this profile?')) await deleteDoc(doc(db,'profiles',profile.id));
+          });
+        }
 
-    // Load profiles
-    let allProfiles = [];
-    const q = query(collection(db, 'profiles'), orderBy('createdAt', 'desc'));
-    onSnapshot(q, snap => {
-      allProfiles = [];
-      snap.forEach(doc => allProfiles.push({ id: doc.id, ...doc.data() }));
-      applyAndRender();
-    });
-
-    // Filtering, sorting, pagination
-    function applyAndRender() {
-      let list = [...allProfiles];
-      // filters
-      const g = fGender.value; if (g) list = list.filter(x => x.gender === g);
-      const minA = parseInt(fAgeMin.value || '0',10); const maxA = parseInt(fAgeMax.value || '0',10);
-      if (minA) list = list.filter(x => parseInt(x.age||0,10) >= minA);
-      if (maxA) list = list.filter(x => parseInt(x.age||0,10) <= maxA);
-      if (fCity.value.trim()) list = list.filter(x => (x.city||'').toLowerCase().includes(fCity.value.trim().toLowerCase()));
-      if (fReligion.value.trim()) list = list.filter(x => (x.religion||'').toLowerCase().includes(fReligion.value.trim().toLowerCase()));
-
-      // sort
-      if (sortBy.value === 'ageAsc') list.sort((a,b)=> (parseInt(a.age||0)-parseInt(b.age||0)));
-      else if (sortBy.value === 'ageDesc') list.sort((a,b)=> (parseInt(b.age||0)-parseInt(a.age||0)));
-      else list.sort((a,b)=> ( (b.createdAt && b.createdAt.seconds||0) - (a.createdAt && a.createdAt.seconds||0) ));
-
-      // pagination
-      const total = list.length; const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      if (currentPage > totalPages) currentPage = totalPages;
-      const start = (currentPage-1)*pageSize; const pageItems = list.slice(start, start+pageSize);
-
-      // render
-      profilesContainer.innerHTML = '';
-      pageItems.forEach(p => profilesContainer.appendChild(profileCard(p)));
-      resultCount.textContent = total;
-      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+        profilesGrid.appendChild(card);
+      });
     }
 
-    applyFilters.onclick = () => { currentPage = 1; applyAndRender(); };
-    clearFilters.onclick = () => { fGender.value=''; fAgeMin.value=''; fAgeMax.value=''; fCity.value=''; fReligion.value=''; sortBy.value='new'; currentPage=1; applyAndRender(); };
-    sortBy.onchange = () => { currentPage=1; applyAndRender(); };
-    prevPage.onclick = () => { if (currentPage>1) { currentPage--; applyAndRender(); } };
-    nextPage.onclick = () => { currentPage++; applyAndRender(); };
-
-    function profileCard(p) {
-      const wrap = document.createElement('div'); wrap.className = 'bg-white rounded-lg shadow p-3';
-      const img = document.createElement('img'); img.src = (p.images && p.images[0])? p.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'; img.className='w-full h-44 object-cover rounded';
-      const h = document.createElement('h3'); h.className='mt-2 font-semibold'; h.textContent = `${p.name || ''} (${p.age || '-'})`;
-      const sub = document.createElement('p'); sub.className='text-sm text-gray-600'; sub.textContent = `${p.religion||''} • ${p.city||''}`;
-      const actions = document.createElement('div'); actions.className='mt-2 flex gap-2';
-      const view = document.createElement('button'); view.className='px-3 py-1 border rounded'; view.textContent='पूरा प्रोफ़ाइल'; view.onclick = ()=> openModal(p);
-      const wa = document.createElement('a'); wa.className='px-3 py-1 bg-green-600 text-white rounded'; wa.textContent='रिश्ते जोड़े'; wa.target='_blank'; wa.rel='noopener'; wa.href = `https://wa.me/9112170192?text=${encodeURIComponent('नमस्ते, मैं '+(p.name||'')+' के बारे में जानकारी चाहता/चाहती हूँ')}`;
-      actions.appendChild(view); actions.appendChild(wa);
-      wrap.appendChild(img); wrap.appendChild(h); wrap.appendChild(sub); wrap.appendChild(actions);
-      return wrap;
+    function openContactModal(profile){
+      document.getElementById('modalName').textContent=profile.name||'';
+      document.getElementById('modalAgeCity').textContent=`${profile.age||''} • ${profile.city||''}`;
+      document.getElementById('modalAddress').textContent=profile.address||'';
+      document.getElementById('modalPhone').textContent=profile.phone||'N/A';
+      document.getElementById('whatsappLink').href=profile.phone?`https://wa.me/${profile.phone.replace(/[^0-9]/g,'')}`:'#';
+      contactModal.classList.remove('hidden'); contactModal.classList.add('flex');
     }
 
-    function openModal(p) {
-      document.getElementById('profileModal').classList.remove('hidden');
-      modalContent.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="md:col-span-1">
-            <img src="${(p.images && p.images[0])?p.images[0]:'https://via.placeholder.com/300x400?text=No+Image'}" class="w-full h-64 object-cover rounded" />
-            <div class="mt-2 grid grid-cols-3 gap-2">
-              ${(p.images||[]).slice(0,3).map(u=>`<img src="${u}" class="w-full h-20 object-cover rounded"/>`).join('')}
-            </div>
-          </div>
-          <div class="md:col-span-2">
-            <h2 class="text-xl font-bold">${p.name} — ${p.age}</h2>
-            <p class="text-sm text-gray-600">${p.religion || '-'} • ${p.city || '-'}</p>
-            <div class="mt-3 space-y-2 text-sm">
-              <p><b>लिंग:</b> ${p.gender || '-'}</p>
-              <p><b>शिक्षा:</b> ${p.education || '-'}</p>
-              <p><b>पेशा:</b> ${p.occupation || '-'}</p>
-              <p><b>बायो:</b> ${p.about || '-'}</p>
-            </div>
-            <div class="mt-4 flex gap-2">
-              <a href="https://wa.me/9112170192?text=${encodeURIComponent('नमस्ते, '+(p.name||'')+' के बारे में जानकारी चाहिए') }" target="_blank" class="px-4 py-2 bg-green-600 text-white rounded">रिश्ते जोड़े</a>
-              <button class="px-4 py-2 border rounded" onclick="document.getElementById('profileModal').classList.add('hidden')">बंद करें</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+    closeModal.addEventListener('click',()=>{ contactModal.classList.add('hidden'); contactModal.classList.remove('flex'); });
+    modalCloseBtn.addEventListener('click',()=>{ contactModal.classList.add('hidden'); contactModal.classList.remove('flex'); });
 
-    closeModal.onclick = () => document.getElementById('profileModal').classList.add('hidden');
-    document.getElementById('profileModal').onclick = (e)=> { if (e.target.id==='profileModal') e.target.classList.add('hidden'); };
+    function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s]); }
 
-    // initial state: hide admin controls until auth
-    adminFab.classList.add('hidden'); adminDrawer.style.transform = 'translateX(100%)';
+    loadAndRenderProfiles();
   </script>
 </body>
 </html>
