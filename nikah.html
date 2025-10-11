@@ -94,18 +94,27 @@
 </style>
 </head>
 <body>
-
-<header>
-  <div class="header-left">
-    <a class="home-3d" href="index.html" title="Home">🏠 Home</a>
-    <a class="rules-btn" href="nikah-Conditions.html" title="हमारे नियम">📜 हमारे नियम</a>
+<header style="background:linear-gradient(90deg,#6ec6ff,#4da3ff);color:white;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+  <div class="header-left" style="display:flex;align-items:center;gap:15px;">
+    <a class="home-3d" href="index.html" title="Home" style="font-size:16px;font-weight:bold;color:white;text-decoration:none;transform:perspective(200px) rotateX(10deg);text-shadow:2px 2px 4px rgba(0,0,0,0.3);">
+      🏠 Home
+    </a>
+    <a class="rules-btn" href="nikah-Conditions.html" title="हमारे नियम" style="font-size:16px;font-weight:bold;color:white;text-decoration:none;transform:perspective(200px) rotateX(10deg);text-shadow:2px 2px 4px rgba(0,0,0,0.3);">
+      📜 हमारे नियम
+    </a>
   </div>
 
-  <div class="header-right">
-    <button id="loginBtn" onclick="googleLogin()" style="background:white;color:var(--sky2);padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;">Admin Login</button>
-    <button id="logoutBtn" onclick="logout()" style="display:none;background:#fff;color:var(--sky2);padding:8px 10px;border-radius:8px;border:none;cursor:pointer;">Logout</button>
+  <!-- 3D Text Logo -->
+  <div class="logo" style="font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:2px;text-shadow:2px 2px 0 #004a99,4px 4px 0 #003366;">
+    Nikah
+  </div>
+
+  <div class="header-right" style="display:flex;align-items:center;gap:10px;">
+    <button id="loginBtn" onclick="googleLogin()" style="background:white;color:#2196f3;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;">Admin Login</button>
+    <button id="logoutBtn" onclick="logout()" style="display:none;background:#fff;color:#2196f3;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;">Logout</button>
   </div>
 </header>
+
 
 <main>
   <div class="top-join">
