@@ -1,27 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="hi">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Post Profile</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nikah Portal — Admin Posts</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4">
-  <h1 class="text-2xl font-bold mb-4">Post Your Profile</h1>
+<body class="bg-gray-100 min-h-screen">
 
-  <form id="profileForm" class="bg-white p-4 rounded shadow max-w-md mx-auto space-y-3">
-    <input type="text" id="name" placeholder="Name" class="border p-2 w-full rounded" required>
-    <input type="number" id="age" placeholder="Age" class="border p-2 w-full rounded" required>
-    <input type="text" id="city" placeholder="City" class="border p-2 w-full rounded" required>
-    <input type="text" id="whatsapp" placeholder="WhatsApp Number" class="border p-2 w-full rounded" required>
-    <input type="file" id="imageInput" class="border p-2 w-full rounded" accept="image/*" required>
-    <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded w-full">Submit</button>
-  </form>
+  <!-- HEADER -->
+  <header class="bg-white shadow">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="https://via.placeholder.com/48x48?text=NP" alt="logo" class="rounded-full" />
+        <div>
+          <h1 class="font-bold text-lg">Nikah Portal</h1>
+          <p class="text-sm text-gray-600">सभी प्रोफ़ाइल यहाँ दिखाई देंगी — पोस्ट केवल एडमिन कर सकेगा</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="statusText" class="text-sm text-gray-600">Not signed in</span>
+        <button id="loginBtn" class="px-3 py-2 border rounded">Sign in (Google)</button>
+        <button id="logoutBtn" class="px-3 py-2 border rounded hidden">Logout</button>
+        <a href="https://wa.me/9112170192?text=नमस्ते,%20रिश्ते%20जोड़ने%20के%20लिए%20संपर्क%20करना%20है" target="_blank" class="ml-3 bg-green-600 text-white px-4 py-2 rounded">रिश्ते जोड़े</a>
+      </div>
+    </div>
+  </header>
 
-  <script>
+  <!-- MAIN -->
+  <main class="max-w-6xl mx-auto p-4">
+    <!-- Admin Form -->
+    <section id="adminFormWrap" class="hidden bg-white rounded shadow p-4 mb-6">
+      <h2 class="font-bold text-lg mb-2">नया प्रोफ़ाइल पोस्ट करें (केवल एडमिन)</h2>
+      <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        <input id="name" class="border p-2 rounded" placeholder="पूरा नाम" required />
+        <input id="age" type="number" class="border p-2 rounded" placeholder="उम्र" />
+        <select id="gender" class="border p-2 rounded">
+          <option value="">लिंग चुनें</option>
+          <option value="Male">पुरुष</option>
+          <option value="Female">महिला</option>
+          <option value="Other">अन्य</option>
+        </select>
+        <input id="religion" class="border p-2 rounded" placeholder="धर्म" />
+        <input id="motherTongue" class="border p-2 rounded" placeholder="मातृभाषा" />
+        <input id="city" class="border p-2 rounded" placeholder="शहर" />
+        <input id="education" class="border p-2 rounded" placeholder="शिक्षा" />
+        <input id="occupation" class="border p-2 rounded" placeholder="पेशा" />
+        <textarea id="about" class="border p-2 rounded md:col-span-2" placeholder="आत्म-परिचय / बायो"></textarea>
+        <input id="images" type="file" accept="image/*" multiple class="md:col-span-2" />
+        <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded md:col-span-2">Post Profile</button>
+      </form>
+    </section>
+
+    <!-- Profiles -->
+    <section>
+      <h2 class="font-bold text-lg mb-3">प्रोफ़ाइल्स</h2>
+      <div id="profilesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+  </main>
+
+  <!-- MODAL -->
+  <div id="profileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-3xl w-full p-4 relative">
+      <button id="closeModal" class="absolute right-3 top-3 text-gray-600 text-lg">✖</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- FIREBASE + JS -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+
     const firebaseConfig = {
       apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
       authDomain: "all-madrsa.firebaseapp.com",
@@ -31,62 +82,126 @@
       appId: "1:619313835874:web:e387e1297663f11fc2463b"
     };
     const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+    const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    let editId = null;
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const adminFormWrap = document.getElementById('adminFormWrap');
+    const profileForm = document.getElementById('profileForm');
+    const profilesContainer = document.getElementById('profilesContainer');
+    const statusText = document.getElementById('statusText');
 
-    // Edit mode check
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('edit')) {
-      editId = urlParams.get('edit');
-      loadProfileForEdit(editId);
-    }
+    // 🔹 LOGIN / LOGOUT
+    loginBtn.onclick = async () => {
+      try { await signInWithPopup(auth, provider); } 
+      catch (e) { alert("Login failed: " + e.message); }
+    };
+    logoutBtn.onclick = async () => { await signOut(auth); };
 
-    async function loadProfileForEdit(id) {
-      const doc = await db.collection('profiles').doc(id).get();
-      if (doc.exists) {
-        const data = doc.data();
-        document.getElementById('name').value = data.name || '';
-        document.getElementById('age').value = data.age || '';
-        document.getElementById('city').value = data.city || '';
-        document.getElementById('whatsapp').value = data.whatsapp || '';
-      }
-    }
-
-    document.getElementById('profileForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const age = document.getElementById('age').value;
-      const city = document.getElementById('city').value;
-      const whatsapp = document.getElementById('whatsapp').value;
-      const file = document.getElementById('imageInput').files[0];
-
-      let imageURL = '';
-      if (file) {
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
-          method: 'POST',
-          body: formData
-        });
-        const json = await res.json();
-        imageURL = json.data?.url || '';
-      }
-
-      const data = { name, age, city, whatsapp, imageURL, approved: false, createdAt: new Date() };
-
-      if (editId) {
-        await db.collection('profiles').doc(editId).update(data);
-        alert('Profile updated!');
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        statusText.textContent = `Signed in: ${user.email}`;
+        loginBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+        adminFormWrap.classList.toggle('hidden', user.email !== ADMIN_EMAIL);
       } else {
-        await db.collection('profiles').add(data);
-        alert('Profile submitted for approval');
+        statusText.textContent = 'Not signed in';
+        loginBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+        adminFormWrap.classList.add('hidden');
       }
-      window.location.href = 'index.html';
     });
+
+    // 🔹 Image upload helper (imgbb)
+    async function uploadImageToImgbb(file) {
+      const form = new FormData();
+      form.append('image', file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method: 'POST', body: form });
+      const data = await res.json();
+      if (!data.success) throw new Error('Image upload failed');
+      return data.data.url;
+    }
+
+    // 🔹 Submit Profile
+    profileForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = "Posting...";
+
+      try {
+        const name = nameInput('name'), age = val('age'), gender = val('gender'),
+              religion = val('religion'), motherTongue = val('motherTongue'),
+              city = val('city'), education = val('education'),
+              occupation = val('occupation'), about = val('about');
+        const files = document.getElementById('images').files;
+        const imageUrls = [];
+        for (let f of files) imageUrls.push(await uploadImageToImgbb(f));
+
+        await addDoc(collection(db, 'profiles'), {
+          name, age, gender, religion, motherTongue, city, education, occupation, about,
+          images: imageUrls, createdAt: serverTimestamp()
+        });
+
+        alert("✅ Profile Posted Successfully!");
+        profileForm.reset();
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Post Profile";
+      }
+    };
+
+    const val = id => document.getElementById(id).value.trim();
+    const nameInput = id => document.getElementById(id).value.trim();
+
+    // 🔹 Load Profiles Realtime
+    const q = query(collection(db, 'profiles'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, snap => {
+      profilesContainer.innerHTML = '';
+      snap.forEach(doc => profilesContainer.appendChild(makeCard(doc.data())));
+    });
+
+    function makeCard(d) {
+      const div = document.createElement('div');
+      div.className = "bg-white rounded-lg shadow p-4 hover:shadow-md";
+      const img = d.images?.[0] || 'https://via.placeholder.com/300x200?text=No+Image';
+      div.innerHTML = `
+        <img src="${img}" class="w-full h-48 object-cover rounded" />
+        <h3 class="mt-3 text-lg font-semibold">${d.name || ''} (${d.age || '-'})</h3>
+        <p class="text-sm text-gray-600">${d.religion || ''} • ${d.motherTongue || ''} • ${d.city || ''}</p>
+        <div class="mt-3 flex gap-2">
+          <button class="px-3 py-1 border rounded" onclick='openProfile(${JSON.stringify(JSON.stringify(d))})'>पूरा प्रोफ़ाइल</button>
+          <a href="https://wa.me/9112170192?text=नमस्ते,%20${encodeURIComponent(d.name)}%20के%20रिश्ते%20के%20लिए%20जानकारी%20चाहिए" target="_blank" class="px-3 py-1 bg-green-600 text-white rounded">रिश्ते जोड़े</a>
+        </div>`;
+      return div;
+    }
+
+    // 🔹 Modal logic
+    window.openProfile = (dataStr) => {
+      const data = JSON.parse(dataStr);
+      const modal = document.getElementById('profileModal');
+      const modalContent = document.getElementById('modalContent');
+      modal.classList.remove('hidden');
+      modalContent.innerHTML = `
+        <h2 class="text-xl font-bold mb-2">${data.name} — ${data.age}</h2>
+        <p><b>लिंग:</b> ${data.gender || '-'}</p>
+        <p><b>धर्म:</b> ${data.religion || '-'}</p>
+        <p><b>मातृभाषा:</b> ${data.motherTongue || '-'}</p>
+        <p><b>शहर:</b> ${data.city || '-'}</p>
+        <p><b>शिक्षा:</b> ${data.education || '-'}</p>
+        <p><b>पेशा:</b> ${data.occupation || '-'}</p>
+        <p><b>बायो:</b> ${data.about || '-'}</p>
+        <div class="grid grid-cols-2 gap-2 mt-3">
+          ${data.images?.map(u => `<img src="${u}" class="w-full h-32 object-cover rounded" />`).join('') || ''}
+        </div>`;
+    };
+    document.getElementById('closeModal').onclick = () => document.getElementById('profileModal').classList.add('hidden');
+    document.getElementById('profileModal').onclick = (e) => { if (e.target.id === 'profileModal') e.target.classList.add('hidden'); };
   </script>
 </body>
 </html>
