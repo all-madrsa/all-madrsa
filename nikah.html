@@ -3,17 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Nikah Portal — Ready</title>
+<title>Nikah Portal — Secure</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { background:#f3f4f6; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial; }
-  .card { background:#fff; border-radius:10px; overflow:hidden; transition:transform .18s, box-shadow .18s; }
-  .card:hover { transform:translateY(-6px); box-shadow:0 12px 30px rgba(2,6,23,0.08); }
-  header { backdrop-filter: blur(6px); background: rgba(255,255,255,0.9); }
-  .modal-bg { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:60; padding:1rem; }
-  .modal { background:#fff; border-radius:12px; max-width:920px; width:100%; max-height:90vh; overflow:auto; padding:1rem; }
-  .small-modal { max-width:520px; }
-  .chip { background:#eef2ff; color:#3730a3; padding:4px 8px; border-radius:999px; font-size:12px; display:inline-block; }
+  body{background:#f3f4f6;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+  .card{background:#fff;border-radius:10px;overflow:hidden;transition:transform .18s,box-shadow .18s;}
+  .card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(2,6,23,0.08);}
+  header{backdrop-filter:blur(6px);background:rgba(255,255,255,0.9);}
+  .modal-bg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);z-index:60;padding:1rem;}
+  .modal{background:#fff;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:1rem;}
+  .small-modal{max-width:520px;}
 </style>
 </head>
 <body>
@@ -24,7 +23,7 @@
       <div class="w-12 h-12 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold text-xl">N</div>
       <div>
         <h1 class="text-lg font-semibold">Nikah Portal</h1>
-        <p class="text-xs text-gray-500">Shadi.com style — admin-approved matrimonial site</p>
+        <p class="text-xs text-gray-500">Secure — Firebase Storage + Firestore</p>
       </div>
     </div>
 
@@ -40,8 +39,8 @@
   <section class="bg-white rounded-lg shadow p-6 mb-6 overflow-hidden">
     <div class="md:flex md:items-center md:justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold">Apna match dhoondein — safe & verified</h2>
-        <p class="text-gray-600 mt-1">Profiles admin verify karte hain before public display.</p>
+        <h2 class="text-2xl font-bold">Apna match dhoondein — secure & verified</h2>
+        <p class="text-gray-600 mt-1">Profiles are admin-approved before public display.</p>
       </div>
       <div class="w-full md:w-1/2">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -151,7 +150,7 @@
 </div>
 
 <script type="module">
-/* ================== CONFIG (your keys inserted) ================== */
+/* ================== FIREBASE CONFIG ================== */
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -160,27 +159,28 @@ const firebaseConfig = {
   messagingSenderId: "619313835874",
   appId: "1:619313835874:web:e387e1297663f11fc2463b"
 };
-const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
-/* ================== Set admin emails ==================
- Replace with the real admin emails allowed to manage site.
- Example: const adminEmails = ["admin@yourdomain.com"];
- If you leave array empty, any authenticated user will NOT be admin.
-================================================================= */
-const adminEmails = ["admin@example.com"]; // <-- CHANGE THIS
-/* ================================================================= */
+/* Replace adminEmails with your real admin emails (comma-separated) */
+const adminEmails = ["you@yourdomain.com"];
+/* ===================================================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, where,
   updateDoc, doc, deleteDoc, orderBy
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import {
+  getStorage, ref as sref, uploadBytesResumable, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
-/* DOM */
+/* DOM refs */
 const profilesGrid = document.getElementById('profilesGrid');
 const filterName = document.getElementById('filterName');
 const filterGender = document.getElementById('filterGender');
@@ -224,19 +224,19 @@ let currentProfile = null;
 
 function esc(s){ return s?String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"):""; }
 
-async function uploadToImgbb(file){
-  if(!file) throw new Error('No file selected');
-  if(file.size > 2*1024*1024) throw new Error('Image must be < 2MB');
-  const fd = new FormData();
-  fd.append('image', file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
-  const data = await res.json();
-  if(!data || !data.success) throw new Error('Image upload failed');
-  return data.data.display_url || data.data.url;
-}
-
 function show(el){ el.style.display = 'flex'; }
 function hide(el){ el.style.display = 'none'; }
+
+/* ---------------- Upload to Firebase Storage ---------------- */
+async function uploadToFirebaseStorage(file){
+  if(!file) throw new Error('No file selected');
+  if(file.size > 2*1024*1024) throw new Error('Image must be < 2MB');
+  const name = `profiles/${Date.now()}_${file.name.replace(/\s+/g,'_')}`;
+  const storageRef = sref(storage, name);
+  const uploadTask = await uploadBytesResumable(storageRef, file);
+  const url = await getDownloadURL(uploadTask.ref);
+  return url;
+}
 
 /* ---------------- Load approved profiles ---------------- */
 async function loadProfiles(){
@@ -252,7 +252,6 @@ async function loadProfiles(){
       const genderq = filterGender.value;
       if(nameq && !((p.name||'').toLowerCase().includes(nameq) || (p.city||'').toLowerCase().includes(nameq))) return;
       if(genderq && p.gender !== genderq) return;
-
       any = true;
       const card = document.createElement('div');
       card.className = 'card p-3 cursor-pointer';
@@ -330,7 +329,7 @@ postForm.addEventListener('submit', async (e)=>{
   if(!name || !age || !gender || !file){ postStatus.textContent='Please fill required fields.'; return; }
 
   try{
-    const imageUrl = await uploadToImgbb(file);
+    const imageUrl = await uploadToFirebaseStorage(file);
     await addDoc(collection(db,'profiles'), {
       name, age, city, gender, contact, about, imageUrl, approved:false, created: Date.now()
     });
@@ -370,10 +369,7 @@ logoutBtn.addEventListener('click', async ()=>{
 /* ---------------- show admin panel when admin user ---------------- */
 onAuthStateChanged(auth, async (user)=>{
   currentUser = user;
-  if(user && adminEmails.includes(user.email)){
-    isAdmin = true;
-  } else isAdmin = false;
-
+  if(user && adminEmails.includes(user.email)) isAdmin = true; else isAdmin = false;
   loginBtn.textContent = user ? (isAdmin ? 'Admin' : 'Logged in') : 'Admin Login';
   adminPanel.style.display = isAdmin ? 'block' : 'none';
   if(isAdmin) loadAdminData();
@@ -381,7 +377,7 @@ onAuthStateChanged(auth, async (user)=>{
 
 /* ---------------- Admin: load pending & contact requests ---------------- */
 async function loadAdminData(){
-  // Pending profiles
+  // Pending
   pendingList.innerHTML = 'Loading...';
   try{
     const pq = query(collection(db,'profiles'), where('approved','==', false), orderBy('created','desc'));
@@ -401,21 +397,19 @@ async function loadAdminData(){
       </div>`;
       li.querySelector('.approve').addEventListener('click', async ()=>{
         await updateDoc(doc(db,'profiles',s.id), { approved:true });
-        loadAdminData();
-        loadProfiles();
+        loadAdminData(); loadProfiles();
       });
       li.querySelector('.del').addEventListener('click', async ()=>{
-        if(!confirm('Delete profile permanently?')) return;
+        if(!confirm('Delete permanently?')) return;
         await deleteDoc(doc(db,'profiles',s.id));
-        loadAdminData();
-        loadProfiles();
+        loadAdminData(); loadProfiles();
       });
       pendingList.appendChild(li);
     });
     if(psnap.empty) pendingList.innerHTML = '<div class="text-sm text-gray-500">No pending profiles.</div>';
   }catch(err){ console.error(err); pendingList.innerHTML = '<div class="text-red-600">Failed to load pending.</div>'; }
 
-  // Contact requests
+  // Contact
   contactList.innerHTML = 'Loading...';
   try{
     const cq = query(collection(db,'contactRequests'), orderBy('timestamp','desc'));
