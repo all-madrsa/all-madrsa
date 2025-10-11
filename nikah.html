@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nikah Portal — Complete Version</title>
+<title>Nikah Portal — Complete Version (Fixed)</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 .card-gradient { background: linear-gradient(90deg,#ffffff 0%,#f8fafc 100%); }
@@ -121,7 +121,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -169,29 +169,35 @@ async function uploadToImgbb(file){
   throw new Error('Image upload failed');
 }
 
-// Admin auto-login
-(async function(){ if(adminEmail && adminPassword){ try{ await signInWithEmailAndPassword(auth, adminEmail, adminPassword); }catch(e){ console.warn(e); }}})();
+// Auto login admin (optional)
+(async function(){ 
+  if(adminEmail && adminPassword){
+    try{ await signInWithEmailAndPassword(auth, adminEmail, adminPassword); }
+    catch(e){ console.warn("Admin login failed:", e.message); }
+  }
+})();
 
 // Auth state
 onAuthStateChanged(auth, user=>{
   currentUser = user;
-  if(user && user.email===adminEmail){
+  if(user?.email === adminEmail){
     currentAdmin = user;
     adminBtn.classList.remove('hidden');
-  }else{
+    loadAdminData();
+  } else {
     currentAdmin = null;
     adminBtn.classList.add('hidden');
   }
-  refreshData();
+  loadApprovedProfiles();
 });
 
-// Show post form only if logged in
+// Show post form
 showPostFormBtn.addEventListener('click', ()=>{
-  if(!currentUser) return window.location.href = "index.html";
+  if(!currentUser){ alert("Login required to post profile."); return; }
   postFormContainer.classList.toggle('hidden');
 });
 
-// Post form submit
+// Post profile
 postForm.addEventListener('submit', async e=>{
   e.preventDefault();
   postingStatus.textContent = "Posting...";
@@ -204,45 +210,77 @@ postForm.addEventListener('submit', async e=>{
   const contact = f.get('contact')?.trim();
   const imageFile = f.get('image');
 
-  if(!name || !age || !gender || !imageFile || imageFile.size===0){
+  if(!name || !age || !gender || !imageFile?.size){
     postingStatus.textContent = "Please fill required fields.";
-    setTimeout(()=>postingStatus.textContent="",2000); return;
+    return;
   }
-  if(imageFile.size>2*1024*1024){ postingStatus.textContent="Image must <2MB"; setTimeout(()=>postingStatus.textContent="",2000); return;}
+  if(imageFile.size > 2*1024*1024){
+    postingStatus.textContent = "Image must be smaller than 2MB.";
+    return;
+  }
 
   try{
     const imageUrl = await uploadToImgbb(imageFile);
     await addDoc(collection(db,'profiles'), {name, age, gender, about, city, contact, imageUrl, approved:false, createdAt: Date.now()});
-    postingStatus.textContent="Submitted — admin approval pending.";
+    postingStatus.textContent="Submitted — waiting admin approval.";
     postForm.reset();
+    loadApprovedProfiles();
+  }catch(err){
+    console.error(err);
+    postingStatus.textContent="Posting failed. Try again.";
+  }finally{
     setTimeout(()=>postingStatus.textContent="",3000);
-    refreshData();
-  }catch(err){ console.error(err); postingStatus.textContent="Posting failed"; setTimeout(()=>postingStatus.textContent="",3000);}
+  }
 });
 
-// Load profiles
+// Load approved profiles
 async function loadApprovedProfiles(){
-  profilesGrid.innerHTML="";
+  profilesGrid.innerHTML="<p class='text-center text-gray-500'>Loading profiles...</p>";
   const q = query(collection(db,'profiles'), where('approved','==', true));
   const snap = await getDocs(q);
   const arr=[];
   snap.forEach(s=> arr.push({id:s.id,...s.data()}));
   arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-
+  profilesGrid.innerHTML="";
+  if(arr.length===0){ profilesGrid.innerHTML="<p class='text-center text-gray-500'>No approved profiles yet.</p>"; return; }
   arr.forEach(p=>{
-    const card = document.createElement('div');
-    card.className='bg-white rounded-lg shadow overflow-hidden cursor-pointer';
+    const card=document.createElement('div');
+    card.className='bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg transition';
     card.innerHTML=`<div class="h-44 bg-gray-100 overflow-hidden">
-      <img src="${esc(p.imageUrl)}" class="w-full h-full object-cover"/>
+      <img loading="lazy" src="${esc(p.imageUrl)}" class="w-full h-full object-cover"/>
     </div>
     <div class="p-4">
       <h4 class="font-semibold text-lg">${esc(p.name)}, <span class="text-sm text-gray-600">${esc(p.age)}</span></h4>
       <div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div>
+      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded mt-1 inline-block">Approved</span>
     </div>`;
     card.addEventListener('click', ()=>showProfileModal(p));
     profilesGrid.appendChild(card);
   });
 }
+
+// Filter feature
+document.getElementById('filterBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('filterName').value.trim().toLowerCase();
+  const gender = document.getElementById('filterGender').value;
+  const q = query(collection(db,'profiles'), where('approved','==', true));
+  const snap = await getDocs(q);
+  const arr=[];
+  snap.forEach(s=> arr.push({id:s.id,...s.data()}));
+  const filtered = arr.filter(p=>{
+    return (!name || (p.name?.toLowerCase().includes(name) || p.city?.toLowerCase().includes(name))) &&
+           (!gender || p.gender===gender);
+  });
+  profilesGrid.innerHTML="";
+  if(filtered.length===0){ profilesGrid.innerHTML="<p class='text-center text-gray-500'>No matching profiles found.</p>"; return; }
+  filtered.forEach(p=>{
+    const card=document.createElement('div');
+    card.className='bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg';
+    card.innerHTML=`<img loading="lazy" src="${esc(p.imageUrl)}" class="w-full h-44 object-cover"/><div class="p-4"><h4 class="font-semibold">${esc(p.name)}, ${esc(p.age)}</h4><div class="text-sm text-gray-500">${esc(p.city||'')} · ${esc(p.gender)}</div></div>`;
+    card.addEventListener('click', ()=>showProfileModal(p));
+    profilesGrid.appendChild(card);
+  });
+});
 
 // Profile modal
 function showProfileModal(p){
@@ -253,8 +291,7 @@ function showProfileModal(p){
     <p>Gender: ${esc(p.gender)}</p>
     ${currentUser && !currentAdmin?`<button id="requestContactBtn" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded">Request Contact</button>`:''}`;
   profileModal.style.display='flex';
-
-  const btn = document.getElementById('requestContactBtn');
+  const btn=document.getElementById('requestContactBtn');
   if(btn){
     btn.addEventListener('click', async ()=>{
       await addDoc(collection(db,'contactRequests'), {profileId:p.id,userEmail:currentUser.email, timestamp:Date.now()});
@@ -263,23 +300,21 @@ function showProfileModal(p){
     });
   }
 }
-
 closeModal.addEventListener('click', ()=>profileModal.style.display='none');
 
-// Admin Panel toggle
+// Admin Panel
 adminBtn.addEventListener('click', ()=>adminPanel.classList.remove('hidden'));
 adminClose.addEventListener('click', ()=>adminPanel.classList.add('hidden'));
 
-// Load pending and approved for admin
 async function loadAdminData(){
   if(!currentAdmin) return;
   // Pending
   pendingList.innerHTML="";
-  const pq = query(collection(db,'profiles'), where('approved','==', false));
-  const psnap = await getDocs(pq);
+  const pq=query(collection(db,'profiles'), where('approved','==', false));
+  const psnap=await getDocs(pq);
   psnap.forEach(s=>{
-    const p = s.data();
-    const li = document.createElement('li');
+    const p=s.data();
+    const li=document.createElement('li');
     li.className='border p-2 flex justify-between items-start';
     li.innerHTML=`<div>${esc(p.name)} (${esc(p.age)}) - ${esc(p.city||'')}</div>
       <div>
@@ -287,17 +322,17 @@ async function loadAdminData(){
         <button class="delBtn bg-red-500 text-white px-2 py-1 rounded">Delete</button>
       </div>`;
     pendingList.appendChild(li);
-    li.querySelector('.approveBtn').addEventListener('click', async ()=>{ await updateDoc(doc(db,'profiles',s.id), {approved:true}); refreshData(); });
-    li.querySelector('.delBtn').addEventListener('click', async ()=>{ await updateDoc(doc(db,'profiles',s.id), {approved:false}); refreshData(); });
+    li.querySelector('.approveBtn').addEventListener('click', async ()=>{ await updateDoc(doc(db,'profiles',s.id), {approved:true}); loadAdminData(); loadApprovedProfiles(); });
+    li.querySelector('.delBtn').addEventListener('click', async ()=>{ await deleteDoc(doc(db,'profiles',s.id)); loadAdminData(); loadApprovedProfiles(); });
   });
 
   // Approved
   approvedAdminList.innerHTML="";
-  const aq = query(collection(db,'profiles'), where('approved','==', true));
-  const asnap = await getDocs(aq);
+  const aq=query(collection(db,'profiles'), where('approved','==', true));
+  const asnap=await getDocs(aq);
   asnap.forEach(s=>{
-    const p = s.data();
-    const li = document.createElement('li');
+    const p=s.data();
+    const li=document.createElement('li');
     li.className='border p-2 flex justify-between';
     li.innerHTML=`<div>${esc(p.name)} (${esc(p.age)})</div>`;
     approvedAdminList.appendChild(li);
@@ -305,23 +340,15 @@ async function loadAdminData(){
 
   // Contact requests
   contactRequests.innerHTML="";
-  const cq = collection(db,'contactRequests');
-  const csnap = await getDocs(cq);
+  const cq=collection(db,'contactRequests');
+  const csnap=await getDocs(cq);
   csnap.forEach(s=>{
-    const r = s.data();
-    const li = document.createElement('li');
-    li.textContent=`${r.userEmail} requested contact for profile ID: ${r.profileId}`;
+    const r=s.data();
+    const li=document.createElement('li');
+    li.textContent=`${r.userEmail || 'Unknown'} requested contact for profile ID: ${r.profileId || 'Deleted profile'}`;
     contactRequests.appendChild(li);
   });
 }
-
-async function refreshData(){
-  await loadApprovedProfiles();
-  await loadAdminData();
-}
-
-// Initial load
-refreshData();
 </script>
 </body>
 </html>
