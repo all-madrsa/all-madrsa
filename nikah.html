@@ -1,464 +1,295 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Nikah Portal — Ready</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  body{background:#f3f4f6;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
-  .card{background:#fff;border-radius:10px;overflow:hidden;transition:transform .18s,box-shadow .18s;}
-  .card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(2,6,23,0.08);}
-  header{backdrop-filter: blur(6px); background: rgba(255,255,255,0.95);}
-  .modal-bg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);z-index:60;padding:1rem;}
-  .modal{background:#fff;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:1rem;}
-  .small-modal{max-width:520px;}
-  .wa-btn{background:#25D366;color:white;padding:.5rem 1rem;border-radius:8px;display:inline-flex;gap:.5rem;align-items:center;}
-</style>
-</head>
-<body>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nikah Portal — Admin Posts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase v9 modular SDK (CDN) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
 
-<header class="sticky top-0 z-50 shadow">
-  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold text-xl">N</div>
-      <div>
-        <h1 class="text-lg font-semibold">Nikah Portal</h1>
-        <p class="text-xs text-gray-500">Profiles admin-approve karte hain</p>
-      </div>
-    </div>
+    // --- CONFIG: Replace with provided / keep as-is ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+      authDomain: "all-madrsa.firebaseapp.com",
+      projectId: "all-madrsa",
+      storageBucket: "all-madrsa.appspot.com",
+      messagingSenderId: "619313835874",
+      appId: "1:619313835874:web:e387e1297663f11fc2463b"
+    };
+    const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // imgbb key provided
+    const ADMIN_EMAIL = 'zaradigitalseva@gmail.com';
 
-    <div class="flex items-center gap-3">
-      <button id="rishtaBtn" class="bg-yellow-500 text-white px-3 py-2 rounded text-sm">रिश्ता जोड़ें</button>
-      <button id="postBtn" class="bg-green-600 text-white px-3 py-2 rounded text-sm">Profile Post</button>
-      <button id="loginBtn" class="bg-white border px-3 py-2 rounded text-sm">Admin Login</button>
-    </div>
-  </div>
-</header>
+    // Initialize
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-<main class="max-w-6xl mx-auto px-4 py-6">
-  <section class="bg-white rounded-lg shadow p-6 mb-6 overflow-hidden">
-    <div class="md:flex md:items-center md:justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-bold">Apna match dhoondein — safe & verified</h2>
-        <p class="text-gray-600 mt-1">Profiles admin verify karte hain before public display.</p>
-      </div>
-      <div class="w-full md:w-1/2">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <input id="filterName" type="text" placeholder="Name / City" class="border rounded px-3 py-2" />
-          <select id="filterGender" class="border rounded px-3 py-2">
-            <option value="">Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-          <button id="filterBtn" class="bg-green-600 text-white rounded px-3 py-2">Filter</button>
-        </div>
-      </div>
-    </div>
-  </section>
+    // DOM refs
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const adminFormWrap = document.getElementById('adminFormWrap');
+    const profileForm = document.getElementById('profileForm');
+    const profilesContainer = document.getElementById('profilesContainer');
+    const statusText = document.getElementById('statusText');
 
-  <section>
-    <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
-  </section>
+    // Auth
+    loginBtn.addEventListener('click', async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        alert('Login failed: ' + e.message);
+      }
+    });
+    logoutBtn.addEventListener('click', async () => {
+      await signOut(auth);
+    });
 
-  <section id="adminPanel" class="hidden mt-6">
-    <div class="bg-white p-4 rounded-lg shadow">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Admin Dashboard</h3>
-        <div class="flex gap-2">
-          <button id="refreshAdmin" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Refresh</button>
-          <button id="logoutBtn" class="bg-gray-200 px-3 py-1 rounded text-sm">Logout</button>
-        </div>
-      </div>
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        statusText.textContent = `Signed in: ${user.email}`;
+        loginBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+        // show admin form only to admin
+        if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          adminFormWrap.classList.remove('hidden');
+        } else {
+          adminFormWrap.classList.add('hidden');
+        }
+      } else {
+        statusText.textContent = 'Not signed in';
+        loginBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+        adminFormWrap.classList.add('hidden');
+      }
+    });
 
-      <div class="mt-4 grid md:grid-cols-2 gap-4">
-        <div>
-          <h4 class="font-semibold mb-2">Pending Profiles</h4>
-          <ul id="pendingList" class="space-y-2 max-h-72 overflow-auto"></ul>
-        </div>
+    // Upload helper (imgbb)
+    async function uploadImageToImgbb(file) {
+      const form = new FormData();
+      form.append('image', file);
+      // imgbb requires base64 OR file via formdata? The endpoint accepts multipart/form-data with 'image' as file
+      const url = `https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`;
+      const res = await fetch(url, { method: 'POST', body: form });
+      const data = await res.json();
+      if (!data.success) throw new Error('Image upload failed');
+      return data.data.url; // direct image url
+    }
 
-        <div>
-          <h4 class="font-semibold mb-2">Contact Requests</h4>
-          <ul id="contactList" class="space-y-2 max-h-72 overflow-auto text-sm text-gray-700"></ul>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
+    // Submit profile (admin only)
+    profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Posting...';
 
-<!-- Rishta Modal (shows WhatsApp button) -->
-<div id="rishtaModal" class="modal-bg">
-  <div class="modal small-modal">
-    <button id="closeRishta" class="float-right text-gray-600">✖</button>
-    <h3 class="text-lg font-semibold mb-3">रिश्ता जोड़ें — WhatsApp से संपर्क करें</h3>
-    <p class="text-gray-700 mb-4">नीचे बटन पर क्लिक करके सीधे WhatsApp पर संदेश भेजें:</p>
-    <a id="waLinkHeader" class="wa-btn" target="_blank" rel="noopener">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M..."></path></svg>
-      WhatsApp पर भेजें
-    </a>
-    <p class="text-sm text-gray-500 mt-3">Number: <strong>+91 9112170192</strong></p>
-  </div>
-</div>
+      try {
+        // gather fields
+        const name = document.getElementById('name').value.trim();
+        const age = document.getElementById('age').value.trim();
+        const gender = document.getElementById('gender').value;
+        const religion = document.getElementById('religion').value.trim();
+        const motherTongue = document.getElementById('motherTongue').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const education = document.getElementById('education').value.trim();
+        const occupation = document.getElementById('occupation').value.trim();
+        const about = document.getElementById('about').value.trim();
 
-<!-- Post modal -->
-<div id="postModal" class="modal-bg">
-  <div class="modal small-modal">
-    <button id="closePost" class="float-right text-gray-600">✖</button>
-    <h3 class="text-lg font-semibold text-green-700 mb-2">Post Your Profile</h3>
-    <form id="postForm" class="space-y-2">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <input id="p_name" name="name" placeholder="Full name" class="border p-2 rounded" required />
-        <input id="p_age" name="age" type="number" placeholder="Age" class="border p-2 rounded" required />
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <input id="p_city" name="city" placeholder="City" class="border p-2 rounded" />
-        <select id="p_gender" name="gender" class="border p-2 rounded" required>
-          <option value="">Gender</option><option>Male</option><option>Female</option>
-        </select>
-      </div>
-      <input id="p_contact" name="contact" placeholder="Contact (optional)" class="border p-2 rounded" />
-      <textarea id="p_about" name="about" placeholder="Thoda sa intro (optional)" class="border p-2 rounded w-full"></textarea>
-      <div>
-        <label class="text-sm text-gray-600">Profile Photo (max 2MB)</label>
-        <input id="p_image" name="image" type="file" accept="image/*" class="border p-2 rounded w-full" required />
-      </div>
-      <div class="flex items-center gap-2">
-        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Submit</button>
-        <div id="postStatus" class="text-sm text-gray-600"></div>
-      </div>
-    </form>
-  </div>
-</div>
+        // images
+        const files = document.getElementById('images').files;
+        const imageUrls = [];
+        for (let i = 0; i < files.length; i++) {
+          const url = await uploadImageToImgbb(files[i]);
+          imageUrls.push(url);
+        }
 
-<!-- Profile modal -->
-<div id="profileModal" class="modal-bg">
-  <div class="modal">
-    <button id="closeProfile" class="float-right text-gray-600">✖</button>
-    <div class="md:flex gap-4">
-      <img id="pm_img" class="w-full md:w-64 h-64 object-cover rounded" src="" alt="profile"/>
-      <div class="flex-1">
-        <h3 id="pm_name" class="text-xl font-semibold"></h3>
-        <div class="text-sm text-gray-500" id="pm_meta"></div>
-        <div class="mt-3 text-gray-700" id="pm_about"></div>
-        <div class="mt-4 flex gap-2">
-          <a id="pm_wa" class="wa-btn" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M..."></path></svg> WhatsApp पर पूछें</a>
-          <button id="pm_save" class="bg-white border px-3 py-2 rounded">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+        // add to Firestore
+        await addDoc(collection(db, 'profiles'), {
+          name, age, gender, religion, motherTongue, city, education, occupation, about,
+          images: imageUrls,
+          createdAt: serverTimestamp()
+        });
 
-<!-- Login modal -->
-<div id="loginModal" class="modal-bg">
-  <div class="modal small-modal">
-    <button id="closeLogin" class="float-right text-gray-600">✖</button>
-    <h3 class="text-lg font-semibold mb-2">Admin Login</h3>
-    <input id="loginEmail" class="border p-2 rounded w-full mb-2" placeholder="Admin email" value="zaradigitalseva@gmail.com" />
-    <input id="loginPass" type="password" class="border p-2 rounded w-full mb-2" placeholder="Password" />
-    <div class="flex gap-2">
-      <button id="doLogin" class="bg-indigo-600 text-white px-3 py-2 rounded w-full">Login</button>
-      <button id="closeLogin2" class="bg-gray-200 px-3 py-2 rounded w-full">Close</button>
-    </div>
-    <div id="loginStatus" class="text-sm text-gray-600 mt-2"></div>
-  </div>
-</div>
+        alert('Profile posted successfully');
+        profileForm.reset();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to post: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Post Profile';
+      }
+    });
 
-<!-- Firebase + App Script -->
-<script type="module">
-/* ----------------- Config (you provided) ----------------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
-const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
-/* Admin email */
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-/* WhatsApp number (international format without +) */
-const WA_NUMBER = "919112170192"; // +91 9112170192
-/* default message when header rishta button used */
-const WA_MESSAGE_HEADER = encodeURIComponent("Namaste, main Nikah Portal par rishta jodna chahta/chahti hoon. कृपया मदद कीजिए.");
-/* ================================================================= */
+    // Real-time listener to load profiles (visible to everyone)
+    const q = query(collection(db, 'profiles'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snapshot) => {
+      profilesContainer.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const card = createProfileCard(data);
+        profilesContainer.appendChild(card);
+      });
+    });
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, query, where,
-  updateDoc, doc, deleteDoc, orderBy
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import {
-  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    function createProfileCard(data) {
+      const wrap = document.createElement('div');
+      wrap.className = 'bg-white rounded-lg shadow p-4';
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+      // image
+      const img = document.createElement('img');
+      img.src = (data.images && data.images[0]) ? data.images[0] : 'https://via.placeholder.com/300x200?text=No+Image';
+      img.alt = data.name || 'Profile Image';
+      img.className = 'w-full h-48 object-cover rounded';
 
-/* DOM refs */
-const profilesGrid = document.getElementById('profilesGrid');
-const filterName = document.getElementById('filterName');
-const filterGender = document.getElementById('filterGender');
-const filterBtn = document.getElementById('filterBtn');
+      const h = document.createElement('h3');
+      h.className = 'mt-3 text-lg font-semibold';
+      h.textContent = data.name + ' (' + (data.age || '-') + ')';
 
-const postBtn = document.getElementById('postBtn');
-const postModal = document.getElementById('postModal');
-const closePost = document.getElementById('closePost');
-const postForm = document.getElementById('postForm');
-const postStatus = document.getElementById('postStatus');
+      const p1 = document.createElement('p');
+      p1.className = 'text-sm text-gray-600';
+      p1.textContent = `${data.religion || '-'} • ${data.motherTongue || '-'} • ${data.city || '-'}`;
 
-const rishtaBtn = document.getElementById('rishtaBtn');
-const rishtaModal = document.getElementById('rishtaModal');
-const closeRishta = document.getElementById('closeRishta');
-const waLinkHeader = document.getElementById('waLinkHeader');
+      const btnWrap = document.createElement('div');
+      btnWrap.className = 'mt-3 flex gap-2';
 
-const loginBtn = document.getElementById('loginBtn');
-const loginModal = document.getElementById('loginModal');
-const closeLogin = document.getElementById('closeLogin');
-const closeLogin2 = document.getElementById('closeLogin2');
-const doLogin = document.getElementById('doLogin');
-const loginEmail = document.getElementById('loginEmail');
-const loginPass = document.getElementById('loginPass');
-const loginStatus = document.getElementById('loginStatus');
+      // View full profile (modal)
+      const viewBtn = document.createElement('button');
+      viewBtn.className = 'px-3 py-1 rounded border';
+      viewBtn.textContent = 'पूरा प्रोफ़ाइल';
+      viewBtn.addEventListener('click', () => openProfileModal(data));
 
-const adminPanel = document.getElementById('adminPanel');
-const pendingList = document.getElementById('pendingList');
-const contactList = document.getElementById('contactList');
-const refreshAdmin = document.getElementById('refreshAdmin');
-const logoutBtn = document.getElementById('logoutBtn');
+      // WhatsApp button
+      const waBtn = document.createElement('a');
+      const text = encodeURIComponent('नमस्ते, परिवार के लिए रिश्ता जोड़ने के बारे में जानकारी चाहिए — प्रोफ़ाइल: ' + (data.name || '–'));
+      waBtn.href = `https://wa.me/9112170192?text=${text}`;
+      waBtn.target = '_blank';
+      waBtn.rel = 'noopener';
+      waBtn.className = 'px-3 py-1 rounded bg-green-600 text-white';
+      waBtn.textContent = 'रिश्ते जोड़े';
 
-const pm = {
-  modal: document.getElementById('profileModal'),
-  img: document.getElementById('pm_img'),
-  name: document.getElementById('pm_name'),
-  meta: document.getElementById('pm_meta'),
-  about: document.getElementById('pm_about'),
-  requestBtn: document.getElementById('pm_request'),
-  saveBtn: document.getElementById('pm_save'),
-  waBtn: document.getElementById('pm_wa')
-};
-const closeProfile = document.getElementById('closeProfile');
+      btnWrap.appendChild(viewBtn);
+      btnWrap.appendChild(waBtn);
 
-let currentUser = null;
-let isAdmin = false;
-let currentProfile = null;
+      wrap.appendChild(img);
+      wrap.appendChild(h);
+      wrap.appendChild(p1);
+      wrap.appendChild(btnWrap);
 
-function esc(s){ return s?String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"):""; }
-function show(el){ el.style.display = 'flex'; }
-function hide(el){ el.style.display = 'none'; }
+      return wrap;
+    }
 
-/* ImgBB upload (using provided IMG_API_KEY) */
-async function uploadToImgbb(file){
-  if(!file) throw new Error('No file selected');
-  if(file.size > 2*1024*1024) throw new Error('Image must be < 2MB');
-  const fd = new FormData();
-  fd.append('image', file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
-  const data = await res.json();
-  if(!data || !data.success) throw new Error('Image upload failed');
-  return data.data.display_url || data.data.url;
-}
-
-/* Load approved profiles */
-async function loadProfiles(){
-  profilesGrid.innerHTML = '<div class="col-span-full text-center text-gray-500">Loading...</div>';
-  try{
-    const q = query(collection(db,'profiles'), where('approved','==', true), orderBy('created','desc'));
-    const snap = await getDocs(q);
-    profilesGrid.innerHTML = '';
-    let any=false;
-    snap.forEach(docSnap=>{
-      const p = docSnap.data();
-      const nameq = filterName.value.trim().toLowerCase();
-      const genderq = filterGender.value;
-      if(nameq && !((p.name||'').toLowerCase().includes(nameq) || (p.city||'').toLowerCase().includes(nameq))) return;
-      if(genderq && p.gender !== genderq) return;
-      any=true;
-      const card = document.createElement('div');
-      card.className = 'card p-3 cursor-pointer';
-      card.innerHTML = `
-        <div class="relative">
-          <img src="${esc(p.imageUrl||'')}" class="w-full h-44 object-cover rounded" />
-        </div>
-        <div class="mt-3">
-          <div class="font-semibold">${esc(p.name)} <span class="text-sm text-gray-500">, ${esc(p.age)}</span></div>
-          <div class="text-sm text-gray-500">${esc(p.city)} · ${esc(p.gender)}</div>
-        </div>
+    // Modal code
+    const modal = document.getElementById('profileModal');
+    const modalContent = document.getElementById('modalContent');
+    const closeModalBtn = document.getElementById('closeModal');
+    function openProfileModal(data) {
+      modal.classList.remove('hidden');
+      modalContent.innerHTML = '';
+      const title = document.createElement('h2');
+      title.className = 'text-xl font-bold mb-2';
+      title.textContent = data.name + ' — ' + (data.age || '-');
+      const ul = document.createElement('div');
+      ul.className = 'space-y-1 text-sm text-gray-700';
+      ul.innerHTML = `
+        <p><strong>लिंग:</strong> ${data.gender || '-'}</p>
+        <p><strong>धर्म:</strong> ${data.religion || '-'}</p>
+        <p><strong>मातृभाषा:</strong> ${data.motherTongue || '-'}</p>
+        <p><strong>शहर:</strong> ${data.city || '-'}</p>
+        <p><strong>शिक्षा:</strong> ${data.education || '-'}</p>
+        <p><strong>पेशा:</strong> ${data.occupation || '-'}</p>
+        <p><strong>बायो:</strong> ${data.about || '-'}</p>
       `;
-      card.addEventListener('click', ()=> openProfileModal(docSnap.id, p));
-      profilesGrid.appendChild(card);
+
+      // image carousel (simple)
+      const gallery = document.createElement('div');
+      gallery.className = 'mt-3 grid grid-cols-2 gap-2';
+      if (data.images && data.images.length) {
+        data.images.forEach(u => {
+          const im = document.createElement('img');
+          im.src = u;
+          im.className = 'w-full h-32 object-cover rounded';
+          gallery.appendChild(im);
+        });
+      }
+
+      modalContent.appendChild(title);
+      modalContent.appendChild(ul);
+      modalContent.appendChild(gallery);
+    }
+    closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+    // Close modal on outside click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.add('hidden');
     });
-    if(!any) profilesGrid.innerHTML = '<div class="col-span-full text-center text-gray-500">No profiles found.</div>';
-  }catch(err){
-    profilesGrid.innerHTML = `<div class="col-span-full text-center text-red-600">Failed to load profiles.</div>`;
-    console.error(err);
-  }
-}
 
-/* Open profile modal */
-function openProfileModal(id, p){
-  currentProfile = { id, ...p };
-  pm.img.src = p.imageUrl || '';
-  pm.name.textContent = p.name || '';
-  pm.meta.textContent = `${p.age || ''} · ${p.city || ''} · ${p.gender || ''}`;
-  pm.about.textContent = p.about || '';
-  // set profile-specific WhatsApp link (prefilled message)
-  const msg = encodeURIComponent(`Hello, I am interested in the profile: ${p.name} (ID: ${id}). Please share details.`);
-  pm.waBtn.href = `https://wa.me/${WA_NUMBER}?text=${msg}`;
-  show(pm.modal);
-}
-
-/* pm request button alternative (but we use WA link) */
-pm.requestBtn.addEventListener('click', async ()=>{
-  // open WA
-  if(!currentProfile) return;
-  const msg = encodeURIComponent(`Hello, I am interested in the profile: ${currentProfile.name} (ID: ${currentProfile.id}). Please share details.`);
-  window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
-});
-
-/* Save shortlist (localStorage) */
-pm.saveBtn.addEventListener('click', ()=>{
-  const list = JSON.parse(localStorage.getItem('shortlist_nikah') || '[]');
-  if(!list.find(i=>i.id===currentProfile.id)){
-    list.unshift(currentProfile);
-    if(list.length>50) list.pop();
-    localStorage.setItem('shortlist_nikah', JSON.stringify(list));
-    alert('Saved to shortlist');
-  } else alert('Already in shortlist');
-});
-
-/* close profile */
-closeProfile.addEventListener('click', ()=> hide(pm.modal));
-
-/* Post new profile */
-postBtn.addEventListener('click', ()=> show(postModal));
-closePost.addEventListener('click', ()=> hide(postModal));
-
-postForm.addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  postStatus.textContent = 'Posting...';
-  const name = document.getElementById('p_name').value.trim();
-  const age = document.getElementById('p_age').value.trim();
-  const city = document.getElementById('p_city').value.trim();
-  const gender = document.getElementById('p_gender').value;
-  const contact = document.getElementById('p_contact').value.trim();
-  const about = document.getElementById('p_about').value.trim();
-  const file = document.getElementById('p_image').files[0];
-
-  if(!name || !age || !gender || !file){ postStatus.textContent='Please fill required fields.'; return; }
-  try{
-    const imageUrl = await uploadToImgbb(file); // using ImgBB
-    await addDoc(collection(db,'profiles'), {
-      name, age, city, gender, contact, about, imageUrl, approved:false, created: Date.now()
-    });
-    postStatus.textContent = 'Submitted — awaiting admin approval.';
-    postForm.reset();
-    setTimeout(()=>{ postStatus.textContent=''; hide(postModal); }, 1200);
-  }catch(err){
-    console.error(err);
-    postStatus.textContent = 'Upload failed: ' + (err.message || '');
-  }
-});
-
-/* Rishta header button -> open modal with WA link */
-rishtaBtn.addEventListener('click', ()=>{
-  // prefill header message
-  waLinkHeader.href = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE_HEADER}`;
-  show(rishtaModal);
-});
-closeRishta.addEventListener('click', ()=> hide(rishtaModal));
-
-/* Admin login/logout UI */
-loginBtn.addEventListener('click', ()=> show(loginModal));
-closeLogin.addEventListener('click', ()=> hide(loginModal));
-closeLogin2.addEventListener('click', ()=> hide(loginModal));
-
-doLogin.addEventListener('click', async ()=>{
-  const email = loginEmail.value.trim();
-  const pass = loginPass.value;
-  loginStatus.textContent = 'Logging in...';
-  try{
-    await signInWithEmailAndPassword(auth, email, pass);
-    loginStatus.textContent = 'Logged in';
-    hide(loginModal);
-  }catch(err){
-    console.error(err);
-    loginStatus.textContent = 'Login failed';
-  }finally{ setTimeout(()=> loginStatus.textContent = '', 1500); }
-});
-
-logoutBtn.addEventListener('click', async ()=>{
-  await signOut(auth);
-  alert('Logged out');
-});
-
-/* onAuth change -> show admin panel if admin email */
-onAuthStateChanged(auth, async (user)=>{
-  currentUser = user;
-  isAdmin = (user && user.email === ADMIN_EMAIL);
-  loginBtn.textContent = user ? (isAdmin ? 'Admin' : 'Logged in') : 'Admin Login';
-  adminPanel.style.display = isAdmin ? 'block' : 'none';
-  if(isAdmin) loadAdminData();
-});
-
-/* Admin: load pending & contact requests */
-async function loadAdminData(){
-  pendingList.innerHTML = 'Loading...';
-  try{
-    const pq = query(collection(db,'profiles'), where('approved','==', false), orderBy('created','desc'));
-    const psnap = await getDocs(pq);
-    pendingList.innerHTML = '';
-    psnap.forEach(s=>{
-      const p = s.data();
-      const li = document.createElement('li');
-      li.className = 'border p-2 rounded flex items-start justify-between gap-2';
-      li.innerHTML = `<div>
-        <div class="font-medium">${esc(p.name)} <span class="text-sm text-gray-500">, ${esc(p.age)}</span></div>
-        <div class="text-sm text-gray-500">${esc(p.city)} · ${esc(p.gender)}</div>
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <header class="bg-white shadow">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="https://via.placeholder.com/48x48?text=NP" alt="logo" class="rounded-full" />
+        <div>
+          <h1 class="font-bold text-lg">Nikah Portal</h1>
+          <p class="text-sm text-gray-600">सभी प्रोफ़ाइल यहाँ दिखाई देंगी — पोस्ट केवल एडमिन कर सकेगा</p>
+        </div>
       </div>
-      <div class="flex flex-col gap-2">
-        <button class="approve bg-green-600 text-white px-2 py-1 rounded text-sm">Approve</button>
-        <button class="del bg-red-600 text-white px-2 py-1 rounded text-sm">Delete</button>
-      </div>`;
-      li.querySelector('.approve').addEventListener('click', async ()=>{
-        await updateDoc(doc(db,'profiles',s.id), { approved:true });
-        loadAdminData(); loadProfiles();
-      });
-      li.querySelector('.del').addEventListener('click', async ()=>{
-        if(!confirm('Delete profile permanently?')) return;
-        await deleteDoc(doc(db,'profiles',s.id));
-        loadAdminData(); loadProfiles();
-      });
-      pendingList.appendChild(li);
-    });
-    if(psnap.empty) pendingList.innerHTML = '<div class="text-sm text-gray-500">No pending profiles.</div>';
-  }catch(err){ console.error(err); pendingList.innerHTML = '<div class="text-red-600">Failed to load pending.</div>'; }
 
-  // contact requests listing (if any)
-  contactList.innerHTML = 'Loading...';
-  try{
-    const cq = query(collection(db,'contactRequests'), orderBy('timestamp','desc'));
-    const csnap = await getDocs(cq);
-    contactList.innerHTML = '';
-    csnap.forEach(s=>{
-      const r = s.data();
-      const li = document.createElement('li');
-      li.className = 'border p-2 rounded';
-      li.innerHTML = `<div><strong>${esc(r.userEmail || 'Unknown')}</strong> requested contact for <span class="font-medium">${esc(r.profileId)}</span></div>
-        <div class="text-xs text-gray-500">${new Date(r.timestamp||0).toLocaleString()}</div>`;
-      contactList.appendChild(li);
-    });
-    if(csnap.empty) contactList.innerHTML = '<div class="text-sm text-gray-500">No contact requests.</div>';
-  }catch(err){ console.error(err); contactList.innerHTML = '<div class="text-red-600">Failed to load requests.</div>'; }
-}
+      <div class="flex items-center gap-3">
+        <span id="statusText" class="text-sm text-gray-600">Not signed in</span>
+        <button id="loginBtn" class="px-3 py-2 border rounded">Sign in (Google)</button>
+        <button id="logoutBtn" class="px-3 py-2 border rounded hidden">Logout</button>
+        <!-- Header WhatsApp button -->
+        <a href="https://wa.me/9112170192?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87%2C%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%95%E0%A4%BE%E0%A4%B0%20%E0%A4%AC%E0%A4%BE%E0%A4%B0%E0%A5%80%20%E0%A4%B0%E0%A4%BF%E0%A4%B6%E0%A5%8D%E0%A4%A4%E0%A5%87%20%E0%A4%9C%E0%A5%8B%E0%A4%A1%E0%A5%87" target="_blank" class="ml-3 bg-green-600 text-white px-4 py-2 rounded">रिश्ते जोड़े</a>
+      </div>
+    </div>
+  </header>
 
-refreshAdmin.addEventListener('click', ()=> loadAdminData());
+  <main class="max-w-6xl mx-auto p-4">
+    <!-- Admin form (only visible to admin user) -->
+    <section id="adminFormWrap" class="hidden bg-white rounded shadow p-4 mb-6">
+      <h2 class="font-bold text-lg">नया प्रोफ़ाइल पोस्ट करें (केवल एडमिन)</h2>
+      <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        <input id="name" class="border p-2 rounded" placeholder="पूरा नाम" required />
+        <input id="age" type="number" class="border p-2 rounded" placeholder="उम्र" />
+        <select id="gender" class="border p-2 rounded">
+          <option value="">लिंग चुनें</option>
+          <option value="Male">पुरुष</option>
+          <option value="Female">महिला</option>
+          <option value="Other">अन्य</option>
+        </select>
+        <input id="religion" class="border p-2 rounded" placeholder="धर्म" />
+        <input id="motherTongue" class="border p-2 rounded" placeholder="मातृभाषा" />
+        <input id="city" class="border p-2 rounded" placeholder="शहर" />
+        <input id="education" class="border p-2 rounded" placeholder="शिक्षा" />
+        <input id="occupation" class="border p-2 rounded" placeholder="पेशा" />
+        <textarea id="about" class="border p-2 rounded md:col-span-2" placeholder="आत्म-परिचय / बायो"></textarea>
+        <input id="images" type="file" accept="image/*" multiple class="md:col-span-2" />
+        <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded md:col-span-2">Post Profile</button>
+      </form>
+    </section>
 
-/* initial load */
-loadProfiles();
+    <!-- Profiles grid -->
+    <section>
+      <h2 class="font-bold text-lg mb-3">प्रोफ़ाइल्स</h2>
+      <div id="profilesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+  </main>
 
-</script>
+  <!-- Modal -->
+  <div id="profileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-3xl w-full p-4 relative">
+      <button id="closeModal" class="absolute right-3 top-3 text-gray-600">✖</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- Note: The Firebase app & logic are in the ES module above. This is a single-file starting point. -->
 </body>
 </html>
