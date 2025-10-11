@@ -5,9 +5,172 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nikah Portal | Shadi.com Style</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+// ------------- CONFIG -------------
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_MSG_ID",
+  appId: "YOUR_APP_ID"
+};
+const IMG_API_KEY = "YOUR_IMGBB_KEY";
+const ADMIN_EMAIL = "YOUR_ADMIN_EMAIL";
+const ADMIN_PASSWORD = "YOUR_ADMIN_PASSWORD";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth();
+
+// ------------- ELEMENTS -------------
+const profilesGrid = document.getElementById('profilesGrid');
+const postBtn = document.getElementById('postBtn');
+const postModal = document.getElementById('postModal');
+const closePost = document.getElementById('closePost');
+const postForm = document.getElementById('postForm');
+const adminBtn = document.getElementById('adminBtn');
+const adminPanel = document.getElementById('adminPanel');
+const adminList = document.getElementById('adminList');
+const filterName = document.getElementById('filterName');
+const filterGender = document.getElementById('filterGender');
+const filterBtn = document.getElementById('filterBtn');
+const profileModal = document.getElementById('profileModal');
+const modalImg = document.getElementById('modalImg');
+const modalName = document.getElementById('modalName');
+const modalInfo = document.getElementById('modalInfo');
+const modalDesc = document.getElementById('modalDesc');
+const closeModal = document.getElementById('closeModal');
+
+let currentAdmin = false;
+let currentUser = null;
+
+// ------------- UTILS -------------
+function esc(s){ return s?String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"):""; }
+
+async function uploadToImgbb(file){
+  if(file.size > 2*1024*1024) throw new Error("Image size must be <2MB");
+  const fd = new FormData();
+  fd.append('image',file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
+  const data = await res.json();
+  if(data && data.success) return data.data.display_url;
+  throw new Error('Image upload failed');
+}
+
+// ------------- AUTH STATE -------------
+(async function(){ // Auto-login admin
+  try{ await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD); }catch(e){ console.warn(e); }
+})();
+
+onAuthStateChanged(auth,user=>{
+  currentUser = user;
+  if(user?.email===ADMIN_EMAIL){
+    currentAdmin = true;
+    adminBtn.classList.remove('hidden');
+  } else {
+    currentAdmin = false;
+    adminBtn.classList.add('hidden');
+  }
+  loadProfiles();
+  if(currentAdmin) loadAdminProfiles();
+});
+
+// ------------- MODALS -------------
+postBtn.onclick = ()=>postModal.style.display='flex';
+closePost.onclick = ()=>postModal.style.display='none';
+closeModal.onclick = ()=>profileModal.style.display='none';
+
+function showProfileModal(p){
+  modalImg.src = esc(p.imageUrl);
+  modalName.textContent = esc(p.name);
+  modalInfo.textContent = `${esc(p.age)} · ${esc(p.city)} · ${esc(p.gender)}`;
+  modalDesc.textContent = esc(p.about || '');
+  profileModal.style.display = 'flex';
+}
+
+// ------------- LOAD PROFILES -------------
+async function loadProfiles(){
+  profilesGrid.innerHTML="Loading...";
+  const q = query(collection(db,'profiles'), where('approved','==',true));
+  const snap = await getDocs(q);
+  profilesGrid.innerHTML="";
+  let arr=[];
+  snap.forEach(s=>arr.push({id:s.id,...s.data()}));
+  arr.sort((a,b)=>(b.created||0)-(a.created||0));
+  arr.forEach(p=>{
+    if((!filterName.value || p.name.toLowerCase().includes(filterName.value.toLowerCase()) || (p.city||'').toLowerCase().includes(filterName.value.toLowerCase())) &&
+       (!filterGender.value || p.gender===filterGender.value)){
+      const card = document.createElement('div');
+      card.className='profile-card bg-white rounded-lg shadow cursor-pointer overflow-hidden';
+      card.innerHTML = `<img src="${esc(p.imageUrl)}" class="w-full h-48 object-cover">
+        <div class="p-3"><h4 class="font-semibold">${esc(p.name)}, ${esc(p.age)}</h4>
+        <p class="text-sm text-gray-500">${esc(p.city)} · ${esc(p.gender)}</p></div>`;
+      card.onclick = ()=>showProfileModal(p);
+      profilesGrid.appendChild(card);
+    }
+  });
+}
+
+// ------------- FILTER -------------
+filterBtn.onclick = ()=>loadProfiles();
+
+// ------------- POST FORM -------------
+postForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const f = new FormData(postForm);
+  const name = f.get('name').trim();
+  const age = f.get('age').trim();
+  const city = f.get('city').trim();
+  const gender = f.get('gender').trim();
+  const about = f.get('about').trim();
+  const imageFile = f.get('image');
+  if(!name || !age || !gender || !imageFile){ alert("Please fill required fields"); return; }
+
+  try{
+    const imageUrl = await uploadToImgbb(imageFile);
+    await addDoc(collection(db,'profiles'),{
+      name, age, city, gender, about, imageUrl, approved:false, created: Date.now()
+    });
+    alert("Profile submitted! Awaiting admin approval.");
+    postModal.style.display='none';
+    postForm.reset();
+    loadProfiles();
+    if(currentAdmin) loadAdminProfiles();
+  }catch(err){ alert(err.message); }
+});
+
+// ------------- ADMIN PANEL -------------
+adminBtn.onclick=()=>adminPanel.classList.toggle('hidden');
+
+async function loadAdminProfiles(){
+  if(!currentAdmin) return;
+  adminList.innerHTML="Loading...";
+  const snap = await getDocs(collection(db,'profiles'));
+  adminList.innerHTML="";
+  snap.forEach(s=>{
+    const p = s.data();
+    const li = document.createElement('li');
+    li.className="border p-2 rounded flex justify-between items-center";
+    li.innerHTML=`<div><strong>${esc(p.name)}</strong> (${esc(p.gender)}) - ${esc(p.city}) [${p.approved?'Approved':'Pending'}]</div>
+      <div class="space-x-2">
+        <button class="approve bg-green-500 text-white px-2 py-1 rounded">Approve</button>
+        <button class="del bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+      </div>`;
+    li.querySelector('.approve').onclick=async()=>{
+      await updateDoc(doc(db,'profiles',s.id),{approved:true}); loadAdminProfiles(); loadProfiles();
+    };
+    li.querySelector('.del').onclick=async()=>{
+      await updateDoc(doc(db,'profiles',s.id),{approved:false}); loadAdminProfiles(); loadProfiles();
+    };
+    adminList.appendChild(li);
+  });
+}
+</script>
 
 <style>
 body{font-family:'Inter',sans-serif;background:#f8fafc;}
@@ -15,65 +178,33 @@ header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rg
 .profile-card{transition:all .3s ease;}
 .profile-card:hover{transform:translateY(-5px);box-shadow:0 8px 15px rgba(0,0,0,0.1);}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:50;}
-.modal-content{background:white;border-radius:1rem;max-width:500px;width:90%;padding:20px;}
+.modal-content{background:white;border-radius:1rem;max-width:500px;width:90%;padding:20px;max-height:90vh;overflow:auto;}
 </style>
+
 </head>
 <body>
-
-<!-- HEADER -->
-<header class="p-4 shadow">
-  <div class="max-w-6xl mx-auto flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-green-700">💍 Nikah Portal</h1>
-    <div class="space-x-2">
-      <button id="postBtn" class="bg-blue-600 text-white px-4 py-1 rounded">Post Profile</button>
-      <button id="adminBtn" class="bg-green-600 text-white px-4 py-1 rounded">Admin</button>
-    </div>
-  </div>
+<header class="p-4 shadow flex justify-between items-center max-w-6xl mx-auto">
+<h1 class="text-2xl font-bold text-green-700">💍 Nikah Portal</h1>
+<div>
+  <button id="postBtn" class="bg-blue-600 text-white px-4 py-1 rounded">Post Profile</button>
+  <button id="adminBtn" class="bg-green-600 text-white px-4 py-1 rounded hidden">Admin</button>
+</div>
 </header>
 
-<!-- HERO -->
-<section class="relative bg-gradient-to-r from-green-50 to-white rounded-lg shadow p-8 mt-4 mx-4 max-w-6xl mx-auto overflow-hidden">
-  <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e" class="absolute inset-0 w-full h-full object-cover opacity-10" />
-  <div class="relative">
-    <h2 class="text-3xl font-bold text-green-800">Find Your Perfect Match</h2>
-    <p class="text-gray-600 mt-2">Trusted matrimonial portal inspired by Shadi.com</p>
-  </div>
-</section>
+<div class="max-w-6xl mx-auto mt-6 p-4 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="profilesGrid"></div>
 
-<!-- FILTER -->
-<div class="max-w-6xl mx-auto mt-6 bg-white p-4 rounded-lg shadow flex flex-wrap gap-3 items-center">
-  <input id="filterName" type="text" placeholder="Search by name/city" class="border p-2 rounded flex-1">
-  <select id="filterGender" class="border p-2 rounded">
-    <option value="">All</option>
-    <option value="Male">Male</option>
-    <option value="Female">Female</option>
-  </select>
-  <button id="filterBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Search</button>
-</div>
-
-<!-- PROFILES -->
-<div id="profilesGrid" class="max-w-6xl mx-auto grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 mt-4"></div>
-
-<!-- ADMIN DASHBOARD -->
-<div id="adminPanel" class="hidden max-w-6xl mx-auto bg-white shadow rounded-lg mt-6 p-4">
-  <h3 class="text-xl font-semibold mb-3 text-green-700">Admin Dashboard</h3>
-  <ul id="adminList" class="space-y-3"></ul>
-</div>
-
-<!-- POST FORM -->
+<!-- POST FORM MODAL -->
 <div id="postModal" class="modal-bg">
   <div class="modal-content">
     <button id="closePost" class="float-right text-red-600">✖</button>
     <h3 class="text-lg font-semibold mb-2 text-green-700">Post Your Profile</h3>
     <form id="postForm" class="space-y-2">
-      <input type="text" id="name" placeholder="Full Name" required class="border p-2 w-full rounded">
-      <input type="number" id="age" placeholder="Age" required class="border p-2 w-full rounded">
-      <input type="text" id="city" placeholder="City" required class="border p-2 w-full rounded">
-      <select id="gender" class="border p-2 w-full rounded" required>
-        <option value="">Select Gender</option><option>Male</option><option>Female</option>
-      </select>
-      <textarea id="about" placeholder="About yourself..." class="border p-2 w-full rounded"></textarea>
-      <input type="file" id="image" accept="image/*" required class="border p-2 w-full rounded">
+      <input type="text" name="name" placeholder="Full Name" required class="border p-2 w-full rounded">
+      <input type="number" name="age" placeholder="Age" required class="border p-2 w-full rounded">
+      <input type="text" name="city" placeholder="City" required class="border p-2 w-full rounded">
+      <select name="gender" required class="border p-2 w-full rounded"><option value="">Select Gender</option><option>Male</option><option>Female</option></select>
+      <textarea name="about" placeholder="About yourself..." class="border p-2 w-full rounded"></textarea>
+      <input type="file" name="image" accept="image/*" required class="border p-2 w-full rounded">
       <button class="bg-blue-600 text-white px-4 py-2 rounded w-full">Submit</button>
     </form>
   </div>
@@ -83,136 +214,17 @@ header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rg
 <div id="profileModal" class="modal-bg">
   <div class="modal-content">
     <button id="closeModal" class="float-right text-red-600">✖</button>
-    <img id="modalImg" class="rounded-lg w-full h-60 object-cover mt-2" />
+    <img id="modalImg" class="rounded-lg w-full h-60 object-cover mt-2"/>
     <h3 id="modalName" class="text-xl font-bold mt-3"></h3>
     <p id="modalInfo" class="text-gray-600"></p>
     <p id="modalDesc" class="mt-2 text-sm"></p>
   </div>
 </div>
 
-<script>
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth();
-const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
-
-const profilesGrid = document.getElementById('profilesGrid');
-const adminPanel = document.getElementById('adminPanel');
-const adminList = document.getElementById('adminList');
-
-// Load Approved Profiles
-async function loadProfiles() {
-  profilesGrid.innerHTML = "Loading...";
-  const q = query(collection(db, 'profiles'), where('approved', '==', true));
-  const snap = await getDocs(q);
-  profilesGrid.innerHTML = "";
-  snap.forEach(s=>{
-    const d = s.data();
-    const card = document.createElement('div');
-    card.className = "profile-card bg-white rounded-lg shadow overflow-hidden cursor-pointer";
-    card.innerHTML = `<img src="${d.imageUrl}" class="w-full h-48 object-cover">
-      <div class="p-3"><h4 class="font-semibold">${d.name}, ${d.age}</h4>
-      <p class="text-sm text-gray-500">${d.city} · ${d.gender}</p></div>`;
-    card.onclick = ()=>showModal(d);
-    profilesGrid.appendChild(card);
-  });
-}
-loadProfiles();
-
-// Profile Modal
-function showModal(d){
-  document.getElementById('modalImg').src = d.imageUrl;
-  document.getElementById('modalName').textContent = d.name;
-  document.getElementById('modalInfo').textContent = `${d.age} · ${d.city} · ${d.gender}`;
-  document.getElementById('modalDesc').textContent = d.about || '';
-  document.getElementById('profileModal').style.display = "flex";
-}
-document.getElementById('closeModal').onclick = ()=>document.getElementById('profileModal').style.display="none";
-
-// Filter
-document.getElementById('filterBtn').onclick = async ()=>{
-  const name = document.getElementById('filterName').value.trim().toLowerCase();
-  const gender = document.getElementById('filterGender').value;
-  const q = query(collection(db,'profiles'), where('approved','==', true));
-  const snap = await getDocs(q);
-  profilesGrid.innerHTML="";
-  snap.forEach(s=>{
-    const d = s.data();
-    if((!name || d.name.toLowerCase().includes(name) || d.city.toLowerCase().includes(name)) &&
-       (!gender || d.gender === gender)){
-      const card=document.createElement('div');
-      card.className="profile-card bg-white rounded-lg shadow overflow-hidden cursor-pointer";
-      card.innerHTML=`<img src="${d.imageUrl}" class="w-full h-48 object-cover">
-        <div class="p-3"><h4 class="font-semibold">${d.name}, ${d.age}</h4>
-        <p class="text-sm text-gray-500">${d.city} · ${d.gender}</p></div>`;
-      card.onclick=()=>showModal(d);
-      profilesGrid.appendChild(card);
-    }
-  });
-};
-
-// Post Form
-const postModal=document.getElementById('postModal');
-document.getElementById('postBtn').onclick=()=>postModal.style.display="flex";
-document.getElementById('closePost').onclick=()=>postModal.style.display="none";
-document.getElementById('postForm').addEventListener('submit',async(e)=>{
-  e.preventDefault();
-  const file=document.getElementById('image').files[0];
-  const fData=new FormData();
-  fData.append("image",file);
-  const res=await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`,{method:"POST",body:fData});
-  const img=await res.json();
-  await addDoc(collection(db,'profiles'),{
-    name:name.value,age:age.value,city:city.value,gender:gender.value,about:about.value,
-    imageUrl:img.data.url,approved:false,created:Date.now()
-  });
-  alert("Profile submitted! Awaiting admin approval.");
-  postModal.style.display="none";
-});
-
-// Admin Login
-document.getElementById('adminBtn').onclick=async()=>{
-  const email=prompt("Admin Email:");
-  const pass=prompt("Password:");
-  try{
-    await signInWithEmailAndPassword(auth,email,pass);
-    alert("Welcome Admin!");
-    adminPanel.classList.remove('hidden');
-    loadAdminProfiles();
-  }catch(err){alert("Login failed");}
-};
-
-async function loadAdminProfiles(){
-  adminList.innerHTML="Loading...";
-  const snap=await getDocs(collection(db,'profiles'));
-  adminList.innerHTML="";
-  snap.forEach(s=>{
-    const d=s.data();
-    const li=document.createElement('li');
-    li.className="border p-2 rounded flex justify-between items-center";
-    li.innerHTML=`<div><strong>${d.name}</strong> (${d.gender}) - ${d.city}</div>
-      <div class="space-x-2">
-      <button class="approve bg-green-500 text-white px-2 py-1 rounded">Approve</button>
-      <button class="del bg-red-500 text-white px-2 py-1 rounded">Delete</button></div>`;
-    li.querySelector('.approve').onclick=async()=>{await updateDoc(doc(db,'profiles',s.id),{approved:true});loadAdminProfiles();};
-    li.querySelector('.del').onclick=async()=>{await deleteDoc(doc(db,'profiles',s.id));loadAdminProfiles();};
-    adminList.appendChild(li);
-  });
-}
-</script>
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="hidden max-w-6xl mx-auto bg-white shadow rounded-lg mt-6 p-4">
+  <h3 class="text-xl font-semibold mb-3 text-green-700">Admin Dashboard</h3>
+  <ul id="adminList" class="space-y-3"></ul>
+</div>
 </body>
 </html>
