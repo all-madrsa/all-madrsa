@@ -15,68 +15,44 @@
     header h1 { margin:0; font-size:22px; flex:1; }
     #logoutBtn {
       background:#dc3545; color:white; border:none; border-radius:6px;
-      padding:6px 10px; cursor:pointer; margin-right:10px;
-      display:none;
+      padding:6px 10px; cursor:pointer; margin-right:10px; display:none;
     }
-
-    main { max-width:1100px; margin:auto; padding:15px; }
     .grid {
       display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap:15px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap:15px; max-width:1100px; margin:auto; padding:15px;
     }
     .card {
       background:white; border-radius:12px; overflow:hidden;
       box-shadow:0 3px 8px rgba(0,0,0,0.15);
       display:flex; flex-direction:column; align-items:center;
-      transition:transform 0.2s;
     }
-    .card:hover { transform:translateY(-4px); }
     .card img { width:100%; height:220px; object-fit:cover; background:#eee; }
-    .card-body { padding:10px; text-align:center; width:100%; }
+    .card-body { padding:10px; text-align:center; }
     .card-body h3 { margin:6px 0; font-size:18px; color:#116530; }
-    .card-body p { margin:4px 0; font-size:14px; color:#555; }
-    .card-actions { display:flex; justify-content:center; gap:8px; padding:10px; flex-wrap:wrap; }
-    .card-actions button, .card-actions a {
-      border:none; padding:6px 10px; border-radius:6px; font-size:13px; cursor:pointer;
-      text-decoration:none; display:inline-block;
+    .card-actions { display:flex; gap:8px; padding:10px; }
+    .card-actions a, .card-actions button {
+      background:#25d366; color:white; padding:6px 10px; border-radius:6px;
+      font-size:13px; text-decoration:none; cursor:pointer; border:none;
     }
-    .contact-btn { background:#25d366; color:white; }
-    .edit-btn { background:#ffc107; }
-    .delete-btn { background:#dc3545; color:white; }
+    .contact-list { width:100%; padding:10px; font-size:13px; }
+    .contact-item { background:#f0f0f0; margin:5px 0; padding:5px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; }
 
-    /* Contact Popup */
+    /* Popup */
     #contactPopup {
       position:fixed; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center;
     }
-    #contactBox {
-      background:white; padding:20px; border-radius:12px; width:90%; max-width:350px;
-      box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    #popupBox {
+      background:white; padding:20px; border-radius:12px; width:90%; max-width:400px;
     }
-    #contactBox h3 { margin-top:0; color:#116530; }
-    #contactBox input {
-      width:100%; margin:8px 0; padding:10px; border:1px solid #ccc; border-radius:6px;
+    #popupBox input {
+      width:100%; margin:8px 0; padding:10px;
+      border:1px solid #ccc; border-radius:6px;
     }
-    #contactBox button {
-      margin-top:10px; padding:10px; border:none; border-radius:6px; cursor:pointer; width:100%;
-    }
-    #submitContact { background:#116530; color:white; }
-    #cancelContact { background:#999; color:white; }
-
-    .interested {
-      background:#f9f9f9; border-top:1px solid #ddd; width:100%; padding:10px;
-    }
-    .interested h4 { margin:0 0 8px; font-size:14px; color:#116530; }
-    .interested-item {
-      display:flex; justify-content:space-between; align-items:center;
-      background:white; padding:6px; margin:4px 0; border-radius:6px;
-      box-shadow:0 1px 3px rgba(0,0,0,0.1);
-      font-size:13px;
-    }
-    .interested-item a {
-      background:#25d366; color:white; padding:4px 8px; border-radius:4px; text-decoration:none; font-size:12px;
-    }
+    #popupBox button { width:100%; margin-top:10px; padding:10px; border:none; border-radius:6px; cursor:pointer; }
+    #submitContactBtn { background:#116530; color:white; }
+    #closePopupBtn { background:#999; color:white; margin-top:5px; }
   </style>
 </head>
 <body>
@@ -86,19 +62,17 @@
   <button id="logoutBtn" onclick="logout()">Logout</button>
 </header>
 
-<main>
-  <div class="grid" id="members"></div>
-</main>
+<div class="grid" id="members"></div>
 
 <!-- Contact Popup -->
 <div id="contactPopup">
-  <div id="contactBox">
-    <h3>📞 संपर्क जानकारी</h3>
-    <input type="text" id="cName" placeholder="आपका नाम">
-    <input type="text" id="cAddress" placeholder="पता (City)">
-    <input type="text" id="cWhatsapp" placeholder="WhatsApp नंबर (91...)" maxlength="12">
-    <button id="submitContact">Submit</button>
-    <button id="cancelContact" onclick="closeContact()">Cancel</button>
+  <div id="popupBox">
+    <h3>अपनी जानकारी भरें</h3>
+    <input type="text" id="contactName" placeholder="आपका नाम">
+    <input type="text" id="contactAddress" placeholder="पता">
+    <input type="text" id="contactWhatsapp" placeholder="WhatsApp नंबर">
+    <button id="submitContactBtn" onclick="submitContact()">Submit</button>
+    <button id="closePopupBtn" onclick="closePopup()">Cancel</button>
   </div>
 </div>
 
@@ -117,17 +91,18 @@
     appId: "1:619313835874:web:e387e1297663f11fc2463b"
   };
   firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
   const db = firebase.firestore();
 
   const adminEmails = ["zaradigitalseva@gmail.com"];
-  let currentContactProfile = null;
-
   const membersContainer = document.getElementById("members");
 
-  // Load profiles with interested list
-  db.collection("members").orderBy("name").onSnapshot(snapshot=>{
+  let currentContactProfileId = null;
+
+  // Load profiles
+  db.collection("members").orderBy("name").onSnapshot(async snapshot=>{
     membersContainer.innerHTML="";
-    snapshot.forEach(doc=>{
+    for(const doc of snapshot.docs){
       const d = doc.data();
       const card = document.createElement("div");
       card.className="card";
@@ -137,69 +112,76 @@
 
       const body = document.createElement("div");
       body.className="card-body";
-      body.innerHTML = `<h3>${d.name}</h3><p>उम्र: ${d.age}</p><p>शहर: ${d.city}</p>`;
+      body.innerHTML = `<h3>${d.name}</h3><p>उम्र: ${d.age}</p><p>${d.city}</p>`;
 
       const actions = document.createElement("div");
       actions.className="card-actions";
 
       const contactBtn = document.createElement("button");
-      contactBtn.className="contact-btn";
-      contactBtn.textContent="📞 Contact";
-      contactBtn.onclick=()=>openContact(doc.id);
+      contactBtn.textContent = "📞 Connect";
+      contactBtn.onclick = ()=>openPopup(doc.id);
       actions.appendChild(contactBtn);
 
       card.appendChild(img);
       card.appendChild(body);
       card.appendChild(actions);
 
-      // Interested People (for Admin)
-      const interestedDiv = document.createElement("div");
-      interestedDiv.className="interested";
-
-      db.collection("members").doc(doc.id).collection("interested").get().then(subSnap=>{
-        if(!subSnap.empty){
-          interestedDiv.innerHTML="<h4>Interested People:</h4>";
-          subSnap.forEach(p=>{
-            const person=p.data();
-            const item=document.createElement("div");
-            item.className="interested-item";
-            item.innerHTML=`<span>${person.name} - ${person.address}</span>
-            <a href="https://wa.me/${person.whatsapp}" target="_blank">WhatsApp</a>`;
-            interestedDiv.appendChild(item);
-          });
-          card.appendChild(interestedDiv);
-        }
-      });
+      // Admin view: Show contacts
+      if(auth.currentUser && adminEmails.includes(auth.currentUser.email)){
+        const listDiv = document.createElement("div");
+        listDiv.className = "contact-list";
+        const contactsSnap = await db.collection("members").doc(doc.id).collection("contacts").get();
+        contactsSnap.forEach(c=>{
+          const cd = c.data();
+          const item = document.createElement("div");
+          item.className="contact-item";
+          item.innerHTML = `
+            <div>
+              <strong>${cd.name}</strong><br>
+              ${cd.address}<br>
+              ${cd.whatsapp}
+            </div>
+            <a href="https://wa.me/${cd.whatsapp}" target="_blank">WhatsApp</a>
+          `;
+          listDiv.appendChild(item);
+        });
+        card.appendChild(listDiv);
+      }
 
       membersContainer.appendChild(card);
-    });
+    }
   });
 
-  function openContact(profileId){
-    currentContactProfile = profileId;
+  function openPopup(profileId){
+    currentContactProfileId = profileId;
     document.getElementById("contactPopup").style.display="flex";
   }
 
-  function closeContact(){
+  function closePopup(){
     document.getElementById("contactPopup").style.display="none";
-    currentContactProfile=null;
-    document.getElementById("cName").value="";
-    document.getElementById("cAddress").value="";
-    document.getElementById("cWhatsapp").value="";
+    currentContactProfileId = null;
+    document.getElementById("contactName").value="";
+    document.getElementById("contactAddress").value="";
+    document.getElementById("contactWhatsapp").value="";
   }
 
-  document.getElementById("submitContact").onclick = async ()=>{
-    const name=document.getElementById("cName").value.trim();
-    const address=document.getElementById("cAddress").value.trim();
-    const whatsapp=document.getElementById("cWhatsapp").value.trim();
-    if(!name || !address || !whatsapp) return alert("कृपया सभी जानकारी भरें");
+  async function submitContact(){
+    const name=document.getElementById("contactName").value;
+    const address=document.getElementById("contactAddress").value;
+    const whatsapp=document.getElementById("contactWhatsapp").value;
+    if(!name || !address || !whatsapp) return alert("सब जानकारी भरें");
 
-    await db.collection("members").doc(currentContactProfile)
-      .collection("interested")
-      .add({name,address,whatsapp,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+    await db.collection("members")
+      .doc(currentContactProfileId)
+      .collection("contacts")
+      .add({name,address,whatsapp, created: new Date()});
 
-    alert("✅ आपकी जानकारी भेज दी गई है");
-    closeContact();
+    closePopup();
+    alert("✅ जानकारी भेज दी गई!");
+  }
+
+  function logout(){
+    auth.signOut();
   }
 </script>
 
