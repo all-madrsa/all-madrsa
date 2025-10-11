@@ -1,230 +1,448 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nikah Portal | Shadi.com Style</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Nikah Portal — Shadi.com style (Ready)</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
-// ------------- CONFIG -------------
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_MSG_ID",
-  appId: "YOUR_APP_ID"
-};
-const IMG_API_KEY = "YOUR_IMGBB_KEY";
-const ADMIN_EMAIL = "YOUR_ADMIN_EMAIL";
-const ADMIN_PASSWORD = "YOUR_ADMIN_PASSWORD";
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth();
-
-// ------------- ELEMENTS -------------
-const profilesGrid = document.getElementById('profilesGrid');
-const postBtn = document.getElementById('postBtn');
-const postModal = document.getElementById('postModal');
-const closePost = document.getElementById('closePost');
-const postForm = document.getElementById('postForm');
-const adminBtn = document.getElementById('adminBtn');
-const adminPanel = document.getElementById('adminPanel');
-const adminList = document.getElementById('adminList');
-const filterName = document.getElementById('filterName');
-const filterGender = document.getElementById('filterGender');
-const filterBtn = document.getElementById('filterBtn');
-const profileModal = document.getElementById('profileModal');
-const modalImg = document.getElementById('modalImg');
-const modalName = document.getElementById('modalName');
-const modalInfo = document.getElementById('modalInfo');
-const modalDesc = document.getElementById('modalDesc');
-const closeModal = document.getElementById('closeModal');
-
-let currentAdmin = false;
-let currentUser = null;
-
-// ------------- UTILS -------------
-function esc(s){ return s?String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"):""; }
-
-async function uploadToImgbb(file){
-  if(file.size > 2*1024*1024) throw new Error("Image size must be <2MB");
-  const fd = new FormData();
-  fd.append('image',file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
-  const data = await res.json();
-  if(data && data.success) return data.data.display_url;
-  throw new Error('Image upload failed');
-}
-
-// ------------- AUTH STATE -------------
-(async function(){ // Auto-login admin
-  try{ await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD); }catch(e){ console.warn(e); }
-})();
-
-onAuthStateChanged(auth,user=>{
-  currentUser = user;
-  if(user?.email===ADMIN_EMAIL){
-    currentAdmin = true;
-    adminBtn.classList.remove('hidden');
-  } else {
-    currentAdmin = false;
-    adminBtn.classList.add('hidden');
-  }
-  loadProfiles();
-  if(currentAdmin) loadAdminProfiles();
-});
-
-// ------------- MODALS -------------
-postBtn.onclick = ()=>postModal.style.display='flex';
-closePost.onclick = ()=>postModal.style.display='none';
-closeModal.onclick = ()=>profileModal.style.display='none';
-
-function showProfileModal(p){
-  modalImg.src = esc(p.imageUrl);
-  modalName.textContent = esc(p.name);
-  modalInfo.textContent = `${esc(p.age)} · ${esc(p.city)} · ${esc(p.gender)}`;
-  modalDesc.textContent = esc(p.about || '');
-  profileModal.style.display = 'flex';
-}
-
-// ------------- LOAD PROFILES -------------
-async function loadProfiles(){
-  profilesGrid.innerHTML="Loading...";
-  const q = query(collection(db,'profiles'), where('approved','==',true));
-  const snap = await getDocs(q);
-  profilesGrid.innerHTML="";
-  let arr=[];
-  snap.forEach(s=>arr.push({id:s.id,...s.data()}));
-  arr.sort((a,b)=>(b.created||0)-(a.created||0));
-  arr.forEach(p=>{
-    if((!filterName.value || p.name.toLowerCase().includes(filterName.value.toLowerCase()) || (p.city||'').toLowerCase().includes(filterName.value.toLowerCase())) &&
-       (!filterGender.value || p.gender===filterGender.value)){
-      const card = document.createElement('div');
-      card.className='profile-card bg-white rounded-lg shadow cursor-pointer overflow-hidden';
-      card.innerHTML = `<img src="${esc(p.imageUrl)}" class="w-full h-48 object-cover">
-        <div class="p-3"><h4 class="font-semibold">${esc(p.name)}, ${esc(p.age)}</h4>
-        <p class="text-sm text-gray-500">${esc(p.city)} · ${esc(p.gender)}</p></div>`;
-      card.onclick = ()=>showProfileModal(p);
-      profilesGrid.appendChild(card);
-    }
-  });
-}
-
-// ------------- FILTER -------------
-filterBtn.onclick = ()=>loadProfiles();
-
-// ------------- POST FORM -------------
-postForm.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const f = new FormData(postForm);
-  const name = f.get('name').trim();
-  const age = f.get('age').trim();
-  const city = f.get('city').trim();
-  const gender = f.get('gender').trim();
-  const about = f.get('about').trim();
-  const imageFile = f.get('image');
-  if(!name || !age || !gender || !imageFile){ alert("Please fill required fields"); return; }
-
-  try{
-    const imageUrl = await uploadToImgbb(imageFile);
-    await addDoc(collection(db,'profiles'),{
-      name, age, city, gender, about, imageUrl, approved:false, created: Date.now()
-    });
-    alert("Profile submitted! Awaiting admin approval.");
-    postModal.style.display='none';
-    postForm.reset();
-    loadProfiles();
-    if(currentAdmin) loadAdminProfiles();
-  }catch(err){ alert(err.message); }
-});
-
-// ------------- ADMIN PANEL -------------
-adminBtn.onclick=()=>adminPanel.classList.toggle('hidden');
-
-async function loadAdminProfiles(){
-  if(!currentAdmin) return;
-  adminList.innerHTML="Loading...";
-  const snap = await getDocs(collection(db,'profiles'));
-  adminList.innerHTML="";
-  snap.forEach(s=>{
-    const p = s.data();
-    const li = document.createElement('li');
-    li.className="border p-2 rounded flex justify-between items-center";
-    li.innerHTML=`<div><strong>${esc(p.name)}</strong> (${esc(p.gender)}) - ${esc(p.city}) [${p.approved?'Approved':'Pending'}]</div>
-      <div class="space-x-2">
-        <button class="approve bg-green-500 text-white px-2 py-1 rounded">Approve</button>
-        <button class="del bg-red-500 text-white px-2 py-1 rounded">Delete</button>
-      </div>`;
-    li.querySelector('.approve').onclick=async()=>{
-      await updateDoc(doc(db,'profiles',s.id),{approved:true}); loadAdminProfiles(); loadProfiles();
-    };
-    li.querySelector('.del').onclick=async()=>{
-      await updateDoc(doc(db,'profiles',s.id),{approved:false}); loadAdminProfiles(); loadProfiles();
-    };
-    adminList.appendChild(li);
-  });
-}
-</script>
-
 <style>
-body{font-family:'Inter',sans-serif;background:#f8fafc;}
-header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(255,255,255,0.9);}
-.profile-card{transition:all .3s ease;}
-.profile-card:hover{transform:translateY(-5px);box-shadow:0 8px 15px rgba(0,0,0,0.1);}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:50;}
-.modal-content{background:white;border-radius:1rem;max-width:500px;width:90%;padding:20px;max-height:90vh;overflow:auto;}
+  body { background:#f3f4f6; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; }
+  .card { background:#fff; border-radius:12px; overflow:hidden; transition:transform .18s, box-shadow .18s; }
+  .card:hover { transform:translateY(-6px); box-shadow:0 12px 30px rgba(2,6,23,0.08); }
+  header { backdrop-filter: blur(6px); background: rgba(255,255,255,0.85); }
+  .modal-bg { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:60; padding:1rem; }
+  .modal { background:white; border-radius:12px; max-width:900px; width:100%; max-height:90vh; overflow:auto; padding:1rem; }
+  .small-modal { max-width:520px; }
+  .chip { background:#eef2ff; color:#3730a3; padding:4px 8px; border-radius:999px; font-size:12px; display:inline-block; }
 </style>
-
 </head>
 <body>
-<header class="p-4 shadow flex justify-between items-center max-w-6xl mx-auto">
-<h1 class="text-2xl font-bold text-green-700">💍 Nikah Portal</h1>
-<div>
-  <button id="postBtn" class="bg-blue-600 text-white px-4 py-1 rounded">Post Profile</button>
-  <button id="adminBtn" class="bg-green-600 text-white px-4 py-1 rounded hidden">Admin</button>
-</div>
+
+<header class="sticky top-0 z-50 shadow">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold text-xl">N</div>
+      <div>
+        <h1 class="text-lg font-semibold">Nikah Portal</h1>
+        <p class="text-xs text-gray-500">Shadi.com style — admin-approved matrimonial site</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <input id="globalSearch" class="hidden md:block border rounded px-3 py-2 text-sm w-72" placeholder="Search name / city..." />
+      <button id="postBtn" class="bg-green-600 text-white px-3 py-2 rounded text-sm">Post Profile</button>
+      <button id="loginBtn" class="bg-white border px-3 py-2 rounded text-sm">Admin Login</button>
+    </div>
+  </div>
 </header>
 
-<div class="max-w-6xl mx-auto mt-6 p-4 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="profilesGrid"></div>
+<main class="max-w-6xl mx-auto px-4 py-6">
+  <!-- HERO -->
+  <section class="bg-white rounded-lg shadow p-6 mb-6 overflow-hidden">
+    <div class="md:flex md:items-center md:justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold">Apna match dhoondein — safe & verified</h2>
+        <p class="text-gray-600 mt-1">Profiles admin verify karte hain before public display.</p>
+      </div>
+      <div class="w-full md:w-1/2">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input id="filterName" type="text" placeholder="Name / City" class="border rounded px-3 py-2" />
+          <select id="filterGender" class="border rounded px-3 py-2">
+            <option value="">Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+          <button id="filterBtn" class="bg-green-600 text-white rounded px-3 py-2">Filter</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<!-- POST FORM MODAL -->
+  <!-- Profiles grid -->
+  <section>
+    <div id="profilesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+  </section>
+
+  <!-- Admin panel (hidden, shown when admin logged in) -->
+  <section id="adminPanel" class="hidden mt-6">
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Admin Dashboard</h3>
+        <div>
+          <button id="refreshAdmin" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Refresh</button>
+          <button id="logoutBtn" class="bg-gray-200 px-3 py-1 rounded text-sm">Logout</button>
+        </div>
+      </div>
+
+      <div class="mt-4 grid md:grid-cols-2 gap-4">
+        <div>
+          <h4 class="font-semibold mb-2">Pending Profiles</h4>
+          <ul id="pendingList" class="space-y-2 max-h-72 overflow-auto"></ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold mb-2">Contact Requests</h4>
+          <ul id="contactList" class="space-y-2 max-h-72 overflow-auto text-sm text-gray-700"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Post modal -->
 <div id="postModal" class="modal-bg">
-  <div class="modal-content">
-    <button id="closePost" class="float-right text-red-600">✖</button>
-    <h3 class="text-lg font-semibold mb-2 text-green-700">Post Your Profile</h3>
+  <div class="modal small-modal">
+    <button id="closePost" class="float-right text-gray-600">✖</button>
+    <h3 class="text-lg font-semibold text-green-700 mb-2">Post Your Profile</h3>
     <form id="postForm" class="space-y-2">
-      <input type="text" name="name" placeholder="Full Name" required class="border p-2 w-full rounded">
-      <input type="number" name="age" placeholder="Age" required class="border p-2 w-full rounded">
-      <input type="text" name="city" placeholder="City" required class="border p-2 w-full rounded">
-      <select name="gender" required class="border p-2 w-full rounded"><option value="">Select Gender</option><option>Male</option><option>Female</option></select>
-      <textarea name="about" placeholder="About yourself..." class="border p-2 w-full rounded"></textarea>
-      <input type="file" name="image" accept="image/*" required class="border p-2 w-full rounded">
-      <button class="bg-blue-600 text-white px-4 py-2 rounded w-full">Submit</button>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <input id="p_name" name="name" placeholder="Full name" class="border p-2 rounded" required />
+        <input id="p_age" name="age" type="number" placeholder="Age" class="border p-2 rounded" required />
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <input id="p_city" name="city" placeholder="City" class="border p-2 rounded" />
+        <select id="p_gender" name="gender" class="border p-2 rounded" required>
+          <option value="">Gender</option><option>Male</option><option>Female</option>
+        </select>
+      </div>
+      <input id="p_contact" name="contact" placeholder="Contact (optional)" class="border p-2 rounded" />
+      <textarea id="p_about" name="about" placeholder="Thoda sa intro (optional)" class="border p-2 rounded w-full"></textarea>
+      <div>
+        <label class="text-sm text-gray-600">Profile Photo (max 2MB)</label>
+        <input id="p_image" name="image" type="file" accept="image/*" class="border p-2 rounded w-full" required />
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Submit</button>
+        <div id="postStatus" class="text-sm text-gray-600"></div>
+      </div>
     </form>
   </div>
 </div>
 
-<!-- PROFILE MODAL -->
+<!-- Profile modal -->
 <div id="profileModal" class="modal-bg">
-  <div class="modal-content">
-    <button id="closeModal" class="float-right text-red-600">✖</button>
-    <img id="modalImg" class="rounded-lg w-full h-60 object-cover mt-2"/>
-    <h3 id="modalName" class="text-xl font-bold mt-3"></h3>
-    <p id="modalInfo" class="text-gray-600"></p>
-    <p id="modalDesc" class="mt-2 text-sm"></p>
+  <div class="modal">
+    <button id="closeProfile" class="float-right text-gray-600">✖</button>
+    <div class="md:flex gap-4">
+      <img id="pm_img" class="w-full md:w-64 h-64 object-cover rounded" src="" alt="profile"/>
+      <div class="flex-1">
+        <h3 id="pm_name" class="text-xl font-semibold"></h3>
+        <div class="text-sm text-gray-500" id="pm_meta"></div>
+        <div class="mt-3 text-gray-700" id="pm_about"></div>
+        <div class="mt-4 flex gap-2">
+          <button id="pm_request" class="bg-blue-600 text-white px-3 py-2 rounded">Request Contact</button>
+          <button id="pm_save" class="bg-white border px-3 py-2 rounded">Save</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ADMIN PANEL -->
-<div id="adminPanel" class="hidden max-w-6xl mx-auto bg-white shadow rounded-lg mt-6 p-4">
-  <h3 class="text-xl font-semibold mb-3 text-green-700">Admin Dashboard</h3>
-  <ul id="adminList" class="space-y-3"></ul>
+<!-- Login modal -->
+<div id="loginModal" class="modal-bg">
+  <div class="modal small-modal">
+    <button id="closeLogin" class="float-right text-gray-600">✖</button>
+    <h3 class="text-lg font-semibold mb-2">Admin Login</h3>
+    <input id="loginEmail" class="border p-2 rounded w-full mb-2" placeholder="Admin email" />
+    <input id="loginPass" type="password" class="border p-2 rounded w-full mb-2" placeholder="Password" />
+    <div class="flex gap-2">
+      <button id="doLogin" class="bg-indigo-600 text-white px-3 py-2 rounded w-full">Login</button>
+      <button id="closeLogin2" class="bg-gray-200 px-3 py-2 rounded w-full">Close</button>
+    </div>
+    <div id="loginStatus" class="text-sm text-gray-600 mt-2"></div>
+  </div>
 </div>
+
+<script type="module">
+/* ================== CONFIG (you provided these keys) ================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+};
+const IMG_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+/* ========================================================================= */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs, query, where,
+  updateDoc, doc, deleteDoc, orderBy
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+/* DOM */
+const profilesGrid = document.getElementById('profilesGrid');
+const filterName = document.getElementById('filterName');
+const filterGender = document.getElementById('filterGender');
+const filterBtn = document.getElementById('filterBtn');
+
+const postBtn = document.getElementById('postBtn');
+const postModal = document.getElementById('postModal');
+const closePost = document.getElementById('closePost');
+const postForm = document.getElementById('postForm');
+const postStatus = document.getElementById('postStatus');
+
+const loginBtn = document.getElementById('loginBtn');
+const loginModal = document.getElementById('loginModal');
+const closeLogin = document.getElementById('closeLogin');
+const closeLogin2 = document.getElementById('closeLogin2');
+const doLogin = document.getElementById('doLogin');
+const loginEmail = document.getElementById('loginEmail');
+const loginPass = document.getElementById('loginPass');
+const loginStatus = document.getElementById('loginStatus');
+
+const adminPanel = document.getElementById('adminPanel');
+const pendingList = document.getElementById('pendingList');
+const contactList = document.getElementById('contactList');
+const refreshAdmin = document.getElementById('refreshAdmin');
+const logoutBtn = document.getElementById('logoutBtn');
+
+const pm = { modal: document.getElementById('profileModal'), img: document.getElementById('pm_img'), name: document.getElementById('pm_name'), meta: document.getElementById('pm_meta'), about: document.getElementById('pm_about'), requestBtn: document.getElementById('pm_request'), saveBtn: document.getElementById('pm_save') };
+const closeProfile = document.getElementById('closeProfile');
+
+let currentUser = null;
+let isAdmin = false;
+let currentProfile = null;
+
+/* small escape helper */
+function esc(s){ return s?String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"):""; }
+
+/* ImgBB upload helper */
+async function uploadToImgbb(file){
+  if(!file) throw new Error('No file selected');
+  if(file.size > 2*1024*1024) throw new Error('Image must be < 2MB');
+  const fd = new FormData();
+  fd.append('image', file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method:'POST', body:fd });
+  const data = await res.json();
+  if(!data || !data.success) throw new Error('Image upload failed');
+  return data.data.display_url || data.data.url;
+}
+
+/* Show / hide modals helpers */
+function show(el){ el.style.display = 'flex'; }
+function hide(el){ el.style.display = 'none'; }
+
+/* ---------------- Load approved profiles ---------------- */
+async function loadProfiles(){
+  profilesGrid.innerHTML = '<div class="col-span-full text-center text-gray-500">Loading...</div>';
+  try{
+    const q = query(collection(db,'profiles'), where('approved','==', true), orderBy('created','desc'));
+    const snap = await getDocs(q);
+    profilesGrid.innerHTML = '';
+    let any=false;
+    snap.forEach(docSnap=>{
+      const p = docSnap.data();
+      // client-side filter by name/city/gender (small dataset). For large dataset move filter into queries.
+      const nameq = filterName.value.trim().toLowerCase();
+      const genderq = filterGender.value;
+      if(nameq && !( (p.name||'').toLowerCase().includes(nameq) || (p.city||'').toLowerCase().includes(nameq) )) return;
+      if(genderq && p.gender !== genderq) return;
+
+      any=true;
+      const card = document.createElement('div');
+      card.className = 'card p-3 cursor-pointer';
+      card.innerHTML = `
+        <div class="relative">
+          <img src="${esc(p.imageUrl||'')}" class="w-full h-44 object-cover rounded" />
+        </div>
+        <div class="mt-3">
+          <div class="font-semibold">${esc(p.name)} <span class="text-sm text-gray-500">, ${esc(p.age)}</span></div>
+          <div class="text-sm text-gray-500">${esc(p.city)} · ${esc(p.gender)}</div>
+        </div>
+      `;
+      card.addEventListener('click', ()=> openProfileModal(docSnap.id, p));
+      profilesGrid.appendChild(card);
+    });
+    if(!any) profilesGrid.innerHTML = '<div class="col-span-full text-center text-gray-500">No profiles found.</div>';
+  }catch(err){
+    profilesGrid.innerHTML = `<div class="col-span-full text-center text-red-600">Failed to load profiles.</div>`;
+    console.error(err);
+  }
+}
+
+/* -------------- Open profile modal -------------- */
+function openProfileModal(id, p){
+  currentProfile = { id, ...p };
+  pm.img.src = p.imageUrl || '';
+  pm.name.textContent = p.name || '';
+  pm.meta.textContent = `${p.age || ''} · ${p.city || ''} · ${p.gender || ''}`;
+  pm.about.textContent = p.about || '';
+  show(pm.modal);
+}
+
+/* Request contact */
+pm.requestBtn.addEventListener('click', async ()=>{
+  if(!currentUser){
+    alert('Please login as admin or a registered user to request contact (admin will see request).');
+    return;
+  }
+  try{
+    await addDoc(collection(db,'contactRequests'), { profileId: currentProfile.id, userEmail: currentUser.email || 'unknown', timestamp: Date.now() });
+    alert('Contact request sent to admin.');
+    hide(pm.modal);
+  }catch(err){ console.error(err); alert('Failed to send request.'); }
+});
+
+/* Save (shortlist) -> localStorage */
+pm.saveBtn.addEventListener('click', ()=>{
+  const list = JSON.parse(localStorage.getItem('shortlist_nikah') || '[]');
+  if(!list.find(i=>i.id===currentProfile.id)){
+    list.unshift(currentProfile);
+    if(list.length>50) list.pop();
+    localStorage.setItem('shortlist_nikah', JSON.stringify(list));
+    alert('Saved to shortlist');
+  } else alert('Already in shortlist');
+});
+
+/* close profile */
+closeProfile.addEventListener('click', ()=> hide(pm.modal));
+
+/* ---------------- Post new profile ---------------- */
+postBtn.addEventListener('click', ()=> show(postModal));
+closePost.addEventListener('click', ()=> hide(postModal));
+
+postForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  postStatus.textContent = 'Posting...';
+  const name = document.getElementById('p_name').value.trim();
+  const age = document.getElementById('p_age').value.trim();
+  const city = document.getElementById('p_city').value.trim();
+  const gender = document.getElementById('p_gender').value;
+  const contact = document.getElementById('p_contact').value.trim();
+  const about = document.getElementById('p_about').value.trim();
+  const file = document.getElementById('p_image').files[0];
+
+  if(!name || !age || !gender || !file){ postStatus.textContent='Please fill required fields.'; return; }
+
+  try{
+    const imageUrl = await uploadToImgbb(file);
+    await addDoc(collection(db,'profiles'), {
+      name, age, city, gender, contact, about, imageUrl, approved:false, created: Date.now()
+    });
+    postStatus.textContent = 'Submitted — awaiting admin approval.';
+    postForm.reset();
+    setTimeout(()=>{ postStatus.textContent=''; hide(postModal); }, 1200);
+  }catch(err){
+    console.error(err);
+    postStatus.textContent = 'Upload failed: ' + (err.message || '');
+  }
+});
+
+/* ---------------- Admin login/logout ---------------- */
+loginBtn.addEventListener('click', ()=> show(loginModal));
+closeLogin.addEventListener('click', ()=> hide(loginModal));
+closeLogin2.addEventListener('click', ()=> hide(loginModal));
+
+doLogin.addEventListener('click', async ()=>{
+  const email = loginEmail.value.trim();
+  const pass = loginPass.value;
+  loginStatus.textContent = 'Logging in...';
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+    loginStatus.textContent = 'Logged in';
+    hide(loginModal);
+  }catch(err){
+    console.error(err);
+    loginStatus.textContent = 'Login failed';
+  }finally{ setTimeout(()=> loginStatus.textContent = '', 1500); }
+});
+
+logoutBtn.addEventListener('click', async ()=>{
+  await signOut(auth);
+  alert('Logged out');
+});
+
+/* ---------------- show admin panel when admin user ---------------- */
+onAuthStateChanged(auth, async (user)=>{
+  currentUser = user;
+  if(user){
+    // check admin by email — adjust if you have roles stored in DB
+    const adminEmails = [ /* add admin emails here if you want to predefine */ ];
+    // for now allow any authenticated user to be admin view — you can restrict by checking a list or a firestore role field
+    // We'll show admin panel if user email matches known admin or user manually logs in
+    // OPTIONAL: you can manage adminEmails array from server
+    if(adminEmails.length>0){
+      isAdmin = adminEmails.includes(user.email);
+    } else {
+      // If you want to restrict to a single admin, replace condition below
+      isAdmin = confirm('Are you admin? (click Ok if yes)'); // lightweight; remove in production
+    }
+  } else {
+    isAdmin = false;
+  }
+  document.getElementById('loginBtn').textContent = user ? (isAdmin ? 'Admin' : 'Logged in') : 'Admin Login';
+  adminPanel.style.display = isAdmin ? 'block' : 'none';
+  if(isAdmin) loadAdminData();
+});
+
+/* ---------------- Admin: load pending & contact requests ---------------- */
+async function loadAdminData(){
+  // Pending profiles
+  pendingList.innerHTML = 'Loading...';
+  try{
+    const pq = query(collection(db,'profiles'), where('approved','==', false), orderBy('created','desc'));
+    const psnap = await getDocs(pq);
+    pendingList.innerHTML = '';
+    psnap.forEach(s=>{
+      const p = s.data();
+      const li = document.createElement('li');
+      li.className = 'border p-2 rounded flex items-start justify-between gap-2';
+      li.innerHTML = `<div>
+        <div class="font-medium">${esc(p.name)} <span class="text-sm text-gray-500">, ${esc(p.age)}</span></div>
+        <div class="text-sm text-gray-500">${esc(p.city)} · ${esc(p.gender)}</div>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button class="approve bg-green-600 text-white px-2 py-1 rounded text-sm">Approve</button>
+        <button class="del bg-red-600 text-white px-2 py-1 rounded text-sm">Delete</button>
+      </div>`;
+      li.querySelector('.approve').addEventListener('click', async ()=>{
+        await updateDoc(doc(db,'profiles',s.id), { approved:true });
+        loadAdminData();
+        loadProfiles();
+      });
+      li.querySelector('.del').addEventListener('click', async ()=>{
+        if(!confirm('Delete profile permanently?')) return;
+        await deleteDoc(doc(db,'profiles',s.id));
+        loadAdminData();
+        loadProfiles();
+      });
+      pendingList.appendChild(li);
+    });
+    if(psnap.empty) pendingList.innerHTML = '<div class="text-sm text-gray-500">No pending profiles.</div>';
+  }catch(err){ console.error(err); pendingList.innerHTML = '<div class="text-red-600">Failed to load pending.</div>'; }
+
+  // Contact requests
+  contactList.innerHTML = 'Loading...';
+  try{
+    const cq = query(collection(db,'contactRequests'), orderBy('timestamp','desc'));
+    const csnap = await getDocs(cq);
+    contactList.innerHTML = '';
+    csnap.forEach(s=>{
+      const r = s.data();
+      const li = document.createElement('li');
+      li.className = 'border p-2 rounded';
+      li.innerHTML = `<div><strong>${esc(r.userEmail || 'Unknown')}</strong> requested contact for <span class="font-medium">${esc(r.profileId)}</span></div>
+        <div class="text-xs text-gray-500">${new Date(r.timestamp||0).toLocaleString()}</div>`;
+      contactList.appendChild(li);
+    });
+    if(csnap.empty) contactList.innerHTML = '<div class="text-sm text-gray-500">No contact requests.</div>';
+  }catch(err){ console.error(err); contactList.innerHTML = '<div class="text-red-600">Failed to load requests.</div>'; }
+}
+
+/* refresh admin */
+refreshAdmin.addEventListener('click', ()=> loadAdminData());
+
+/* initial load */
+loadProfiles();
+
+</script>
 </body>
 </html>
