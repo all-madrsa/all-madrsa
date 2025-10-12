@@ -14,11 +14,19 @@
   --card-radius:12px;
   --card-h:280px;
 }
-body { font-family:"Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; -webkit-font-smoothing:antialiased; }
+body {
+  font-family:"Segoe UI", sans-serif;
+  margin:0;
+  background:#f5f7f5;
+  color:#222;
+  -webkit-font-smoothing:antialiased;
+}
 
 /* HEADER */
 .site-header{
-  position:sticky; top:0; z-index:60;
+  position:sticky;
+  top:0;
+  z-index:60;
   background: linear-gradient(135deg,#6ec1ff,#3aa8ff);
   padding:8px 10px;
   box-shadow:0 6px 18px rgba(0,0,0,0.12);
@@ -66,6 +74,11 @@ body { font-family:"Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#
 .header-btn:hover{ filter:brightness(0.95); }
 .header-btn:active{ transform:translateY(1px); }
 
+@media(max-width:420px){
+  .logo-3d{ font-size:26px; padding:4px 10px; }
+  .header-btn{ padding:5px 8px; font-size:12px; }
+}
+
 /* MAIN */
 main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 
@@ -81,46 +94,95 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 @media(min-width:1024px){ .grid { grid-template-columns:repeat(4,1fr); } }
 
 /* card */
-.card { background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s; }
+.card {
+  background:white;
+  border-radius:var(--card-radius);
+  overflow:hidden;
+  height:var(--card-h);
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+  cursor:pointer;
+  transition:transform .15s;
+}
 .card:hover { transform:translateY(-4px); }
-.img-wrapper { width:100%; height:150px; overflow:hidden; display:block; cursor:pointer; -webkit-tap-highlight-color: transparent; }
-.img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; user-select:none; }
-.card-body { padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; width:100%; }
+.img-wrapper { width:100%; height:150px; overflow:hidden; display:block; }
+.img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; }
+.card-body {
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1;
+  align-items:flex-start;
+  width:100%;
+}
 .card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
 .card-body .meta { color:var(--muted); font-size:13px; }
-.card-footer { padding:10px; display:flex; gap:8px; width:100%; justify-content:flex-start; align-items:center; flex-wrap:wrap; }
+.card-footer {
+  padding:10px;
+  display:flex;
+  gap:8px;
+  width:100%;
+  justify-content:flex-start;
+  align-items:center;
+}
+.card-footer button{ flex:1; text-align:center; }
 .btn-wa { background:#25d366; color:white; padding:6px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; cursor:pointer; }
 .btn-connect { background:var(--accent); color:white; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
 .admin-small { background:#ffc107; color:#333; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
 .admin-del { background:#dc3545; color:#fff; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
 
 /* profile popup */
-#profilePopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
-.profile-card { background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative; }
+#profilePopup {
+  position:fixed; inset:0; display:none; justify-content:center; align-items:center;
+  background:rgba(0,0,0,0.55); z-index:60;
+}
+.profile-card {
+  background:white; width:95%; max-width:920px;
+  border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  overflow:auto; max-height:90vh; position:relative;
+}
 .profile-grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; padding:18px; }
 .profile-photo { width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee; }
 .profile-info { padding:8px 4px; }
 .profile-info h2 { margin:0 0 8px 0; color:var(--green); }
 .profile-info .line { margin:6px 0; color:#333; }
-.close-btn { position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+.close-btn {
+  position:absolute; right:18px; top:18px;
+  background:#eee; border:none; padding:8px 10px;
+  border-radius:8px; cursor:pointer;
+}
+
+@media(max-width:600px){
+  .profile-grid { grid-template-columns:1fr; }
+  .profile-photo { height:300px; }
+}
 
 /* connect popup */
-#connectPopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:70; }
-.connect-box { background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
-.connect-box input { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
+#connectPopup {
+  position:fixed; inset:0; display:none; justify-content:center; align-items:center;
+  background:rgba(0,0,0,0.45); z-index:70;
+}
+.connect-box {
+  background:white; padding:16px; border-radius:10px;
+  width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2);
+}
+.connect-box input, .connect-box textarea {
+  width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd;
+}
 
-/* admin add/edit panel */
+/* admin form */
 #memberForm { display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0; }
-#memberForm input, #memberForm textarea, #memberForm select { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; }
+#memberForm input, #memberForm textarea {
+  width:100%; padding:10px; margin:6px 0;
+  border-radius:8px; border:1px solid #ddd; box-sizing:border-box;
+  font-size:14px;
+}
 #adminLogs { display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06); }
 #logsTable { width:100%; border-collapse:collapse; }
 #logsTable th, #logsTable td { border-bottom:1px solid #eee; padding:8px 6px; text-align:left; font-size:14px; }
 #logsTable th { color:var(--green); font-weight:700; }
-
-@media(max-width:420px){
-  .logo-3d{ font-size:26px; padding:4px 10px; }
-  .header-btn{ padding:6px 10px; font-size:13px; }
-}
 </style>
 </head>
 <body>
@@ -129,10 +191,10 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
   <div class="logo-row">
     <div class="logo-3d">निकाह</div>
   </div>
-  <nav class="button-row" role="navigation" aria-label="Main navigation">
-    <a class="header-btn" href="index.html" title="Home">🏠 Home</a>
-    <a class="header-btn" href="nikah-Conditions.html" title="हमारे नियम">📜 हमारे नियम</a>
-    <a class="header-btn" id="whatsappBtn" href="https://wa.me/9112170192" target="_blank">📱 रिश्ते जोड़ें</a>
+  <nav class="button-row">
+    <a class="header-btn" href="index.html">🏠 Home</a>
+    <a class="header-btn" href="nikah-Conditions.html">📜 हमारे नियम</a>
+    <a class="header-btn" href="https://wa.me/9112170192" target="_blank">📱 रिश्ते जोड़ें</a>
     <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
     <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
   </nav>
@@ -143,7 +205,6 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
     <a class="whatsapp-btn" href="https://wa.me/9112170192" target="_blank">📱 WhatsApp से Join करें</a>
   </div>
 
-  <!-- Admin Add/Edit Form -->
   <section id="memberForm">
     <h3>प्रोफ़ाइल जोड़ें / संपादित करें (Admin)</h3>
     <input type="text" id="name" placeholder="नाम"/>
@@ -162,9 +223,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
     </table>
   </div>
 
-  <div class="grid" id="cardsGrid">
-    <!-- JS से cards load होंगे -->
-  </div>
+  <div class="grid" id="cardsGrid"></div>
 </main>
 
 <!-- Profile Popup -->
@@ -213,24 +272,26 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 const adminEmails = ["zaradigitalseva@gmail.com"];
-
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const cardsGrid = document.getElementById('cardsGrid');
 let currentProfile = null;
 
+// Persistent login fix
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
 auth.onAuthStateChanged(user=>{
   if(user && adminEmails.includes(user.email)){
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'inline-flex';
-    document.getElementById('memberForm').style.display = 'block';
-    document.getElementById('adminLogs').style.display = 'block';
+    loginBtn.style.display='none';
+    logoutBtn.style.display='inline-flex';
+    document.getElementById('memberForm').style.display='block';
+    document.getElementById('adminLogs').style.display='block';
     loadLogs();
-  } else{
-    loginBtn.style.display = 'inline-flex';
-    logoutBtn.style.display = 'none';
-    document.getElementById('memberForm').style.display = 'none';
-    document.getElementById('adminLogs').style.display = 'none';
+  } else {
+    loginBtn.style.display='inline-flex';
+    logoutBtn.style.display='none';
+    document.getElementById('memberForm').style.display='none';
+    document.getElementById('adminLogs').style.display='none';
   }
 });
 
@@ -249,7 +310,8 @@ function loadCards(){
   db.collection("members").get().then(snapshot=>{
     snapshot.forEach(doc=>{
       const data = doc.data();
-      const card = document.createElement('div'); card.className='card';
+      const card = document.createElement('div');
+      card.className='card';
       card.innerHTML=`
         <div class="img-wrapper"><img src="${data.photo}" alt="${data.name}"></div>
         <div class="card-body">
@@ -288,16 +350,17 @@ function sendConnect(){
   const mobile=document.getElementById('visitorMobile').value;
   const msg=document.getElementById('visitorMsg').value;
   if(!name||!mobile){ alert("Name और Mobile जरूरी हैं!"); return;}
-  const waMsg=`नमस्ते, ${name} ने संदेश भेजा: ${msg || '...'}`
+  const waMsg=`नमस्ते, ${name} ने संदेश भेजा: ${msg || '...'}`;
   window.open(`https://wa.me/9112170192?text=${encodeURIComponent(waMsg)}`,'_blank');
-  document.getElementById('visitorName').value=''; document.getElementById('visitorMobile').value=''; document.getElementById('visitorMsg').value='';
+  document.getElementById('visitorName').value='';
+  document.getElementById('visitorMobile').value='';
+  document.getElementById('visitorMsg').value='';
   document.getElementById('connectPopup').style.display='none';
-  // save logs
   db.collection('visitorLogs').add({name,mobile,msg,date:new Date()});
   loadLogs();
 }
 
-// Admin Add Member
+// Add Member
 function addMember(){
   const name=document.getElementById('name').value;
   const age=document.getElementById('age').value;
@@ -305,10 +368,18 @@ function addMember(){
   const photo=document.getElementById('photo').value;
   const details=document.getElementById('details').value;
   if(!name||!photo){ alert("Name और Photo जरूरी हैं"); return; }
-  db.collection('members').add({name,age,city,photo,details}).then(()=>{ alert("Added"); loadCards(); });
+  db.collection('members').add({name,age,city,photo,details}).then(()=>{
+    alert("Added");
+    document.getElementById('name').value='';
+    document.getElementById('age').value='';
+    document.getElementById('city').value='';
+    document.getElementById('photo').value='';
+    document.getElementById('details').value='';
+    loadCards();
+  });
 }
 
-// Load visitor logs
+// Logs
 function loadLogs(){
   const tbody=document.querySelector('#logsTable tbody');
   tbody.innerHTML='';
@@ -322,7 +393,6 @@ function loadLogs(){
   });
 }
 
-// init
 loadCards();
 </script>
 </body>
