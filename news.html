@@ -1,175 +1,349 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Talimi Ittehad News</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Kaaba_Masjid_al_Haram.jpg/1920px-Kaaba_Masjid_al_Haram.jpg') no-repeat center center fixed;
-      background-size: cover;
-      font-family: sans-serif;
-    }
-    .overlay {
-      background: rgba(0,0,0,0.6);
-      min-height: 100vh;
-      padding: 2rem;
-    }
-    .news-card {
-      background: rgba(255,255,255,0.9);
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      transition: transform 0.2s;
-    }
-    .news-card:hover { transform: scale(1.02); }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Local News Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#0ea5a4; --title:#072a4b;
+}
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0b2540; -webkit-font-smoothing:antialiased;}
+.container{max-width:1100px;margin:18px auto;padding:0 16px;}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{background:linear-gradient(90deg,#06b6d4,#0ea5a4);color:white;padding:8px 12px;border-radius:8px;font-weight:700;font-size:18px}
+.tagline{font-size:14px;color:var(--muted)}
+.controls{display:flex;gap:8px;align-items:center}
+.search{padding:8px 12px;border-radius:10px;border:1px solid #e6e9ef;background:white;min-width:220px}
+.btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+.btn.ghost{background:transparent;color:var(--title);border:1px solid #e6e9ef}
+.top-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.categories{display:flex;gap:8px;flex-wrap:wrap}
+
+.category{background:white;padding:8px 12px;border-radius:999px;border:1px solid #e9eef6;color:var(--muted);cursor:pointer}
+.category.active{border-color:var(--accent);color:var(--accent);box-shadow:0 6px 18px rgba(14,165,164,0.08)}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
+.card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 6px 30px rgba(2,6,23,0.06);display:flex;flex-direction:column;cursor:pointer}
+.card img{width:100%;height:160px;object-fit:cover;display:block}
+.card-body{padding:12px;flex:1;display:flex;flex-direction:column}
+.kicker{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.title{font-size:16px;font-weight:700;color:var(--title);margin:0 0 8px}
+.excerpt{font-size:14px;color:#344155;flex:1}
+.meta{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}
+
+.footer{margin:28px 0;padding:18px;border-radius:10px;background:white;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
+
+/* modal */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.5);z-index:60;padding:18px}
+.modal-card{background:white;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:18px;box-shadow:0 40px 90px rgba(2,6,23,0.5)}
+.modal-card img{width:100%;height:340px;object-fit:cover;border-radius:8px;margin-bottom:12px}
+.modal-close{position:absolute;right:28px;top:22px;background:#fff;border-radius:8px;border:none;padding:8px 10px;cursor:pointer}
+
+/* admin panel */
+.admin-panel{position:fixed;right:18px;bottom:18px;background:var(--accent);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 20px 50px rgba(2,6,23,0.12);cursor:pointer;z-index:70}
+.admin-drawer{position:fixed;right:18px;bottom:72px;width:340px;background:white;border-radius:12px;box-shadow:0 30px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:80}
+.form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.input, textarea{padding:8px;border-radius:8px;border:1px solid #e6e9ef;width:100%}
+textarea{min-height:100px;resize:vertical}
+.small{font-size:13px;color:var(--muted)}
+
+/* empty state */
+.empty{padding:28px;background:white;border-radius:12px;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
+
+/* tiny helpers */
+.row{display:flex;gap:8px;align-items:center}
+.badge{background:#eefbf9;color:#065f53;padding:6px 8px;border-radius:8px;font-weight:700;font-size:13px}
+</style>
 </head>
 <body>
-<div class="overlay">
+<div class="container">
+  <header class="header">
+    <div class="brand">
+      <div class="logo">NEWS</div>
+      <div>
+        <div style="font-weight:700">Local News Portal</div>
+        <div class="tagline">Tez, Saaf aur Bharosemand Khabar</div>
+      </div>
+    </div>
 
-  <header class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-white text-shadow">📰 Talimi Ittehad News</h1>
-    <button id="loginBtn" class="bg-green-500 text-white px-3 py-1 rounded font-bold">Admin Login</button>
+    <div class="controls">
+      <input id="search" class="search" placeholder="Search headlines or content...">
+      <button id="clearBtn" class="btn ghost">Clear</button>
+      <button id="adminBtn" class="btn">Admin</button>
+    </div>
   </header>
-<!-- Header -->
-<header class="bg-blue-600 p-4 flex flex-col sm:flex-row justify-between items-center text-white gap-2">
-  <h1 class="text-2xl font-bold">News Portal</h1>
-  <div class="flex gap-2">
-    <a href="index.html" class="btn-3d-home px-2 py-1 text-sm rounded font-bold flex items-center justify-center">🏠 Home</a>
-    <button id="loginBtn" class="bg-green-500 px-2 py-1 text-sm rounded">Login</button>
-    <button id="postBtn" class="bg-yellow-500 px-2 py-1 text-sm rounded hidden">➕ Post</button>
-  </div>
-</header>
-  <!-- Admin News Form -->
-  <div id="adminForm" class="hidden mb-6">
-    <input id="newsTitle" type="text" placeholder="News Title" class="w-full p-2 mb-2 rounded border">
-    <textarea id="newsContent" placeholder="News Content" class="w-full p-2 mb-2 rounded border" rows="4"></textarea>
-    <button id="postNews" class="bg-blue-500 text-white px-4 py-2 rounded font-bold">Post News</button>
+
+  <div class="top-row">
+    <div class="categories" id="cats"></div>
+    <div style="margin-left:auto" class="row">
+      <div class="badge" id="countBadge">0</div>
+      <div class="small">Articles</div>
+    </div>
   </div>
 
-  <!-- News List -->
-  <main id="newsList" class="max-w-4xl mx-auto"></main>
+  <main id="mainGrid">
+    <div class="grid" id="grid"></div>
+  </main>
 
+  <div class="footer">Demo News Website • Built fast • Replace data with real CMS or Firebase when ready</div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<!-- Article Modal -->
+<div id="modal" class="modal" role="dialog" aria-hidden="true">
+  <div class="modal-card" id="modalCard">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <img id="modalImg" src="" alt="">
+    <h2 id="modalTitle"></h2>
+    <div id="modalKicker" class="kicker"></div>
+    <div id="modalMeta" class="small"></div>
+    <p id="modalContent" style="white-space:pre-wrap"></p>
+  </div>
+</div>
 
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
-};
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+<!-- Admin floating -->
+<button id="adminFab" class="admin-panel">Admin</button>
+<div id="adminDrawer" class="admin-drawer" aria-hidden="true">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <strong>Admin Panel</strong>
+    <button id="closeAdmin" class="btn ghost">Close</button>
+  </div>
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+  <div class="form-row">
+    <label class="small">Password (demo)</label>
+    <input id="adminPass" class="input" type="password" placeholder="enter admin password">
+    <button id="loginAdmin" class="btn">Login</button>
+    <div id="adminMsg" class="small"></div>
+  </div>
 
-// Elements
-const loginBtn = document.getElementById("loginBtn");
-const adminForm = document.getElementById("adminForm");
-const postNewsBtn = document.getElementById("postNews");
-const newsTitle = document.getElementById("newsTitle");
-const newsContent = document.getElementById("newsContent");
-const newsList = document.getElementById("newsList");
+  <div id="editorArea" style="display:none">
+    <div class="form-row">
+      <label class="small">Title</label>
+      <input id="aTitle" class="input">
+    </div>
+    <div class="form-row">
+      <label class="small">Category</label>
+      <input id="aCat" class="input" placeholder="e.g. Technology">
+    </div>
+    <div class="form-row">
+      <label class="small">Image URL</label>
+      <input id="aImg" class="input" placeholder="https://...">
+    </div>
+    <div class="form-row">
+      <label class="small">Kicker / Short label</label>
+      <input id="aKicker" class="input" placeholder="Breaking / Opinion / Local">
+    </div>
+    <div class="form-row">
+      <label class="small">Content</label>
+      <textarea id="aContent"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:space-between">
+      <button id="saveArticle" class="btn">Save Article</button>
+      <button id="clearEditor" class="btn ghost">Clear</button>
+    </div>
 
-let currentUser = null;
+    <hr style="margin:12px 0">
+    <div>
+      <strong>Existing Articles</strong>
+      <div id="adminList" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
 
-// Login
-loginBtn.addEventListener("click", async ()=>{
-  await signInWithPopup(auth, provider);
-});
+<script>
+/* ===== Demo data store: localStorage key 'news_articles' =====
+   Structure: array of {id,title,category,image,kicker,content,ts}
+*/
+const ADMIN_PASSWORD = 'admin123';
+const STORAGE_KEY = 'news_articles_v1';
+const DEFAULT_CATS = ['All','Local','Politics','Technology','Sports','Business','Entertainment'];
 
-// Auth state
-onAuthStateChanged(auth, user=>{
-  currentUser = user;
-  if(user?.email === ADMIN_EMAIL){
-    adminForm.classList.remove("hidden");
-    loginBtn.classList.add("hidden");
-  } else {
-    adminForm.classList.add("hidden");
-    loginBtn.classList.remove("hidden");
-  }
-});
+/* --- Utilities --- */
+function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+function saveArticles(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+function loadArticles(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch(e){return []} }
+function formatDate(ts){ const d = new Date(ts); return d.toLocaleString(); }
 
-// Post News
-postNewsBtn.addEventListener("click", async ()=>{
-  const title = newsTitle.value.trim();
-  const content = newsContent.value.trim();
-  if(!title || !content) return alert("Fill all fields!");
-  await addDoc(collection(db,"news"),{
-    title, content,
-    createdAt: serverTimestamp()
+/* --- Seed sample if empty --- */
+if(!localStorage.getItem(STORAGE_KEY)){
+  const sample = [
+    {id:uid('a'), title:"City inaugurates new community park", category:"Local", image:"https://images.unsplash.com/photo-1503264116251-35a269479413?w=1200&q=80", kicker:"Local", content:"A new community park was inaugurated today... (sample content)", ts:Date.now()-1000*60*60*24},
+    {id:uid('a'), title:"Govt. launches tech skills program", category:"Technology", image:"https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80", kicker:"Tech", content:"The government unveiled a new initiative to boost tech skills...", ts:Date.now()-1000*60*60*6},
+    {id:uid('a'), title:"Local team wins inter-city cup", category:"Sports", image:"https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?w=1200&q=80", kicker:"Sports", content:"The local football team celebrated a thrilling win...", ts:Date.now()-1000*60*30},
+  ];
+  saveArticles(sample);
+}
+
+/* --- App State --- */
+let ARTICLES = loadArticles();
+let ACTIVE_CAT = 'All';
+let SEARCH = '';
+
+/* --- DOM references --- */
+const grid = document.getElementById('grid');
+const catsDiv = document.getElementById('cats');
+const countBadge = document.getElementById('countBadge');
+const searchInput = document.getElementById('search');
+const clearBtn = document.getElementById('clearBtn');
+
+function renderCategories(){
+  catsDiv.innerHTML = '';
+  DEFAULT_CATS.forEach(c=>{
+    const el = document.createElement('button');
+    el.className = 'category' + (c===ACTIVE_CAT ? ' active':'');
+    el.textContent = c;
+    el.onclick = ()=>{ ACTIVE_CAT = c; render(); renderCategories(); }
+    catsDiv.appendChild(el);
   });
-  newsTitle.value = newsContent.value = "";
-});
+}
 
-// Load News
-const q = query(collection(db,"news"), orderBy("createdAt","desc"));
-onSnapshot(q, snapshot=>{
-  newsList.innerHTML = "";
-  snapshot.forEach(docSnap=>{
-    const d = docSnap.data();
-    const card = document.createElement("div");
-    card.className = "news-card";
-    
-    let html = `<h2 class="font-bold text-lg mb-1">${d.title}</h2>
-                <p>${d.content}</p>
-                <small class="text-gray-700">Posted: ${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleString() : ''}</small>`;
-    
-    if(currentUser?.email === ADMIN_EMAIL){
-      html += `<div class="mt-2 flex gap-2">
-                 <button class="edit-btn bg-yellow-500 text-white px-2 py-1 rounded font-bold">Edit</button>
-                 <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded font-bold">Delete</button>
-               </div>`;
+/* --- Render grid --- */
+function render(){
+  const filtered = ARTICLES.filter(a=>{
+    if(ACTIVE_CAT!=='All' && a.category!==ACTIVE_CAT) return false;
+    if(SEARCH){
+      const s = SEARCH.toLowerCase();
+      return (a.title+a.content+a.kicker+a.category).toLowerCase().includes(s);
     }
-
-    card.innerHTML = html;
-    newsList.appendChild(card);
-
-    // Delete
-    card.querySelector(".delete-btn")?.addEventListener("click", async ()=>{
-      if(confirm("Delete this news?")){
-        await deleteDoc(doc(db,"news",docSnap.id));
-      }
-    });
-
-    // Edit
-    card.querySelector(".edit-btn")?.addEventListener("click", async ()=>{
-      const newTitle = prompt("Edit Title", d.title);
-      const newContent = prompt("Edit Content", d.content);
-      if(newTitle && newContent){
-        await updateDoc(doc(db,"news",docSnap.id), { title: newTitle, content: newContent });
-      }
-    });
+    return true;
+  }).sort((a,b)=>b.ts-a.ts);
+  grid.innerHTML = '';
+  countBadge.textContent = filtered.length;
+  if(filtered.length===0){
+    grid.innerHTML = '<div class="empty">Koi article nahi mila. Admin se add karein.</div>';
+    return;
+  }
+  filtered.forEach(a=>{
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="${a.image||'https://via.placeholder.com/800x450?text=No+Image'}" alt="">
+      <div class="card-body">
+        <div class="kicker">${a.kicker || a.category}</div>
+        <h3 class="title">${a.title}</h3>
+        <div class="excerpt">${(a.content||'').slice(0,120)}...</div>
+        <div class="meta"><div>${a.category}</div><div style="margin-left:auto">${formatDate(a.ts)}</div></div>
+      </div>
+    `;
+    card.onclick = ()=> openModal(a.id);
+    grid.appendChild(card);
   });
+}
+
+/* --- Modal --- */
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modalImg');
+const modalTitle = document.getElementById('modalTitle');
+const modalKicker = document.getElementById('modalKicker');
+const modalMeta = document.getElementById('modalMeta');
+const modalContent = document.getElementById('modalContent');
+function openModal(id){
+  const a = ARTICLES.find(x=>x.id===id); if(!a) return;
+  modalImg.src = a.image||'https://via.placeholder.com/1200x600?text=No+Image';
+  modalTitle.textContent = a.title;
+  modalKicker.textContent = a.kicker || a.category;
+  modalMeta.textContent = `${a.category} • ${formatDate(a.ts)}`;
+  modalContent.textContent = a.content || '';
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden','false');
+}
+function closeModal(){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); }
+
+/* --- Search --- */
+searchInput.addEventListener('input', (e)=>{ SEARCH = e.target.value.trim(); render(); });
+
+clearBtn.addEventListener('click', ()=>{
+  searchInput.value=''; SEARCH=''; ACTIVE_CAT='All'; render(); renderCategories();
 });
+
+/* --- Admin UI --- */
+const adminFab = document.getElementById('adminFab');
+const adminDrawer = document.getElementById('adminDrawer');
+const adminPass = document.getElementById('adminPass');
+const loginAdmin = document.getElementById('loginAdmin');
+const adminMsg = document.getElementById('adminMsg');
+const editorArea = document.getElementById('editorArea');
+
+adminFab.addEventListener('click', ()=>{ adminDrawer.style.display = 'block'; adminDrawer.setAttribute('aria-hidden','false'); });
+document.getElementById('closeAdmin').addEventListener('click', ()=>{ adminDrawer.style.display='none'; adminDrawer.setAttribute('aria-hidden','true'); });
+
+loginAdmin.addEventListener('click', ()=>{
+  const v = adminPass.value;
+  if(v===ADMIN_PASSWORD){ adminMsg.textContent = 'Logged in as admin'; editorArea.style.display='block'; renderAdminList(); }
+  else adminMsg.textContent = 'Invalid password';
+});
+
+/* Editor actions */
+const aTitle = document.getElementById('aTitle');
+const aCat = document.getElementById('aCat');
+const aImg = document.getElementById('aImg');
+const aKicker = document.getElementById('aKicker');
+const aContent = document.getElementById('aContent');
+const saveArticle = document.getElementById('saveArticle');
+const clearEditor = document.getElementById('clearEditor');
+const adminList = document.getElementById('adminList');
+
+let editingId = null;
+function renderAdminList(){
+  adminList.innerHTML = '';
+  if(ARTICLES.length===0){ adminList.innerHTML = '<div class="small">No articles</div>'; return; }
+  ARTICLES.slice().reverse().forEach(a=>{
+    const d = document.createElement('div'); d.style.display='flex'; d.style.justifyContent='space-between'; d.style.alignItems='center'; d.style.gap='8px'; d.style.padding='6px 0';
+    d.innerHTML = `<div style="flex:1"><strong style="display:block">${a.title}</strong><div class="small">${a.category} • ${formatDate(a.ts)}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn ghost" data-id="${a.id}" onclick="editArticle(event)">Edit</button>
+        <button class="btn" data-id="${a.id}" onclick="deleteArticle(event)">Delete</button>
+      </div>`;
+    adminList.appendChild(d);
+  });
+}
+
+window.editArticle = function(ev){
+  const id = ev.currentTarget.dataset.id;
+  const a = ARTICLES.find(x=>x.id===id);
+  if(!a) return;
+  editingId = id;
+  aTitle.value = a.title; aCat.value = a.category; aImg.value = a.image; aKicker.value = a.kicker; aContent.value = a.content;
+  adminMsg.textContent = 'Editing article';
+}
+window.deleteArticle = function(ev){
+  const id = ev.currentTarget.dataset.id;
+  if(!confirm('Delete this article?')) return;
+  ARTICLES = ARTICLES.filter(x=>x.id!==id);
+  saveArticles(ARTICLES); render(); renderAdminList();
+}
+
+/* Save / clear */
+saveArticle.addEventListener('click', ()=>{
+  const t = aTitle.value.trim();
+  if(!t){ alert('Title required'); return; }
+  const obj = {
+    id: editingId || uid('a'),
+    title: t,
+    category: aCat.value.trim() || 'Local',
+    image: aImg.value.trim(),
+    kicker: aKicker.value.trim(),
+    content: aContent.value.trim(),
+    ts: Date.now()
+  };
+  if(editingId){
+    ARTICLES = ARTICLES.map(x=> x.id===editingId ? obj : x);
+    editingId = null;
+  } else ARTICLES.push(obj);
+  saveArticles(ARTICLES);
+  aTitle.value=''; aCat.value=''; aImg.value=''; aKicker.value=''; aContent.value='';
+  render(); renderAdminList();
+  adminMsg.textContent = 'Saved';
+});
+
+clearEditor.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; aImg.value=''; aKicker.value=''; aContent.value=''; editingId=null; adminMsg.textContent='Cleared'; });
+
+/* --- init --- */
+renderCategories(); render();
 </script>
-
-  <script type="module" src="auth-protect.js"></script>
-<!-- Fixed Donate Button -->
-<a href="https://all-madrsa.netlify.app/upi" 
-   class="fixed top-1/2 right-4 transform -translate-y-1/2 
-          bg-yellow-400 text-black font-bold px-5 py-3 
-          rounded-lg shadow-lg hover:bg-yellow-300 z-50">
-   💝 Donate
-</a>
-
-  
 </body>
-
-
-
-
-  
 </html>
