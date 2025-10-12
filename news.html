@@ -1,119 +1,96 @@
 <!doctype html>
 <html lang="hi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>News Portal</title>
-  <style>
-    :root {
-      --primary:#0b63a6;
-      --accent:#008069;
-      --bg:#f7f7f7;
-      --card-radius:12px;
-    }
-    body { margin:0; font-family:"Segoe UI",sans-serif; background:var(--bg); color:#222; }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>News Portal</title>
+<style>
+:root{
+  --green:#116530;
+  --accent:#008069;
+  --muted:#777;
+  --card-radius:12px;
+  --card-h:250px;
+}
+body { font-family:"Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; }
 
-    header {
-      background: linear-gradient(135deg,#6ec1ff,#3aa8ff);
-      padding:10px;
-      text-align:center;
-      color:white;
-      font-weight:700;
-      font-size:20px;
-    }
+/* Header */
+.site-header{
+  position:sticky; top:0; z-index:60;
+  background: linear-gradient(135deg,#6ec1ff,#3aa8ff);
+  padding:8px 10px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.12);
+}
+.logo-row{text-align:center;}
+.logo-3d{
+  display:inline-block;font-size:28px;font-weight:900;color:#fff;
+  padding:6px 12px;border-radius:8px;text-shadow:0 2px 0 rgba(0,0,0,0.15);
+}
+.button-row{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; padding:6px 4px;}
+.header-btn{
+  display:inline-flex; align-items:center; gap:6px; background:#fff; color:#0b63a6;
+  padding:8px 14px; border-radius:10px; border:none; cursor:pointer; font-weight:700;
+}
+.header-btn:hover{ filter:brightness(0.95); }
 
-    .container { max-width:900px; margin:0 auto; padding:10px; }
+/* Main */
+main{ max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 
-    /* Admin form */
-    #newsForm { display:none; background:white; padding:14px; border-radius:12px; margin-bottom:16px; box-shadow:0 6px 18px rgba(0,0,0,0.06); }
-    #newsForm input, #newsForm textarea {
-      width:100%; padding:10px; margin:6px 0; border:1px solid #ddd; border-radius:8px;
-    }
-    #newsForm button { background:var(--primary); color:white; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+/* Admin Form */
+#memberForm{ display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0;}
+#memberForm input, #memberForm textarea{ width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; }
 
-    /* News grid */
-    .news-grid { display:grid; gap:14px; grid-template-columns:1fr; }
-    @media(min-width:600px){ .news-grid{ grid-template-columns:repeat(2,1fr); } }
+/* Grid Cards */
+.grid{ display:grid; gap:14px; grid-template-columns:repeat(2,1fr); }
+@media(min-width:768px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+@media(min-width:1024px){ .grid{ grid-template-columns:repeat(4,1fr); } }
 
-    .news-card {
-      background:white; border-radius:var(--card-radius);
-      overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.08);
-      cursor:pointer; transition:transform .15s;
-    }
-    .news-card:hover { transform:translateY(-4px); }
-    .news-card img {
-      width:100%; height:auto;
-      object-fit:contain;
-      display:block;
-      background:#000;
-    }
-    .news-card .content { padding:10px; }
-    .news-card h3 { margin:0; font-size:16px; color:var(--primary); }
-    .news-card p { margin:6px 0 0; font-size:14px; color:#444; }
+.card{ background:white; border-radius:var(--card-radius); height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s; }
+.card:hover{ transform:translateY(-4px);}
+.card img{ width:100%; height:150px; object-fit:cover; border-radius:12px 12px 0 0; }
+.card-body{ padding:10px; flex:1; display:flex; flex-direction:column; gap:4px; }
+.card-footer{ padding:8px; display:flex; gap:6px; flex-wrap:wrap; }
+.btn-edit{ background:#ffc107; color:#333; padding:5px 8px; border:none; border-radius:6px; cursor:pointer; }
+.btn-del{ background:#dc3545; color:#fff; padding:5px 8px; border:none; border-radius:6px; cursor:pointer; }
 
-    /* Modal */
-    #newsModal {
-      position:fixed; inset:0; background:rgba(0,0,0,0.6);
-      display:none; justify-content:center; align-items:center; padding:10px;
-      z-index:50; overflow:auto;
-    }
-    .modal-box {
-      background:white; max-width:700px; width:100%;
-      border-radius:12px; overflow:hidden; position:relative;
-    }
-    .modal-box img { width:100%; height:auto; object-fit:contain; background:#000; display:block; }
-    .modal-content { padding:14px; }
-    .modal-content h2 { margin-top:0; color:var(--primary); }
-    .close-btn {
-      position:absolute; top:10px; right:10px;
-      background:#eee; border:none; padding:6px 10px;
-      border-radius:8px; cursor:pointer;
-    }
-
-    /* Admin buttons */
-    .admin-btns { display:flex; gap:8px; margin-top:10px; }
-    .admin-btns button {
-      padding:6px 10px; border:none; border-radius:8px; cursor:pointer; font-size:13px;
-    }
-    .edit-btn { background:#ffc107; color:#333; }
-    .del-btn { background:#dc3545; color:#fff; }
-  </style>
+/* Popup */
+#newsPopup{ display:none; position:fixed; inset:0; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:70; padding:10px; overflow:auto;}
+.popup-card{ background:white; max-width:800px; width:100%; border-radius:12px; position:relative; padding:16px;}
+.popup-card img{ width:100%; max-height:400px; object-fit:cover; border-radius:8px; }
+.close-btn{ position:absolute; top:10px; right:10px; background:#eee; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }
+</style>
 </head>
 <body>
 
-<header>📰 News Portal</header>
+<header class="site-header">
+  <div class="logo-row"><div class="logo-3d">News Portal</div></div>
+  <nav class="button-row">
+    <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
+    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
+  </nav>
+</header>
 
-<div class="container">
-
+<main>
   <!-- Admin Form -->
-  <section id="newsForm">
-    <h3>📝 News Add / Edit (Admin)</h3>
+  <section id="memberForm">
+    <h3>News Add/Edit (Admin)</h3>
     <input type="hidden" id="editId">
-    <input type="text" id="title" placeholder="शीर्षक लिखें">
-    <textarea id="content" placeholder="पूरी खबर लिखें"></textarea>
-    <input type="file" id="imageFile" accept="image/*">
+    <input type="text" id="title" placeholder="Title">
+    <textarea id="content" placeholder="Full news content"></textarea>
+    <input type="file" id="newsImage" accept="image/*">
     <button onclick="saveNews()">Save</button>
   </section>
 
-  <!-- Login Buttons -->
-  <div id="authBtns" style="text-align:center; margin-bottom:10px;">
-    <button onclick="googleLogin()">Admin Login</button>
-    <button onclick="logout()" style="display:none;">Logout</button>
-  </div>
+  <div class="grid" id="cardsGrid"></div>
+</main>
 
-  <!-- News Grid -->
-  <div class="news-grid" id="newsGrid"></div>
-</div>
-
-<!-- News Modal -->
-<div id="newsModal">
-  <div class="modal-box">
-    <button class="close-btn" onclick="closeModal()">❌</button>
-    <img id="modalImg" src="" alt="">
-    <div class="modal-content">
-      <h2 id="modalTitle"></h2>
-      <p id="modalText"></p>
-    </div>
+<!-- News Popup -->
+<div id="newsPopup">
+  <div class="popup-card">
+    <button class="close-btn" onclick="closePopup()">❌</button>
+    <h2 id="popupTitle"></h2>
+    <img id="popupImage" src="">
+    <p id="popupContent"></p>
   </div>
 </div>
 
@@ -129,130 +106,129 @@ const firebaseConfig = {
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663f11fc2463b"
+  appId:"1:619313835874:web:e387e1297663f11fc2463b11fc2463b"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const adminEmail = "zaradigitalseva@gmail.com";
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY";
 
-const newsGrid = document.getElementById('newsGrid');
-const loginBtn = document.querySelector('#authBtns button:first-child');
-const logoutBtn = document.querySelector('#authBtns button:last-child');
-const newsForm = document.getElementById('newsForm');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const cardsGrid = document.getElementById('cardsGrid');
 
+// Auth state
 auth.onAuthStateChanged(user=>{
-  if(user && user.email===adminEmail){
+  if(user && user.email===ADMIN_EMAIL){
     loginBtn.style.display='none';
-    logoutBtn.style.display='inline-block';
-    newsForm.style.display='block';
-  } else {
-    loginBtn.style.display='inline-block';
+    logoutBtn.style.display='inline-flex';
+    document.getElementById('memberForm').style.display='block';
+  } else{
+    loginBtn.style.display='inline-flex';
     logoutBtn.style.display='none';
-    newsForm.style.display='none';
+    document.getElementById('memberForm').style.display='none';
   }
 });
 
+// Login/Logout
 function googleLogin(){
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider);
+  const provider=new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err=>alert(err.message));
 }
 function logout(){ auth.signOut(); }
 
-async function uploadImage(){
-  const fileInput = document.getElementById('imageFile');
-  if(fileInput.files.length===0) return null;
-  const file = fileInput.files[0];
-  const formData = new FormData();
-  formData.append('image',file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=d12c2e4a8650157b2b6b9fe85336ea43`,{
-    method:'POST',
-    body:formData
+// Load News
+function loadNews(){
+  cardsGrid.innerHTML='';
+  db.collection("news").orderBy('title').onSnapshot(snapshot=>{
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      const card = document.createElement('div'); card.className='card';
+      card.innerHTML=`
+        <img src="${data.image}" alt="${data.title}">
+        <div class="card-body">
+          <h3>${data.title}</h3>
+        </div>
+        <div class="card-footer">
+          <button onclick="openPopup('${doc.id}')">Read More</button>
+          ${auth.currentUser && auth.currentUser.email===ADMIN_EMAIL ? `
+          <button class="btn-edit" onclick="editNews('${doc.id}')">Edit</button>
+          <button class="btn-del" onclick="deleteNews('${doc.id}')">Delete</button>` : ''}
+        </div>`;
+      cardsGrid.appendChild(card);
+    });
   });
+}
+
+// Popup
+function openPopup(id){
+  db.collection("news").doc(id).get().then(doc=>{
+    if(!doc.exists) return;
+    const data=doc.data();
+    document.getElementById('popupTitle').textContent=data.title;
+    document.getElementById('popupContent').textContent=data.content;
+    document.getElementById('popupImage').src=data.image;
+    document.getElementById('newsPopup').style.display='flex';
+  });
+}
+function closePopup(){ document.getElementById('newsPopup').style.display='none'; }
+
+// Image Upload via Imgbb
+async function uploadImage(){
+  const fileInput=document.getElementById('newsImage');
+  if(fileInput.files.length===0) return null;
+  const file=fileInput.files[0];
+  const formData=new FormData();
+  formData.append('image',file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:'POST',body:formData});
   const data = await res.json();
   return data.data.url;
 }
 
+// Admin Save News
 async function saveNews(){
-  const id = document.getElementById('editId').value;
-  const title = document.getElementById('title').value;
-  const content = document.getElementById('content').value;
-  let imageUrl = await uploadImage();
+  const id=document.getElementById('editId').value;
+  const title=document.getElementById('title').value;
+  const content=document.getElementById('content').value;
+  if(!title || !content){ alert("Title और Content जरूरी हैं"); return;}
+  const imageURL = await uploadImage();
+  if(!imageURL){ alert("Image जरूरी है"); return;}
 
   if(id){
-    const updateData = {title,content};
-    if(imageUrl) updateData.image=imageUrl;
-    db.collection('news').doc(id).update(updateData).then(()=>{
-      alert("Updated");
-      clearForm();
-    });
-  } else {
-    if(!imageUrl){ alert("Image जरूरी है"); return; }
-    db.collection('news').add({title,content,image:imageUrl,date:new Date()}).then(()=>{
-      alert("News Added");
-      clearForm();
-    });
+    db.collection('news').doc(id).update({title,content,image:imageURL})
+      .then(()=>{ alert("Updated"); clearForm(); });
+  } else{
+    db.collection('news').add({title,content,image:imageURL})
+      .then(()=>{ alert("Added"); clearForm(); });
   }
 }
 
-function clearForm(){
-  document.getElementById('editId').value='';
-  document.getElementById('title').value='';
-  document.getElementById('content').value='';
-  document.getElementById('imageFile').value='';
-}
-
-function loadNews(){
-  db.collection('news').orderBy('date','desc').onSnapshot(snap=>{
-    newsGrid.innerHTML='';
-    snap.forEach(doc=>{
-      const d=doc.data();
-      const div=document.createElement('div');
-      div.className='news-card';
-      div.innerHTML=`
-        <img src="${d.image}" alt="">
-        <div class="content">
-          <h3>${d.title}</h3>
-          <p>${d.content.slice(0,60)}...</p>
-          ${auth.currentUser && auth.currentUser.email===adminEmail ? `
-            <div class="admin-btns">
-              <button class="edit-btn" onclick="editNews('${doc.id}')">Edit</button>
-              <button class="del-btn" onclick="deleteNews('${doc.id}')">Delete</button>
-            </div>
-          `:''}
-        </div>`;
-      div.addEventListener('click',()=>openModal(d));
-      newsGrid.appendChild(div);
-    });
-  });
-}
-loadNews();
-
 function editNews(id){
   db.collection('news').doc(id).get().then(doc=>{
-    const d=doc.data();
+    if(!doc.exists) return;
+    const data=doc.data();
     document.getElementById('editId').value=id;
-    document.getElementById('title').value=d.title;
-    document.getElementById('content').value=d.content;
-    window.scrollTo({top:0,behavior:'smooth'});
+    document.getElementById('title').value=data.title;
+    document.getElementById('content').value=data.content;
   });
 }
 
 function deleteNews(id){
-  if(confirm("Delete this news?")){
-    db.collection('news').doc(id).delete();
+  if(confirm("Delete करना चाहते हैं?")){
+    db.collection('news').doc(id).delete().catch(err=>alert(err.message));
   }
 }
 
-// Modal
-function openModal(data){
-  document.getElementById('modalImg').src=data.image;
-  document.getElementById('modalTitle').textContent=data.title;
-  document.getElementById('modalText').textContent=data.content;
-  document.getElementById('newsModal').style.display='flex';
+function clearForm(){
+  document.getElementById('title').value='';
+  document.getElementById('content').value='';
+  document.getElementById('newsImage').value='';
+  document.getElementById('editId').value='';
 }
-function closeModal(){ document.getElementById('newsModal').style.display='none'; }
-</script>
 
+// Init
+loadNews();
+</script>
 </body>
 </html>
