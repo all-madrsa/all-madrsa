@@ -22,10 +22,8 @@ body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0
 .btn.ghost{background:transparent;color:var(--title);border:1px solid #e6e9ef}
 .top-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}
 .categories{display:flex;gap:8px;flex-wrap:wrap}
-
 .category{background:white;padding:8px 12px;border-radius:999px;border:1px solid #e9eef6;color:var(--muted);cursor:pointer}
 .category.active{border-color:var(--accent);color:var(--accent);box-shadow:0 6px 18px rgba(14,165,164,0.08)}
-
 .grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
 @media(min-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
 .card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 6px 30px rgba(2,6,23,0.06);display:flex;flex-direction:column;cursor:pointer}
@@ -35,32 +33,24 @@ body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0
 .title{font-size:16px;font-weight:700;color:var(--title);margin:0 0 8px}
 .excerpt{font-size:14px;color:#344155;flex:1}
 .meta{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}
-
 .footer{margin:28px 0;padding:18px;border-radius:10px;background:white;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
-
-/* modal */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.5);z-index:60;padding:18px}
 .modal-card{background:white;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:18px;box-shadow:0 40px 90px rgba(2,6,23,0.5)}
 .modal-card img{width:100%;height:340px;object-fit:cover;border-radius:8px;margin-bottom:12px}
 .modal-close{position:absolute;right:28px;top:22px;background:#fff;border-radius:8px;border:none;padding:8px 10px;cursor:pointer}
-
-/* admin panel */
 .admin-panel{position:fixed;right:18px;bottom:18px;background:var(--accent);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 20px 50px rgba(2,6,23,0.12);cursor:pointer;z-index:70}
 .admin-drawer{position:fixed;right:18px;bottom:72px;width:340px;background:white;border-radius:12px;box-shadow:0 30px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:80}
 .form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .input, textarea{padding:8px;border-radius:8px;border:1px solid #e6e9ef;width:100%}
 textarea{min-height:100px;resize:vertical}
 .small{font-size:13px;color:var(--muted)}
-
-/* empty state */
 .empty{padding:28px;background:white;border-radius:12px;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
-
-/* tiny helpers */
 .row{display:flex;gap:8px;align-items:center}
 .badge{background:#eefbf9;color:#065f53;padding:6px 8px;border-radius:8px;font-weight:700;font-size:13px}
 </style>
 </head>
 <body>
+
 <div class="container">
   <header class="header">
     <div class="brand">
@@ -93,7 +83,6 @@ textarea{min-height:100px;resize:vertical}
   <div class="footer">Demo News Website • Built fast • Replace data with real CMS or Firebase when ready</div>
 </div>
 
-<!-- Article Modal -->
 <div id="modal" class="modal" role="dialog" aria-hidden="true">
   <div class="modal-card" id="modalCard">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -105,19 +94,11 @@ textarea{min-height:100px;resize:vertical}
   </div>
 </div>
 
-<!-- Admin floating -->
 <button id="adminFab" class="admin-panel">Admin</button>
 <div id="adminDrawer" class="admin-drawer" aria-hidden="true">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
     <strong>Admin Panel</strong>
     <button id="closeAdmin" class="btn ghost">Close</button>
-  </div>
-
-  <div class="form-row">
-    <label class="small">Password (demo)</label>
-    <input id="adminPass" class="input" type="password" placeholder="enter admin password">
-    <button id="loginAdmin" class="btn">Login</button>
-    <div id="adminMsg" class="small"></div>
   </div>
 
   <div id="editorArea" style="display:none">
@@ -154,36 +135,42 @@ textarea{min-height:100px;resize:vertical}
   </div>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
 <script>
-/* ===== Demo data store: localStorage key 'news_articles' =====
-   Structure: array of {id,title,category,image,kicker,content,ts}
-*/
-const ADMIN_PASSWORD = 'admin123';
+const firebaseConfig = {
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  projectId:"all-madrsa",
+  storageBucket:"all-madrsa.appspot.com",
+  messagingSenderId:"619313835874",
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b11fc2463b"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
+/* ===== Demo localStorage articles ===== */
 const STORAGE_KEY = 'news_articles_v1';
 const DEFAULT_CATS = ['All','Local','Politics','Technology','Sports','Business','Entertainment'];
-
-/* --- Utilities --- */
 function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
 function saveArticles(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
 function loadArticles(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch(e){return []} }
 function formatDate(ts){ const d = new Date(ts); return d.toLocaleString(); }
-
-/* --- Seed sample if empty --- */
 if(!localStorage.getItem(STORAGE_KEY)){
   const sample = [
-    {id:uid('a'), title:"City inaugurates new community park", category:"Local", image:"https://images.unsplash.com/photo-1503264116251-35a269479413?w=1200&q=80", kicker:"Local", content:"A new community park was inaugurated today... (sample content)", ts:Date.now()-1000*60*60*24},
-    {id:uid('a'), title:"Govt. launches tech skills program", category:"Technology", image:"https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80", kicker:"Tech", content:"The government unveiled a new initiative to boost tech skills...", ts:Date.now()-1000*60*60*6},
-    {id:uid('a'), title:"Local team wins inter-city cup", category:"Sports", image:"https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?w=1200&q=80", kicker:"Sports", content:"The local football team celebrated a thrilling win...", ts:Date.now()-1000*60*30},
+    {id:uid('a'), title:"City inaugurates new community park", category:"Local", image:"https://images.unsplash.com/photo-1503264116251-35a269479413?w=1200&q=80", kicker:"Local", content:"Sample content", ts:Date.now()-1000*60*60*24},
+    {id:uid('a'), title:"Govt. launches tech skills program", category:"Technology", image:"https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80", kicker:"Tech", content:"Sample content", ts:Date.now()-1000*60*60*6},
   ];
   saveArticles(sample);
 }
 
-/* --- App State --- */
 let ARTICLES = loadArticles();
 let ACTIVE_CAT = 'All';
 let SEARCH = '';
 
-/* --- DOM references --- */
 const grid = document.getElementById('grid');
 const catsDiv = document.getElementById('cats');
 const countBadge = document.getElementById('countBadge');
@@ -194,14 +181,13 @@ function renderCategories(){
   catsDiv.innerHTML = '';
   DEFAULT_CATS.forEach(c=>{
     const el = document.createElement('button');
-    el.className = 'category' + (c===ACTIVE_CAT ? ' active':'');
-    el.textContent = c;
-    el.onclick = ()=>{ ACTIVE_CAT = c; render(); renderCategories(); }
+    el.className = 'category'+(c===ACTIVE_CAT?' active':'');
+    el.textContent=c;
+    el.onclick=()=>{ ACTIVE_CAT=c; render(); renderCategories(); }
     catsDiv.appendChild(el);
   });
 }
 
-/* --- Render grid --- */
 function render(){
   const filtered = ARTICLES.filter(a=>{
     if(ACTIVE_CAT!=='All' && a.category!==ACTIVE_CAT) return false;
@@ -211,89 +197,94 @@ function render(){
     }
     return true;
   }).sort((a,b)=>b.ts-a.ts);
-  grid.innerHTML = '';
-  countBadge.textContent = filtered.length;
-  if(filtered.length===0){
-    grid.innerHTML = '<div class="empty">Koi article nahi mila. Admin se add karein.</div>';
-    return;
-  }
+  grid.innerHTML='';
+  countBadge.textContent=filtered.length;
+  if(filtered.length===0){ grid.innerHTML='<div class="empty">Koi article nahi mila. Admin se add karein.</div>'; return; }
   filtered.forEach(a=>{
-    const card = document.createElement('article');
-    card.className = 'card';
-    card.innerHTML = `
+    const card=document.createElement('article');
+    card.className='card';
+    card.innerHTML=`
       <img src="${a.image||'https://via.placeholder.com/800x450?text=No+Image'}" alt="">
       <div class="card-body">
-        <div class="kicker">${a.kicker || a.category}</div>
+        <div class="kicker">${a.kicker||a.category}</div>
         <h3 class="title">${a.title}</h3>
         <div class="excerpt">${(a.content||'').slice(0,120)}...</div>
         <div class="meta"><div>${a.category}</div><div style="margin-left:auto">${formatDate(a.ts)}</div></div>
       </div>
     `;
-    card.onclick = ()=> openModal(a.id);
+    card.onclick=()=>openModal(a.id);
     grid.appendChild(card);
   });
 }
 
 /* --- Modal --- */
-const modal = document.getElementById('modal');
-const modalImg = document.getElementById('modalImg');
-const modalTitle = document.getElementById('modalTitle');
-const modalKicker = document.getElementById('modalKicker');
-const modalMeta = document.getElementById('modalMeta');
-const modalContent = document.getElementById('modalContent');
+const modal=document.getElementById('modal');
+const modalImg=document.getElementById('modalImg');
+const modalTitle=document.getElementById('modalTitle');
+const modalKicker=document.getElementById('modalKicker');
+const modalMeta=document.getElementById('modalMeta');
+const modalContent=document.getElementById('modalContent');
 function openModal(id){
-  const a = ARTICLES.find(x=>x.id===id); if(!a) return;
-  modalImg.src = a.image||'https://via.placeholder.com/1200x600?text=No+Image';
-  modalTitle.textContent = a.title;
-  modalKicker.textContent = a.kicker || a.category;
-  modalMeta.textContent = `${a.category} • ${formatDate(a.ts)}`;
-  modalContent.textContent = a.content || '';
-  modal.style.display = 'flex';
+  const a=ARTICLES.find(x=>x.id===id); if(!a) return;
+  modalImg.src=a.image||'https://via.placeholder.com/1200x600?text=No+Image';
+  modalTitle.textContent=a.title;
+  modalKicker.textContent=a.kicker||a.category;
+  modalMeta.textContent=`${a.category} • ${formatDate(a.ts)}`;
+  modalContent.textContent=a.content||'';
+  modal.style.display='flex';
   modal.setAttribute('aria-hidden','false');
 }
 function closeModal(){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); }
 
-/* --- Search --- */
-searchInput.addEventListener('input', (e)=>{ SEARCH = e.target.value.trim(); render(); });
+/* Search */
+searchInput.addEventListener('input', (e)=>{ SEARCH=e.target.value.trim(); render(); });
+clearBtn.addEventListener('click', ()=>{ searchInput.value=''; SEARCH=''; ACTIVE_CAT='All'; render(); renderCategories(); });
 
-clearBtn.addEventListener('click', ()=>{
-  searchInput.value=''; SEARCH=''; ACTIVE_CAT='All'; render(); renderCategories();
+/* Admin */
+const adminFab=document.getElementById('adminFab');
+const adminDrawer=document.getElementById('adminDrawer');
+const editorArea=document.getElementById('editorArea');
+const adminList=document.getElementById('adminList');
+let editingId=null;
+
+adminFab.addEventListener('click', async ()=>{
+  const user = auth.currentUser;
+  if(user && user.email===ADMIN_EMAIL){
+    adminDrawer.style.display='block'; adminDrawer.setAttribute('aria-hidden','false');
+  } else {
+    try{
+      const provider=new firebase.auth.GoogleAuthProvider();
+      const result=await auth.signInWithPopup(provider);
+      if(result.user.email===ADMIN_EMAIL){
+        editorArea.style.display='block';
+        adminDrawer.style.display='block'; adminDrawer.setAttribute('aria-hidden','false');
+      } else { alert('You are not authorized'); await auth.signOut(); }
+    } catch(e){ console.error(e); alert('Login failed'); }
+  }
 });
 
-/* --- Admin UI --- */
-const adminFab = document.getElementById('adminFab');
-const adminDrawer = document.getElementById('adminDrawer');
-const adminPass = document.getElementById('adminPass');
-const loginAdmin = document.getElementById('loginAdmin');
-const adminMsg = document.getElementById('adminMsg');
-const editorArea = document.getElementById('editorArea');
-
-adminFab.addEventListener('click', ()=>{ adminDrawer.style.display = 'block'; adminDrawer.setAttribute('aria-hidden','false'); });
 document.getElementById('closeAdmin').addEventListener('click', ()=>{ adminDrawer.style.display='none'; adminDrawer.setAttribute('aria-hidden','true'); });
 
-loginAdmin.addEventListener('click', ()=>{
-  const v = adminPass.value;
-  if(v===ADMIN_PASSWORD){ adminMsg.textContent = 'Logged in as admin'; editorArea.style.display='block'; renderAdminList(); }
-  else adminMsg.textContent = 'Invalid password';
+auth.onAuthStateChanged(user=>{
+  if(user && user.email===ADMIN_EMAIL){ editorArea.style.display='block'; } 
+  else { editorArea.style.display='none'; }
 });
 
 /* Editor actions */
-const aTitle = document.getElementById('aTitle');
-const aCat = document.getElementById('aCat');
-const aImg = document.getElementById('aImg');
-const aKicker = document.getElementById('aKicker');
-const aContent = document.getElementById('aContent');
-const saveArticle = document.getElementById('saveArticle');
-const clearEditor = document.getElementById('clearEditor');
-const adminList = document.getElementById('adminList');
+const aTitle=document.getElementById('aTitle');
+const aCat=document.getElementById('aCat');
+const aImg=document.getElementById('aImg');
+const aKicker=document.getElementById('aKicker');
+const aContent=document.getElementById('aContent');
+const saveArticle=document.getElementById('saveArticle');
+const clearEditor=document.getElementById('clearEditor');
 
-let editingId = null;
 function renderAdminList(){
-  adminList.innerHTML = '';
-  if(ARTICLES.length===0){ adminList.innerHTML = '<div class="small">No articles</div>'; return; }
+  adminList.innerHTML='';
+  if(ARTICLES.length===0){ adminList.innerHTML='<div class="small">No articles</div>'; return; }
   ARTICLES.slice().reverse().forEach(a=>{
-    const d = document.createElement('div'); d.style.display='flex'; d.style.justifyContent='space-between'; d.style.alignItems='center'; d.style.gap='8px'; d.style.padding='6px 0';
-    d.innerHTML = `<div style="flex:1"><strong style="display:block">${a.title}</strong><div class="small">${a.category} • ${formatDate(a.ts)}</div></div>
+    const d=document.createElement('div'); d.style.display='flex'; d.style.justifyContent='space-between'; d.style.alignItems='center'; d.style.gap='8px'; d.style.padding='6px 0';
+    d.innerHTML=`<div style="flex:1"><strong style="display:block">${a.title}</strong><div class="small">${a.category} • ${formatDate(a.ts)}</div></div>
       <div style="display:flex;gap:6px">
         <button class="btn ghost" data-id="${a.id}" onclick="editArticle(event)">Edit</button>
         <button class="btn" data-id="${a.id}" onclick="deleteArticle(event)">Delete</button>
@@ -302,47 +293,28 @@ function renderAdminList(){
   });
 }
 
-window.editArticle = function(ev){
-  const id = ev.currentTarget.dataset.id;
-  const a = ARTICLES.find(x=>x.id===id);
-  if(!a) return;
-  editingId = id;
-  aTitle.value = a.title; aCat.value = a.category; aImg.value = a.image; aKicker.value = a.kicker; aContent.value = a.content;
-  adminMsg.textContent = 'Editing article';
+window.editArticle=function(ev){
+  const id=ev.currentTarget.dataset.id;
+  const a=ARTICLES.find(x=>x.id===id); if(!a) return;
+  editingId=id;
+  aTitle.value=a.title; aCat.value=a.category; aImg.value=a.image; aKicker.value=a.kicker; aContent.value=a.content;
 }
-window.deleteArticle = function(ev){
-  const id = ev.currentTarget.dataset.id;
+window.deleteArticle=function(ev){
+  const id=ev.currentTarget.dataset.id;
   if(!confirm('Delete this article?')) return;
-  ARTICLES = ARTICLES.filter(x=>x.id!==id);
-  saveArticles(ARTICLES); render(); renderAdminList();
+  ARTICLES=ARTICLES.filter(x=>x.id!==id); saveArticles(ARTICLES); render(); renderAdminList();
 }
 
-/* Save / clear */
 saveArticle.addEventListener('click', ()=>{
-  const t = aTitle.value.trim();
+  const t=aTitle.value.trim();
   if(!t){ alert('Title required'); return; }
-  const obj = {
-    id: editingId || uid('a'),
-    title: t,
-    category: aCat.value.trim() || 'Local',
-    image: aImg.value.trim(),
-    kicker: aKicker.value.trim(),
-    content: aContent.value.trim(),
-    ts: Date.now()
-  };
-  if(editingId){
-    ARTICLES = ARTICLES.map(x=> x.id===editingId ? obj : x);
-    editingId = null;
-  } else ARTICLES.push(obj);
-  saveArticles(ARTICLES);
-  aTitle.value=''; aCat.value=''; aImg.value=''; aKicker.value=''; aContent.value='';
-  render(); renderAdminList();
-  adminMsg.textContent = 'Saved';
+  const obj={id:editingId||uid('a'), title:t, category:aCat.value.trim()||'Local', image:aImg.value.trim(), kicker:aKicker.value.trim(), content:aContent.value.trim(), ts:Date.now()};
+  if(editingId){ ARTICLES=ARTICLES.map(x=> x.id===editingId?obj:x); editingId=null; } else ARTICLES.push(obj);
+  saveArticles(ARTICLES); aTitle.value=''; aCat.value=''; aImg.value=''; aKicker.value=''; aContent.value=''; render(); renderAdminList();
 });
 
-clearEditor.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; aImg.value=''; aKicker.value=''; aContent.value=''; editingId=null; adminMsg.textContent='Cleared'; });
+clearEditor.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; aImg.value=''; aKicker.value=''; aContent.value=''; editingId=null; });
 
-/* --- init --- */
 renderCategories(); render();
 </script>
 </body>
