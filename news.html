@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>News Admin</title>
+<title>News Portal</title>
 <style>
 :root{
   --green:#116530;
@@ -12,15 +12,21 @@
   --card-radius:12px;
 }
 body{font-family:sans-serif;margin:0;background:#f5f7f5;color:#222;}
-header{background:linear-gradient(135deg,#6ec1ff,#3aa8ff);padding:10px;display:flex;justify-content:space-between;align-items:center;}
-header h1{color:white;margin:0;}
-button{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;}
-.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));padding:10px;}
-.card{background:white;border-radius:var(--card-radius);padding:10px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.15);}
+header{background:linear-gradient(135deg,#6ec1ff,#3aa8ff);padding:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
+header h1{color:white;margin:0;font-size:20px;}
+button{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;margin:2px;}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));padding:10px;}
+.card{background:white;border-radius:var(--card-radius);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.15);overflow:hidden;display:flex;flex-direction:column;}
+.card img{width:100%;height:140px;object-fit:cover;}
+.card h4{margin:6px 8px 2px 8px;font-size:16px;color:var(--green);}
+.card p{margin:0 8px 8px 8px;font-size:12px;color:#555;flex:1;}
 #newsForm{display:none;background:white;padding:12px;margin:10px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-#newsPopup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;}
-#newsPopupContent{background:white;padding:12px;border-radius:12px;max-width:500px;width:95%;max-height:90vh;overflow:auto;}
+#newsPopup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;padding:10px;overflow:auto;}
+#newsPopupContent{background:white;padding:12px;border-radius:12px;max-width:500px;width:100%;max-height:90vh;overflow:auto;position:relative;}
 .closePopup{position:absolute;right:10px;top:10px;cursor:pointer;background:#eee;padding:4px 8px;border-radius:6px;}
+#newsPopupContent img{width:100%;height:auto;margin-bottom:8px;border-radius:8px;}
+.admin-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+@media(max-width:400px){ .grid{grid-template-columns:1fr;} header h1{font-size:18px;} }
 </style>
 </head>
 <body>
@@ -45,10 +51,10 @@ button{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;}
 <div class="grid" id="newsGrid"></div>
 
 <!-- News Popup -->
-<div id="newsPopup" style="display:flex;">
-  <div id="newsPopupContent" style="position:relative;">
+<div id="newsPopup">
+  <div id="newsPopupContent">
     <span class="closePopup" onclick="closePopup()">❌</span>
-    <img id="popupImage" src="" alt="" style="width:100%;border-radius:8px;margin-bottom:8px;">
+    <img id="popupImage" src="" alt="">
     <h3 id="popupTitle"></h3>
     <p id="popupContent"></p>
   </div>
@@ -138,12 +144,16 @@ db.collection('news').orderBy('title').onSnapshot(snapshot=>{
     const card = document.createElement('div');
     card.className='card';
     card.innerHTML=`
-      <img src="${data.image||''}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:4px;">
+      <img src="${data.image||''}" alt="">
       <h4>${data.title}</h4>
-      <p style="font-size:12px;color:#555;">${data.content.substring(0,50)}...</p>
+      <p>${data.content.substring(0,50)}...</p>
     `;
     card.onclick=()=>openPopup(data);
+    
+    // Admin buttons
     if(auth.currentUser && auth.currentUser.email===ADMIN_EMAIL){
+      const adminDiv = document.createElement('div');
+      adminDiv.className='admin-btns';
       const editBtn = document.createElement('button');
       editBtn.textContent='Edit';
       editBtn.onclick=(e)=>{
@@ -158,9 +168,11 @@ db.collection('news').orderBy('title').onSnapshot(snapshot=>{
         e.stopPropagation();
         if(confirm('Delete this news?')) db.collection('news').doc(doc.id).delete();
       };
-      card.appendChild(editBtn);
-      card.appendChild(delBtn);
+      adminDiv.appendChild(editBtn);
+      adminDiv.appendChild(delBtn);
+      card.appendChild(adminDiv);
     }
+
     newsGrid.appendChild(card);
   });
 });
