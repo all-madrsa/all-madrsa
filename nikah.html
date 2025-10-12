@@ -118,7 +118,6 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 @media(max-width:420px){
   .logo-3d{ font-size:26px; padding:4px 10px; }
   .header-btn{ padding:6px 10px; font-size:13px; }
-  .profile-photo { height:300px; }
 }
 </style>
 </head>
@@ -145,11 +144,11 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
   <!-- Admin Add/Edit Form -->
   <section id="memberForm">
     <h3>प्रोफ़ाइल जोड़ें / संपादित करें (Admin)</h3>
-    <input type="hidden" id="memberId"/>
+    <input type="hidden" id="editId">
     <input type="text" id="name" placeholder="नाम"/>
     <input type="text" id="age" placeholder="आयु"/>
     <input type="text" id="city" placeholder="शहर"/>
-    <input type="file" id="photoFile" accept="image/*"/>
+    <input type="url" id="photo" placeholder="Photo URL"/>
     <textarea id="details" placeholder="पूरा विवरण"></textarea>
     <button class="btn-connect" onclick="saveMember()">Save</button>
   </section>
@@ -162,7 +161,9 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
     </table>
   </div>
 
-  <div class="grid" id="cardsGrid"></div>
+  <div class="grid" id="cardsGrid">
+    <!-- JS से cards load होंगे -->
+  </div>
 </main>
 
 <!-- Profile Popup -->
@@ -198,7 +199,6 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -212,21 +212,18 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 const adminEmails = ["zaradigitalseva@gmail.com"];
-const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
 
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const cardsGrid = document.getElementById('cardsGrid');
-let editingId = null;
+let currentProfile = null;
 
-// Auth state
 auth.onAuthStateChanged(user=>{
   if(user && adminEmails.includes(user.email)){
     loginBtn.style.display = 'none';
     logoutBtn.style.display = 'inline-flex';
     document.getElementById('memberForm').style.display = 'block';
     document.getElementById('adminLogs').style.display = 'block';
-    loadLogs();
   } else{
     loginBtn.style.display = 'inline-flex';
     logoutBtn.style.display = 'none';
@@ -235,7 +232,7 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-// Login/Logout
+// Login
 function googleLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider)
@@ -244,10 +241,10 @@ function googleLogin(){
 }
 function logout(){ auth.signOut(); }
 
-// Load Cards
+// Load Cards with live update
 function loadCards(){
-  cardsGrid.innerHTML='';
   db.collection("members").orderBy('name').onSnapshot(snapshot=>{
+    cardsGrid.innerHTML=''; // clear cards first
     snapshot.forEach(doc=>{
       const data = doc.data();
       const card = document.createElement('div'); card.className='card';
@@ -259,7 +256,8 @@ function loadCards(){
         </div>
         <div class="card-footer">
           <button class="btn-wa" onclick="openProfile('${doc.id}')">यहाँ क्लिक करें</button>
-          ${auth.currentUser && adminEmails.includes(auth.currentUser.email) ? `<button class="admin-small" onclick="editMember('${doc.id}')">Edit</button>
+          ${auth.currentUser && adminEmails.includes(auth.currentUser.email) ? `
+          <button class="admin-small" onclick="editMember('${doc.id}')">Edit</button>
           <button class="admin-del" onclick="deleteMember('${doc.id}')">Delete</button>` : ''}
         </div>`;
       cardsGrid.appendChild(card);
@@ -272,6 +270,7 @@ function openProfile(id){
   db.collection("members").doc(id).get().then(doc=>{
     if(!doc.exists) return;
     const data = doc.data();
+    currentProfile=data;
     document.getElementById('popupPhoto').src=data.photo;
     document.getElementById('popupName').textContent=data.name;
     document.getElementById('popupAge').textContent=`आयु: ${data.age} साल`;
@@ -282,7 +281,7 @@ function openProfile(id){
 }
 function closeProfile(){ document.getElementById('profilePopup').style.display='none'; }
 
-// WhatsApp
+// Connect WhatsApp
 function connectWhatsApp(){ document.getElementById('connectPopup').style.display='flex'; }
 function closeConnect(){ document.getElementById('connectPopup').style.display='none'; }
 function sendConnect(){
@@ -298,7 +297,54 @@ function sendConnect(){
   loadLogs();
 }
 
-// Visitor logs
+// Admin Add/Edit Member
+function saveMember(){
+  const id=document.getElementById('editId').value;
+  const name=document.getElementById('name').value;
+  const age=document.getElementById('age').value;
+  const city=document.getElementById('city').value;
+  const photo=document.getElementById('photo').value;
+  const details=document.getElementById('details').value;
+  if(!name||!photo){ alert("Name और Photo जरूरी हैं"); return; }
+
+  if(id){ // update
+    db.collection('members').doc(id).update({name,age,city,photo,details})
+      .then(()=>{ alert("Updated"); document.getElementById('editId').value=''; clearForm(); });
+  } else{ // add new
+    db.collection('members').add({name,age,city,photo,details})
+      .then(()=>{ alert("Added"); clearForm(); });
+  }
+}
+function editMember(id){
+  db.collection('members').doc(id).get().then(doc=>{
+    if(!doc.exists) return;
+    const data = doc.data();
+    document.getElementById('editId').value=id;
+    document.getElementById('name').value=data.name;
+    document.getElementById('age').value=data.age;
+    document.getElementById('city').value=data.city;
+    document.getElementById('photo').value=data.photo;
+    document.getElementById('details').value=data.details;
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+}
+function deleteMember(id){
+  if(confirm("क्या आप वाकई delete करना चाहते हैं?")){
+    db.collection('members').doc(id).delete()
+      .then(()=> console.log("Deleted:", id))
+      .catch(err=> alert(err.message));
+  }
+}
+
+function clearForm(){
+  document.getElementById('name').value='';
+  document.getElementById('age').value='';
+  document.getElementById('city').value='';
+  document.getElementById('photo').value='';
+  document.getElementById('details').value='';
+}
+
+// Load visitor logs
 function loadLogs(){
   const tbody=document.querySelector('#logsTable tbody');
   tbody.innerHTML='';
@@ -312,64 +358,7 @@ function loadLogs(){
   });
 }
 
-// Admin Add/Edit/Delete
-async function uploadToImgbb(file){
-  const formData = new FormData();
-  formData.append('image', file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {method:'POST',body:formData});
-  const data = await res.json();
-  if(data.success) return data.data.url;
-  else throw new Error("Image upload failed");
-}
-
-async function saveMember(){
-  const name=document.getElementById('name').value;
-  const age=document.getElementById('age').value;
-  const city=document.getElementById('city').value;
-  const details=document.getElementById('details').value;
-  const file=document.getElementById('photoFile').files[0];
-
-  if(!name || !file){ alert("Name और Photo जरूरी हैं"); return; }
-
-  try{
-    const photoUrl = await uploadToImgbb(file);
-    if(editingId){
-      await db.collection('members').doc(editingId).update({name,age,city,details,photo:photoUrl});
-      alert("Updated");
-    } else {
-      await db.collection('members').add({name,age,city,details,photo:photoUrl});
-      alert("Added");
-    }
-    clearForm();
-  }catch(err){ alert(err.message); }
-}
-
-function editMember(id){
-  db.collection('members').doc(id).get().then(doc=>{
-    if(!doc.exists) return;
-    const d=doc.data();
-    document.getElementById('name').value=d.name;
-    document.getElementById('age').value=d.age;
-    document.getElementById('city').value=d.city;
-    document.getElementById('details').value=d.details;
-    editingId=id;
-  });
-}
-
-function deleteMember(id){
-  if(confirm("Are you sure to delete?")) db.collection('members').doc(id).delete();
-}
-
-function clearForm(){
-  editingId=null;
-  document.getElementById('name').value='';
-  document.getElementById('age').value='';
-  document.getElementById('city').value='';
-  document.getElementById('details').value='';
-  document.getElementById('photoFile').value='';
-}
-
-// Init
+// init
 loadCards();
 </script>
 </body>
