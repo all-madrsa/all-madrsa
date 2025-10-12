@@ -102,7 +102,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
   background:rgba(0,0,0,0.55);
   z-index:60;
   padding:10px;
-  overflow:auto; /* scroll if content too long */
+  overflow:auto;
 }
 .profile-card {
   background:white;
@@ -118,15 +118,13 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 }
 .profile-grid {
   display:grid;
-  grid-template-columns:1fr; /* mobile single column */
+  grid-template-columns:1fr;
   gap:16px;
   padding:18px;
   overflow:auto;
 }
 @media(min-width:600px){
-  .profile-grid {
-    grid-template-columns: 320px 1fr; /* desktop layout */
-  }
+  .profile-grid { grid-template-columns: 320px 1fr; }
 }
 .profile-photo {
   width:100%;
@@ -135,10 +133,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
   object-fit:cover;
   border-radius:8px;
 }
-.profile-info {
-  padding:8px 4px;
-  overflow:auto;
-}
+.profile-info { padding:8px 4px; overflow:auto; }
 .profile-info h2 { margin:0 0 8px 0; color:var(--green); }
 .profile-info .line { margin:6px 0; color:#333; }
 .close-btn { position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
@@ -189,7 +184,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
     <input type="text" id="name" placeholder="नाम"/>
     <input type="text" id="age" placeholder="आयु"/>
     <input type="text" id="city" placeholder="शहर"/>
-    <input type="url" id="photo" placeholder="Photo URL"/>
+    <input type="file" id="photoFile" accept="image/*"/>
     <textarea id="details" placeholder="पूरा विवरण"></textarea>
     <button class="btn-connect" onclick="saveMember()">Save</button>
   </section>
@@ -240,6 +235,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -273,7 +269,6 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-// Login
 function googleLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider)
@@ -282,7 +277,6 @@ function googleLogin(){
 }
 function logout(){ auth.signOut(); }
 
-// Load Cards with live update
 function loadCards(){
   db.collection("members").orderBy('name').onSnapshot(snapshot=>{
     cardsGrid.innerHTML='';
@@ -311,22 +305,17 @@ function openProfile(id){
   db.collection("members").doc(id).get().then(doc=>{
     if(!doc.exists) return;
     const data = doc.data();
-    currentProfile = data;
-    document.getElementById('popupPhoto').src = data.photo;
-    document.getElementById('popupName').textContent = data.name;
-    document.getElementById('popupAge').textContent = `आयु: ${data.age} साल`;
-    document.getElementById('popupCity').textContent = `शहर: ${data.city}`;
-    document.getElementById('popupDetails').textContent = data.details;
-    document.getElementById('profilePopup').style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // disable background scroll
+    currentProfile=data;
+    document.getElementById('popupPhoto').src=data.photo;
+    document.getElementById('popupName').textContent=data.name;
+    document.getElementById('popupAge').textContent=`आयु: ${data.age} साल`;
+    document.getElementById('popupCity').textContent=`शहर: ${data.city}`;
+    document.getElementById('popupDetails').textContent=data.details;
+    document.getElementById('profilePopup').style.display='flex';
   });
 }
-function closeProfile(){
-  document.getElementById('profilePopup').style.display = 'none';
-  document.body.style.overflow = 'auto'; // enable scroll
-}
+function closeProfile(){ document.getElementById('profilePopup').style.display='none'; }
 
-// Connect WhatsApp
 function connectWhatsApp(){ document.getElementById('connectPopup').style.display='flex'; }
 function closeConnect(){ document.getElementById('connectPopup').style.display='none'; }
 function sendConnect(){
@@ -342,24 +331,45 @@ function sendConnect(){
   loadLogs();
 }
 
-// Admin Add/Edit Member
-function saveMember(){
-  const id=document.getElementById('editId').value;
-  const name=document.getElementById('name').value;
-  const age=document.getElementById('age').value;
-  const city=document.getElementById('city').value;
-  const photo=document.getElementById('photo').value;
-  const details=document.getElementById('details').value;
-  if(!name||!photo){ alert("Name और Photo जरूरी हैं"); return; }
+// ImgBB Upload
+async function uploadImageAndGetURL(){
+  const fileInput = document.getElementById('photoFile');
+  if(fileInput.files.length === 0) return null;
+  const file = fileInput.files[0];
+  const formData = new FormData();
+  formData.append("image", file);
+  const apiKey = "YOUR_IMGBB_API_KEY"; // replace with your key
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+    method:"POST",
+    body: formData
+  });
+  const data = await res.json();
+  return data.data.url;
+}
 
-  if(id){ // update
-    db.collection('members').doc(id).update({name,age,city,photo,details})
-      .then(()=>{ alert("Updated"); document.getElementById('editId').value=''; clearForm(); });
-  } else{ // add new
-    db.collection('members').add({name,age,city,photo,details})
+// Admin Add/Edit Member
+async function saveMember(){
+  const id = document.getElementById('editId').value;
+  const name = document.getElementById('name').value;
+  const age = document.getElementById('age').value;
+  const city = document.getElementById('city').value;
+  const details = document.getElementById('details').value;
+  if(!name){ alert("Name जरूरी है"); return; }
+
+  let photoURL = null;
+  const uploadedURL = await uploadImageAndGetURL();
+  if(uploadedURL) photoURL = uploadedURL;
+  if(!photoURL){ alert("Photo जरूरी है"); return; }
+
+  if(id){
+    db.collection('members').doc(id).update({name,age,city,details,photo:photoURL})
+      .then(()=>{ alert("Updated"); clearForm(); document.getElementById('editId').value=''; });
+  } else{
+    db.collection('members').add({name,age,city,details,photo:photoURL})
       .then(()=>{ alert("Added"); clearForm(); });
   }
 }
+
 function editMember(id){
   db.collection('members').doc(id).get().then(doc=>{
     if(!doc.exists) return;
@@ -368,7 +378,6 @@ function editMember(id){
     document.getElementById('name').value=data.name;
     document.getElementById('age').value=data.age;
     document.getElementById('city').value=data.city;
-    document.getElementById('photo').value=data.photo;
     document.getElementById('details').value=data.details;
     window.scrollTo({top:0, behavior:'smooth'});
   });
@@ -384,8 +393,8 @@ function clearForm(){
   document.getElementById('name').value='';
   document.getElementById('age').value='';
   document.getElementById('city').value='';
-  document.getElementById('photo').value='';
   document.getElementById('details').value='';
+  document.getElementById('photoFile').value='';
 }
 
 // Load visitor logs
