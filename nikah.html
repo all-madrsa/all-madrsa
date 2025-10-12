@@ -9,8 +9,6 @@
   --green:#116530;
   --accent:#008069;
   --muted:#777;
-  --sky1: #6EC1FF;
-  --sky2: #3AA8FF;
   --card-radius:12px;
   --card-h:280px;
 }
@@ -104,20 +102,14 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 .profile-info .line { margin:6px 0; color:#333; }
 .close-btn { position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
 
-@media(max-width:768px){
-  .profile-grid { grid-template-columns:1fr; gap:12px; }
-  .profile-photo { height:auto; max-height:60vh; width:100%; }
-  .profile-card { width:95%; max-width:95%; max-height:90vh; overflow-y:auto; }
-  .profile-info .btn-wa { width:100%; text-align:center; }
-}
-
+/* connect popup */
 #connectPopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:70; }
 .connect-box { background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
 .connect-box input, .connect-box textarea { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
 
+/* admin add/edit panel */
 #memberForm { display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0; }
-#memberForm input, #memberForm textarea { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; }
-
+#memberForm input, #memberForm textarea, #memberForm select { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; }
 #adminLogs { display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06); }
 #logsTable { width:100%; border-collapse:collapse; }
 #logsTable th, #logsTable td { border-bottom:1px solid #eee; padding:8px 6px; text-align:left; font-size:14px; }
@@ -126,6 +118,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 @media(max-width:420px){
   .logo-3d{ font-size:26px; padding:4px 10px; }
   .header-btn{ padding:6px 10px; font-size:13px; }
+  .profile-photo { height:300px; }
 }
 </style>
 </head>
@@ -156,7 +149,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
     <input type="text" id="name" placeholder="नाम"/>
     <input type="text" id="age" placeholder="आयु"/>
     <input type="text" id="city" placeholder="शहर"/>
-    <input type="url" id="photo" placeholder="Photo URL"/>
+    <input type="file" id="photoFile" accept="image/*"/>
     <textarea id="details" placeholder="पूरा विवरण"></textarea>
     <button class="btn-connect" onclick="saveMember()">Save</button>
   </section>
@@ -169,9 +162,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
     </table>
   </div>
 
-  <div class="grid" id="cardsGrid">
-    <!-- JS से cards load होंगे -->
-  </div>
+  <div class="grid" id="cardsGrid"></div>
 </main>
 
 <!-- Profile Popup -->
@@ -207,6 +198,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -220,13 +212,14 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 const adminEmails = ["zaradigitalseva@gmail.com"];
+const imgbbKey = "d12c2e4a8650157b2b6b9fe85336ea43";
 
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const cardsGrid = document.getElementById('cardsGrid');
-let currentProfile = null;
 let editingId = null;
 
+// Auth state
 auth.onAuthStateChanged(user=>{
   if(user && adminEmails.includes(user.email)){
     loginBtn.style.display = 'none';
@@ -242,7 +235,7 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-// Login
+// Login/Logout
 function googleLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider)
@@ -251,19 +244,13 @@ function googleLogin(){
 }
 function logout(){ auth.signOut(); }
 
-// Load Cards (live update)
+// Load Cards
 function loadCards(){
   cardsGrid.innerHTML='';
   db.collection("members").orderBy('name').onSnapshot(snapshot=>{
-    cardsGrid.innerHTML='';
     snapshot.forEach(doc=>{
       const data = doc.data();
       const card = document.createElement('div'); card.className='card';
-      let adminControls='';
-      if(auth.currentUser && adminEmails.includes(auth.currentUser.email)){
-        adminControls = `<button class="admin-small" onclick="editMember('${doc.id}')">Edit</button>
-                         <button class="admin-del" onclick="deleteMember('${doc.id}')">Delete</button>`;
-      }
       card.innerHTML=`
         <div class="img-wrapper"><img src="${data.photo}" alt="${data.name}"></div>
         <div class="card-body">
@@ -272,7 +259,8 @@ function loadCards(){
         </div>
         <div class="card-footer">
           <button class="btn-wa" onclick="openProfile('${doc.id}')">यहाँ क्लिक करें</button>
-          ${adminControls}
+          ${auth.currentUser && adminEmails.includes(auth.currentUser.email) ? `<button class="admin-small" onclick="editMember('${doc.id}')">Edit</button>
+          <button class="admin-del" onclick="deleteMember('${doc.id}')">Delete</button>` : ''}
         </div>`;
       cardsGrid.appendChild(card);
     });
@@ -284,7 +272,6 @@ function openProfile(id){
   db.collection("members").doc(id).get().then(doc=>{
     if(!doc.exists) return;
     const data = doc.data();
-    currentProfile=data;
     document.getElementById('popupPhoto').src=data.photo;
     document.getElementById('popupName').textContent=data.name;
     document.getElementById('popupAge').textContent=`आयु: ${data.age} साल`;
@@ -295,7 +282,7 @@ function openProfile(id){
 }
 function closeProfile(){ document.getElementById('profilePopup').style.display='none'; }
 
-// Connect WhatsApp
+// WhatsApp
 function connectWhatsApp(){ document.getElementById('connectPopup').style.display='flex'; }
 function closeConnect(){ document.getElementById('connectPopup').style.display='none'; }
 function sendConnect(){
@@ -311,54 +298,11 @@ function sendConnect(){
   loadLogs();
 }
 
-// Admin Add/Edit Member
-function saveMember(){
-  const name=document.getElementById('name').value;
-  const age=document.getElementById('age').value;
-  const city=document.getElementById('city').value;
-  const photo=document.getElementById('photo').value;
-  const details=document.getElementById('details').value;
-  if(!name||!photo){ alert("Name और Photo जरूरी हैं"); return; }
-
-  if(editingId){ // edit
-    db.collection('members').doc(editingId).update({name,age,city,photo,details}).then(()=>{
-      alert("Updated"); clearForm();
-    });
-  } else { // add
-    db.collection('members').add({name,age,city,photo,details}).then(()=>{ alert("Added"); clearForm(); });
-  }
-}
-
-function editMember(id){
-  editingId=id;
-  db.collection('members').doc(id).get().then(doc=>{
-    const data=doc.data();
-    document.getElementById('name').value=data.name;
-    document.getElementById('age').value=data.age;
-    document.getElementById('city').value=data.city;
-    document.getElementById('photo').value=data.photo;
-    document.getElementById('details').value=data.details;
-  });
-}
-function deleteMember(id){
-  if(confirm("क्या आप वाकई इस प्रोफ़ाइल को हटाना चाहते हैं?")){
-    db.collection('members').doc(id).delete();
-  }
-}
-function clearForm(){
-  editingId=null;
-  document.getElementById('name').value='';
-  document.getElementById('age').value='';
-  document.getElementById('city').value='';
-  document.getElementById('photo').value='';
-  document.getElementById('details').value='';
-}
-
-// Load visitor logs
+// Visitor logs
 function loadLogs(){
   const tbody=document.querySelector('#logsTable tbody');
-  db.collection('visitorLogs').orderBy('date','desc').onSnapshot(snapshot=>{
-    tbody.innerHTML='';
+  tbody.innerHTML='';
+  db.collection('visitorLogs').orderBy('date','desc').get().then(snapshot=>{
     snapshot.forEach(doc=>{
       const d=doc.data();
       const row=document.createElement('tr');
@@ -366,6 +310,63 @@ function loadLogs(){
       tbody.appendChild(row);
     });
   });
+}
+
+// Admin Add/Edit/Delete
+async function uploadToImgbb(file){
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {method:'POST',body:formData});
+  const data = await res.json();
+  if(data.success) return data.data.url;
+  else throw new Error("Image upload failed");
+}
+
+async function saveMember(){
+  const name=document.getElementById('name').value;
+  const age=document.getElementById('age').value;
+  const city=document.getElementById('city').value;
+  const details=document.getElementById('details').value;
+  const file=document.getElementById('photoFile').files[0];
+
+  if(!name || !file){ alert("Name और Photo जरूरी हैं"); return; }
+
+  try{
+    const photoUrl = await uploadToImgbb(file);
+    if(editingId){
+      await db.collection('members').doc(editingId).update({name,age,city,details,photo:photoUrl});
+      alert("Updated");
+    } else {
+      await db.collection('members').add({name,age,city,details,photo:photoUrl});
+      alert("Added");
+    }
+    clearForm();
+  }catch(err){ alert(err.message); }
+}
+
+function editMember(id){
+  db.collection('members').doc(id).get().then(doc=>{
+    if(!doc.exists) return;
+    const d=doc.data();
+    document.getElementById('name').value=d.name;
+    document.getElementById('age').value=d.age;
+    document.getElementById('city').value=d.city;
+    document.getElementById('details').value=d.details;
+    editingId=id;
+  });
+}
+
+function deleteMember(id){
+  if(confirm("Are you sure to delete?")) db.collection('members').doc(id).delete();
+}
+
+function clearForm(){
+  editingId=null;
+  document.getElementById('name').value='';
+  document.getElementById('age').value='';
+  document.getElementById('city').value='';
+  document.getElementById('details').value='';
+  document.getElementById('photoFile').value='';
 }
 
 // Init
