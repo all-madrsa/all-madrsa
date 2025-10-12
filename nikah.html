@@ -14,19 +14,11 @@
   --card-radius:12px;
   --card-h:280px;
 }
-body {
-  font-family:"Segoe UI", sans-serif;
-  margin:0;
-  background:#f5f7f5;
-  color:#222;
-  -webkit-font-smoothing:antialiased;
-}
+body { font-family:"Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; -webkit-font-smoothing:antialiased; }
 
 /* HEADER */
 .site-header{
-  position:sticky;
-  top:0;
-  z-index:60;
+  position:sticky; top:0; z-index:60;
   background: linear-gradient(135deg,#6ec1ff,#3aa8ff);
   padding:8px 10px;
   box-shadow:0 6px 18px rgba(0,0,0,0.12);
@@ -61,23 +53,18 @@ body {
   white-space:nowrap;
   background:#ffffff;
   color:#0b63a6;
-  padding:8px 14px;
+  padding:6px 10px;
   border-radius:10px;
   border:none;
   text-decoration:none;
   font-weight:700;
   cursor:pointer;
   box-shadow:0 4px 12px rgba(0,0,0,0.08);
-  font-size:14px;
+  font-size:13px;
   transition:0.2s;
 }
 .header-btn:hover{ filter:brightness(0.95); }
 .header-btn:active{ transform:translateY(1px); }
-
-@media(max-width:420px){
-  .logo-3d{ font-size:26px; padding:4px 10px; }
-  .header-btn{ padding:5px 8px; font-size:12px; }
-}
 
 /* MAIN */
 main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
@@ -94,91 +81,37 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 @media(min-width:1024px){ .grid { grid-template-columns:repeat(4,1fr); } }
 
 /* card */
-.card {
-  background:white;
-  border-radius:var(--card-radius);
-  overflow:hidden;
-  height:var(--card-h);
-  display:flex;
-  flex-direction:column;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-  cursor:pointer;
-  transition:transform .15s;
-}
+.card { background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s; }
 .card:hover { transform:translateY(-4px); }
-.img-wrapper { width:100%; height:150px; overflow:hidden; display:block; }
-.img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; }
-.card-body {
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  flex:1;
-  align-items:flex-start;
-  width:100%;
-}
+.img-wrapper { width:100%; height:150px; overflow:hidden; display:block; cursor:pointer; -webkit-tap-highlight-color: transparent; }
+.img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; user-select:none; }
+.card-body { padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; width:100%; }
 .card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
 .card-body .meta { color:var(--muted); font-size:13px; }
-.card-footer {
-  padding:10px;
-  display:flex;
-  gap:8px;
-  width:100%;
-  justify-content:flex-start;
-  align-items:center;
-}
-.card-footer button{ flex:1; text-align:center; }
+.card-footer { padding:10px; display:flex; gap:8px; width:100%; justify-content:flex-start; align-items:center; flex-wrap:wrap; }
 .btn-wa { background:#25d366; color:white; padding:6px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; cursor:pointer; }
 .btn-connect { background:var(--accent); color:white; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
 .admin-small { background:#ffc107; color:#333; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
 .admin-del { background:#dc3545; color:#fff; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
 
 /* profile popup */
-#profilePopup {
-  position:fixed; inset:0; display:none; justify-content:center; align-items:center;
-  background:rgba(0,0,0,0.55); z-index:60;
-}
-.profile-card {
-  background:white; width:95%; max-width:920px;
-  border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25);
-  overflow:auto; max-height:90vh; position:relative;
-}
+#profilePopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
+.profile-card { background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative; }
 .profile-grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; padding:18px; }
 .profile-photo { width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee; }
 .profile-info { padding:8px 4px; }
 .profile-info h2 { margin:0 0 8px 0; color:var(--green); }
 .profile-info .line { margin:6px 0; color:#333; }
-.close-btn {
-  position:absolute; right:18px; top:18px;
-  background:#eee; border:none; padding:8px 10px;
-  border-radius:8px; cursor:pointer;
-}
-
-@media(max-width:600px){
-  .profile-grid { grid-template-columns:1fr; }
-  .profile-photo { height:300px; }
-}
+.close-btn { position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
 
 /* connect popup */
-#connectPopup {
-  position:fixed; inset:0; display:none; justify-content:center; align-items:center;
-  background:rgba(0,0,0,0.45); z-index:70;
-}
-.connect-box {
-  background:white; padding:16px; border-radius:10px;
-  width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2);
-}
-.connect-box input, .connect-box textarea {
-  width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd;
-}
+#connectPopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:70; }
+.connect-box { background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
+.connect-box input { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
 
-/* admin form */
+/* admin add/edit panel */
 #memberForm { display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0; }
-#memberForm input, #memberForm textarea {
-  width:100%; padding:10px; margin:6px 0;
-  border-radius:8px; border:1px solid #ddd; box-sizing:border-box;
-  font-size:14px;
-}
+#memberForm input, #memberForm textarea, #memberForm select { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; }
 #adminLogs { display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06); }
 #logsTable { width:100%; border-collapse:collapse; }
 #logsTable th, #logsTable td { border-bottom:1px solid #eee; padding:8px 6px; text-align:left; font-size:14px; }
@@ -191,9 +124,9 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
   <div class="logo-row">
     <div class="logo-3d">निकाह</div>
   </div>
-  <nav class="button-row">
-    <a class="header-btn" href="index.html">🏠 Home</a>
-    <a class="header-btn" href="nikah-Conditions.html">📜 हमारे नियम</a>
+  <nav class="button-row" role="navigation" aria-label="Main navigation">
+    <a class="header-btn" href="index.html" title="Home">🏠 Home</a>
+    <a class="header-btn" href="nikah-Conditions.html" title="हमारे नियम">📜 हमारे नियम</a>
     <a class="header-btn" href="https://wa.me/9112170192" target="_blank">📱 रिश्ते जोड़ें</a>
     <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
     <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
@@ -205,6 +138,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
     <a class="whatsapp-btn" href="https://wa.me/9112170192" target="_blank">📱 WhatsApp से Join करें</a>
   </div>
 
+  <!-- Admin Add/Edit Form -->
   <section id="memberForm">
     <h3>प्रोफ़ाइल जोड़ें / संपादित करें (Admin)</h3>
     <input type="text" id="name" placeholder="नाम"/>
@@ -255,11 +189,12 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
   </div>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase & Script -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script>
+/* 🔥 Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -272,127 +207,171 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 const adminEmails = ["zaradigitalseva@gmail.com"];
+
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const cardsGrid = document.getElementById('cardsGrid');
-let currentProfile = null;
 
-// Persistent login fix
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
+/* ✅ Auth */
 auth.onAuthStateChanged(user=>{
   if(user && adminEmails.includes(user.email)){
-    loginBtn.style.display='none';
-    logoutBtn.style.display='inline-flex';
-    document.getElementById('memberForm').style.display='block';
-    document.getElementById('adminLogs').style.display='block';
-    loadLogs();
+    localStorage.setItem("isAdmin","true");
+    showAdminPanel();
   } else {
-    loginBtn.style.display='inline-flex';
-    logoutBtn.style.display='none';
-    document.getElementById('memberForm').style.display='none';
-    document.getElementById('adminLogs').style.display='none';
+    localStorage.removeItem("isAdmin");
+    hideAdminPanel();
   }
 });
-
-// Login
+window.addEventListener('load', ()=>{
+  if(localStorage.getItem("isAdmin")==="true"){ showAdminPanel(); }
+});
 function googleLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
-    .then(res=> console.log("Logged in:", res.user.email))
-    .catch(err=> alert("Login failed: "+err.message));
+  auth.signInWithPopup(provider);
 }
-function logout(){ auth.signOut(); }
+function logout(){
+  auth.signOut().then(()=>{
+    localStorage.removeItem("isAdmin");
+    hideAdminPanel();
+  });
+}
+function showAdminPanel(){
+  loginBtn.style.display='none';
+  logoutBtn.style.display='inline-flex';
+  document.getElementById('memberForm').style.display='block';
+  document.getElementById('adminLogs').style.display='block';
+  loadLogs();
+}
+function hideAdminPanel(){
+  loginBtn.style.display='inline-flex';
+  logoutBtn.style.display='none';
+  document.getElementById('memberForm').style.display='none';
+  document.getElementById('adminLogs').style.display='none';
+}
 
-// Load Cards
+/* ✅ Load Cards */
 function loadCards(){
   cardsGrid.innerHTML='';
   db.collection("members").get().then(snapshot=>{
     snapshot.forEach(doc=>{
-      const data = doc.data();
-      const card = document.createElement('div');
+      const d=doc.data();
+      const card=document.createElement('div');
       card.className='card';
       card.innerHTML=`
-        <div class="img-wrapper"><img src="${data.photo}" alt="${data.name}"></div>
+        <div class="img-wrapper"><img src="${d.photo}" alt="${d.name}"></div>
         <div class="card-body">
-          <h3>${data.name}</h3>
-          <div class="meta">${data.age} साल, ${data.city}</div>
+          <h3>${d.name}</h3>
+          <div class="meta">${d.age} साल, ${d.city}</div>
         </div>
         <div class="card-footer">
           <button class="btn-wa" onclick="openProfile('${doc.id}')">यहाँ क्लिक करें</button>
+          ${localStorage.getItem("isAdmin")==="true" ? `
+            <button class="admin-small" onclick="editMember('${doc.id}')">✏️</button>
+            <button class="admin-del" onclick="deleteMember('${doc.id}')">🗑</button>` : ``}
         </div>`;
       cardsGrid.appendChild(card);
     });
   });
 }
 
-// Profile Popup
+/* ✅ Profile Popup */
 function openProfile(id){
-  db.collection("members").doc(id).get().then(doc=>{
+  db.collection('members').doc(id).get().then(doc=>{
     if(!doc.exists) return;
-    const data = doc.data();
-    currentProfile=data;
-    document.getElementById('popupPhoto').src=data.photo;
-    document.getElementById('popupName').textContent=data.name;
-    document.getElementById('popupAge').textContent=`आयु: ${data.age} साल`;
-    document.getElementById('popupCity').textContent=`शहर: ${data.city}`;
-    document.getElementById('popupDetails').textContent=data.details;
+    const d=doc.data();
+    document.getElementById('popupPhoto').src=d.photo;
+    document.getElementById('popupName').textContent=d.name;
+    document.getElementById('popupAge').textContent=`आयु: ${d.age} साल`;
+    document.getElementById('popupCity').textContent=`शहर: ${d.city}`;
+    document.getElementById('popupDetails').textContent=d.details;
     document.getElementById('profilePopup').style.display='flex';
   });
 }
 function closeProfile(){ document.getElementById('profilePopup').style.display='none'; }
 
-// Connect WhatsApp
+/* ✅ WhatsApp Popup */
 function connectWhatsApp(){ document.getElementById('connectPopup').style.display='flex'; }
 function closeConnect(){ document.getElementById('connectPopup').style.display='none'; }
 function sendConnect(){
-  const name=document.getElementById('visitorName').value;
-  const mobile=document.getElementById('visitorMobile').value;
+  const n=document.getElementById('visitorName').value;
+  const m=document.getElementById('visitorMobile').value;
   const msg=document.getElementById('visitorMsg').value;
-  if(!name||!mobile){ alert("Name और Mobile जरूरी हैं!"); return;}
-  const waMsg=`नमस्ते, ${name} ने संदेश भेजा: ${msg || '...'}`;
-  window.open(`https://wa.me/9112170192?text=${encodeURIComponent(waMsg)}`,'_blank');
+  if(!n||!m){ alert("Name और Mobile जरूरी हैं!"); return;}
+  const wa=`नमस्ते, ${n} ने संदेश भेजा: ${msg || '...'}`;
+  window.open(`https://wa.me/9112170192?text=${encodeURIComponent(wa)}`,'_blank');
+  db.collection('visitorLogs').add({name:n,mobile:m,msg,date:new Date()});
+  loadLogs();
   document.getElementById('visitorName').value='';
   document.getElementById('visitorMobile').value='';
   document.getElementById('visitorMsg').value='';
-  document.getElementById('connectPopup').style.display='none';
-  db.collection('visitorLogs').add({name,mobile,msg,date:new Date()});
-  loadLogs();
+  closeConnect();
 }
 
-// Add Member
+/* ✅ Admin Add/Edit/Delete */
 function addMember(){
   const name=document.getElementById('name').value;
   const age=document.getElementById('age').value;
   const city=document.getElementById('city').value;
   const photo=document.getElementById('photo').value;
   const details=document.getElementById('details').value;
-  if(!name||!photo){ alert("Name और Photo जरूरी हैं"); return; }
+  if(!name||!photo){ alert("Name और Photo जरूरी हैं"); return;}
   db.collection('members').add({name,age,city,photo,details}).then(()=>{
-    alert("Added");
-    document.getElementById('name').value='';
-    document.getElementById('age').value='';
-    document.getElementById('city').value='';
-    document.getElementById('photo').value='';
-    document.getElementById('details').value='';
+    alert("Profile जोड़ा गया ✅");
+    clearForm();
     loadCards();
   });
 }
+function editMember(id){
+  db.collection('members').doc(id).get().then(doc=>{
+    const d=doc.data();
+    document.getElementById('name').value=d.name;
+    document.getElementById('age').value=d.age;
+    document.getElementById('city').value=d.city;
+    document.getElementById('photo').value=d.photo;
+    document.getElementById('details').value=d.details;
+    document.querySelector('#memberForm button').onclick=()=>{
+      const name=document.getElementById('name').value;
+      const age=document.getElementById('age').value;
+      const city=document.getElementById('city').value;
+      const photo=document.getElementById('photo').value;
+      const details=document.getElementById('details').value;
+      db.collection('members').doc(id).update({name,age,city,photo,details}).then(()=>{
+        alert("Updated ✅");
+        clearForm();
+        loadCards();
+      });
+    };
+  });
+}
+function deleteMember(id){
+  if(confirm("Delete this profile?")){
+    db.collection('members').doc(id).delete().then(()=>loadCards());
+  }
+}
+function clearForm(){
+  document.getElementById('name').value='';
+  document.getElementById('age').value='';
+  document.getElementById('city').value='';
+  document.getElementById('photo').value='';
+  document.getElementById('details').value='';
+  document.querySelector('#memberForm button').onclick=addMember;
+}
 
-// Logs
+/* ✅ Logs */
 function loadLogs(){
   const tbody=document.querySelector('#logsTable tbody');
   tbody.innerHTML='';
   db.collection('visitorLogs').orderBy('date','desc').get().then(snapshot=>{
     snapshot.forEach(doc=>{
       const d=doc.data();
-      const row=document.createElement('tr');
-      row.innerHTML=`<td>${d.name}</td><td>${d.mobile}</td><td>${d.msg}</td><td>${d.date.toDate().toLocaleString()}</td>`;
-      tbody.appendChild(row);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${d.name}</td><td>${d.mobile}</td><td>${d.msg}</td><td>${new Date(d.date.seconds*1000).toLocaleString()}</td>`;
+      tbody.appendChild(tr);
     });
   });
 }
 
+/* ✅ Init */
 loadCards();
 </script>
 </body>
