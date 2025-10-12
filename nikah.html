@@ -197,9 +197,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
     </table>
   </div>
 
-  <div class="grid" id="cardsGrid">
-    <!-- JS से cards load होंगे -->
-  </div>
+  <div class="grid" id="cardsGrid"></div>
 </main>
 
 <!-- Profile Popup -->
@@ -231,52 +229,53 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
   </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
+// CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  projectId:"all-madrsa",
+  storageBucket:"all-madrsa.appspot.com",
+  messagingSenderId:"619313835874",
+  appId:"1:619313835874:web:e387e1297663f11fc2463b11fc2463b"
 };
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const adminEmails = ["zaradigitalseva@gmail.com"];
 
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const cardsGrid = document.getElementById('cardsGrid');
-let currentProfile = null;
 
 auth.onAuthStateChanged(user=>{
-  if(user && adminEmails.includes(user.email)){
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'inline-flex';
-    document.getElementById('memberForm').style.display = 'block';
-    document.getElementById('adminLogs').style.display = 'block';
+  if(user && user.email === ADMIN_EMAIL){
+    loginBtn.style.display='none';
+    logoutBtn.style.display='inline-flex';
+    document.getElementById('memberForm').style.display='block';
+    document.getElementById('adminLogs').style.display='block';
   } else{
-    loginBtn.style.display = 'inline-flex';
-    logoutBtn.style.display = 'none';
-    document.getElementById('memberForm').style.display = 'none';
-    document.getElementById('adminLogs').style.display = 'none';
+    loginBtn.style.display='inline-flex';
+    logoutBtn.style.display='none';
+    document.getElementById('memberForm').style.display='none';
+    document.getElementById('adminLogs').style.display='none';
   }
 });
 
+// LOGIN/LOGOUT
 function googleLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
-    .then(res=> console.log("Logged in:", res.user.email))
-    .catch(err=> alert("Login failed: "+err.message));
+  auth.signInWithPopup(provider).then(res=>console.log("Logged in:",res.user.email)).catch(err=>alert(err.message));
 }
 function logout(){ auth.signOut(); }
 
+// LOAD CARDS
 function loadCards(){
   db.collection("members").orderBy('name').onSnapshot(snapshot=>{
     cardsGrid.innerHTML='';
@@ -291,16 +290,17 @@ function loadCards(){
         </div>
         <div class="card-footer">
           <button class="btn-wa" onclick="openProfile('${doc.id}')">यहाँ क्लिक करें</button>
-          ${auth.currentUser && adminEmails.includes(auth.currentUser.email) ? `
+          ${auth.currentUser && auth.currentUser.email===ADMIN_EMAIL?`
           <button class="admin-small" onclick="editMember('${doc.id}')">Edit</button>
-          <button class="admin-del" onclick="deleteMember('${doc.id}')">Delete</button>` : ''}
+          <button class="admin-del" onclick="deleteMember('${doc.id}')">Delete</button>`:''}
         </div>`;
       cardsGrid.appendChild(card);
     });
   });
 }
 
-// Profile Popup
+// PROFILE
+let currentProfile = null;
 function openProfile(id){
   db.collection("members").doc(id).get().then(doc=>{
     if(!doc.exists) return;
@@ -316,6 +316,7 @@ function openProfile(id){
 }
 function closeProfile(){ document.getElementById('profilePopup').style.display='none'; }
 
+// CONNECT
 function connectWhatsApp(){ document.getElementById('connectPopup').style.display='flex'; }
 function closeConnect(){ document.getElementById('connectPopup').style.display='none'; }
 function sendConnect(){
@@ -325,79 +326,15 @@ function sendConnect(){
   if(!name||!mobile){ alert("Name और Mobile जरूरी हैं!"); return;}
   const waMsg=`नमस्ते, ${name} ने संदेश भेजा: ${msg || '...'}`;
   window.open(`https://wa.me/9112170192?text=${encodeURIComponent(waMsg)}`,'_blank');
-  document.getElementById('visitorName').value=''; document.getElementById('visitorMobile').value=''; document.getElementById('visitorMsg').value='';
+  document.getElementById('visitorName').value='';
+  document.getElementById('visitorMobile').value='';
+  document.getElementById('visitorMsg').value='';
   document.getElementById('connectPopup').style.display='none';
   db.collection('visitorLogs').add({name,mobile,msg,date:new Date()});
   loadLogs();
 }
 
-// ImgBB Upload
-async function uploadImageAndGetURL(){
-  const fileInput = document.getElementById('photoFile');
-  if(fileInput.files.length === 0) return null;
-  const file = fileInput.files[0];
-  const formData = new FormData();
-  formData.append("image", file);
-  const apiKey = "YOUR_IMGBB_API_KEY"; // replace with your key
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-    method:"POST",
-    body: formData
-  });
-  const data = await res.json();
-  return data.data.url;
-}
-
-// Admin Add/Edit Member
-async function saveMember(){
-  const id = document.getElementById('editId').value;
-  const name = document.getElementById('name').value;
-  const age = document.getElementById('age').value;
-  const city = document.getElementById('city').value;
-  const details = document.getElementById('details').value;
-  if(!name){ alert("Name जरूरी है"); return; }
-
-  let photoURL = null;
-  const uploadedURL = await uploadImageAndGetURL();
-  if(uploadedURL) photoURL = uploadedURL;
-  if(!photoURL){ alert("Photo जरूरी है"); return; }
-
-  if(id){
-    db.collection('members').doc(id).update({name,age,city,details,photo:photoURL})
-      .then(()=>{ alert("Updated"); clearForm(); document.getElementById('editId').value=''; });
-  } else{
-    db.collection('members').add({name,age,city,details,photo:photoURL})
-      .then(()=>{ alert("Added"); clearForm(); });
-  }
-}
-
-function editMember(id){
-  db.collection('members').doc(id).get().then(doc=>{
-    if(!doc.exists) return;
-    const data = doc.data();
-    document.getElementById('editId').value=id;
-    document.getElementById('name').value=data.name;
-    document.getElementById('age').value=data.age;
-    document.getElementById('city').value=data.city;
-    document.getElementById('details').value=data.details;
-    window.scrollTo({top:0, behavior:'smooth'});
-  });
-}
-function deleteMember(id){
-  if(confirm("क्या आप वाकई delete करना चाहते हैं?")){
-    db.collection('members').doc(id).delete()
-      .then(()=> console.log("Deleted:", id))
-      .catch(err=> alert(err.message));
-  }
-}
-function clearForm(){
-  document.getElementById('name').value='';
-  document.getElementById('age').value='';
-  document.getElementById('city').value='';
-  document.getElementById('details').value='';
-  document.getElementById('photoFile').value='';
-}
-
-// Load visitor logs
+// LOGS
 function loadLogs(){
   const tbody=document.querySelector('#logsTable tbody');
   tbody.innerHTML='';
@@ -411,7 +348,68 @@ function loadLogs(){
   });
 }
 
-// init
+// UPLOAD IMAGE
+async function uploadImageAndGetURL(){
+  const fileInput=document.getElementById('photoFile');
+  if(fileInput.files.length===0) return null;
+  const file=fileInput.files[0];
+  const formData=new FormData();
+  formData.append("image",file);
+  const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:formData});
+  const data=await res.json();
+  return data.data.url;
+}
+
+// ADMIN SAVE
+async function saveMember(){
+  const id=document.getElementById('editId').value;
+  const name=document.getElementById('name').value;
+  const age=document.getElementById('age').value;
+  const city=document.getElementById('city').value;
+  const details=document.getElementById('details').value;
+  if(!name){ alert("Name जरूरी है"); return; }
+
+  let photoURL=null;
+  const uploadedURL=await uploadImageAndGetURL();
+  if(uploadedURL) photoURL=uploadedURL;
+  if(!photoURL){ alert("Photo जरूरी है"); return; }
+
+  if(id){
+    db.collection('members').doc(id).update({name,age,city,details,photo:photoURL})
+      .then(()=>{ alert("Updated"); clearForm(); document.getElementById('editId').value=''; });
+  } else{
+    db.collection('members').add({name,age,city,details,photo:photoURL})
+      .then(()=>{ alert("Added"); clearForm(); });
+  }
+}
+
+// ADMIN EDIT / DELETE
+function editMember(id){
+  db.collection('members').doc(id).get().then(doc=>{
+    if(!doc.exists) return;
+    const data=doc.data();
+    document.getElementById('editId').value=id;
+    document.getElementById('name').value=data.name;
+    document.getElementById('age').value=data.age;
+    document.getElementById('city').value=data.city;
+    document.getElementById('details').value=data.details;
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+}
+function deleteMember(id){
+  if(confirm("क्या आप वाकई delete करना चाहते हैं?")){
+    db.collection('members').doc(id).delete().then(()=>console.log("Deleted:",id)).catch(err=>alert(err.message));
+  }
+}
+function clearForm(){
+  document.getElementById('name').value='';
+  document.getElementById('age').value='';
+  document.getElementById('city').value='';
+  document.getElementById('details').value='';
+  document.getElementById('photoFile').value='';
+}
+
+// INIT
 loadCards();
 </script>
 </body>
