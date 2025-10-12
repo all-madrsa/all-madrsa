@@ -54,6 +54,276 @@ body { font-family:"Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#
   background:#ffffff;
   color:#0b63a6;
   padding:6px 10px;
+  border-radius:8px;
+  border:none;
+  text-decoration:none;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  font-size:13px;
+}
+.header-btn:hover{ filter:brightness(0.95); }
+
+/* MAIN */
+main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
+
+/* grid cards */
+.grid { display:grid; gap:14px; grid-template-columns:repeat(2,1fr); }
+@media(min-width:1024px){ .grid { grid-template-columns:repeat(4,1fr); } }
+
+/* card */
+.card { background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); transition:transform .15s; }
+.card:hover { transform:translateY(-4px); }
+.img-wrapper { width:100%; height:150px; overflow:hidden; cursor:pointer; }
+.img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; }
+.card-body { padding:10px; flex:1; }
+.card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-body .meta { color:var(--muted); font-size:13px; }
+.card-footer { padding:8px; display:flex; gap:6px; flex-wrap:wrap; }
+.btn-wa { background:#25d366; color:white; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+.admin-small { background:#ffc107; color:#333; padding:5px 8px; border-radius:6px; border:none; cursor:pointer; font-size:12px; }
+.admin-del { background:#dc3545; color:#fff; padding:5px 8px; border-radius:6px; border:none; cursor:pointer; font-size:12px; }
+
+/* profile popup */
+#profilePopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
+.profile-card { background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative; }
+.profile-grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; padding:18px; }
+.profile-photo { width:100%; height:420px; object-fit:cover; border-radius:8px; background:#eee; }
+.close-btn { position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+
+@media(max-width:420px){
+  .logo-3d{ font-size:26px; padding:4px 10px; }
+  .header-btn{ padding:5px 8px; font-size:12px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo-row">
+    <div class="logo-3d">निकाह</div>
+  </div>
+  <nav class="button-row">
+    <a class="header-btn" href="index.html">🏠 Home</a>
+    <a class="header-btn" href="nikah-Conditions.html">📜 हमारे नियम</a>
+    <a class="header-btn" href="https://wa.me/9112170192" target="_blank">📱 रिश्ते जोड़ें</a>
+    <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
+    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
+  </nav>
+</header>
+
+<main>
+  <!-- Admin Add/Edit Form -->
+  <section id="memberForm" style="display:none;">
+    <h3>प्रोफ़ाइल जोड़ें / संपादित करें</h3>
+    <input type="text" id="name" placeholder="नाम"/>
+    <input type="text" id="age" placeholder="आयु"/>
+    <input type="text" id="city" placeholder="शहर"/>
+    <input type="url" id="photo" placeholder="Photo URL"/>
+    <textarea id="details" placeholder="पूरा विवरण"></textarea>
+    <button class="btn-wa" onclick="saveMember()">Save</button>
+  </section>
+
+  <div class="grid" id="cardsGrid"></div>
+</main>
+
+<!-- Profile Popup -->
+<div id="profilePopup">
+  <div class="profile-card">
+    <button class="close-btn" onclick="closeProfile()">❌</button>
+    <div class="profile-grid">
+      <img src="" id="popupPhoto" class="profile-photo">
+      <div>
+        <h2 id="popupName"></h2>
+        <p id="popupAge"></p>
+        <p id="popupCity"></p>
+        <p id="popupDetails"></p>
+        <button class="btn-wa" onclick="connectWhatsApp()">📱 WhatsApp से संपर्क करें</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:e387e1297663f11fc2463b"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const adminEmails = ["zaradigitalseva@gmail.com"];
+
+let editingId = null;
+let isAdmin = false;
+
+auth.onAuthStateChanged(user=>{
+  if(user && adminEmails.includes(user.email)){
+    isAdmin = true;
+    document.getElementById('loginBtn').style.display='none';
+    document.getElementById('logoutBtn').style.display='inline-flex';
+    document.getElementById('memberForm').style.display='block';
+  } else {
+    isAdmin = false;
+    document.getElementById('loginBtn').style.display='inline-flex';
+    document.getElementById('logoutBtn').style.display='none';
+    document.getElementById('memberForm').style.display='none';
+  }
+});
+
+// Login/Logout
+function googleLogin(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+function logout(){ auth.signOut(); }
+
+// Real-time load
+db.collection('members').onSnapshot(snapshot=>{
+  const grid=document.getElementById('cardsGrid');
+  grid.innerHTML='';
+  snapshot.forEach(doc=>{
+    const d=doc.data();
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <div class="img-wrapper" onclick="openProfile('${doc.id}')"><img src="${d.photo}" alt=""></div>
+      <div class="card-body"><h3>${d.name}</h3><div class="meta">${d.age} साल, ${d.city}</div></div>
+      <div class="card-footer">
+        <button class="btn-wa" onclick="openProfile('${doc.id}')">यहाँ क्लिक करें</button>
+        ${isAdmin ? `
+          <button class="admin-small" onclick="editMember('${doc.id}')">✏️ Edit</button>
+          <button class="admin-del" onclick="deleteMember('${doc.id}')">🗑️ Delete</button>`:''}
+      </div>`;
+    grid.appendChild(card);
+  });
+});
+
+// Save (Add/Edit)
+function saveMember(){
+  const data={
+    name:document.getElementById('name').value,
+    age:document.getElementById('age').value,
+    city:document.getElementById('city').value,
+    photo:document.getElementById('photo').value,
+    details:document.getElementById('details').value
+  };
+  if(editingId){
+    db.collection('members').doc(editingId).update(data).then(()=>{editingId=null; clearForm();});
+  } else {
+    db.collection('members').add(data).then(clearForm);
+  }
+}
+function editMember(id){
+  db.collection('members').doc(id).get().then(doc=>{
+    const d=doc.data();
+    editingId=id;
+    document.getElementById('name').value=d.name;
+    document.getElementById('age').value=d.age;
+    document.getElementById('city').value=d.city;
+    document.getElementById('photo').value=d.photo;
+    document.getElementById('details').value=d.details;
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+function deleteMember(id){
+  if(confirm("क्या आप वाकई हटाना चाहते हैं?")){
+    db.collection('members').doc(id).delete();
+  }
+}
+function clearForm(){
+  document.getElementById('name').value='';
+  document.getElementById('age').value='';
+  document.getElementById('city').value='';
+  document.getElementById('photo').value='';
+  document.getElementById('details').value='';
+}
+
+// Profile Popup
+let currentProfile=null;
+function openProfile(id){
+  db.collection('members').doc(id).get().then(doc=>{
+    if(!doc.exists) return;
+    const d=doc.data();
+    currentProfile=d;
+    document.getElementById('popupPhoto').src=d.photo;
+    document.getElementById('popupName').textContent=d.name;
+    document.getElementById('popupAge').textContent=`आयु: ${d.age} साल`;
+    document.getElementById('popupCity').textContent=`शहर: ${d.city}`;
+    document.getElementById('popupDetails').textContent=d.details;
+    document.getElementById('profilePopup').style.display='flex';
+  });
+}
+function closeProfile(){ document.getElementById('profilePopup').style.display='none'; }
+function connectWhatsApp(){
+  if(!currentProfile) return;
+  const msg=`मुझे ${currentProfile.name} की प्रोफ़ाइल पसंद आई है। कृपया संपर्क करें।`;
+  window.open(`https://wa.me/9112170192?text=${encodeURIComponent(msg)}`,'_blank');
+}
+</script>
+</body>
+</html>
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Nikah Profiles</title>
+<style>
+:root{
+  --green:#116530;
+  --accent:#008069;
+  --muted:#777;
+  --sky1: #6EC1FF;
+  --sky2: #3AA8FF;
+  --card-radius:12px;
+  --card-h:280px;
+}
+body { font-family:"Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; -webkit-font-smoothing:antialiased; }
+
+/* HEADER */
+.site-header{
+  position:sticky; top:0; z-index:60;
+  background: linear-gradient(135deg,#6ec1ff,#3aa8ff);
+  padding:8px 10px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.12);
+}
+.logo-row{ text-align:center; margin-bottom:6px; }
+.logo-3d{
+  display:inline-block;
+  font-size:32px;
+  font-weight:900;
+  color:#fff;
+  letter-spacing:2px;
+  padding:6px 12px;
+  border-radius:8px;
+  text-shadow:0 2px 0 rgba(0,0,0,0.15),
+              0 6px 0 rgba(0,0,0,0.12),
+              0 12px 20px rgba(0,0,0,0.25);
+  transform: perspective(400px) rotateX(6deg);
+  -webkit-font-smoothing:antialiased;
+}
+.button-row{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  padding:6px 4px;
+}
+.header-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  background:#ffffff;
+  color:#0b63a6;
+  padding:6px 10px;
   border-radius:10px;
   border:none;
   text-decoration:none;
