@@ -1,245 +1,349 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>News Portal</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Local News Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --green:#116530;
-  --accent:#008069;
-  --muted:#777;
-  --card-radius:12px;
-  --card-h:250px;
+  --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#0ea5a4; --title:#072a4b;
 }
-body { font-family:"Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; }
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0b2540; -webkit-font-smoothing:antialiased;}
+.container{max-width:1100px;margin:18px auto;padding:0 16px;}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{background:linear-gradient(90deg,#06b6d4,#0ea5a4);color:white;padding:8px 12px;border-radius:8px;font-weight:700;font-size:18px}
+.tagline{font-size:14px;color:var(--muted)}
+.controls{display:flex;gap:8px;align-items:center}
+.search{padding:8px 12px;border-radius:10px;border:1px solid #e6e9ef;background:white;min-width:220px}
+.btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+.btn.ghost{background:transparent;color:var(--title);border:1px solid #e6e9ef}
+.top-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.categories{display:flex;gap:8px;flex-wrap:wrap}
 
-/* HEADER */
-.site-header{
-  position:sticky; top:0; z-index:60;
-  background: linear-gradient(135deg,#6ec1ff,#3aa8ff);
-  padding:10px;
-  text-align:center;
-  color:#fff;
-  font-weight:700;
-}
-.button-row{
-  display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px;
-}
-.header-btn{
-  background:#fff; color:#0b63a6; padding:8px 14px; border-radius:8px; border:none; cursor:pointer; font-weight:700;
-}
-.header-btn:hover{ filter:brightness(0.95); }
+.category{background:white;padding:8px 12px;border-radius:999px;border:1px solid #e9eef6;color:var(--muted);cursor:pointer}
+.category.active{border-color:var(--accent);color:var(--accent);box-shadow:0 6px 18px rgba(14,165,164,0.08)}
 
-/* MAIN */
-main { max-width:1024px; margin:20px auto; padding:0 10px; }
+.grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
+.card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 6px 30px rgba(2,6,23,0.06);display:flex;flex-direction:column;cursor:pointer}
+.card img{width:100%;height:160px;object-fit:cover;display:block}
+.card-body{padding:12px;flex:1;display:flex;flex-direction:column}
+.kicker{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.title{font-size:16px;font-weight:700;color:var(--title);margin:0 0 8px}
+.excerpt{font-size:14px;color:#344155;flex:1}
+.meta{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}
 
-/* grid cards */
-.grid { display:grid; gap:14px; grid-template-columns:1fr; }
-@media(min-width:600px){ .grid { grid-template-columns:repeat(2,1fr); } }
-@media(min-width:900px){ .grid { grid-template-columns:repeat(3,1fr); } }
+.footer{margin:28px 0;padding:18px;border-radius:10px;background:white;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
 
-.card { background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 4px 12px rgba(0,0,0,0.1); cursor:pointer; transition:transform 0.2s; }
-.card:hover { transform:translateY(-4px); }
-.card img { width:100%; height:120px; object-fit:cover; }
-.card-body { padding:8px; flex:1; display:flex; flex-direction:column; justify-content:space-between; }
-.card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.card-body p { margin:4px 0 0 0; font-size:14px; color:#555; overflow:hidden; text-overflow:ellipsis; }
-.card-footer { padding:6px 8px; display:flex; gap:6px; flex-wrap:wrap; }
+/* modal */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.5);z-index:60;padding:18px}
+.modal-card{background:white;border-radius:12px;max-width:920px;width:100%;max-height:90vh;overflow:auto;padding:18px;box-shadow:0 40px 90px rgba(2,6,23,0.5)}
+.modal-card img{width:100%;height:340px;object-fit:cover;border-radius:8px;margin-bottom:12px}
+.modal-close{position:absolute;right:28px;top:22px;background:#fff;border-radius:8px;border:none;padding:8px 10px;cursor:pointer}
 
-/* admin buttons */
-.admin-small { background:#ffc107; color:#333; border:none; border-radius:6px; padding:4px 6px; cursor:pointer; font-size:12px; }
-.admin-del { background:#dc3545; color:#fff; border:none; border-radius:6px; padding:4px 6px; cursor:pointer; font-size:12px; }
+/* admin panel */
+.admin-panel{position:fixed;right:18px;bottom:18px;background:var(--accent);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 20px 50px rgba(2,6,23,0.12);cursor:pointer;z-index:70}
+.admin-drawer{position:fixed;right:18px;bottom:72px;width:340px;background:white;border-radius:12px;box-shadow:0 30px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:80}
+.form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.input, textarea{padding:8px;border-radius:8px;border:1px solid #e6e9ef;width:100%}
+textarea{min-height:100px;resize:vertical}
+.small{font-size:13px;color:var(--muted)}
 
-/* popup */
-#newsPopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.6); z-index:100; padding:10px; overflow:auto; }
-.news-card { background:white; width:100%; max-width:800px; border-radius:12px; padding:16px; box-shadow:0 10px 40px rgba(0,0,0,0.25); position:relative; }
-.news-card img { width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin-bottom:10px; }
-.close-btn { position:absolute; top:10px; right:10px; background:#eee; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
+/* empty state */
+.empty{padding:28px;background:white;border-radius:12px;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
 
-/* admin form */
-#adminForm { display:none; background:white; padding:16px; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-#adminForm input, #adminForm textarea { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #ddd; }
-#adminForm button { background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; margin-top:6px; }
-
-/* responsive */
-@media(max-width:420px){ .card-body h3 { font-size:14px; } }
+/* tiny helpers */
+.row{display:flex;gap:8px;align-items:center}
+.badge{background:#eefbf9;color:#065f53;padding:6px 8px;border-radius:8px;font-weight:700;font-size:13px}
 </style>
 </head>
 <body>
+<div class="container">
+  <header class="header">
+    <div class="brand">
+      <div class="logo">NEWS</div>
+      <div>
+        <div style="font-weight:700">Local News Portal</div>
+        <div class="tagline">Tez, Saaf aur Bharosemand Khabar</div>
+      </div>
+    </div>
 
-<header class="site-header">
-  न्यूज़ पोर्टल
-  <div class="button-row">
-    <button class="header-btn" id="loginBtn" onclick="login()">Admin Login</button>
-    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
+    <div class="controls">
+      <input id="search" class="search" placeholder="Search headlines or content...">
+      <button id="clearBtn" class="btn ghost">Clear</button>
+      <button id="adminBtn" class="btn">Admin</button>
+    </div>
+  </header>
+
+  <div class="top-row">
+    <div class="categories" id="cats"></div>
+    <div style="margin-left:auto" class="row">
+      <div class="badge" id="countBadge">0</div>
+      <div class="small">Articles</div>
+    </div>
   </div>
-</header>
 
-<main>
-  <section id="adminForm">
-    <h3>News Post (Admin)</h3>
-    <input type="hidden" id="editId">
-    <input type="text" id="title" placeholder="Title">
-    <textarea id="content" placeholder="Full Content"></textarea>
-    <input type="file" id="imageFile" accept="image/*">
-    <button onclick="saveNews()">Save News</button>
-  </section>
+  <main id="mainGrid">
+    <div class="grid" id="grid"></div>
+  </main>
 
-  <div class="grid" id="newsGrid">
-    <!-- Cards loaded via JS -->
-  </div>
-</main>
+  <div class="footer">Demo News Website • Built fast • Replace data with real CMS or Firebase when ready</div>
+</div>
 
-<!-- News Popup -->
-<div id="newsPopup">
-  <div class="news-card">
-    <button class="close-btn" onclick="closePopup()">❌</button>
-    <img id="popupImage" src="">
-    <h2 id="popupTitle"></h2>
-    <p id="popupContent"></p>
+<!-- Article Modal -->
+<div id="modal" class="modal" role="dialog" aria-hidden="true">
+  <div class="modal-card" id="modalCard">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <img id="modalImg" src="" alt="">
+    <h2 id="modalTitle"></h2>
+    <div id="modalKicker" class="kicker"></div>
+    <div id="modalMeta" class="small"></div>
+    <p id="modalContent" style="white-space:pre-wrap"></p>
   </div>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<!-- Admin floating -->
+<button id="adminFab" class="admin-panel">Admin</button>
+<div id="adminDrawer" class="admin-drawer" aria-hidden="true">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <strong>Admin Panel</strong>
+    <button id="closeAdmin" class="btn ghost">Close</button>
+  </div>
+
+  <div class="form-row">
+    <label class="small">Password (demo)</label>
+    <input id="adminPass" class="input" type="password" placeholder="enter admin password">
+    <button id="loginAdmin" class="btn">Login</button>
+    <div id="adminMsg" class="small"></div>
+  </div>
+
+  <div id="editorArea" style="display:none">
+    <div class="form-row">
+      <label class="small">Title</label>
+      <input id="aTitle" class="input">
+    </div>
+    <div class="form-row">
+      <label class="small">Category</label>
+      <input id="aCat" class="input" placeholder="e.g. Technology">
+    </div>
+    <div class="form-row">
+      <label class="small">Image URL</label>
+      <input id="aImg" class="input" placeholder="https://...">
+    </div>
+    <div class="form-row">
+      <label class="small">Kicker / Short label</label>
+      <input id="aKicker" class="input" placeholder="Breaking / Opinion / Local">
+    </div>
+    <div class="form-row">
+      <label class="small">Content</label>
+      <textarea id="aContent"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:space-between">
+      <button id="saveArticle" class="btn">Save Article</button>
+      <button id="clearEditor" class="btn ghost">Clear</button>
+    </div>
+
+    <hr style="margin:12px 0">
+    <div>
+      <strong>Existing Articles</strong>
+      <div id="adminList" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
 
 <script>
-const firebaseConfig = {
-  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain:"all-madrsa.firebaseapp.com",
-  projectId:"all-madrsa",
-  storageBucket:"all-madrsa.appspot.com",
-  messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
+/* ===== Demo data store: localStorage key 'news_articles' =====
+   Structure: array of {id,title,category,image,kicker,content,ts}
+*/
+const ADMIN_PASSWORD = 'admin123';
+const STORAGE_KEY = 'news_articles_v1';
+const DEFAULT_CATS = ['All','Local','Politics','Technology','Sports','Business','Entertainment'];
 
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY"; // replace with your Imgbb key
+/* --- Utilities --- */
+function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+function saveArticles(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+function loadArticles(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch(e){return []} }
+function formatDate(ts){ const d = new Date(ts); return d.toLocaleString(); }
 
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const newsGrid = document.getElementById('newsGrid');
+/* --- Seed sample if empty --- */
+if(!localStorage.getItem(STORAGE_KEY)){
+  const sample = [
+    {id:uid('a'), title:"City inaugurates new community park", category:"Local", image:"https://images.unsplash.com/photo-1503264116251-35a269479413?w=1200&q=80", kicker:"Local", content:"A new community park was inaugurated today... (sample content)", ts:Date.now()-1000*60*60*24},
+    {id:uid('a'), title:"Govt. launches tech skills program", category:"Technology", image:"https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80", kicker:"Tech", content:"The government unveiled a new initiative to boost tech skills...", ts:Date.now()-1000*60*60*6},
+    {id:uid('a'), title:"Local team wins inter-city cup", category:"Sports", image:"https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?w=1200&q=80", kicker:"Sports", content:"The local football team celebrated a thrilling win...", ts:Date.now()-1000*60*30},
+  ];
+  saveArticles(sample);
+}
 
-auth.onAuthStateChanged(user=>{
-  if(user && user.email===ADMIN_EMAIL){
-    loginBtn.style.display='none';
-    logoutBtn.style.display='inline-block';
-    document.getElementById('adminForm').style.display='block';
-  } else{
-    loginBtn.style.display='inline-block';
-    logoutBtn.style.display='none';
-    document.getElementById('adminForm').style.display='none';
+/* --- App State --- */
+let ARTICLES = loadArticles();
+let ACTIVE_CAT = 'All';
+let SEARCH = '';
+
+/* --- DOM references --- */
+const grid = document.getElementById('grid');
+const catsDiv = document.getElementById('cats');
+const countBadge = document.getElementById('countBadge');
+const searchInput = document.getElementById('search');
+const clearBtn = document.getElementById('clearBtn');
+
+function renderCategories(){
+  catsDiv.innerHTML = '';
+  DEFAULT_CATS.forEach(c=>{
+    const el = document.createElement('button');
+    el.className = 'category' + (c===ACTIVE_CAT ? ' active':'');
+    el.textContent = c;
+    el.onclick = ()=>{ ACTIVE_CAT = c; render(); renderCategories(); }
+    catsDiv.appendChild(el);
+  });
+}
+
+/* --- Render grid --- */
+function render(){
+  const filtered = ARTICLES.filter(a=>{
+    if(ACTIVE_CAT!=='All' && a.category!==ACTIVE_CAT) return false;
+    if(SEARCH){
+      const s = SEARCH.toLowerCase();
+      return (a.title+a.content+a.kicker+a.category).toLowerCase().includes(s);
+    }
+    return true;
+  }).sort((a,b)=>b.ts-a.ts);
+  grid.innerHTML = '';
+  countBadge.textContent = filtered.length;
+  if(filtered.length===0){
+    grid.innerHTML = '<div class="empty">Koi article nahi mila. Admin se add karein.</div>';
+    return;
   }
+  filtered.forEach(a=>{
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="${a.image||'https://via.placeholder.com/800x450?text=No+Image'}" alt="">
+      <div class="card-body">
+        <div class="kicker">${a.kicker || a.category}</div>
+        <h3 class="title">${a.title}</h3>
+        <div class="excerpt">${(a.content||'').slice(0,120)}...</div>
+        <div class="meta"><div>${a.category}</div><div style="margin-left:auto">${formatDate(a.ts)}</div></div>
+      </div>
+    `;
+    card.onclick = ()=> openModal(a.id);
+    grid.appendChild(card);
+  });
+}
+
+/* --- Modal --- */
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modalImg');
+const modalTitle = document.getElementById('modalTitle');
+const modalKicker = document.getElementById('modalKicker');
+const modalMeta = document.getElementById('modalMeta');
+const modalContent = document.getElementById('modalContent');
+function openModal(id){
+  const a = ARTICLES.find(x=>x.id===id); if(!a) return;
+  modalImg.src = a.image||'https://via.placeholder.com/1200x600?text=No+Image';
+  modalTitle.textContent = a.title;
+  modalKicker.textContent = a.kicker || a.category;
+  modalMeta.textContent = `${a.category} • ${formatDate(a.ts)}`;
+  modalContent.textContent = a.content || '';
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden','false');
+}
+function closeModal(){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); }
+
+/* --- Search --- */
+searchInput.addEventListener('input', (e)=>{ SEARCH = e.target.value.trim(); render(); });
+
+clearBtn.addEventListener('click', ()=>{
+  searchInput.value=''; SEARCH=''; ACTIVE_CAT='All'; render(); renderCategories();
 });
 
-function login(){
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider);
-}
-function logout(){ auth.signOut(); }
+/* --- Admin UI --- */
+const adminFab = document.getElementById('adminFab');
+const adminDrawer = document.getElementById('adminDrawer');
+const adminPass = document.getElementById('adminPass');
+const loginAdmin = document.getElementById('loginAdmin');
+const adminMsg = document.getElementById('adminMsg');
+const editorArea = document.getElementById('editorArea');
 
-// Load news cards
-function loadNews(){
-  db.collection('news').orderBy('title').onSnapshot(snapshot=>{
-    newsGrid.innerHTML='';
-    snapshot.forEach(doc=>{
-      const data = doc.data();
-      const card = document.createElement('div'); card.className='card';
-      card.innerHTML=`
-        <img src="${data.image}" alt="${data.title}">
-        <div class="card-body">
-          <h3>${data.title}</h3>
-          <p>${data.content.substring(0,80)}...</p>
-        </div>
-        <div class="card-footer">
-          <button onclick="openPopup('${doc.id}')">Read More</button>
-          ${auth.currentUser && auth.currentUser.email===ADMIN_EMAIL ? `
-          <button class="admin-small" onclick="editNews('${doc.id}')">Edit</button>
-          <button class="admin-del" onclick="deleteNews('${doc.id}')">Delete</button>` : ''}
-        </div>`;
-      newsGrid.appendChild(card);
-    });
+adminFab.addEventListener('click', ()=>{ adminDrawer.style.display = 'block'; adminDrawer.setAttribute('aria-hidden','false'); });
+document.getElementById('closeAdmin').addEventListener('click', ()=>{ adminDrawer.style.display='none'; adminDrawer.setAttribute('aria-hidden','true'); });
+
+loginAdmin.addEventListener('click', ()=>{
+  const v = adminPass.value;
+  if(v===ADMIN_PASSWORD){ adminMsg.textContent = 'Logged in as admin'; editorArea.style.display='block'; renderAdminList(); }
+  else adminMsg.textContent = 'Invalid password';
+});
+
+/* Editor actions */
+const aTitle = document.getElementById('aTitle');
+const aCat = document.getElementById('aCat');
+const aImg = document.getElementById('aImg');
+const aKicker = document.getElementById('aKicker');
+const aContent = document.getElementById('aContent');
+const saveArticle = document.getElementById('saveArticle');
+const clearEditor = document.getElementById('clearEditor');
+const adminList = document.getElementById('adminList');
+
+let editingId = null;
+function renderAdminList(){
+  adminList.innerHTML = '';
+  if(ARTICLES.length===0){ adminList.innerHTML = '<div class="small">No articles</div>'; return; }
+  ARTICLES.slice().reverse().forEach(a=>{
+    const d = document.createElement('div'); d.style.display='flex'; d.style.justifyContent='space-between'; d.style.alignItems='center'; d.style.gap='8px'; d.style.padding='6px 0';
+    d.innerHTML = `<div style="flex:1"><strong style="display:block">${a.title}</strong><div class="small">${a.category} • ${formatDate(a.ts)}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn ghost" data-id="${a.id}" onclick="editArticle(event)">Edit</button>
+        <button class="btn" data-id="${a.id}" onclick="deleteArticle(event)">Delete</button>
+      </div>`;
+    adminList.appendChild(d);
   });
 }
 
-// Popup
-function openPopup(id){
-  db.collection('news').doc(id).get().then(doc=>{
-    if(!doc.exists) return;
-    const data = doc.data();
-    document.getElementById('popupImage').src = data.image;
-    document.getElementById('popupTitle').textContent = data.title;
-    document.getElementById('popupContent').textContent = data.content;
-    document.getElementById('newsPopup').style.display='flex';
-  });
+window.editArticle = function(ev){
+  const id = ev.currentTarget.dataset.id;
+  const a = ARTICLES.find(x=>x.id===id);
+  if(!a) return;
+  editingId = id;
+  aTitle.value = a.title; aCat.value = a.category; aImg.value = a.image; aKicker.value = a.kicker; aContent.value = a.content;
+  adminMsg.textContent = 'Editing article';
 }
-function closePopup(){ document.getElementById('newsPopup').style.display='none'; }
-
-// Imgbb upload
-async function uploadImage(){
-  const fileInput = document.getElementById('imageFile');
-  if(fileInput.files.length===0) return null;
-  const file = fileInput.files[0];
-  const formData = new FormData();
-  formData.append("image", file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-    method:'POST',
-    body: formData
-  });
-  const data = await res.json();
-  return data.data.url;
+window.deleteArticle = function(ev){
+  const id = ev.currentTarget.dataset.id;
+  if(!confirm('Delete this article?')) return;
+  ARTICLES = ARTICLES.filter(x=>x.id!==id);
+  saveArticles(ARTICLES); render(); renderAdminList();
 }
 
-// Save News
-async function saveNews(){
-  const id = document.getElementById('editId').value;
-  const title = document.getElementById('title').value;
-  const content = document.getElementById('content').value;
-  if(!title || !content){ alert('Title और Content जरूरी हैं'); return; }
-  let imageURL = await uploadImage();
-  if(!imageURL && !id){ alert('Image जरूरी है'); return; }
+/* Save / clear */
+saveArticle.addEventListener('click', ()=>{
+  const t = aTitle.value.trim();
+  if(!t){ alert('Title required'); return; }
+  const obj = {
+    id: editingId || uid('a'),
+    title: t,
+    category: aCat.value.trim() || 'Local',
+    image: aImg.value.trim(),
+    kicker: aKicker.value.trim(),
+    content: aContent.value.trim(),
+    ts: Date.now()
+  };
+  if(editingId){
+    ARTICLES = ARTICLES.map(x=> x.id===editingId ? obj : x);
+    editingId = null;
+  } else ARTICLES.push(obj);
+  saveArticles(ARTICLES);
+  aTitle.value=''; aCat.value=''; aImg.value=''; aKicker.value=''; aContent.value='';
+  render(); renderAdminList();
+  adminMsg.textContent = 'Saved';
+});
 
-  if(id){
-    const docRef = db.collection('news').doc(id);
-    if(imageURL) await docRef.update({title,content,image:imageURL});
-    else await docRef.update({title,content});
-    alert('Updated'); clearForm();
-  } else{
-    await db.collection('news').add({title,content,image:imageURL});
-    alert('Added'); clearForm();
-  }
-}
+clearEditor.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; aImg.value=''; aKicker.value=''; aContent.value=''; editingId=null; adminMsg.textContent='Cleared'; });
 
-function editNews(id){
-  db.collection('news').doc(id).get().then(doc=>{
-    if(!doc.exists) return;
-    const data = doc.data();
-    document.getElementById('editId').value=id;
-    document.getElementById('title').value=data.title;
-    document.getElementById('content').value=data.content;
-    window.scrollTo({top:0,behavior:'smooth'});
-  });
-}
-function deleteNews(id){
-  if(confirm('Are you sure?')){
-    db.collection('news').doc(id).delete();
-  }
-}
-function clearForm(){
-  document.getElementById('editId').value='';
-  document.getElementById('title').value='';
-  document.getElementById('content').value='';
-  document.getElementById('imageFile').value='';
-}
-
-// Init
-loadNews();
+/* --- init --- */
+renderCategories(); render();
 </script>
 </body>
 </html>
