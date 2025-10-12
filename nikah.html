@@ -9,73 +9,92 @@
   --green:#116530;
   --accent:#008069;
   --muted:#777;
+  --sky1: #6EC1FF;
+  --sky2: #3AA8FF;
   --card-radius:12px;
   --card-h:280px;
 }
-body { font-family:"Segoe UI",sans-serif; margin:0; background:#f5f7f5; color:#222; -webkit-font-smoothing:antialiased; }
+body { font-family:"Segoe UI", sans-serif; margin:0; background:#f5f7f5; color:#222; -webkit-font-smoothing:antialiased; }
 
 /* HEADER */
 .site-header{
-  position:sticky; top:0; z-index:100;
+  position:sticky; top:0; z-index:60;
   background: linear-gradient(135deg,#6ec1ff,#3aa8ff);
   padding:8px 10px;
-  box-shadow:0 4px 14px rgba(0,0,0,0.1);
+  box-shadow:0 6px 18px rgba(0,0,0,0.12);
 }
 .logo-row{ text-align:center; margin-bottom:6px; }
 .logo-3d{
   display:inline-block;
-  font-size:34px;
+  font-size:32px;
   font-weight:900;
   color:#fff;
   letter-spacing:2px;
-  text-shadow:0 2px 0 rgba(0,0,0,0.15),0 6px 0 rgba(0,0,0,0.12),0 12px 20px rgba(0,0,0,0.25);
+  padding:6px 12px;
+  border-radius:8px;
+  text-shadow:0 2px 0 rgba(0,0,0,0.15),
+              0 6px 0 rgba(0,0,0,0.12),
+              0 12px 20px rgba(0,0,0,0.25);
   transform: perspective(400px) rotateX(6deg);
+  -webkit-font-smoothing:antialiased;
 }
 .button-row{
   display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
   gap:8px;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  padding:6px 4px;
 }
 .header-btn{
   display:inline-flex;
   align-items:center;
-  justify-content:center;
   gap:6px;
-  background:#fff;
-  color:#0b63a6;
-  border:none;
-  border-radius:8px;
-  padding:7px 10px;
-  font-weight:600;
   white-space:nowrap;
-  cursor:pointer;
+  background:#ffffff;
+  color:#0b63a6;
+  padding:8px 14px;
+  border-radius:10px;
+  border:none;
   text-decoration:none;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
   font-size:14px;
-  box-shadow:0 3px 6px rgba(0,0,0,0.08);
+  transition:0.2s;
 }
-.header-btn:hover{ filter:brightness(0.97); }
+.header-btn:hover{ filter:brightness(0.95); }
 .header-btn:active{ transform:translateY(1px); }
-.whatsapp-btn{ background:#25D366; color:#fff; font-weight:700; }
 
 /* MAIN */
 main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
+
+/* top join button */
+.top-join { display:flex; justify-content:center; margin:6px 0 18px; }
+.whatsapp-btn {
+  background:#25d366; color:white; text-decoration:none; padding:10px 18px; border-radius:10px; font-weight:700;
+  box-shadow:0 6px 18px rgba(37,211,102,0.14);
+}
+
+/* grid cards */
 .grid { display:grid; gap:14px; grid-template-columns:repeat(2,1fr); }
 @media(min-width:1024px){ .grid { grid-template-columns:repeat(4,1fr); } }
 
-/* CARD */
+/* card */
 .card { background:white; border-radius:var(--card-radius); overflow:hidden; height:var(--card-h); display:flex; flex-direction:column; box-shadow:0 6px 18px rgba(0,0,0,0.08); cursor:pointer; transition:transform .15s; }
 .card:hover { transform:translateY(-4px); }
-.img-wrapper { width:100%; height:150px; overflow:hidden; }
-.img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; }
-.card-body { padding:10px; flex:1; }
-.card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.img-wrapper { width:100%; height:150px; overflow:hidden; display:block; cursor:pointer; -webkit-tap-highlight-color: transparent; }
+.img-wrapper img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; user-select:none; }
+.card-body { padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; align-items:flex-start; width:100%; }
+.card-body h3 { margin:0; font-size:16px; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
 .card-body .meta { color:var(--muted); font-size:13px; }
-.card-footer { padding:10px; display:flex; gap:8px; flex-wrap:wrap; }
-.btn-wa { background:#25d366; color:white; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+.card-footer { padding:10px; display:flex; gap:8px; width:100%; justify-content:flex-start; align-items:center; flex-wrap:wrap; }
+.btn-wa { background:#25d366; color:white; padding:6px 10px; border-radius:8px; text-decoration:none; font-weight:600; border:none; cursor:pointer; }
 .btn-connect { background:var(--accent); color:white; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+.admin-small { background:#ffc107; color:#333; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
+.admin-del { background:#dc3545; color:#fff; padding:6px 8px; border-radius:6px; border:none; cursor:pointer; }
 
-/* PROFILE POPUP */
+/* profile popup */
 #profilePopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.55); z-index:60; }
 .profile-card { background:white; width:95%; max-width:920px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:auto; max-height:90vh; position:relative; }
 .profile-grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; padding:18px; }
@@ -85,61 +104,73 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 .profile-info .line { margin:6px 0; color:#333; }
 .close-btn { position:absolute; right:18px; top:18px; background:#eee; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
 
-/* CONNECT POPUP */
+@media(max-width:768px){
+  .profile-grid { grid-template-columns:1fr; gap:12px; }
+  .profile-photo { height:auto; max-height:60vh; width:100%; }
+  .profile-card { width:95%; max-width:95%; max-height:90vh; overflow-y:auto; }
+  .profile-info .btn-wa { width:100%; text-align:center; }
+}
+
 #connectPopup { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:70; }
 .connect-box { background:white; padding:16px; border-radius:10px; width:95%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
 .connect-box input, .connect-box textarea { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
 
-/* ADMIN PANEL */
-#memberForm { display:none; background:white; padding:16px; border-radius:12px; margin:14px 0; }
-#memberForm input, #memberForm textarea { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; }
-#adminLogs { display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; }
+#memberForm { display:none; background:white; padding:16px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin:14px 0; }
+#memberForm input, #memberForm textarea { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; }
+
+#adminLogs { display:none; margin-top:16px; background:white; padding:12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06); }
 #logsTable { width:100%; border-collapse:collapse; }
-#logsTable th, #logsTable td { border-bottom:1px solid #eee; padding:8px 6px; font-size:14px; text-align:left; }
+#logsTable th, #logsTable td { border-bottom:1px solid #eee; padding:8px 6px; text-align:left; font-size:14px; }
 #logsTable th { color:var(--green); font-weight:700; }
 
-/* RESPONSIVE */
 @media(max-width:420px){
-  .logo-3d{ font-size:26px; }
-  .header-btn{ font-size:12px; padding:6px 8px; }
+  .logo-3d{ font-size:26px; padding:4px 10px; }
+  .header-btn{ padding:6px 10px; font-size:13px; }
 }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="site-header">
-  <div class="logo-row"><span class="logo-3d">निकाह</span></div>
-  <div class="button-row">
-    <a href="https://wa.me/9112170192" target="_blank" class="header-btn whatsapp-btn">💬 रिश्ते जोड़ें</a>
-    <a href="index.html" class="header-btn">🏠 Home</a>
-    <a href="nikah-Conditions.html" class="header-btn">📜 हमारे नियम</a>
-    <button id="loginBtn" class="header-btn" onclick="googleLogin()">🔐 Admin Login</button>
-    <button id="logoutBtn" class="header-btn" onclick="logout()" style="display:none;">🚪 Logout</button>
+  <div class="logo-row">
+    <div class="logo-3d">निकाह</div>
   </div>
+  <nav class="button-row" role="navigation" aria-label="Main navigation">
+    <a class="header-btn" href="index.html" title="Home">🏠 Home</a>
+    <a class="header-btn" href="nikah-Conditions.html" title="हमारे नियम">📜 हमारे नियम</a>
+    <a class="header-btn" id="whatsappBtn" href="https://wa.me/9112170192" target="_blank">📱 रिश्ते जोड़ें</a>
+    <button class="header-btn" id="loginBtn" onclick="googleLogin()">Admin Login</button>
+    <button class="header-btn" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
+  </nav>
 </header>
 
 <main>
-  <div class="grid" id="cardsGrid"></div>
+  <div class="top-join">
+    <a class="whatsapp-btn" href="https://wa.me/9112170192" target="_blank">📱 WhatsApp से Join करें</a>
+  </div>
 
-  <!-- Admin Form -->
+  <!-- Admin Add/Edit Form -->
   <section id="memberForm">
     <h3>प्रोफ़ाइल जोड़ें / संपादित करें (Admin)</h3>
+    <input type="hidden" id="memberId"/>
     <input type="text" id="name" placeholder="नाम"/>
     <input type="text" id="age" placeholder="आयु"/>
     <input type="text" id="city" placeholder="शहर"/>
     <input type="url" id="photo" placeholder="Photo URL"/>
     <textarea id="details" placeholder="पूरा विवरण"></textarea>
-    <button class="btn-connect" onclick="addMember()">Save</button>
+    <button class="btn-connect" onclick="saveMember()">Save</button>
   </section>
 
-  <!-- Visitor Logs -->
   <div id="adminLogs">
     <h3>Visitor Logs</h3>
     <table id="logsTable">
       <thead><tr><th>नाम</th><th>मोबाइल</th><th>Message</th><th>Date</th></tr></thead>
       <tbody></tbody>
     </table>
+  </div>
+
+  <div class="grid" id="cardsGrid">
+    <!-- JS से cards load होंगे -->
   </div>
 </main>
 
@@ -148,7 +179,7 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
   <div class="profile-card">
     <button class="close-btn" onclick="closeProfile()">❌</button>
     <div class="profile-grid">
-      <img src="" class="profile-photo" id="popupPhoto">
+      <img src="" alt="" class="profile-photo" id="popupPhoto">
       <div class="profile-info">
         <h2 id="popupName"></h2>
         <div class="line" id="popupAge"></div>
@@ -176,7 +207,6 @@ main { max-width:1100px; margin:18px auto; padding:0 16px 60px; }
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -195,36 +225,45 @@ const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const cardsGrid = document.getElementById('cardsGrid');
 let currentProfile = null;
+let editingId = null;
 
 auth.onAuthStateChanged(user=>{
   if(user && adminEmails.includes(user.email)){
-    loginBtn.style.display='none';
-    logoutBtn.style.display='inline-flex';
-    document.getElementById('memberForm').style.display='block';
-    document.getElementById('adminLogs').style.display='block';
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-flex';
+    document.getElementById('memberForm').style.display = 'block';
+    document.getElementById('adminLogs').style.display = 'block';
     loadLogs();
   } else{
-    loginBtn.style.display='inline-flex';
-    logoutBtn.style.display='none';
-    document.getElementById('memberForm').style.display='none';
-    document.getElementById('adminLogs').style.display='none';
+    loginBtn.style.display = 'inline-flex';
+    logoutBtn.style.display = 'none';
+    document.getElementById('memberForm').style.display = 'none';
+    document.getElementById('adminLogs').style.display = 'none';
   }
 });
 
 // Login
 function googleLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider);
+  auth.signInWithPopup(provider)
+    .then(res=> console.log("Logged in:", res.user.email))
+    .catch(err=> alert("Login failed: "+err.message));
 }
 function logout(){ auth.signOut(); }
 
-// Load Cards
+// Load Cards (live update)
 function loadCards(){
   cardsGrid.innerHTML='';
-  db.collection("members").onSnapshot(snapshot=>{
+  db.collection("members").orderBy('name').onSnapshot(snapshot=>{
+    cardsGrid.innerHTML='';
     snapshot.forEach(doc=>{
-      const data=doc.data();
-      const card=document.createElement('div'); card.className='card';
+      const data = doc.data();
+      const card = document.createElement('div'); card.className='card';
+      let adminControls='';
+      if(auth.currentUser && adminEmails.includes(auth.currentUser.email)){
+        adminControls = `<button class="admin-small" onclick="editMember('${doc.id}')">Edit</button>
+                         <button class="admin-del" onclick="deleteMember('${doc.id}')">Delete</button>`;
+      }
       card.innerHTML=`
         <div class="img-wrapper"><img src="${data.photo}" alt="${data.name}"></div>
         <div class="card-body">
@@ -233,6 +272,7 @@ function loadCards(){
         </div>
         <div class="card-footer">
           <button class="btn-wa" onclick="openProfile('${doc.id}')">यहाँ क्लिक करें</button>
+          ${adminControls}
         </div>`;
       cardsGrid.appendChild(card);
     });
@@ -243,7 +283,7 @@ function loadCards(){
 function openProfile(id){
   db.collection("members").doc(id).get().then(doc=>{
     if(!doc.exists) return;
-    const data=doc.data();
+    const data = doc.data();
     currentProfile=data;
     document.getElementById('popupPhoto').src=data.photo;
     document.getElementById('popupName').textContent=data.name;
@@ -263,30 +303,62 @@ function sendConnect(){
   const mobile=document.getElementById('visitorMobile').value;
   const msg=document.getElementById('visitorMsg').value;
   if(!name||!mobile){ alert("Name और Mobile जरूरी हैं!"); return;}
-  const waMsg=`नमस्ते, ${name} ने संदेश भेजा: ${msg||'...'}`;
+  const waMsg=`नमस्ते, ${name} ने संदेश भेजा: ${msg || '...'}`;
   window.open(`https://wa.me/9112170192?text=${encodeURIComponent(waMsg)}`,'_blank');
-  db.collection('visitorLogs').add({name,mobile,msg,date:new Date()});
   document.getElementById('visitorName').value=''; document.getElementById('visitorMobile').value=''; document.getElementById('visitorMsg').value='';
-  closeConnect(); loadLogs();
+  document.getElementById('connectPopup').style.display='none';
+  db.collection('visitorLogs').add({name,mobile,msg,date:new Date()});
+  loadLogs();
 }
 
-// Admin Add Member
-function addMember(){
+// Admin Add/Edit Member
+function saveMember(){
   const name=document.getElementById('name').value;
   const age=document.getElementById('age').value;
   const city=document.getElementById('city').value;
   const photo=document.getElementById('photo').value;
   const details=document.getElementById('details').value;
   if(!name||!photo){ alert("Name और Photo जरूरी हैं"); return; }
-  db.collection('members').add({name,age,city,photo,details});
-  document.getElementById('name').value=''; document.getElementById('age').value=''; document.getElementById('city').value=''; document.getElementById('photo').value=''; document.getElementById('details').value='';
+
+  if(editingId){ // edit
+    db.collection('members').doc(editingId).update({name,age,city,photo,details}).then(()=>{
+      alert("Updated"); clearForm();
+    });
+  } else { // add
+    db.collection('members').add({name,age,city,photo,details}).then(()=>{ alert("Added"); clearForm(); });
+  }
+}
+
+function editMember(id){
+  editingId=id;
+  db.collection('members').doc(id).get().then(doc=>{
+    const data=doc.data();
+    document.getElementById('name').value=data.name;
+    document.getElementById('age').value=data.age;
+    document.getElementById('city').value=data.city;
+    document.getElementById('photo').value=data.photo;
+    document.getElementById('details').value=data.details;
+  });
+}
+function deleteMember(id){
+  if(confirm("क्या आप वाकई इस प्रोफ़ाइल को हटाना चाहते हैं?")){
+    db.collection('members').doc(id).delete();
+  }
+}
+function clearForm(){
+  editingId=null;
+  document.getElementById('name').value='';
+  document.getElementById('age').value='';
+  document.getElementById('city').value='';
+  document.getElementById('photo').value='';
+  document.getElementById('details').value='';
 }
 
 // Load visitor logs
 function loadLogs(){
   const tbody=document.querySelector('#logsTable tbody');
-  tbody.innerHTML='';
-  db.collection('visitorLogs').orderBy('date','desc').get().then(snapshot=>{
+  db.collection('visitorLogs').orderBy('date','desc').onSnapshot(snapshot=>{
+    tbody.innerHTML='';
     snapshot.forEach(doc=>{
       const d=doc.data();
       const row=document.createElement('tr');
@@ -296,7 +368,7 @@ function loadLogs(){
   });
 }
 
-// INIT
+// Init
 loadCards();
 </script>
 </body>
