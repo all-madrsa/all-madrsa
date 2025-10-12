@@ -1,132 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>My News Website</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; }
-    header { background: #333; color: #fff; padding: 10px 20px; }
-    header h1 { margin: 0; }
+    :root {
+      --primary: #007bff;
+    }
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      background: #f5f5f5; 
+    }
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 15px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
 
-    .news-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; padding: 20px; }
-    .news-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); overflow: hidden; }
-    .news-card img { width: 100%; height: 180px; object-fit: cover; }
-    .news-card .content { padding: 10px; }
-    .news-card h3 { margin: 5px 0; }
-    .news-card small { color: #666; display: block; margin-bottom: 5px; }
+    /* ✅ Responsive Grid */
+    .news-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      padding: 15px;
+    }
 
-    #adminPanel { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #fff; box-shadow: -2px 0 6px rgba(0,0,0,0.1); transform: translateX(100%); transition: 0.3s; padding: 15px; overflow-y: auto; }
+    .news-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .news-card:hover { transform: scale(1.02); }
+
+    /* ✅ Proper image fit for mobile */
+    .news-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .news-card .content {
+      padding: 10px;
+    }
+    .news-card h3 {
+      margin: 5px 0;
+      font-size: 1.1rem;
+    }
+    .news-card small {
+      color: #666;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .news-card p {
+      font-size: 0.9rem;
+      color: #333;
+    }
+
+    /* ✅ Full Article Modal */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 10px;
+    }
+    .modal.open { display: flex; }
+
+    .modal-content {
+      background: #fff;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-content img {
+      width: 100%;
+      object-fit: cover;
+      max-height: 250px;
+      display: block;
+    }
+    .modal-body {
+      padding: 15px;
+    }
+    .modal-body h2 {
+      margin-top: 0;
+    }
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #fff;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      line-height: 35px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    /* ✅ Admin Panel */
+    #adminPanel {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 300px;
+      height: 100vh;
+      background: #fff;
+      box-shadow: -2px 0 6px rgba(0,0,0,0.1);
+      transform: translateX(100%);
+      transition: 0.3s;
+      padding: 15px;
+      overflow-y: auto;
+      z-index: 2000;
+    }
     #adminPanel.open { transform: translateX(0); }
-    #adminBtn { position: fixed; bottom: 20px; right: 20px; background: #007bff; color: #fff; padding: 10px 15px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-
-    input, textarea, select, button { width: 100%; padding: 8px; margin-bottom: 10px; }
-    button { background: #007bff; color: #fff; border: none; cursor: pointer; }
+    #adminBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 2000;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+    button { background: var(--primary); color: #fff; border: none; cursor: pointer; }
     button:hover { background: #0056b3; }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>📰 My News Website</h1>
-  </header>
+<header>
+  <h1>📰 My News Website</h1>
+</header>
 
-  <div class="news-container" id="newsContainer"></div>
+<div class="news-container" id="newsContainer"></div>
 
-  <div id="adminPanel">
-    <h2>Admin Panel</h2>
-    <input type="password" id="adminPassword" placeholder="Enter admin password">
-    <button onclick="loginAdmin()">Login</button>
-
-    <div id="postForm" style="display:none;">
-      <input type="text" id="title" placeholder="News Title">
-      <select id="category">
-        <option value="">Select Category</option>
-        <option>Local</option>
-        <option>National</option>
-        <option>Sports</option>
-        <option>Technology</option>
-      </select>
-      <input type="text" id="kicker" placeholder="Kicker (e.g. Breaking)">
-      <input type="file" id="imageFile" accept="image/*">
-      <textarea id="content" placeholder="News Content" rows="5"></textarea>
-      <button onclick="addNews()">Save Article</button>
+<!-- 📝 Full Article Modal -->
+<div class="modal" id="newsModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal()">×</button>
+    <img id="modalImage" src="" alt="">
+    <div class="modal-body">
+      <small id="modalCategory"></small>
+      <h2 id="modalTitle"></h2>
+      <p id="modalContent"></p>
+      <small id="modalDate"></small>
     </div>
   </div>
+</div>
 
-  <div id="adminBtn" onclick="toggleAdmin()">✏️</div>
+<!-- 🧑‍💻 Admin Panel -->
+<div id="adminPanel">
+  <h2>Admin Panel</h2>
+  <input type="password" id="adminPassword" placeholder="Enter admin password">
+  <button onclick="loginAdmin()">Login</button>
 
-  <script>
-    const ADMIN_PASSWORD = "admin123";
-    let newsData = JSON.parse(localStorage.getItem('newsData') || '[]');
+  <div id="postForm" style="display:none;">
+    <input type="text" id="title" placeholder="News Title">
+    <select id="category">
+      <option value="">Select Category</option>
+      <option>Local</option>
+      <option>National</option>
+      <option>Sports</option>
+      <option>Technology</option>
+    </select>
+    <input type="text" id="kicker" placeholder="Kicker (e.g. Breaking)">
+    <input type="file" id="imageFile" accept="image/*">
+    <textarea id="content" placeholder="News Content" rows="5"></textarea>
+    <button onclick="addNews()">Save Article</button>
+  </div>
+</div>
 
-    function toggleAdmin() {
-      document.getElementById('adminPanel').classList.toggle('open');
+<div id="adminBtn" onclick="toggleAdmin()">✏️</div>
+
+<script>
+  const ADMIN_PASSWORD = "admin123";
+  let newsData = JSON.parse(localStorage.getItem('newsData') || '[]');
+
+  function toggleAdmin() {
+    document.getElementById('adminPanel').classList.toggle('open');
+  }
+
+  function loginAdmin() {
+    const pass = document.getElementById('adminPassword').value;
+    if (pass === ADMIN_PASSWORD) {
+      document.getElementById('postForm').style.display = 'block';
+      document.getElementById('adminPassword').style.display = 'none';
+    } else {
+      alert('Invalid password');
+    }
+  }
+
+  function addNews() {
+    const title = document.getElementById('title').value.trim();
+    const category = document.getElementById('category').value;
+    const kicker = document.getElementById('kicker').value.trim();
+    const content = document.getElementById('content').value.trim();
+    const file = document.getElementById('imageFile').files[0];
+
+    if (!title || !category || !file || !content) {
+      alert('Please fill all fields including image');
+      return;
     }
 
-    function loginAdmin() {
-      const pass = document.getElementById('adminPassword').value;
-      if (pass === ADMIN_PASSWORD) {
-        document.getElementById('postForm').style.display = 'block';
-        document.getElementById('adminPassword').style.display = 'none';
-      } else {
-        alert('Invalid password');
-      }
-    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const imageBase64 = e.target.result;
+      const article = { title, category, kicker, content, image: imageBase64, date: new Date().toLocaleString() };
+      newsData.unshift(article);
+      localStorage.setItem('newsData', JSON.stringify(newsData));
+      displayNews();
+      clearForm();
+    };
+    reader.readAsDataURL(file);
+  }
 
-    function addNews() {
-      const title = document.getElementById('title').value.trim();
-      const category = document.getElementById('category').value;
-      const kicker = document.getElementById('kicker').value.trim();
-      const content = document.getElementById('content').value.trim();
-      const file = document.getElementById('imageFile').files[0];
+  function clearForm() {
+    document.getElementById('title').value = '';
+    document.getElementById('category').value = '';
+    document.getElementById('kicker').value = '';
+    document.getElementById('imageFile').value = '';
+    document.getElementById('content').value = '';
+  }
 
-      if (!title || !category || !file || !content) {
-        alert('Please fill all fields including image');
-        return;
-      }
+  function displayNews() {
+    const container = document.getElementById('newsContainer');
+    container.innerHTML = '';
+    newsData.forEach((article, index) => {
+      const card = document.createElement('div');
+      card.className = 'news-card';
+      card.onclick = () => openModal(index);
+      card.innerHTML = `
+        <img src="${article.image}" alt="News Image">
+        <div class="content">
+          <small>${article.category} • ${article.kicker}</small>
+          <h3>${article.title}</h3>
+          <p>${article.content.substring(0, 80)}...</p>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const imageBase64 = e.target.result;
-        const article = { title, category, kicker, content, image: imageBase64, date: new Date().toLocaleString() };
-        newsData.unshift(article);
-        localStorage.setItem('newsData', JSON.stringify(newsData));
-        displayNews();
-        clearForm();
-      };
-      reader.readAsDataURL(file);
-    }
+  function openModal(index) {
+    const article = newsData[index];
+    document.getElementById('modalImage').src = article.image;
+    document.getElementById('modalCategory').textContent = `${article.category} • ${article.kicker}`;
+    document.getElementById('modalTitle').textContent = article.title;
+    document.getElementById('modalContent').textContent = article.content;
+    document.getElementById('modalDate').textContent = article.date;
+    document.getElementById('newsModal').classList.add('open');
+  }
 
-    function clearForm() {
-      document.getElementById('title').value = '';
-      document.getElementById('category').value = '';
-      document.getElementById('kicker').value = '';
-      document.getElementById('imageFile').value = '';
-      document.getElementById('content').value = '';
-    }
+  function closeModal() {
+    document.getElementById('newsModal').classList.remove('open');
+  }
 
-    function displayNews() {
-      const container = document.getElementById('newsContainer');
-      container.innerHTML = '';
-      newsData.forEach(article => {
-        const card = document.createElement('div');
-        card.className = 'news-card';
-        card.innerHTML = `
-          <img src="${article.image}" alt="News Image">
-          <div class="content">
-            <small>${article.category} • ${article.kicker}</small>
-            <h3>${article.title}</h3>
-            <p>${article.content.substring(0,100)}...</p>
-            <small><i>${article.date}</i></small>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    displayNews();
-  </script>
+  displayNews();
+</script>
 
 </body>
 </html>
