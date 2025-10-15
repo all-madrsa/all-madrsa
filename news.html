@@ -8,7 +8,6 @@
 <style>
 :root{
   --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#0ea5a4; --title:#072a4b; --live:#d32f2f;
-  --ticker-duration:18s;
 }
 *{box-sizing:border-box}
 body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0b2540; -webkit-font-smoothing:antialiased;}
@@ -23,7 +22,7 @@ body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0
 .btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
 .btn.ghost{background:transparent;color:var(--title);border:1px solid #e6e9ef}
 .live-ticker{background:#111;color:#fff;padding:8px 12px;border-radius:8px;overflow:hidden;white-space:nowrap}
-.ticker-inner{display:inline-block;padding-left:100%;animation:marquee var(--ticker-duration) linear infinite}
+.ticker-inner{display:inline-block;padding-left:100%;animation:marquee 18s linear infinite}
 @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 
 .top-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
@@ -46,12 +45,12 @@ body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0
 /* modal / article view */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.55);z-index:80;padding:12px}
 .modal-card{background:white;border-radius:10px;max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:16px;box-shadow:0 30px 90px rgba(2,6,23,0.5)}
-.modal-card img{max-width:100%;height:auto;border-radius:8px;margin:6px 0}
+.modal-card .block img{max-width:100%;height:auto;border-radius:8px;margin:6px 0}
 .modal-close{position:absolute;right:18px;top:18px;background:#fff;border-radius:8px;border:none;padding:8px 10px;cursor:pointer}
 
 /* admin drawer */
 .admin-fab{position:fixed;right:16px;bottom:16px;background:var(--accent);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 20px 50px rgba(2,6,23,0.12);cursor:pointer;z-index:90}
-.admin-drawer{position:fixed;right:16px;bottom:80px;width:420px;background:white;border-radius:12px;box-shadow:0 20px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:90}
+.admin-drawer{position:fixed;right:16px;bottom:80px;width:380px;background:white;border-radius:12px;box-shadow:0 20px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:90}
 .form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .input,textarea,select{padding:8px;border-radius:8px;border:1px solid #e6e9ef;width:100%}
 textarea{min-height:100px;resize:vertical}
@@ -66,14 +65,7 @@ textarea{min-height:100px;resize:vertical}
 .share-row{display:flex;gap:8px;justify-content:center;margin-top:12px}
 .share-row button{background:#eee;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
 
-@media(max-width:600px){
-  .grid{grid-template-columns:1fr}
-  .card img{height:140px}
-  .admin-drawer{width:95%}
-  .logo-img{height:36px;width:36px}
-  .title{font-size:16px}
-  .kicker{font-size:11px}
-}
+@media(max-width:420px){ .grid{grid-template-columns:1fr} .admin-drawer{width:95%} }
 </style>
 </head>
 <body>
@@ -176,17 +168,7 @@ textarea{min-height:100px;resize:vertical}
   <div id="editorArea" style="display:none;margin-top:8px">
     <h4 style="margin:6px 0">Compose Article</h4>
     <div class="form-row"><label class="small">Title</label><input id="aTitle" class="input"></div>
-    <div class="form-row"><label class="small">Category</label>
-      <select id="aCat" class="input">
-        <option>Local</option>
-        <option>Politics</option>
-        <option>Technology</option>
-        <option>Sports</option>
-        <option>Business</option>
-        <option>Entertainment</option>
-        <option>Other</option>
-      </select>
-    </div>
+    <div class="form-row"><label class="small">Category</label><input id="aCat" class="input" placeholder="Local"></div>
 
     <!-- Blocks editor -->
     <div style="margin:8px 0">
@@ -216,18 +198,18 @@ textarea{min-height:100px;resize:vertical}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ============ CONFIG ============ */
+/* ================= CONFIG (edit these) ================= */
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain:"all-madrsa.firebaseapp.com",
   projectId:"all-madrsa",
   storageBucket:"all-madrsa.appspot.com",
   messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
+  appId:"1:619313835874:web:e387e1297663f11fc2463b11fc2463b11fc2463b"
 };
-const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // <-- replace with your IMGBB key
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // << replace with your IMGBB key if needed
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-/* ================================= */
+/* ===================================================== */
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -273,7 +255,7 @@ const adminList = document.getElementById('adminList');
 const siteLogoImg = document.getElementById('siteLogo');
 
 /* --- state --- */
-let ARTICLES = [];
+let ARTICLES = []; // from firestore (live)
 let ACTIVE_CAT = 'All';
 let SEARCH = '';
 let editingId = null;
@@ -284,7 +266,7 @@ function uid(p='n'){ return p + '_' + Math.random().toString(36).slice(2,9); }
 function showLoginMsg(m){ loginMsg.textContent = m; setTimeout(()=>{ if(loginMsg.textContent===m) loginMsg.textContent=''; },2500); }
 function showBreakingMsg(m){ breakingMsg.textContent = m; setTimeout(()=>{ if(breakingMsg.textContent===m) breakingMsg.textContent=''; },2500); }
 
-/* --- categories --- */
+/* --- categories render --- */
 function renderCategories(){
   catsDiv.innerHTML = '';
   DEFAULT_CATS.forEach(c=>{
@@ -314,13 +296,8 @@ function render(){
   filtered.forEach(a=>{
     const el = document.createElement('article');
     el.className = 'card';
-    // thumbnail: first image block else placeholder from first text snippet
-    let thumb = (a.blocks || []).find(b=>b.type==='image')?.url || a.image || null;
-    if(!thumb){
-      const txt = (a.blocks || []).find(b=>b.type==='text')?.text || '';
-      const snippet = txt.trim().slice(0,60) || 'Vasai Live';
-      thumb = 'https://via.placeholder.com/1200x800?text=' + encodeURIComponent(snippet);
-    }
+    // pick first image block as thumbnail
+    const thumb = (a.blocks || []).find(b=>b.type==='image')?.url || a.image || 'https://via.placeholder.com/1200x800?text=No+Image';
     el.innerHTML = `
       <img src="${thumb}" alt="">
       <div class="card-body">
@@ -335,7 +312,7 @@ function render(){
   });
 }
 
-/* --- open modal (headline -> first image -> blocks in order) --- */
+/* --- open article modal and render blocks --- */
 function openModal(id){
   const a = ARTICLES.find(x=>x.id===id); if(!a) return;
   document.getElementById('modalTitle').textContent = a.title;
@@ -344,49 +321,24 @@ function openModal(id){
   const blocks = a.blocks || [];
   const container = document.getElementById('modalBlocks');
   container.innerHTML = '';
-
-  // show first image (if any) right after heading
-  const firstImage = blocks.find(b=>b.type==='image');
-  if(firstImage){
-    const imgTop = document.createElement('img');
-    imgTop.src = firstImage.url;
-    imgTop.style.width = '100%';
-    imgTop.style.maxHeight = '420px';
-    imgTop.style.objectFit = 'cover';
-    imgTop.style.borderRadius = '8px';
-    imgTop.style.margin = '10px 0';
-    container.appendChild(imgTop);
-  }
-
   blocks.forEach(b=>{
-    // skip the first image if already displayed
-    if(firstImage && b.type==='image' && b.url===firstImage.url && container.firstChild && container.firstChild.tagName==='IMG') return;
-
     const blockWrap = document.createElement('div');
     blockWrap.className = 'block';
     if(b.type==='text'){
       const p = document.createElement('p');
       p.style.color = b.color || '#000';
       p.style.whiteSpace = 'pre-wrap';
-      p.style.lineHeight = '1.6';
-      p.style.fontSize = '16px';
-      p.style.margin = '12px 0';
       p.textContent = b.text || '';
       blockWrap.appendChild(p);
     } else if(b.type==='image'){
       const img = document.createElement('img');
       img.src = b.url || '';
       img.alt = '';
-      img.style.width = '100%';
-      img.style.height = 'auto';
-      img.style.margin = '10px 0';
-      img.style.borderRadius = '8px';
-      img.style.objectFit = 'cover';
       blockWrap.appendChild(img);
     }
     container.appendChild(blockWrap);
   });
-
+  // show modal
   document.getElementById('modal').style.display = 'flex';
 }
 function closeModal(){ document.getElementById('modal').style.display = 'none'; }
@@ -395,7 +347,7 @@ function closeModal(){ document.getElementById('modal').style.display = 'none'; 
 searchInput.addEventListener('input', e=>{ SEARCH = e.target.value.trim(); render(); });
 clearBtn.addEventListener('click', ()=>{ searchInput.value=''; SEARCH=''; ACTIVE_CAT='All'; render(); renderCategories(); });
 
-/* --- admin drawer --- */
+/* --- admin drawer open/close --- */
 adminFab.addEventListener('click', ()=>{ adminDrawer.style.display = 'block'; adminDrawer.setAttribute('aria-hidden','false'); });
 closeAdmin.addEventListener('click', ()=>{ adminDrawer.style.display='none'; adminDrawer.setAttribute('aria-hidden','true'); });
 
@@ -445,6 +397,7 @@ uploadLogoBtn.addEventListener('click', async ()=>{
   try{
     uploadLogoBtn.disabled = true; showLoginMsg('Uploading logo...');
     const url = await uploadToImgbb(logoFile.files[0]);
+    // save to settings in firestore
     await db.collection('settings').doc('branding').set({ logo: url }, { merge:true });
     siteLogoImg.src = url;
     logoUrl.value = url;
@@ -464,7 +417,7 @@ saveBreaking.addEventListener('click', async ()=>{
   }catch(e){ console.error(e); showBreakingMsg('Save failed'); }
 });
 
-/* --- blocks editor --- */
+/* --- blocks editor functionality --- */
 function createTextBlock(initial={text:'',color:'#000000'}) {
   const id = uid('b');
   const wrap = document.createElement('div');
@@ -518,11 +471,12 @@ function createImageBlock(initial={url:''}){
 addTextBlockBtn.addEventListener('click', ()=> createTextBlock());
 addImageBlockBtn.addEventListener('click', ()=> createImageBlock());
 
-/* --- publish article (gather blocks & save to Firestore) --- */
+/* --- publish article: gather blocks from editor and save to Firestore --- */
 publishArticleBtn.addEventListener('click', async ()=>{
   const title = (aTitle.value||'').trim();
   if(!title){ alert('Title required'); return; }
   const cat = (aCat.value||'Local').trim();
+  // gather blocks
   const blockEls = Array.from(blocksList.children);
   const blocks = blockEls.map(el=>{
     if(el.querySelector('.block-text')){
@@ -546,14 +500,15 @@ publishArticleBtn.addEventListener('click', async ()=>{
       showLoginMsg('Article published');
     }
     // clear editor
-    aTitle.value=''; aCat.value='Local'; blocksList.innerHTML=''; editingId=null;
+    aTitle.value=''; aCat.value=''; blocksList.innerHTML=''; aContent.value='';
     loadAdminList();
   }catch(e){ console.error(e); showLoginMsg('Publish failed'); }
 });
 
-clearEditorBtn.addEventListener('click', ()=>{ aTitle.value=''; aCat.value='Local'; blocksList.innerHTML=''; editingId=null; });
+/* clear editor */
+clearEditorBtn.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; blocksList.innerHTML=''; editingId=null; });
 
-/* --- admin list (edit/delete) --- */
+/* admin list: show docs with edit/delete */
 async function loadAdminList(){
   adminList.innerHTML = '<div class="small">Loading...</div>';
   const snap = await db.collection('vasai_news').orderBy('ts','desc').get();
@@ -571,7 +526,7 @@ async function loadAdminList(){
     const delBtn = row.querySelector('.btn:not(.ghost)');
     editBtn.onclick = async ()=>{
       editingId = doc.id;
-      aTitle.value = d.title; aCat.value = d.category || 'Local';
+      aTitle.value = d.title; aCat.value = d.category || '';
       blocksList.innerHTML = '';
       (d.blocks||[]).forEach(b=> {
         if(b.type==='text') createTextBlock({text:b.text,color:b.color});
@@ -588,7 +543,7 @@ async function loadAdminList(){
   });
 }
 
-/* --- realtime listeners --- */
+/* --- realtime listeners: articles, breaking_texts, settings (logo) --- */
 db.collection('vasai_news').orderBy('ts','desc').onSnapshot(snapshot=>{
   const arr=[];
   snapshot.forEach(doc=>{ const d=doc.data(); d.id=doc.id; arr.push(d); });
@@ -597,6 +552,8 @@ db.collection('vasai_news').orderBy('ts','desc').onSnapshot(snapshot=>{
   // ticker2: latest 5 headlines
   const last5 = ARTICLES.slice(0,5).map(x=> x.title );
   ticker2Inner.textContent = last5.join('   •   ');
+  // live-bar highlight latest title briefly
+  if(ARTICLES[0]){ document.getElementById('ticker1').style.display='block'; }
 });
 
 db.collection('breaking_texts').orderBy('ts','desc').limit(10).onSnapshot(snapshot=>{
@@ -606,6 +563,7 @@ db.collection('breaking_texts').orderBy('ts','desc').limit(10).onSnapshot(snapsh
   else ticker1Inner.textContent = '● LIVE';
 });
 
+// settings -> branding logo
 db.collection('settings').doc('branding').onSnapshot(doc=>{
   const data = doc.data();
   if(data && data.logo){ siteLogoImg.src = data.logo; logoUrl.value = data.logo; }
@@ -614,11 +572,12 @@ db.collection('settings').doc('branding').onSnapshot(doc=>{
 /* --- initial --- */
 renderCategories(); render();
 
-/* --- social share --- */
+/* --- social share helpers --- */
 function shareWhatsApp(){ window.open('https://wa.me/?text=' + encodeURIComponent(document.title + ' ' + location.href), '_blank'); }
 function shareFacebook(){ window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(location.href), '_blank'); }
 function shareX(){ window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(document.title + ' ' + location.href), '_blank'); }
 function shareTelegram(){ window.open('https://t.me/share/url?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(document.title), '_blank'); }
+
 </script>
 </body>
 </html>
