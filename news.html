@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Vasai Live News</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Vasai Live News — Admin Powered</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -13,14 +13,18 @@
 body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0b2540; -webkit-font-smoothing:antialiased;}
 .container{max-width:1100px;margin:12px auto;padding:0 12px;}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;}
-.brand{display:flex;align-items:center;gap:10px}
-.logo{background:linear-gradient(90deg,#06b6d4,#0ea5a4);color:white;padding:8px 12px;border-radius:8px;font-weight:700;font-size:18px}
-.tagline{font-size:13px;color:var(--muted)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo-img{height:44px;width:44px;background:#fff;border-radius:8px;object-fit:contain}
+.logo-text{font-weight:700;font-size:18px}
 .controls{display:flex;gap:8px;align-items:center}
 .search{padding:8px 12px;border-radius:10px;border:1px solid #e6e9ef;background:white;min-width:160px}
 .btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
 .btn.ghost{background:transparent;color:var(--title);border:1px solid #e6e9ef}
-.live-bar{background:var(--live);color:white;padding:6px 10px;border-radius:8px;font-weight:700;display:flex;gap:10px;align-items:center}
+.live-ticker{background:#111;color:#fff;padding:8px 12px;border-radius:8px;overflow:hidden;white-space:nowrap}
+.ticker-inner{display:inline-block;padding-left:100%;animation:marquee 18s linear infinite}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
 .top-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
 .categories{display:flex;gap:8px;flex-wrap:wrap}
 .category{background:white;padding:6px 10px;border-radius:999px;border:1px solid #e9eef6;color:var(--muted);cursor:pointer}
@@ -38,32 +42,42 @@ body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0
 
 .footer{margin:20px 0;padding:14px;border-radius:10px;background:white;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
 
-/* modal */
+/* modal / article view */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.55);z-index:80;padding:12px}
 .modal-card{background:white;border-radius:10px;max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:16px;box-shadow:0 30px 90px rgba(2,6,23,0.5)}
-.modal-card img{width:100%;height:auto;max-height:420px;object-fit:contain;border-radius:8px;margin-bottom:12px}
+.modal-card .block img{max-width:100%;height:auto;border-radius:8px;margin:6px 0}
 .modal-close{position:absolute;right:18px;top:18px;background:#fff;border-radius:8px;border:none;padding:8px 10px;cursor:pointer}
 
 /* admin drawer */
 .admin-fab{position:fixed;right:16px;bottom:16px;background:var(--accent);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 20px 50px rgba(2,6,23,0.12);cursor:pointer;z-index:90}
-.admin-drawer{position:fixed;right:16px;bottom:80px;width:360px;background:white;border-radius:12px;box-shadow:0 20px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:90}
+.admin-drawer{position:fixed;right:16px;bottom:80px;width:380px;background:white;border-radius:12px;box-shadow:0 20px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:90}
 .form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.input,textarea{padding:8px;border-radius:8px;border:1px solid #e6e9ef;width:100%}
-textarea{min-height:120px;resize:vertical}
+.input,textarea,select{padding:8px;border-radius:8px;border:1px solid #e6e9ef;width:100%}
+textarea{min-height:100px;resize:vertical}
 .small{font-size:13px;color:var(--muted)}
+.block-row{display:flex;gap:8px;align-items:center}
 
-/* small screens */
-@media(max-width:420px){ .grid{grid-template-columns:1fr} .modal-card{padding:12px} .admin-drawer{width:95%} }
+/* content block editor */
+.blocks-list{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.block-editor{border:1px dashed #e6e9ef;padding:8px;border-radius:8px;background:#fff}
+
+/* social */
+.share-row{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.share-row button{background:#eee;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+
+@media(max-width:420px){ .grid{grid-template-columns:1fr} .admin-drawer{width:95%} }
 </style>
 </head>
 <body>
 <div class="container">
   <header class="header">
     <div class="brand">
-      <div class="logo">Vasai Live</div>
-      <div>
-        <div style="font-weight:700">Vasai Live News</div>
-        <div class="tagline">Tez • Saaf • Vasai ki Khabar</div>
+      <div class="logo-wrap">
+        <img id="siteLogo" class="logo-img" src="https://via.placeholder.com/120x120?text=V" alt="logo">
+        <div>
+          <div class="logo-text">Vasai Live</div>
+          <div class="small">Tez • Saaf • Vasai ki Khabar</div>
+        </div>
       </div>
     </div>
 
@@ -75,8 +89,17 @@ textarea{min-height:120px;resize:vertical}
     </div>
   </header>
 
+  <!-- Ticker 1: admin posted breaking texts (marquee) -->
+  <div style="margin:8px 0">
+    <div class="live-ticker" id="ticker1"><div class="ticker-inner" id="ticker1Inner">● LIVE</div></div>
+  </div>
+
+  <!-- Ticker 2: last 5 headlines -->
+  <div style="margin:6px 0">
+    <div class="live-ticker" id="ticker2"><div class="ticker-inner" id="ticker2Inner">Loading headlines...</div></div>
+  </div>
+
   <div class="top-row">
-    <div class="live-bar" id="liveBar">● LIVE</div>
     <div class="categories" id="cats"></div>
     <div style="margin-left:auto" class="small"><span id="countBadge">0</span> Articles</div>
   </div>
@@ -85,22 +108,29 @@ textarea{min-height:120px;resize:vertical}
     <div class="grid" id="grid"></div>
   </main>
 
-  <div class="footer">Vasai Live • © <span id="year"></span></div>
+  <div class="footer">
+    <div>Vasai Live • © <span id="year"></span></div>
+    <div class="share-row">
+      <button onclick="shareWhatsApp()">WhatsApp</button>
+      <button onclick="shareFacebook()">Facebook</button>
+      <button onclick="shareX()">X</button>
+      <button onclick="shareTelegram()">Telegram</button>
+    </div>
+  </div>
 </div>
 
 <!-- Article Modal -->
 <div id="modal" class="modal" role="dialog" aria-hidden="true">
   <div class="modal-card" id="modalCard">
     <button class="modal-close" onclick="closeModal()">✕</button>
-    <img id="modalImg" src="" alt="">
     <h2 id="modalTitle"></h2>
     <div id="modalKicker" class="kicker"></div>
     <div id="modalMeta" class="small"></div>
-    <p id="modalContent" style="white-space:pre-wrap"></p>
+    <div id="modalBlocks"></div>
   </div>
 </div>
 
-<!-- Admin floating -->
+<!-- Admin FAB and Drawer -->
 <button id="adminFab" class="admin-fab">Admin</button>
 <div id="adminDrawer" class="admin-drawer" aria-hidden="true">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -108,25 +138,49 @@ textarea{min-height:120px;resize:vertical}
     <button id="closeAdmin" class="btn ghost">Close</button>
   </div>
 
+  <!-- Login/Logout -->
   <div id="loginArea" class="form-row">
     <button id="googleLogin" class="btn">Sign in with Google</button>
     <div id="loginMsg" class="small"></div>
   </div>
 
-  <div id="editorArea" style="display:none">
+  <!-- Branding (logo upload) -->
+  <div id="brandingArea" style="display:none">
+    <div class="form-row">
+      <label class="small">Upload Logo</label>
+      <input id="logoFile" type="file" accept="image/*">
+      <input id="logoUrl" class="input" readonly placeholder="Logo URL will appear here">
+      <button id="uploadLogoBtn" class="btn">Upload Logo</button>
+    </div>
+
+    <!-- Ticker1 manager -->
+    <div style="border-top:1px dashed #eee;padding-top:10px;margin-top:8px">
+      <h4 style="margin:6px 0">Breaking Text (Ticker 1)</h4>
+      <div class="form-row">
+        <textarea id="breakingText" placeholder="Enter breaking text (short)"></textarea>
+        <button id="saveBreaking" class="btn">Save Breaking Text</button>
+        <div id="breakingMsg" class="small"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Article editor -->
+  <div id="editorArea" style="display:none;margin-top:8px">
+    <h4 style="margin:6px 0">Compose Article</h4>
     <div class="form-row"><label class="small">Title</label><input id="aTitle" class="input"></div>
     <div class="form-row"><label class="small">Category</label><input id="aCat" class="input" placeholder="Local"></div>
-    <div class="form-row">
-      <label class="small">Image</label>
-      <input id="aImgFile" type="file" accept="image/*">
-      <input id="aImg" class="input" placeholder="Image URL will fill after upload" readonly>
-      <div class="small">Select file above to upload to IMGBB</div>
+
+    <!-- Blocks editor -->
+    <div style="margin:8px 0">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button id="addTextBlock" class="btn ghost">+ Text Block</button>
+        <button id="addImageBlock" class="btn ghost">+ Image Block</button>
+      </div>
+      <div class="blocks-list" id="blocksList"></div>
     </div>
-    <div class="form-row"><label class="small">Short label (kicker)</label><input id="aKicker" class="input" placeholder="Breaking"></div>
-    <div class="form-row"><label class="small">Content</label><textarea id="aContent"></textarea></div>
 
     <div style="display:flex;gap:8px;justify-content:space-between">
-      <button id="saveArticle" class="btn">Publish</button>
+      <button id="publishArticle" class="btn">Publish Article</button>
       <button id="clearEditor" class="btn ghost">Clear</button>
     </div>
 
@@ -138,13 +192,13 @@ textarea{min-height:120px;resize:vertical}
   </div>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ========== CONFIG: change these ========== */
+/* ================= CONFIG (edit these) ================= */
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain:"all-madrsa.firebaseapp.com",
@@ -153,76 +207,84 @@ const firebaseConfig = {
   messagingSenderId:"619313835874",
   appId:"1:619313835874:web:e387e1297663f11fc2463b11fc2463b11fc2463b"
 };
-const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // replace with your key
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // << replace with your IMGBB key if needed
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-/* ========================================== */
+/* ===================================================== */
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+/* --- UI refs --- */
 document.getElementById('year').textContent = new Date().getFullYear();
-
-/* --- STATE --- */
-let ARTICLES = []; // local cache (populated from Firestore)
-const DEFAULT_CATS = ['All','Local','Politics','Technology','Sports','Business','Entertainment'];
-
-/* --- DOM refs --- */
 const grid = document.getElementById('grid');
 const catsDiv = document.getElementById('cats');
 const countBadge = document.getElementById('countBadge');
 const searchInput = document.getElementById('search');
 const clearBtn = document.getElementById('clearBtn');
+const ticker1Inner = document.getElementById('ticker1Inner');
+const ticker2Inner = document.getElementById('ticker2Inner');
 
 const adminFab = document.getElementById('adminFab');
 const adminDrawer = document.getElementById('adminDrawer');
 const closeAdmin = document.getElementById('closeAdmin');
-const loginArea = document.getElementById('loginArea');
-const googleLogin = document.getElementById('googleLogin');
+const googleLoginBtn = document.getElementById('googleLogin');
 const loginMsg = document.getElementById('loginMsg');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+
+const brandingArea = document.getElementById('brandingArea');
+const logoFile = document.getElementById('logoFile');
+const logoUrl = document.getElementById('logoUrl');
+const uploadLogoBtn = document.getElementById('uploadLogoBtn');
+
+const breakingTextInput = document.getElementById('breakingText');
+const saveBreaking = document.getElementById('saveBreaking');
+const breakingMsg = document.getElementById('breakingMsg');
+
 const editorArea = document.getElementById('editorArea');
 const aTitle = document.getElementById('aTitle');
 const aCat = document.getElementById('aCat');
-const aImgFile = document.getElementById('aImgFile');
-const aImg = document.getElementById('aImg');
-const aKicker = document.getElementById('aKicker');
-const aContent = document.getElementById('aContent');
-const saveArticle = document.getElementById('saveArticle');
-const clearEditor = document.getElementById('clearEditor');
+const blocksList = document.getElementById('blocksList');
+const addTextBlockBtn = document.getElementById('addTextBlock');
+const addImageBlockBtn = document.getElementById('addImageBlock');
+const publishArticleBtn = document.getElementById('publishArticle');
+const clearEditorBtn = document.getElementById('clearEditor');
 const adminList = document.getElementById('adminList');
 
-const modal = document.getElementById('modal');
-const modalImg = document.getElementById('modalImg');
-const modalTitle = document.getElementById('modalTitle');
-const modalKicker = document.getElementById('modalKicker');
-const modalMeta = document.getElementById('modalMeta');
-const modalContent = document.getElementById('modalContent');
+const siteLogoImg = document.getElementById('siteLogo');
 
-/* --- UX helpers --- */
-function showToast(msg){ loginMsg.textContent = msg; setTimeout(()=>{ if(loginMsg.textContent===msg) loginMsg.textContent=''; },2500); }
-function uid(prefix='n'){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+/* --- state --- */
+let ARTICLES = []; // from firestore (live)
+let ACTIVE_CAT = 'All';
+let SEARCH = '';
+let editingId = null;
+const DEFAULT_CATS = ['All','Local','Politics','Technology','Sports','Business','Entertainment'];
 
-/* --- Categories render --- */
+/* --- helpers --- */
+function uid(p='n'){ return p + '_' + Math.random().toString(36).slice(2,9); }
+function showLoginMsg(m){ loginMsg.textContent = m; setTimeout(()=>{ if(loginMsg.textContent===m) loginMsg.textContent=''; },2500); }
+function showBreakingMsg(m){ breakingMsg.textContent = m; setTimeout(()=>{ if(breakingMsg.textContent===m) breakingMsg.textContent=''; },2500); }
+
+/* --- categories render --- */
 function renderCategories(){
   catsDiv.innerHTML = '';
   DEFAULT_CATS.forEach(c=>{
     const el = document.createElement('button');
-    el.className = 'category' + (c==='All' ? ' active':'');
+    el.className = 'category' + (c===ACTIVE_CAT?' active':'');
     el.textContent = c;
-    el.onclick = ()=>{ ACTIVE_CAT = c; render(); renderCategories(); }
+    el.onclick = ()=>{ ACTIVE_CAT=c; render(); renderCategories(); }
     catsDiv.appendChild(el);
   });
 }
-let ACTIVE_CAT = 'All';
-let SEARCH = '';
 
-/* --- Render grid --- */
+/* --- render grid --- */
 function render(){
   const filtered = ARTICLES.filter(a=>{
     if(ACTIVE_CAT!=='All' && a.category!==ACTIVE_CAT) return false;
     if(SEARCH){
       const s = SEARCH.toLowerCase();
-      return (a.title+a.content+(a.kicker||'')+a.category).toLowerCase().includes(s);
+      return (a.title + (a.blocks||[]).map(b=> b.type==='text'?b.text:'').join('') + (a.kicker||'') + a.category).toLowerCase().includes(s);
     }
     return true;
   }).sort((a,b)=>b.ts - a.ts);
@@ -230,15 +292,18 @@ function render(){
   grid.innerHTML = '';
   countBadge.textContent = filtered.length;
   if(filtered.length===0){ grid.innerHTML = '<div style="padding:18px;background:white;border-radius:8px;text-align:center;">Koi article nahi mila</div>'; return; }
+
   filtered.forEach(a=>{
     const el = document.createElement('article');
     el.className = 'card';
+    // pick first image block as thumbnail
+    const thumb = (a.blocks || []).find(b=>b.type==='image')?.url || a.image || 'https://via.placeholder.com/1200x800?text=No+Image';
     el.innerHTML = `
-      <img src="${a.image||'https://via.placeholder.com/1200x800?text=No+Image'}" alt="">
+      <img src="${thumb}" alt="">
       <div class="card-body">
         <div class="kicker">${a.kicker || a.category}</div>
         <h3 class="title">${a.title}</h3>
-        <div class="excerpt">${(a.content||'').slice(0,120)}...</div>
+        <div class="excerpt">${( (a.blocks||[]).map(b=> b.type==='text'?b.text:'').join(' ').slice(0,120) )}...</div>
         <div class="meta"><div>${a.category}</div><div style="margin-left:auto">${new Date(a.ts).toLocaleString()}</div></div>
       </div>
     `;
@@ -247,157 +312,272 @@ function render(){
   });
 }
 
-/* --- Modal --- */
+/* --- open article modal and render blocks --- */
 function openModal(id){
   const a = ARTICLES.find(x=>x.id===id); if(!a) return;
-  modalImg.src = a.image||'https://via.placeholder.com/1200x800?text=No+Image';
-  modalTitle.textContent = a.title;
-  modalKicker.textContent = a.kicker || a.category;
-  modalMeta.textContent = `${a.category} • ${new Date(a.ts).toLocaleString()}`;
-  modalContent.textContent = a.content || '';
-  modal.style.display = 'flex';
+  document.getElementById('modalTitle').textContent = a.title;
+  document.getElementById('modalKicker').textContent = a.kicker || a.category;
+  document.getElementById('modalMeta').textContent = `${a.category} • ${new Date(a.ts).toLocaleString()}`;
+  const blocks = a.blocks || [];
+  const container = document.getElementById('modalBlocks');
+  container.innerHTML = '';
+  blocks.forEach(b=>{
+    const blockWrap = document.createElement('div');
+    blockWrap.className = 'block';
+    if(b.type==='text'){
+      const p = document.createElement('p');
+      p.style.color = b.color || '#000';
+      p.style.whiteSpace = 'pre-wrap';
+      p.textContent = b.text || '';
+      blockWrap.appendChild(p);
+    } else if(b.type==='image'){
+      const img = document.createElement('img');
+      img.src = b.url || '';
+      img.alt = '';
+      blockWrap.appendChild(img);
+    }
+    container.appendChild(blockWrap);
+  });
+  // show modal
+  document.getElementById('modal').style.display = 'flex';
 }
-function closeModal(){ modal.style.display = 'none'; }
+function closeModal(){ document.getElementById('modal').style.display = 'none'; }
 
-/* --- Search --- */
+/* --- search --- */
 searchInput.addEventListener('input', e=>{ SEARCH = e.target.value.trim(); render(); });
 clearBtn.addEventListener('click', ()=>{ searchInput.value=''; SEARCH=''; ACTIVE_CAT='All'; render(); renderCategories(); });
 
-/* --- Admin drawer --- */
+/* --- admin drawer open/close --- */
 adminFab.addEventListener('click', ()=>{ adminDrawer.style.display = 'block'; adminDrawer.setAttribute('aria-hidden','false'); });
 closeAdmin.addEventListener('click', ()=>{ adminDrawer.style.display='none'; adminDrawer.setAttribute('aria-hidden','true'); });
 
-/* --- Auth: Google Sign-in, restrict to ADMIN_EMAIL --- */
-googleLogin.addEventListener('click', async ()=>{
+/* --- auth: google sign-in restricted to ADMIN_EMAIL --- */
+googleLoginBtn.addEventListener('click', async ()=>{
   try{
     const provider = new firebase.auth.GoogleAuthProvider();
     const res = await auth.signInWithPopup(provider);
     if(res.user && res.user.email===ADMIN_EMAIL){
-      showToast('Logged in as admin');
+      showLoginMsg('Logged in as admin');
+      brandingArea.style.display = 'block';
       editorArea.style.display = 'block';
-      loadAdminList(); // show admin list
+      loadAdminList();
     } else {
-      showToast('Not authorized'); await auth.signOut();
+      showLoginMsg('Not authorized'); await auth.signOut();
     }
-  }catch(e){ console.error(e); showToast('Login failed'); }
-});
-document.getElementById('loginBtn').addEventListener('click', ()=> adminDrawer.style.display='block');
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  await auth.signOut(); showToast('Logged out'); editorArea.style.display='none';
+  }catch(e){ console.error(e); showLoginMsg('Login failed'); }
 });
 
-/* Keep login/logout button handling in header */
+loginBtn.addEventListener('click', ()=> adminDrawer.style.display='block');
+logoutBtn.addEventListener('click', async ()=>{ await auth.signOut(); showLoginMsg('Logged out'); brandingArea.style.display='none'; editorArea.style.display='none'; });
+
 auth.onAuthStateChanged(user=>{
-  const loginBtn = document.getElementById('loginBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
   if(user && user.email===ADMIN_EMAIL){
-    loginBtn.style.display='none'; logoutBtn.style.display='inline-block'; editorArea.style.display='block';
+    loginBtn.style.display='none'; logoutBtn.style.display='inline-block';
+    brandingArea.style.display='block'; editorArea.style.display='block';
     loadAdminList();
   } else {
-    loginBtn.style.display='inline-block'; logoutBtn.style.display='none'; editorArea.style.display='none';
+    loginBtn.style.display='inline-block'; logoutBtn.style.display='none';
+    brandingArea.style.display='none'; editorArea.style.display='none';
   }
 });
 
-/* --- IMGBB upload --- */
-aImgFile.addEventListener('change', async ()=>{
-  if(!aImgFile.files.length) return;
-  const file = aImgFile.files[0];
+/* --- IMGBB upload helper --- */
+async function uploadToImgbb(file){
   const form = new FormData();
   form.append('image', file);
-  showToast('Uploading image...');
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body:form });
+  const data = await res.json();
+  if(data && data.success) return data.data.url;
+  throw new Error('Upload failed');
+}
+
+/* --- logo upload --- */
+uploadLogoBtn.addEventListener('click', async ()=>{
+  if(!logoFile.files.length){ alert('Please select file'); return; }
   try{
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body:form });
-    const data = await res.json();
-    if(data && data.success){
-      aImg.value = data.data.url;
-      showToast('Image uploaded');
-    } else {
-      console.error(data);
-      showToast('Upload failed');
-    }
-  }catch(e){ console.error(e); showToast('Upload error'); }
+    uploadLogoBtn.disabled = true; showLoginMsg('Uploading logo...');
+    const url = await uploadToImgbb(logoFile.files[0]);
+    // save to settings in firestore
+    await db.collection('settings').doc('branding').set({ logo: url }, { merge:true });
+    siteLogoImg.src = url;
+    logoUrl.value = url;
+    showLoginMsg('Logo uploaded');
+  }catch(e){ console.error(e); showLoginMsg('Logo upload failed'); }
+  uploadLogoBtn.disabled = false;
 });
 
-/* --- Publish / Edit / Delete (Firestore) --- */
-/* We'll store articles in Firestore collection 'vasai_news' for live updates */
-async function publishArticle(){
-  const title = aTitle.value.trim();
-  const cat = aCat.value.trim() || 'Local';
-  const kicker = aKicker.value.trim();
-  const content = aContent.value.trim();
-  const image = aImg.value.trim();
-  if(!title || !content){ alert('Title and Content required'); return; }
-  // if editing
-  if(editingId){
-    await db.collection('vasai_news').doc(editingId).update({ title, category:cat, kicker, content, image, ts: Date.now() });
-    editingId = null;
-    showToast('Updated');
-  } else {
-    await db.collection('vasai_news').add({ title, category:cat, kicker, content, image, ts: Date.now() });
-    showToast('Published');
-  }
-  // clear editor
-  aTitle.value=''; aCat.value=''; aKicker.value=''; aContent.value=''; aImg.value=''; aImgFile.value='';
+/* --- breaking text save (Ticker1) --- */
+saveBreaking.addEventListener('click', async ()=>{
+  const txt = (breakingTextInput.value||'').trim();
+  if(!txt){ alert('Enter breaking text'); return; }
+  try{
+    await db.collection('breaking_texts').add({ text: txt, ts: Date.now() });
+    breakingTextInput.value = '';
+    showBreakingMsg('Saved');
+  }catch(e){ console.error(e); showBreakingMsg('Save failed'); }
+});
+
+/* --- blocks editor functionality --- */
+function createTextBlock(initial={text:'',color:'#000000'}) {
+  const id = uid('b');
+  const wrap = document.createElement('div');
+  wrap.className = 'block-editor';
+  wrap.dataset.blockId = id;
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong>Text Block</strong>
+      <div style="display:flex;gap:8px">
+        <input type="color" value="${initial.color||'#000000'}" class="block-color" title="Text color">
+        <button class="btn ghost small remove-block">Remove</button>
+      </div>
+    </div>
+    <textarea class="block-text input" placeholder="Write text...">${initial.text||''}</textarea>
+  `;
+  wrap.querySelector('.remove-block').addEventListener('click', ()=> wrap.remove());
+  blocksList.appendChild(wrap);
 }
 
-/* hook up save button only for admin */
-saveArticle.addEventListener('click', publishArticle);
-clearEditor.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; aKicker.value=''; aContent.value=''; aImg.value=''; aImgFile.value=''; editingId=null; });
+function createImageBlock(initial={url:''}){
+  const id = uid('b');
+  const wrap = document.createElement('div');
+  wrap.className = 'block-editor';
+  wrap.dataset.blockId = id;
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong>Image Block</strong>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost small remove-block">Remove</button>
+      </div>
+    </div>
+    <input type="file" class="block-file input" accept="image/*">
+    <input class="block-url input" placeholder="Uploaded image URL" readonly value="${initial.url||''}">
+    <div class="small">Select file to upload to IMGBB (auto-fill URL)</div>
+  `;
+  const fileInput = wrap.querySelector('.block-file');
+  const urlInput = wrap.querySelector('.block-url');
+  wrap.querySelector('.remove-block').addEventListener('click', ()=> wrap.remove());
+  fileInput.addEventListener('change', async ()=>{
+    if(!fileInput.files.length) return;
+    try{
+      showLoginMsg('Uploading image...');
+      const url = await uploadToImgbb(fileInput.files[0]);
+      urlInput.value = url;
+      showLoginMsg('Image uploaded');
+    }catch(e){ console.error(e); showLoginMsg('Upload failed'); }
+  });
+  blocksList.appendChild(wrap);
+}
 
-/* admin list + edit/delete locally in drawer (reads from Firestore) */
-let editingId = null;
-function loadAdminList(){
-  // populate admin list from Firestore
-  db.collection('vasai_news').orderBy('ts','desc').get().then(snapshot=>{
-    adminList.innerHTML = '';
-    snapshot.forEach(doc=>{
-      const d = doc.data();
-      const row = document.createElement('div');
-      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.gap='8px'; row.style.padding='6px 0';
-      row.innerHTML = `<div style="flex:1"><strong style="display:block">${d.title}</strong><div class="small">${d.category} • ${new Date(d.ts).toLocaleString()}</div></div>
-        <div style="display:flex;gap:6px">
-          <button class="btn ghost" data-id="${doc.id}">Edit</button>
-          <button class="btn" data-id="${doc.id}">Delete</button>
-        </div>`;
-      const editBtn = row.querySelector('.btn.ghost');
-      const delBtn = row.querySelector('.btn:not(.ghost)');
-      editBtn.onclick = async ()=>{
-        editingId = doc.id;
-        aTitle.value = d.title; aCat.value = d.category; aImg.value = d.image || ''; aKicker.value = d.kicker || ''; aContent.value = d.content || '';
-        showToast('Editing'); window.scrollTo({top:0,behavior:'smooth'});
-      };
-      delBtn.onclick = async ()=>{
-        if(!confirm('Delete this article?')) return;
-        await db.collection('vasai_news').doc(doc.id).delete();
-        showToast('Deleted');
-      };
-      adminList.appendChild(row);
-    });
+addTextBlockBtn.addEventListener('click', ()=> createTextBlock());
+addImageBlockBtn.addEventListener('click', ()=> createImageBlock());
+
+/* --- publish article: gather blocks from editor and save to Firestore --- */
+publishArticleBtn.addEventListener('click', async ()=>{
+  const title = (aTitle.value||'').trim();
+  if(!title){ alert('Title required'); return; }
+  const cat = (aCat.value||'Local').trim();
+  // gather blocks
+  const blockEls = Array.from(blocksList.children);
+  const blocks = blockEls.map(el=>{
+    if(el.querySelector('.block-text')){
+      return { type:'text', text: el.querySelector('.block-text').value || '', color: el.querySelector('.block-color').value || '#000' };
+    } else {
+      return { type:'image', url: el.querySelector('.block-url').value || '' };
+    }
+  }).filter(b=> (b.type==='text' && b.text.trim()) || (b.type==='image' && b.url.trim()) );
+  if(blocks.length===0){ alert('Add at least one text or image block'); return; }
+  const doc = {
+    title, category:cat, kicker: (blocks.find(b=>b.type==='text') && (blocks.find(b=>b.type==='text').text||'').slice(0,60)) || cat,
+    blocks, ts: Date.now()
+  };
+  try{
+    if(editingId){
+      await db.collection('vasai_news').doc(editingId).update(doc);
+      editingId = null;
+      showLoginMsg('Article updated');
+    } else {
+      await db.collection('vasai_news').add(doc);
+      showLoginMsg('Article published');
+    }
+    // clear editor
+    aTitle.value=''; aCat.value=''; blocksList.innerHTML=''; aContent.value='';
+    loadAdminList();
+  }catch(e){ console.error(e); showLoginMsg('Publish failed'); }
+});
+
+/* clear editor */
+clearEditorBtn.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; blocksList.innerHTML=''; editingId=null; });
+
+/* admin list: show docs with edit/delete */
+async function loadAdminList(){
+  adminList.innerHTML = '<div class="small">Loading...</div>';
+  const snap = await db.collection('vasai_news').orderBy('ts','desc').get();
+  adminList.innerHTML = '';
+  snap.forEach(doc=>{
+    const d = doc.data();
+    const row = document.createElement('div');
+    row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.gap='8px'; row.style.padding='6px 0';
+    row.innerHTML = `<div style="flex:1"><strong style="display:block">${d.title}</strong><div class="small">${d.category} • ${new Date(d.ts).toLocaleString()}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn ghost" data-id="${doc.id}">Edit</button>
+        <button class="btn" data-id="${doc.id}">Delete</button>
+      </div>`;
+    const editBtn = row.querySelector('.btn.ghost');
+    const delBtn = row.querySelector('.btn:not(.ghost)');
+    editBtn.onclick = async ()=>{
+      editingId = doc.id;
+      aTitle.value = d.title; aCat.value = d.category || '';
+      blocksList.innerHTML = '';
+      (d.blocks||[]).forEach(b=> {
+        if(b.type==='text') createTextBlock({text:b.text,color:b.color});
+        else createImageBlock({url:b.url});
+      });
+      showLoginMsg('Loaded for edit');
+    };
+    delBtn.onclick = async ()=>{
+      if(!confirm('Delete this article?')) return;
+      await db.collection('vasai_news').doc(doc.id).delete();
+      showLoginMsg('Deleted');
+    };
+    adminList.appendChild(row);
   });
 }
 
-/* --- Live subscription: onSnapshot to keep ARTICLES up to date in realtime --- */
+/* --- realtime listeners: articles, breaking_texts, settings (logo) --- */
 db.collection('vasai_news').orderBy('ts','desc').onSnapshot(snapshot=>{
-  const arr = [];
-  snapshot.forEach(doc=>{
-    const d = doc.data(); d.id = doc.id;
-    arr.push(d);
-  });
+  const arr=[];
+  snapshot.forEach(doc=>{ const d=doc.data(); d.id=doc.id; arr.push(d); });
   ARTICLES = arr;
   render();
-  // highlight latest as breaking: show its title briefly in live bar
-  if(ARTICLES.length>0){
-    const latest = ARTICLES[0];
-    document.getElementById('liveBar').textContent = '● LIVE • ' + latest.title;
-    // small timeout to revert to just LIVE after a while
-    clearTimeout(window._liveBarTimer);
-    window._liveBarTimer = setTimeout(()=> document.getElementById('liveBar').textContent = '● LIVE', 8000);
-  } else document.getElementById('liveBar').textContent = '● LIVE';
+  // ticker2: latest 5 headlines
+  const last5 = ARTICLES.slice(0,5).map(x=> x.title );
+  ticker2Inner.textContent = last5.join('   •   ');
+  // live-bar highlight latest title briefly
+  if(ARTICLES[0]){ document.getElementById('ticker1').style.display='block'; }
 });
 
-/* --- Initial UI --- */
-renderCategories();
-render();
+db.collection('breaking_texts').orderBy('ts','desc').limit(10).onSnapshot(snapshot=>{
+  const arr = [];
+  snapshot.forEach(doc=> arr.push(doc.data().text));
+  if(arr.length) ticker1Inner.textContent = arr.join('   •   ');
+  else ticker1Inner.textContent = '● LIVE';
+});
+
+// settings -> branding logo
+db.collection('settings').doc('branding').onSnapshot(doc=>{
+  const data = doc.data();
+  if(data && data.logo){ siteLogoImg.src = data.logo; logoUrl.value = data.logo; }
+});
+
+/* --- initial --- */
+renderCategories(); render();
+
+/* --- social share helpers --- */
+function shareWhatsApp(){ window.open('https://wa.me/?text=' + encodeURIComponent(document.title + ' ' + location.href), '_blank'); }
+function shareFacebook(){ window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(location.href), '_blank'); }
+function shareX(){ window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(document.title + ' ' + location.href), '_blank'); }
+function shareTelegram(){ window.open('https://t.me/share/url?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(document.title), '_blank'); }
+
 </script>
 </body>
 </html>
