@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - Vasai Live</title>
+<style>
+body{font-family:sans-serif;background:#f6f7fb;margin:0;padding:0;}
+.container{max-width:800px;margin:auto;padding:12px;}
+button{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;}
+input,textarea,select{width:100%;padding:8px;margin:6px 0;border-radius:8px;border:1px solid #ccc;}
+.article-row{background:white;padding:8px;margin:6px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Admin Panel</h2>
+  <button id="googleLogin">Login with Google</button>
+  <button id="logoutBtn" style="display:none">Logout</button>
+
+  <hr>
+  <h3>Compose Article</h3>
+  <input id="aTitle" placeholder="Title">
+  <select id="aCat">
+    <option>Local</option>
+    <option>Politics</option>
+    <option>Technology</option>
+    <option>Sports</option>
+    <option>Business</option>
+    <option>Entertainment</option>
+  </select>
+  <textarea id="aContent" placeholder="Write content..."></textarea>
+  <button id="publishArticle">Publish</button>
+
+  <hr>
+  <h3>Existing Articles</h3>
+  <div id="adminList"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  projectId:"all-madrsa"
+};
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const googleLogin = document.getElementById('googleLogin');
+const logoutBtn = document.getElementById('logoutBtn');
+const publishBtn = document.getElementById('publishArticle');
+const adminList = document.getElementById('adminList');
+
+const aTitle = document.getElementById('aTitle');
+const aCat = document.getElementById('aCat');
+const aContent = document.getElementById('aContent');
+
+let editingId = null;
+
+// Google login
+googleLogin.addEventListener('click', async()=>{
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const res = await auth.signInWithPopup(provider);
+    if(res.user.email!==ADMIN_EMAIL){
+      alert('Not authorized');
+      auth.signOut();
+    }
+  }catch(e){ console.error(e); alert('Login failed'); }
+});
+
+// Logout
+logoutBtn.addEventListener('click',()=> auth.signOut());
+
+// Check auth state
+auth.onAuthStateChanged(user=>{
+  if(user && user.email===ADMIN_EMAIL){
+    googleLogin.style.display='none';
+    logoutBtn.style.display='inline-block';
+    loadAdminList();
+  } else {
+    googleLogin.style.display='inline-block';
+    logoutBtn.style.display='none';
+  }
+});
+
+// Publish article
+publishBtn.addEventListener('click', async()=>{
+  const title = aTitle.value.trim();
+  const cat = aCat.value;
+  const content = aContent.value.trim();
+  if(!title || !content){ alert('Title and content required'); return; }
+
+  const doc = { title, category:cat, blocks:[{type:'text', text:content}], ts:Date.now() };
+
+  try{
+    if(editingId){
+      await db.collection('vasai_news').doc(editingId).update(doc);
+      editingId=null;
+    } else {
+      await db.collection('vasai_news').add(doc);
+    }
+    aTitle.value=''; aContent.value='';
+    loadAdminList();
+  }catch(e){ console.error(e); alert('Publish failed'); }
+});
+
+// Load existing articles
+async function loadAdminList(){
+  adminList.innerHTML='Loading...';
+  const snap = await db.collection('vasai_news').orderBy('ts','desc').get();
+  adminList.innerHTML='';
+  snap.forEach(doc=>{
+    const d = doc.data();
+    const row = document.createElement('div');
+    row.className='article-row';
+    row.innerHTML=`<div><strong>${d.title}</strong><br><small>${d.category}</small></div>
+      <div>
+        <button class="editBtn">Edit</button>
+        <button class="delBtn">Delete</button>
+      </div>`;
+    const editBtn = row.querySelector('.editBtn');
+    const delBtn = row.querySelector('.delBtn');
+
+    editBtn.onclick = ()=>{
+      editingId = doc.id;
+      aTitle.value = d.title;
+      aCat.value = d.category;
+      aContent.value = d.blocks.map(b=>b.type==='text'?b.text:'').join('\n');
+    };
+    delBtn.onclick = async()=>{
+      if(confirm('Delete this article?')){
+        await db.collection('vasai_news').doc(doc.id).delete();
+        loadAdminList();
+      }
+    };
+    adminList.appendChild(row);
+  });
+}
+</script>
+</body>
+</html>
