@@ -6,13 +6,13 @@
 <title>Vasai Live News</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;margin:0;padding:0;overflow-x:hidden;}
-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;}
+body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;overflow-x:hidden;}
+header{display:flex;align-items:center;justify-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;}
 .header-left{display:flex;align-items:center;}
 header img{height:50px;width:50px;border-radius:6px;margin-right:8px;}
 header h1{text-shadow:2px 2px 4px #000;font-weight:800;font-size:22px;}
 .header-buttons{display:flex;gap:6px;}
-.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;text-shadow:1px 1px 2px #000;cursor:pointer;}
+.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;text-shadow:1px 1px 2px #000;}
 .card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);padding:12px;margin-bottom:12px;cursor:pointer;}
 .card img{width:100%;border-radius:6px;margin-bottom:6px;}
 .card h3{font-weight:700;margin-bottom:4px;font-size:18px;}
@@ -21,16 +21,28 @@ header h1{text-shadow:2px 2px 4px #000;font-weight:800;font-size:22px;}
 .modal{background:#fff;border-radius:10px;max-width:500px;width:90%;max-height:80%;overflow-y:auto;padding:16px;position:relative;}
 .modal-close{position:absolute;top:8px;right:8px;background:#f87171;color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;}
 textarea{resize:none;}
-.ticker{background:#1e40af;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
-.ticker span{display:inline-block;padding-right:50px;animation:scroll 15s linear infinite;}
+.ticker, .notice-ticker{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:#1e40af;
+  color:white;
+  padding:6px;
+  overflow:hidden;
+  white-space:nowrap;
+  margin-bottom:6px;
+}
+.ticker span, .notice-ticker span{
+  display:inline-block;
+  padding-right:50px;
+  animation:scroll 15s linear infinite;
+}
 @keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
 .category-btns{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;}
 .category-btns button{flex-shrink:0;padding:4px 8px;border-radius:6px;border:1px solid #3b82f6;color:#3b82f6;cursor:pointer;}
 .category-btns button.active{background:#3b82f6;color:white;}
 .social-share{display:flex;gap:6px;margin-top:8px;}
 .social-share button{flex:1;padding:4px;border-radius:6px;border:1px solid #3b82f6;color:#3b82f6;font-size:12px;}
-.notice-ticker{background:#f59e0b;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;font-weight:bold;}
-.notice-ticker span{display:inline-block;padding-right:50px;animation:scroll 20s linear infinite;}
 </style>
 </head>
 <body class="p-2">
@@ -48,10 +60,10 @@ textarea{resize:none;}
   </div>
 </header>
 
-<!-- NEWS TICKER -->
+<!-- SCROLLING NEWS TICKER -->
 <div class="ticker"><span id="tickerText">Loading latest news...</span></div>
 
-<!-- NOTICE TICKER -->
+<!-- SCROLLING NOTICE TICKER (Admin Editable) -->
 <div class="notice-ticker"><span id="noticeText">Admin notice will appear here...</span></div>
 
 <!-- CATEGORY FILTER -->
@@ -67,13 +79,14 @@ textarea{resize:none;}
     <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
   </div>
   <div id="blocksList" class="mb-3"></div>
-  <div class="flex gap-2">
+  <div class="flex gap-2 mb-2">
     <button id="publishBtn" class="bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
     <button id="clearBtn" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
   </div>
-  <div class="mt-2">
-    <input id="noticeInput" class="border p-2 w-full rounded" placeholder="Set scrolling notice text (Admin only)">
-    <button id="noticeBtn" class="bg-orange-500 text-white px-3 py-1 rounded mt-1">Update Notice</button>
+  <div class="mb-2">
+    <label class="font-semibold">Admin Notice:</label>
+    <input type="text" id="noticeInput" class="border p-2 w-full rounded" placeholder="Write notice here">
+    <button id="saveNotice" class="bg-purple-700 text-white px-3 py-1 rounded mt-1">Save Notice</button>
   </div>
 </section>
 
@@ -101,6 +114,7 @@ const firebaseConfig = {
   messagingSenderId: "619313835874",
   appId: "1:619313835874:web:312ec03e62fd49d3d92e60"
 };
+
 const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
@@ -124,7 +138,7 @@ const categoryBtns = document.getElementById("categoryBtns");
 const tickerText = document.getElementById("tickerText");
 const noticeText = document.getElementById("noticeText");
 const noticeInput = document.getElementById("noticeInput");
-const noticeBtn = document.getElementById("noticeBtn");
+const saveNotice = document.getElementById("saveNotice");
 
 let editingId = null;
 let currentCategory = null;
@@ -172,6 +186,14 @@ document.getElementById("addImageBtn").onclick = ()=>{
   });
 };
 
+// ADMIN NOTICE SAVE
+saveNotice.onclick=()=>{
+  const text=noticeInput.value.trim();
+  if(!text) return alert("Notice empty");
+  noticeText.innerText=text;
+  alert("Notice updated!");
+};
+
 // PUBLISH
 publishBtn.onclick=async()=>{
   const user=auth.currentUser; if(!user || user.email!==ADMIN_EMAIL) return alert("Only admin can post!");
@@ -196,13 +218,6 @@ publishBtn.onclick=async()=>{
 
 // CLEAR
 clearBtn.onclick=()=>{aTitle.value="";aCat.value="";blocksList.innerHTML=""; editingId=null;};
-
-// UPDATE NOTICE
-noticeBtn.onclick=()=>{
-  const text = noticeInput.value.trim();
-  if(text) noticeText.innerText = text;
-  else alert("Enter notice text!");
-};
 
 // LOAD POSTS
 async function loadPosts(){
