@@ -1,15 +1,12 @@
-
 <!doctype html>
 <html lang="hi">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Vasai Live News — Admin Powered</title>
+<title>Vasai Live News — Admin Powered (Fixed)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#0ea5a4; --title:#072a4b; --live:#d32f2f;
-}
+:root{ --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#0ea5a4; --title:#072a4b; --live:#d32f2f; }
 *{box-sizing:border-box}
 body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0b2540; -webkit-font-smoothing:antialiased;}
 .container{max-width:1100px;margin:12px auto;padding:0 12px;}
@@ -25,12 +22,10 @@ body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0
 .live-ticker{background:#111;color:#fff;padding:8px 12px;border-radius:8px;overflow:hidden;white-space:nowrap}
 .ticker-inner{display:inline-block;padding-left:100%;animation:marquee 18s linear infinite}
 @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-
 .top-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
 .categories{display:flex;gap:8px;flex-wrap:wrap}
 .category{background:white;padding:6px 10px;border-radius:999px;border:1px solid #e9eef6;color:var(--muted);cursor:pointer}
 .category.active{border-color:var(--accent);color:var(--accent);box-shadow:0 6px 18px rgba(14,165,164,0.08)}
-
 .grid{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
 @media(min-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
 .card{background:var(--card);border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);display:flex;flex-direction:column;cursor:pointer;min-height:220px}
@@ -40,16 +35,11 @@ body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0
 .title{font-size:15px;font-weight:700;color:var(--title);margin:0 0 8px}
 .excerpt{font-size:13px;color:#344155;flex:1}
 .meta{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:12px;color:var(--muted)}
-
 .footer{margin:20px 0;padding:14px;border-radius:10px;background:white;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
-
-/* modal / article view */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.55);z-index:80;padding:12px}
 .modal-card{background:white;border-radius:10px;max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:16px;box-shadow:0 30px 90px rgba(2,6,23,0.5)}
 .modal-card .block img{max-width:100%;height:auto;border-radius:8px;margin:6px 0}
 .modal-close{position:absolute;right:18px;top:18px;background:#fff;border-radius:8px;border:none;padding:8px 10px;cursor:pointer}
-
-/* admin drawer */
 .admin-fab{position:fixed;right:16px;bottom:16px;background:var(--accent);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 20px 50px rgba(2,6,23,0.12);cursor:pointer;z-index:90}
 .admin-drawer{position:fixed;right:16px;bottom:80px;width:380px;background:white;border-radius:12px;box-shadow:0 20px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:90}
 .form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
@@ -57,15 +47,10 @@ body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0
 textarea{min-height:100px;resize:vertical}
 .small{font-size:13px;color:var(--muted)}
 .block-row{display:flex;gap:8px;align-items:center}
-
-/* content block editor */
 .blocks-list{display:flex;flex-direction:column;gap:8px;margin:8px 0}
 .block-editor{border:1px dashed #e6e9ef;padding:8px;border-radius:8px;background:#fff}
-
-/* social */
 .share-row{display:flex;gap:8px;justify-content:center;margin-top:12px}
 .share-row button{background:#eee;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
-
 @media(max-width:420px){ .grid{grid-template-columns:1fr} .admin-drawer{width:95%} }
 </style>
 </head>
@@ -90,12 +75,10 @@ textarea{min-height:100px;resize:vertical}
     </div>
   </header>
 
-  <!-- Ticker 1: admin posted breaking texts (marquee) -->
   <div style="margin:8px 0">
     <div class="live-ticker" id="ticker1"><div class="ticker-inner" id="ticker1Inner">● LIVE</div></div>
   </div>
 
-  <!-- Ticker 2: last 5 headlines -->
   <div style="margin:6px 0">
     <div class="live-ticker" id="ticker2"><div class="ticker-inner" id="ticker2Inner">Loading headlines...</div></div>
   </div>
@@ -120,7 +103,6 @@ textarea{min-height:100px;resize:vertical}
   </div>
 </div>
 
-<!-- Article Modal -->
 <div id="modal" class="modal" role="dialog" aria-hidden="true">
   <div class="modal-card" id="modalCard">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -131,7 +113,6 @@ textarea{min-height:100px;resize:vertical}
   </div>
 </div>
 
-<!-- Admin FAB and Drawer -->
 <button id="adminFab" class="admin-fab">Admin</button>
 <div id="adminDrawer" class="admin-drawer" aria-hidden="true">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -139,13 +120,11 @@ textarea{min-height:100px;resize:vertical}
     <button id="closeAdmin" class="btn ghost">Close</button>
   </div>
 
-  <!-- Login/Logout -->
   <div id="loginArea" class="form-row">
     <button id="googleLogin" class="btn">Sign in with Google</button>
     <div id="loginMsg" class="small"></div>
   </div>
 
-  <!-- Branding (logo upload) -->
   <div id="brandingArea" style="display:none">
     <div class="form-row">
       <label class="small">Upload Logo</label>
@@ -154,7 +133,6 @@ textarea{min-height:100px;resize:vertical}
       <button id="uploadLogoBtn" class="btn">Upload Logo</button>
     </div>
 
-    <!-- Ticker1 manager -->
     <div style="border-top:1px dashed #eee;padding-top:10px;margin-top:8px">
       <h4 style="margin:6px 0">Breaking Text (Ticker 1)</h4>
       <div class="form-row">
@@ -165,13 +143,11 @@ textarea{min-height:100px;resize:vertical}
     </div>
   </div>
 
-  <!-- Article editor -->
   <div id="editorArea" style="display:none;margin-top:8px">
     <h4 style="margin:6px 0">Compose Article</h4>
     <div class="form-row"><label class="small">Title</label><input id="aTitle" class="input"></div>
     <div class="form-row"><label class="small">Category</label><input id="aCat" class="input" placeholder="Local"></div>
 
-    <!-- Blocks editor -->
     <div style="margin:8px 0">
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button id="addTextBlock" class="btn ghost">+ Text Block</button>
@@ -193,7 +169,6 @@ textarea{min-height:100px;resize:vertical}
   </div>
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -208,7 +183,7 @@ const firebaseConfig = {
   messagingSenderId:"619313835874",
   appId:"1:619313835874:web:e387e1297663f11fc2463b11fc2463b11fc2463b"
 };
-const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // << replace with your IMGBB key if needed
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // replace if needed
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 /* ===================================================== */
 
@@ -297,7 +272,6 @@ function render(){
   filtered.forEach(a=>{
     const el = document.createElement('article');
     el.className = 'card';
-    // pick first image block as thumbnail
     const thumb = (a.blocks || []).find(b=>b.type==='image')?.url || a.image || 'https://via.placeholder.com/1200x800?text=No+Image';
     el.innerHTML = `
       <img src="${thumb}" alt="">
@@ -313,7 +287,6 @@ function render(){
   });
 }
 
-/* --- open article modal and render blocks --- */
 function openModal(id){
   const a = ARTICLES.find(x=>x.id===id); if(!a) return;
   document.getElementById('modalTitle').textContent = a.title;
@@ -339,7 +312,6 @@ function openModal(id){
     }
     container.appendChild(blockWrap);
   });
-  // show modal
   document.getElementById('modal').style.display = 'flex';
 }
 function closeModal(){ document.getElementById('modal').style.display = 'none'; }
@@ -398,7 +370,6 @@ uploadLogoBtn.addEventListener('click', async ()=>{
   try{
     uploadLogoBtn.disabled = true; showLoginMsg('Uploading logo...');
     const url = await uploadToImgbb(logoFile.files[0]);
-    // save to settings in firestore
     await db.collection('settings').doc('branding').set({ logo: url }, { merge:true });
     siteLogoImg.src = url;
     logoUrl.value = url;
@@ -477,7 +448,6 @@ publishArticleBtn.addEventListener('click', async ()=>{
   const title = (aTitle.value||'').trim();
   if(!title){ alert('Title required'); return; }
   const cat = (aCat.value||'Local').trim();
-  // gather blocks
   const blockEls = Array.from(blocksList.children);
   const blocks = blockEls.map(el=>{
     if(el.querySelector('.block-text')){
@@ -500,9 +470,10 @@ publishArticleBtn.addEventListener('click', async ()=>{
       await db.collection('vasai_news').add(doc);
       showLoginMsg('Article published');
     }
-    // clear editor
-    aTitle.value=''; aCat.value=''; blocksList.innerHTML=''; aContent.value='';
-    loadAdminList();
+    // clear editor (removed non-existent aContent reference)
+    aTitle.value=''; aCat.value=''; blocksList.innerHTML='';
+    // refresh admin list
+    await loadAdminList();
   }catch(e){ console.error(e); showLoginMsg('Publish failed'); }
 });
 
@@ -512,36 +483,41 @@ clearEditorBtn.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; b
 /* admin list: show docs with edit/delete */
 async function loadAdminList(){
   adminList.innerHTML = '<div class="small">Loading...</div>';
-  const snap = await db.collection('vasai_news').orderBy('ts','desc').get();
-  adminList.innerHTML = '';
-  snap.forEach(doc=>{
-    const d = doc.data();
-    const row = document.createElement('div');
-    row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.gap='8px'; row.style.padding='6px 0';
-    row.innerHTML = `<div style="flex:1"><strong style="display:block">${d.title}</strong><div class="small">${d.category} • ${new Date(d.ts).toLocaleString()}</div></div>
-      <div style="display:flex;gap:6px">
-        <button class="btn ghost" data-id="${doc.id}">Edit</button>
-        <button class="btn" data-id="${doc.id}">Delete</button>
-      </div>`;
-    const editBtn = row.querySelector('.btn.ghost');
-    const delBtn = row.querySelector('.btn:not(.ghost)');
-    editBtn.onclick = async ()=>{
-      editingId = doc.id;
-      aTitle.value = d.title; aCat.value = d.category || '';
-      blocksList.innerHTML = '';
-      (d.blocks||[]).forEach(b=> {
-        if(b.type==='text') createTextBlock({text:b.text,color:b.color});
-        else createImageBlock({url:b.url});
-      });
-      showLoginMsg('Loaded for edit');
-    };
-    delBtn.onclick = async ()=>{
-      if(!confirm('Delete this article?')) return;
-      await db.collection('vasai_news').doc(doc.id).delete();
-      showLoginMsg('Deleted');
-    };
-    adminList.appendChild(row);
-  });
+  try{
+    const snap = await db.collection('vasai_news').orderBy('ts','desc').get();
+    adminList.innerHTML = '';
+    snap.forEach(doc=>{
+      const d = doc.data();
+      const row = document.createElement('div');
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.gap='8px'; row.style.padding='6px 0';
+      row.innerHTML = `<div style="flex:1"><strong style="display:block">${d.title}</strong><div class="small">${d.category} • ${new Date(d.ts).toLocaleString()}</div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn ghost" data-id="${doc.id}">Edit</button>
+          <button class="btn" data-id="${doc.id}">Delete</button>
+        </div>`;
+      const editBtn = row.querySelector('.btn.ghost');
+      const delBtn = row.querySelector('.btn:not(.ghost)');
+      editBtn.onclick = async ()=>{
+        editingId = doc.id;
+        aTitle.value = d.title; aCat.value = d.category || '';
+        blocksList.innerHTML = '';
+        (d.blocks||[]).forEach(b=> {
+          if(b.type==='text') createTextBlock({text:b.text,color:b.color});
+          else createImageBlock({url:b.url});
+        });
+        showLoginMsg('Loaded for edit');
+      };
+      delBtn.onclick = async ()=>{
+        if(!confirm('Delete this article?')) return;
+        try{
+          await db.collection('vasai_news').doc(doc.id).delete();
+          showLoginMsg('Deleted');
+          await loadAdminList();
+        }catch(err){ console.error(err); showLoginMsg('Delete failed'); }
+      };
+      adminList.appendChild(row);
+    });
+  }catch(err){ console.error(err); adminList.innerHTML = '<div class="small">Failed to load</div>'; }
 }
 
 /* --- realtime listeners: articles, breaking_texts, settings (logo) --- */
@@ -550,10 +526,8 @@ db.collection('vasai_news').orderBy('ts','desc').onSnapshot(snapshot=>{
   snapshot.forEach(doc=>{ const d=doc.data(); d.id=doc.id; arr.push(d); });
   ARTICLES = arr;
   render();
-  // ticker2: latest 5 headlines
   const last5 = ARTICLES.slice(0,5).map(x=> x.title );
   ticker2Inner.textContent = last5.join('   •   ');
-  // live-bar highlight latest title briefly
   if(ARTICLES[0]){ document.getElementById('ticker1').style.display='block'; }
 });
 
