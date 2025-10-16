@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"></script>
 <style>
 body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;overflow-x:hidden;}
 header{display:flex;align-items:center;justify-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;position:sticky;top:0;z-index:100;}
@@ -15,7 +16,7 @@ header{display:flex;align-items:center;justify-between;padding:8px 12px;backgrou
 header img{height:45px;width:45px;border-radius:6px;margin-right:8px;}
 header h1{text-shadow:1px 1px 3px #000;font-weight:800;font-size:20px;}
 .header-buttons{display:flex;gap:6px;}
-.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;text-shadow:1px 1px 2px #000;}
+.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;text-shadow:1px 1px 2px #000;cursor:pointer;}
 .ticker,.notice-ticker{color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
 .ticker{background:#1e40af;}
 .notice-ticker{background:#dc2626;}
@@ -64,7 +65,7 @@ header h1{text-shadow:1px 1px 3px #000;font-weight:800;font-size:20px;}
   <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Title">
   <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category">
   <textarea id="aText" class="border p-2 w-full mb-2 rounded" rows="4" placeholder="Write content..."></textarea>
-  <input id="aImg" class="border p-2 w-full mb-2 rounded" placeholder="Image URL (optional)">
+  <input type="file" id="aImgFile" class="border p-2 w-full mb-2 rounded">
   <div class="flex gap-2">
     <button id="publishBtn" class="bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
     <button id="clearBtn" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
@@ -83,9 +84,10 @@ header h1{text-shadow:1px 1px 3px #000;font-weight:800;font-size:20px;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, onSnapshot, orderBy, query, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, orderBy, query, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
-// 🔥 Firebase setup
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -97,8 +99,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-const ADMIN_EMAIL = "admin@example.com"; // ← change this to your real admin email
+const ADMIN_EMAIL = "admin@example.com"; // Change to your admin email
 let currentCategory = "";
 let editingId = null;
 
@@ -112,9 +115,8 @@ const noticeText = document.getElementById("noticeText");
 const tickerText = document.getElementById("tickerText");
 const modalBg = document.getElementById("modalBg");
 const modalClose = document.getElementById("modalClose");
-const modalContent = document.getElementById("modalContent");
 
-// 🔐 Auth
+// Auth
 loginBtn.onclick = async () => {
   const provider = new GoogleAuthProvider();
   await signInWithPopup(auth, provider);
@@ -137,96 +139,97 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// 📰 Load posts live
+// Posts live
 const postsRef = collection(db, "vasai_news");
-onSnapshot(query(postsRef, orderBy("time", "desc")), snap => {
-  const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+onSnapshot(query(postsRef, orderBy("time","desc")), snap => {
+  const posts = snap.docs.map(d=>({id:d.id,...d.data()}));
   renderPosts(posts);
   makeCategories(posts);
 });
 
-// 🚨 Notice live update
-const noticeRef = doc(db, "settings", "notice");
-onSnapshot(noticeRef, snap => {
-  if (snap.exists()) noticeText.textContent = snap.data().text;
+// Notice live
+const noticeRef = doc(db,"settings","notice");
+onSnapshot(noticeRef, snap=>{
+  if(snap.exists()) noticeText.textContent = snap.data().text;
 });
-document.getElementById("saveNoticeBtn").onclick = async () => {
+document.getElementById("saveNoticeBtn").onclick = async()=>{
   const val = document.getElementById("noticeInput").value;
-  await setDoc(noticeRef, { text: val });
+  await setDoc(noticeRef,{text:val});
   alert("Notice updated!");
 };
 
-// ➕ Publish post
-document.getElementById("publishBtn").onclick = async () => {
+// Publish post
+document.getElementById("publishBtn").onclick = async()=>{
   const title = aTitle.value.trim();
   const cat = aCat.value.trim();
   const text = aText.value.trim();
-  const img = aImg.value.trim();
-  if (!title || !text) return alert("Please fill title and content");
+  const file = aImgFile.files[0];
+  if(!title||!text) return alert("Title and content required");
 
-  if (editingId) {
-    await updateDoc(doc(db, "vasai_news", editingId), { title, category: cat, text, image: img });
-    editingId = null;
-  } else {
-    await addDoc(postsRef, { title, category: cat, text, image: img, time: Date.now() });
+  let imageUrl = "";
+  if(file){
+    const imgRef = ref(storage, "vasai_news/"+Date.now()+"_"+file.name);
+    await uploadBytes(imgRef,file);
+    imageUrl = await getDownloadURL(imgRef);
+  }
+
+  if(editingId){
+    await updateDoc(doc(db,"vasai_news",editingId),{title,category:cat,text,image:imageUrl,time:Date.now()});
+    editingId=null;
+  }else{
+    await addDoc(postsRef,{title,category:cat,text,image:imageUrl,time:Date.now()});
   }
   clearFields();
 };
 
-// 🧹 Clear
+// Clear fields
 document.getElementById("clearBtn").onclick = clearFields;
-function clearFields(){
-  aTitle.value=aCat.value=aText.value=aImg.value="";
-  editingId=null;
-}
+function clearFields(){ aTitle.value=aCat.value=aText.value=""; aImgFile.value=""; editingId=null; }
 
-// 🗂️ Category buttons
+// Categories
 function makeCategories(posts){
   const cats = [...new Set(posts.map(p=>p.category).filter(Boolean))];
   const btns = document.getElementById("categoryBtns");
-  btns.innerHTML = `<button class="${!currentCategory?"active":""}" onclick="filterCat('')">All</button>` +
+  btns.innerHTML=`<button class="${!currentCategory?"active":""}" onclick="filterCat('')">All</button>`+
     cats.map(c=>`<button class="${c===currentCategory?"active":""}" onclick="filterCat('${c}')">${c}</button>`).join("");
 }
-window.filterCat = (c)=>{ currentCategory=c; getDocs(postsRef).then(snap=>renderPosts(snap.docs.map(d=>({id:d.id,...d.data()})))); }
+window.filterCat=(c)=>{currentCategory=c;getDocs(postsRef).then(snap=>renderPosts(snap.docs.map(d=>({id:d.id,...d.data()}))))}
 
-// 📰 Render posts
+// Render posts
 function renderPosts(posts){
   postsArea.innerHTML="";
-  const filtered=currentCategory?posts.filter(p=>p.category===currentCategory):posts;
+  const filtered = currentCategory ? posts.filter(p=>p.category===currentCategory) : posts;
   filtered.forEach(d=>{
     const img = d.image || "https://via.placeholder.com/300x150?text=No+Image";
-    const excerpt = d.text.length>100?d.text.substring(0,100)+"...":d.text;
-    const card=document.createElement("div");
+    const excerpt = d.text.length>100 ? d.text.substring(0,100)+"..." : d.text;
+    const card = document.createElement("div");
     card.className="card";
     card.innerHTML=`<img src="${img}"><div class="card-body"><h3>${d.title}</h3><p>${excerpt}</p><button class='bg-blue-600 text-white px-2 py-1 rounded text-sm'>Read More</button></div>`;
-    card.onclick=()=>showModal(d);
+    card.onclick = ()=>showModal(d);
     postsArea.appendChild(card);
   });
+
+  // Update ticker dynamically
+  if(filtered.length) tickerText.textContent = filtered[0].title;
 }
 
-// 📖 Modal view
+// Modal
 function showModal(d){
   modalContent.innerHTML=`<h2 class="text-lg font-bold mb-2">${d.title}</h2><p class="text-sm text-gray-500 mb-2">${d.category||""}</p><img src="${d.image||""}" class="w-full mb-2 rounded"><p>${d.text}</p>`;
   const user=auth.currentUser;
   if(user && user.email===ADMIN_EMAIL){
     const editBtn=document.createElement("button");
-    editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2";
-    editBtn.textContent="Edit";
-    editBtn.onclick=()=>{editingId=d.id;aTitle.value=d.title;aCat.value=d.category;aText.value=d.text;aImg.value=d.image;modalBg.style.display='none';};
+    editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2"; editBtn.textContent="Edit";
+    editBtn.onclick=()=>{editingId=d.id;aTitle.value=d.title;aCat.value=d.category;aText.value=d.text;modalBg.style.display='none';};
     const delBtn=document.createElement("button");
-    delBtn.className="bg-red-500 text-white px-3 py-1 rounded";
-    delBtn.textContent="Delete";
+    delBtn.className="bg-red-500 text-white px-3 py-1 rounded"; delBtn.textContent="Delete";
     delBtn.onclick=async()=>{if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id)); modalBg.style.display='none';};
-    modalContent.appendChild(editBtn);
-    modalContent.appendChild(delBtn);
+    modalContent.appendChild(editBtn); modalContent.appendChild(delBtn);
   }
   modalBg.style.display="flex";
 }
-modalClose.onclick=()=>modalBg.style.display="none";
-modalBg.onclick=e=>{if(e.target===modalBg) modalBg.style.display="none";}
-
-// 🗞️ Ticker sample (dynamic)
-tickerText.textContent="Breaking News: Vasai Live portal launched for real-time updates!";
+modalClose.onclick = ()=>modalBg.style.display="none";
+modalBg.onclick = e=>{if(e.target===modalBg) modalBg.style.display="none";}
 </script>
 </body>
 </html>
