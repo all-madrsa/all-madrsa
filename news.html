@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;overflow-x:hidden;}
-header{display:flex;align-items:center;justify-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;}
+header{display:flex;align-items:center;justify-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;position:sticky;top:0;z-index:100;}
 .header-left{display:flex;align-items:center;}
 header img{height:50px;width:50px;border-radius:6px;margin-right:8px;}
 header h1{text-shadow:2px 2px 4px #000;font-weight:800;font-size:22px;}
@@ -17,39 +17,27 @@ header h1{text-shadow:2px 2px 4px #000;font-weight:800;font-size:22px;}
 .card img{width:100%;border-radius:6px;margin-bottom:6px;}
 .card h3{font-weight:700;margin-bottom:4px;font-size:18px;}
 .card .meta{font-size:12px;color:#6b7280;margin-bottom:6px;}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:50;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:200;}
 .modal{background:#fff;border-radius:10px;max-width:500px;width:90%;max-height:80%;overflow-y:auto;padding:16px;position:relative;}
 .modal-close{position:absolute;top:8px;right:8px;background:#f87171;color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;}
 textarea{resize:none;}
-.ticker, .notice-ticker{
-  position:sticky;
-  top:0;
-  z-index:100;
-  background:#1e40af;
-  color:white;
-  padding:6px;
-  overflow:hidden;
-  white-space:nowrap;
-  margin-bottom:6px;
-}
-.ticker span, .notice-ticker span{
-  display:inline-block;
-  padding-right:50px;
-  animation:scroll 15s linear infinite;
-}
+.ticker{background:#1e40af;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
+.ticker span{display:inline-block;padding-right:50px;animation:scroll 20s linear infinite;}
 @keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
 .category-btns{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;}
 .category-btns button{flex-shrink:0;padding:4px 8px;border-radius:6px;border:1px solid #3b82f6;color:#3b82f6;cursor:pointer;}
 .category-btns button.active{background:#3b82f6;color:white;}
 .social-share{display:flex;gap:6px;margin-top:8px;}
 .social-share button{flex:1;padding:4px;border-radius:6px;border:1px solid #3b82f6;color:#3b82f6;font-size:12px;}
+.notice-ticker{background:#dc2626;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
+.notice-ticker span{display:inline-block;padding-right:50px;animation:scroll 25s linear infinite;}
 </style>
 </head>
 <body class="p-2">
 
 <header>
   <div class="header-left">
-    <img src="https://i.postimg.cc/vTb8F94w/vasalive-png.jpg" alt="Logo">
+    <img src="file:///C:/Users/YourPC/Path/Logo.png" alt="Logo">
     <h1>Vasai Live News</h1>
   </div>
   <div class="header-buttons">
@@ -60,11 +48,15 @@ textarea{resize:none;}
   </div>
 </header>
 
-<!-- SCROLLING NEWS TICKER -->
+<!-- NEWS TICKER -->
 <div class="ticker"><span id="tickerText">Loading latest news...</span></div>
 
-<!-- SCROLLING NOTICE TICKER (Admin Editable) -->
-<div class="notice-ticker"><span id="noticeText">Admin notice will appear here...</span></div>
+<!-- NOTICE TICKER (ADMIN) -->
+<div class="notice-ticker"><span id="noticeText">Admin notice...</span></div>
+<div id="noticeEditor" class="hidden mb-2">
+  <input type="text" id="noticeInput" class="border p-1 w-full rounded" placeholder="Write notice">
+  <button id="saveNoticeBtn" class="bg-blue-700 text-white px-3 py-1 mt-1 rounded">Save Notice</button>
+</div>
 
 <!-- CATEGORY FILTER -->
 <div class="category-btns" id="categoryBtns"></div>
@@ -79,14 +71,9 @@ textarea{resize:none;}
     <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
   </div>
   <div id="blocksList" class="mb-3"></div>
-  <div class="flex gap-2 mb-2">
+  <div class="flex gap-2">
     <button id="publishBtn" class="bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
     <button id="clearBtn" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
-  </div>
-  <div class="mb-2">
-    <label class="font-semibold">Admin Notice:</label>
-    <input type="text" id="noticeInput" class="border p-2 w-full rounded" placeholder="Write notice here">
-    <button id="saveNotice" class="bg-purple-700 text-white px-3 py-1 rounded mt-1">Save Notice</button>
   </div>
 </section>
 
@@ -104,7 +91,7 @@ textarea{resize:none;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, deleteDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -125,6 +112,7 @@ const db = getFirestore(app);
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const editorArea = document.getElementById("editorArea");
+const noticeEditor = document.getElementById("noticeEditor");
 const blocksList = document.getElementById("blocksList");
 const postsArea = document.getElementById("postsArea");
 const aTitle = document.getElementById("aTitle");
@@ -138,7 +126,7 @@ const categoryBtns = document.getElementById("categoryBtns");
 const tickerText = document.getElementById("tickerText");
 const noticeText = document.getElementById("noticeText");
 const noticeInput = document.getElementById("noticeInput");
-const saveNotice = document.getElementById("saveNotice");
+const saveNoticeBtn = document.getElementById("saveNoticeBtn");
 
 let editingId = null;
 let currentCategory = null;
@@ -156,13 +144,36 @@ onAuthStateChanged(auth,user=>{
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
     editorArea.classList.remove("hidden");
+    noticeEditor.classList.remove("hidden");
   } else {
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
     editorArea.classList.add("hidden");
+    noticeEditor.classList.add("hidden");
   }
   loadPosts();
+  loadNotice();
 });
+
+// NOTICE FUNCTIONS
+async function loadNotice(){
+  const docRef = doc(db,"settings","notice");
+  const docSnap = await getDoc(docRef);
+  if(docSnap.exists()){
+    noticeText.innerText = docSnap.data().text;
+    noticeInput.value = docSnap.data().text;
+  } else {
+    noticeText.innerText = "";
+  }
+}
+saveNoticeBtn.onclick=async()=>{
+  const user=auth.currentUser;
+  if(!user || user.email!==ADMIN_EMAIL) return alert("Only admin can edit notice");
+  const text = noticeInput.value.trim();
+  await setDoc(doc(db,"settings","notice"),{text});
+  noticeText.innerText=text;
+  alert("Notice updated");
+};
 
 // ADD BLOCKS
 document.getElementById("addTextBtn").onclick = ()=>{
@@ -184,14 +195,6 @@ document.getElementById("addImageBtn").onclick = ()=>{
       else throw new Error("Upload failed");
     }catch(e){ alert("Upload failed"); console.error(e);}
   });
-};
-
-// ADMIN NOTICE SAVE
-saveNotice.onclick=()=>{
-  const text=noticeInput.value.trim();
-  if(!text) return alert("Notice empty");
-  noticeText.innerText=text;
-  alert("Notice updated!");
 };
 
 // PUBLISH
