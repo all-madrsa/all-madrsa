@@ -1,583 +1,227 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Vasai Live News — Admin Powered</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vasai Live News — Admin Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-:root{
-  --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#0ea5a4; --title:#072a4b; --live:#d32f2f;
-}
-*{box-sizing:border-box}
-body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:#0b2540; -webkit-font-smoothing:antialiased;}
-.container{max-width:1100px;margin:12px auto;padding:0 12px;}
-.header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;}
-.brand{display:flex;align-items:center;gap:12px}
-.logo-wrap{display:flex;align-items:center;gap:12px}
-.logo-img{height:44px;width:44px;background:#fff;border-radius:8px;object-fit:contain}
-.logo-text{font-weight:700;font-size:18px}
-.controls{display:flex;gap:8px;align-items:center}
-.search{padding:8px 12px;border-radius:10px;border:1px solid #e6e9ef;background:white;min-width:160px}
-.btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
-.btn.ghost{background:transparent;color:var(--title);border:1px solid #e6e9ef}
-.live-ticker{background:#111;color:#fff;padding:8px 12px;border-radius:8px;overflow:hidden;white-space:nowrap}
-.ticker-inner{display:inline-block;padding-left:100%;animation:marquee 18s linear infinite}
-@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-
-.top-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
-.categories{display:flex;gap:8px;flex-wrap:wrap}
-.category{background:white;padding:6px 10px;border-radius:999px;border:1px solid #e9eef6;color:var(--muted);cursor:pointer}
-.category.active{border-color:var(--accent);color:var(--accent);box-shadow:0 6px 18px rgba(14,165,164,0.08)}
-
-.grid{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
-@media(min-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
-.card{background:var(--card);border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);display:flex;flex-direction:column;cursor:pointer;min-height:220px}
-.card img{width:100%;height:160px;object-fit:cover}
-.card-body{padding:12px;flex:1;display:flex;flex-direction:column}
-.kicker{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700}
-.title{font-size:15px;font-weight:700;color:var(--title);margin:0 0 8px}
-.excerpt{font-size:13px;color:#344155;flex:1}
-.meta{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:12px;color:var(--muted)}
-
-.footer{margin:20px 0;padding:14px;border-radius:10px;background:white;text-align:center;color:var(--muted);box-shadow:0 6px 30px rgba(2,6,23,0.03)}
-
-/* modal / article view */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.55);z-index:80;padding:12px}
-.modal-card{background:white;border-radius:10px;max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:16px;box-shadow:0 30px 90px rgba(2,6,23,0.5)}
-.modal-card .block img{max-width:100%;height:auto;border-radius:8px;margin:6px 0}
-.modal-close{position:absolute;right:18px;top:18px;background:#fff;border-radius:8px;border:none;padding:8px 10px;cursor:pointer}
-
-/* admin drawer */
-.admin-fab{position:fixed;right:16px;bottom:16px;background:var(--accent);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 20px 50px rgba(2,6,23,0.12);cursor:pointer;z-index:90}
-.admin-drawer{position:fixed;right:16px;bottom:80px;width:380px;background:white;border-radius:12px;box-shadow:0 20px 80px rgba(2,6,23,0.12);padding:12px;display:none;z-index:90}
-.form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.input,textarea,select{padding:8px;border-radius:8px;border:1px solid #e6e9ef;width:100%}
-textarea{min-height:100px;resize:vertical}
-.small{font-size:13px;color:var(--muted)}
-.block-row{display:flex;gap:8px;align-items:center}
-
-/* content block editor */
-.blocks-list{display:flex;flex-direction:column;gap:8px;margin:8px 0}
-.block-editor{border:1px dashed #e6e9ef;padding:8px;border-radius:8px;background:#fff}
-
-/* social */
-.share-row{display:flex;gap:8px;justify-content:center;margin-top:12px}
-.share-row button{background:#eee;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
-
-@media(max-width:420px){ .grid{grid-template-columns:1fr} .admin-drawer{width:95%} }
+  body{font-family:Arial,sans-serif;background:#f6f7fb;color:#0b2540;}
+  .card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);padding:12px;margin-bottom:12px;}
+  .card h3{font-weight:700;margin-bottom:4px;}
+  .card .meta{font-size:12px;color:#6b7280;margin-bottom:6px;}
 </style>
 </head>
-<body>
-<div class="container">
-  <header class="header">
-    <div class="brand">
-      <div class="logo-wrap">
-        <img id="siteLogo" class="logo-img" src="https://via.placeholder.com/120x120?text=V" alt="logo">
-        <div>
-          <div class="logo-text">Vasai Live</div>
-          <div class="small">Tez • Saaf • Vasai ki Khabar</div>
-        </div>
-      </div>
-    </div>
+<body class="p-4">
 
-    <div class="controls">
-      <input id="search" class="search" placeholder="Search headlines or content...">
-      <button id="clearBtn" class="btn ghost">Clear</button>
-      <button id="loginBtn" class="btn">Admin Login</button>
-      <button id="logoutBtn" class="btn" style="display:none">Logout</button>
-    </div>
-  </header>
-
-  <!-- Ticker 1: admin posted breaking texts (marquee) -->
-  <div style="margin:8px 0">
-    <div class="live-ticker" id="ticker1"><div class="ticker-inner" id="ticker1Inner">● LIVE</div></div>
+<header class="flex justify-between items-center mb-4">
+  <h1 class="text-xl font-bold">Vasai Live News</h1>
+  <div>
+    <button id="loginBtn" class="bg-blue-700 text-white px-3 py-1 rounded">Admin Login</button>
+    <button id="logoutBtn" class="hidden bg-red-600 text-white px-3 py-1 rounded">Logout</button>
   </div>
+</header>
 
-  <!-- Ticker 2: last 5 headlines -->
-  <div style="margin:6px 0">
-    <div class="live-ticker" id="ticker2"><div class="ticker-inner" id="ticker2Inner">Loading headlines...</div></div>
+<!-- ADMIN PANEL -->
+<section id="editorArea" class="hidden p-4 mb-4 bg-white rounded shadow">
+  <h2 class="font-semibold mb-2">Create / Edit Post</h2>
+  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Title">
+  <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category">
+  
+  <div class="flex gap-2 mb-2">
+    <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text Block</button>
+    <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image Block</button>
   </div>
-
-  <div class="top-row">
-    <div class="categories" id="cats"></div>
-    <div style="margin-left:auto" class="small"><span id="countBadge">0</span> Articles</div>
+  
+  <div id="blocksList" class="mb-3"></div>
+  
+  <div class="flex gap-2">
+    <button id="publishBtn" class="bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
+    <button id="clearBtn" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
   </div>
+</section>
 
-  <main id="mainGrid">
-    <div class="grid" id="grid"></div>
-  </main>
+<!-- PUBLIC POSTS LIST -->
+<section id="postsArea"></section>
 
-  <div class="footer">
-    <div>Vasai Live • © <span id="year"></span></div>
-    <div class="share-row">
-      <button onclick="shareWhatsApp()">WhatsApp</button>
-      <button onclick="shareFacebook()">Facebook</button>
-      <button onclick="shareX()">X</button>
-      <button onclick="shareTelegram()">Telegram</button>
-    </div>
-  </div>
-</div>
+<!-- Firebase v9 modular -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-<!-- Article Modal -->
-<div id="modal" class="modal" role="dialog" aria-hidden="true">
-  <div class="modal-card" id="modalCard">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <h2 id="modalTitle"></h2>
-    <div id="modalKicker" class="kicker"></div>
-    <div id="modalMeta" class="small"></div>
-    <div id="modalBlocks"></div>
-  </div>
-</div>
-
-<!-- Admin FAB and Drawer -->
-<button id="adminFab" class="admin-fab">Admin</button>
-<div id="adminDrawer" class="admin-drawer" aria-hidden="true">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <strong>Admin (zaradigitalseva@gmail.com)</strong>
-    <button id="closeAdmin" class="btn ghost">Close</button>
-  </div>
-
-  <!-- Login/Logout -->
-  <div id="loginArea" class="form-row">
-    <button id="googleLogin" class="btn">Sign in with Google</button>
-    <div id="loginMsg" class="small"></div>
-  </div>
-
-  <!-- Branding (logo upload) -->
-  <div id="brandingArea" style="display:none">
-    <div class="form-row">
-      <label class="small">Upload Logo</label>
-      <input id="logoFile" type="file" accept="image/*">
-      <input id="logoUrl" class="input" readonly placeholder="Logo URL will appear here">
-      <button id="uploadLogoBtn" class="btn">Upload Logo</button>
-    </div>
-
-    <!-- Ticker1 manager -->
-    <div style="border-top:1px dashed #eee;padding-top:10px;margin-top:8px">
-      <h4 style="margin:6px 0">Breaking Text (Ticker 1)</h4>
-      <div class="form-row">
-        <textarea id="breakingText" placeholder="Enter breaking text (short)"></textarea>
-        <button id="saveBreaking" class="btn">Save Breaking Text</button>
-        <div id="breakingMsg" class="small"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Article editor -->
-  <div id="editorArea" style="display:none;margin-top:8px">
-    <h4 style="margin:6px 0">Compose Article</h4>
-    <div class="form-row"><label class="small">Title</label><input id="aTitle" class="input"></div>
-    <div class="form-row"><label class="small">Category</label><input id="aCat" class="input" placeholder="Local"></div>
-
-    <!-- Blocks editor -->
-    <div style="margin:8px 0">
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button id="addTextBlock" class="btn ghost">+ Text Block</button>
-        <button id="addImageBlock" class="btn ghost">+ Image Block</button>
-      </div>
-      <div class="blocks-list" id="blocksList"></div>
-    </div>
-
-    <div style="display:flex;gap:8px;justify-content:space-between">
-      <button id="publishArticle" class="btn">Publish Article</button>
-      <button id="clearEditor" class="btn ghost">Clear</button>
-    </div>
-
-    <hr style="margin:12px 0">
-    <div>
-      <strong>Existing Articles</strong>
-      <div id="adminList" style="margin-top:8px"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-/* ================= CONFIG (edit these) ================= */
 const firebaseConfig = {
-  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain:"all-madrsa.firebaseapp.com",
-  projectId:"all-madrsa",
-  storageBucket:"all-madrsa.appspot.com",
-  messagingSenderId:"619313835874",
-  appId:"1:619313835874:web:e387e1297663f11fc2463b11fc2463b11fc2463b"
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:312ec03e62fd49d3d92e60"
 };
-const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43"; // << replace with your IMGBB key if needed
+
+const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4"; // aapka imgbb key
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-/* ===================================================== */
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-/* --- UI refs --- */
-document.getElementById('year').textContent = new Date().getFullYear();
-const grid = document.getElementById('grid');
-const catsDiv = document.getElementById('cats');
-const countBadge = document.getElementById('countBadge');
-const searchInput = document.getElementById('search');
-const clearBtn = document.getElementById('clearBtn');
-const ticker1Inner = document.getElementById('ticker1Inner');
-const ticker2Inner = document.getElementById('ticker2Inner');
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const editorArea = document.getElementById("editorArea");
+const blocksList = document.getElementById("blocksList");
+const postsArea = document.getElementById("postsArea");
 
-const adminFab = document.getElementById('adminFab');
-const adminDrawer = document.getElementById('adminDrawer');
-const closeAdmin = document.getElementById('closeAdmin');
-const googleLoginBtn = document.getElementById('googleLogin');
-const loginMsg = document.getElementById('loginMsg');
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
+const aTitle = document.getElementById("aTitle");
+const aCat = document.getElementById("aCat");
+const publishBtn = document.getElementById("publishBtn");
+const clearBtn = document.getElementById("clearBtn");
 
-const brandingArea = document.getElementById('brandingArea');
-const logoFile = document.getElementById('logoFile');
-const logoUrl = document.getElementById('logoUrl');
-const uploadLogoBtn = document.getElementById('uploadLogoBtn');
-
-const breakingTextInput = document.getElementById('breakingText');
-const saveBreaking = document.getElementById('saveBreaking');
-const breakingMsg = document.getElementById('breakingMsg');
-
-const editorArea = document.getElementById('editorArea');
-const aTitle = document.getElementById('aTitle');
-const aCat = document.getElementById('aCat');
-const blocksList = document.getElementById('blocksList');
-const addTextBlockBtn = document.getElementById('addTextBlock');
-const addImageBlockBtn = document.getElementById('addImageBlock');
-const publishArticleBtn = document.getElementById('publishArticle');
-const clearEditorBtn = document.getElementById('clearEditor');
-const adminList = document.getElementById('adminList');
-
-const siteLogoImg = document.getElementById('siteLogo');
-
-/* --- state --- */
-let ARTICLES = []; // from firestore (live)
-let ACTIVE_CAT = 'All';
-let SEARCH = '';
 let editingId = null;
-const DEFAULT_CATS = ['All','Local','Politics','Technology','Sports','Business','Entertainment'];
 
-/* --- helpers --- */
-function uid(p='n'){ return p + '_' + Math.random().toString(36).slice(2,9); }
-function showLoginMsg(m){ loginMsg.textContent = m; setTimeout(()=>{ if(loginMsg.textContent===m) loginMsg.textContent=''; },2500); }
-function showBreakingMsg(m){ breakingMsg.textContent = m; setTimeout(()=>{ if(breakingMsg.textContent===m) breakingMsg.textContent=''; },2500); }
+// 🔹 LOGIN / LOGOUT
+loginBtn.onclick = async () => {
+  const provider = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, provider); } 
+  catch(e){ alert("Login failed"); console.error(e); }
+};
+logoutBtn.onclick = async () => await signOut(auth);
 
-/* --- categories render --- */
-function renderCategories(){
-  catsDiv.innerHTML = '';
-  DEFAULT_CATS.forEach(c=>{
-    const el = document.createElement('button');
-    el.className = 'category' + (c===ACTIVE_CAT?' active':'');
-    el.textContent = c;
-    el.onclick = ()=>{ ACTIVE_CAT=c; render(); renderCategories(); }
-    catsDiv.appendChild(el);
-  });
-}
-
-/* --- render grid --- */
-function render(){
-  const filtered = ARTICLES.filter(a=>{
-    if(ACTIVE_CAT!=='All' && a.category!==ACTIVE_CAT) return false;
-    if(SEARCH){
-      const s = SEARCH.toLowerCase();
-      return (a.title + (a.blocks||[]).map(b=> b.type==='text'?b.text:'').join('') + (a.kicker||'') + a.category).toLowerCase().includes(s);
-    }
-    return true;
-  }).sort((a,b)=>b.ts - a.ts);
-
-  grid.innerHTML = '';
-  countBadge.textContent = filtered.length;
-  if(filtered.length===0){ grid.innerHTML = '<div style="padding:18px;background:white;border-radius:8px;text-align:center;">Koi article nahi mila</div>'; return; }
-
-  filtered.forEach(a=>{
-    const el = document.createElement('article');
-    el.className = 'card';
-    // pick first image block as thumbnail
-    const thumb = (a.blocks || []).find(b=>b.type==='image')?.url || a.image || 'https://via.placeholder.com/1200x800?text=No+Image';
-    el.innerHTML = `
-      <img src="${thumb}" alt="">
-      <div class="card-body">
-        <div class="kicker">${a.kicker || a.category}</div>
-        <h3 class="title">${a.title}</h3>
-        <div class="excerpt">${( (a.blocks||[]).map(b=> b.type==='text'?b.text:'').join(' ').slice(0,120) )}...</div>
-        <div class="meta"><div>${a.category}</div><div style="margin-left:auto">${new Date(a.ts).toLocaleString()}</div></div>
-      </div>
-    `;
-    el.addEventListener('click', ()=> openModal(a.id));
-    grid.appendChild(el);
-  });
-}
-
-/* --- open article modal and render blocks --- */
-function openModal(id){
-  const a = ARTICLES.find(x=>x.id===id); if(!a) return;
-  document.getElementById('modalTitle').textContent = a.title;
-  document.getElementById('modalKicker').textContent = a.kicker || a.category;
-  document.getElementById('modalMeta').textContent = `${a.category} • ${new Date(a.ts).toLocaleString()}`;
-  const blocks = a.blocks || [];
-  const container = document.getElementById('modalBlocks');
-  container.innerHTML = '';
-  blocks.forEach(b=>{
-    const blockWrap = document.createElement('div');
-    blockWrap.className = 'block';
-    if(b.type==='text'){
-      const p = document.createElement('p');
-      p.style.color = b.color || '#000';
-      p.style.whiteSpace = 'pre-wrap';
-      p.textContent = b.text || '';
-      blockWrap.appendChild(p);
-    } else if(b.type==='image'){
-      const img = document.createElement('img');
-      img.src = b.url || '';
-      img.alt = '';
-      blockWrap.appendChild(img);
-    }
-    container.appendChild(blockWrap);
-  });
-  // show modal
-  document.getElementById('modal').style.display = 'flex';
-}
-function closeModal(){ document.getElementById('modal').style.display = 'none'; }
-
-/* --- search --- */
-searchInput.addEventListener('input', e=>{ SEARCH = e.target.value.trim(); render(); });
-clearBtn.addEventListener('click', ()=>{ searchInput.value=''; SEARCH=''; ACTIVE_CAT='All'; render(); renderCategories(); });
-
-/* --- admin drawer open/close --- */
-adminFab.addEventListener('click', ()=>{ adminDrawer.style.display = 'block'; adminDrawer.setAttribute('aria-hidden','false'); });
-closeAdmin.addEventListener('click', ()=>{ adminDrawer.style.display='none'; adminDrawer.setAttribute('aria-hidden','true'); });
-
-/* --- auth: google sign-in restricted to ADMIN_EMAIL --- */
-googleLoginBtn.addEventListener('click', async ()=>{
-  try{
-    const provider = new firebase.auth.GoogleAuthProvider();
-    const res = await auth.signInWithPopup(provider);
-    if(res.user && res.user.email===ADMIN_EMAIL){
-      showLoginMsg('Logged in as admin');
-      brandingArea.style.display = 'block';
-      editorArea.style.display = 'block';
-      loadAdminList();
-    } else {
-      showLoginMsg('Not authorized'); await auth.signOut();
-    }
-  }catch(e){ console.error(e); showLoginMsg('Login failed'); }
-});
-
-loginBtn.addEventListener('click', ()=> adminDrawer.style.display='block');
-logoutBtn.addEventListener('click', async ()=>{ await auth.signOut(); showLoginMsg('Logged out'); brandingArea.style.display='none'; editorArea.style.display='none'; });
-
-auth.onAuthStateChanged(user=>{
+// 🔹 AUTH STATE
+onAuthStateChanged(auth, user => {
   if(user && user.email===ADMIN_EMAIL){
-    loginBtn.style.display='none'; logoutBtn.style.display='inline-block';
-    brandingArea.style.display='block'; editorArea.style.display='block';
-    loadAdminList();
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+    editorArea.classList.remove("hidden");
   } else {
-    loginBtn.style.display='inline-block'; logoutBtn.style.display='none';
-    brandingArea.style.display='none'; editorArea.style.display='none';
+    loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
+    editorArea.classList.add("hidden");
   }
+  loadPosts();
 });
 
-/* --- IMGBB upload helper --- */
-async function uploadToImgbb(file){
-  const form = new FormData();
-  form.append('image', file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body:form });
-  const data = await res.json();
-  if(data && data.success) return data.data.url;
-  throw new Error('Upload failed');
-}
+// 🔹 ADD BLOCKS
+document.getElementById("addTextBtn").onclick = () => {
+  const t = document.createElement("textarea");
+  t.className = "border w-full p-2 rounded mt-2";
+  t.placeholder = "Text...";
+  blocksList.appendChild(t);
+};
+document.getElementById("addImageBtn").onclick = () => {
+  const div = document.createElement("div");
+  div.className = "mt-2";
+  const inputFile = document.createElement("input");
+  inputFile.type = "file";
+  inputFile.accept = "image/*";
+  inputFile.className = "border p-1 rounded w-full";
+  const urlInput = document.createElement("input");
+  urlInput.type = "text";
+  urlInput.placeholder = "Uploaded URL";
+  urlInput.className = "border p-1 rounded w-full mt-1";
+  div.appendChild(inputFile);
+  div.appendChild(urlInput);
+  blocksList.appendChild(div);
 
-/* --- logo upload --- */
-uploadLogoBtn.addEventListener('click', async ()=>{
-  if(!logoFile.files.length){ alert('Please select file'); return; }
-  try{
-    uploadLogoBtn.disabled = true; showLoginMsg('Uploading logo...');
-    const url = await uploadToImgbb(logoFile.files[0]);
-    // save to settings in firestore
-    await db.collection('settings').doc('branding').set({ logo: url }, { merge:true });
-    siteLogoImg.src = url;
-    logoUrl.value = url;
-    showLoginMsg('Logo uploaded');
-  }catch(e){ console.error(e); showLoginMsg('Logo upload failed'); }
-  uploadLogoBtn.disabled = false;
-});
-
-/* --- breaking text save (Ticker1) --- */
-saveBreaking.addEventListener('click', async ()=>{
-  const txt = (breakingTextInput.value||'').trim();
-  if(!txt){ alert('Enter breaking text'); return; }
-  try{
-    await db.collection('breaking_texts').add({ text: txt, ts: Date.now() });
-    breakingTextInput.value = '';
-    showBreakingMsg('Saved');
-  }catch(e){ console.error(e); showBreakingMsg('Save failed'); }
-});
-
-/* --- blocks editor functionality --- */
-function createTextBlock(initial={text:'',color:'#000000'}) {
-  const id = uid('b');
-  const wrap = document.createElement('div');
-  wrap.className = 'block-editor';
-  wrap.dataset.blockId = id;
-  wrap.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <strong>Text Block</strong>
-      <div style="display:flex;gap:8px">
-        <input type="color" value="${initial.color||'#000000'}" class="block-color" title="Text color">
-        <button class="btn ghost small remove-block">Remove</button>
-      </div>
-    </div>
-    <textarea class="block-text input" placeholder="Write text...">${initial.text||''}</textarea>
-  `;
-  wrap.querySelector('.remove-block').addEventListener('click', ()=> wrap.remove());
-  blocksList.appendChild(wrap);
-}
-
-function createImageBlock(initial={url:''}){
-  const id = uid('b');
-  const wrap = document.createElement('div');
-  wrap.className = 'block-editor';
-  wrap.dataset.blockId = id;
-  wrap.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <strong>Image Block</strong>
-      <div style="display:flex;gap:8px">
-        <button class="btn ghost small remove-block">Remove</button>
-      </div>
-    </div>
-    <input type="file" class="block-file input" accept="image/*">
-    <input class="block-url input" placeholder="Uploaded image URL" readonly value="${initial.url||''}">
-    <div class="small">Select file to upload to IMGBB (auto-fill URL)</div>
-  `;
-  const fileInput = wrap.querySelector('.block-file');
-  const urlInput = wrap.querySelector('.block-url');
-  wrap.querySelector('.remove-block').addEventListener('click', ()=> wrap.remove());
-  fileInput.addEventListener('change', async ()=>{
-    if(!fileInput.files.length) return;
+  inputFile.addEventListener("change", async () => {
+    if(!inputFile.files.length) return;
+    const file = inputFile.files[0];
+    const form = new FormData();
+    form.append("image", file);
     try{
-      showLoginMsg('Uploading image...');
-      const url = await uploadToImgbb(fileInput.files[0]);
-      urlInput.value = url;
-      showLoginMsg('Image uploaded');
-    }catch(e){ console.error(e); showLoginMsg('Upload failed'); }
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:"POST", body:form });
+      const data = await res.json();
+      if(data.success){ urlInput.value = data.data.url; alert("Image uploaded"); }
+      else throw new Error("Upload failed");
+    } catch(e){ alert("Upload failed"); console.error(e); }
   });
-  blocksList.appendChild(wrap);
-}
+};
 
-addTextBlockBtn.addEventListener('click', ()=> createTextBlock());
-addImageBlockBtn.addEventListener('click', ()=> createImageBlock());
+// 🔹 PUBLISH / EDIT POST
+publishBtn.onclick = async () => {
+  const user = auth.currentUser;
+  if(!user || user.email!==ADMIN_EMAIL) return alert("Only admin can post!");
 
-/* --- publish article: gather blocks from editor and save to Firestore --- */
-publishArticleBtn.addEventListener('click', async ()=>{
-  const title = (aTitle.value||'').trim();
-  if(!title){ alert('Title required'); return; }
-  const cat = (aCat.value||'Local').trim();
-  // gather blocks
-  const blockEls = Array.from(blocksList.children);
-  const blocks = blockEls.map(el=>{
-    if(el.querySelector('.block-text')){
-      return { type:'text', text: el.querySelector('.block-text').value || '', color: el.querySelector('.block-color').value || '#000' };
-    } else {
-      return { type:'image', url: el.querySelector('.block-url').value || '' };
-    }
-  }).filter(b=> (b.type==='text' && b.text.trim()) || (b.type==='image' && b.url.trim()) );
-  if(blocks.length===0){ alert('Add at least one text or image block'); return; }
-  const doc = {
-    title, category:cat, kicker: (blocks.find(b=>b.type==='text') && (blocks.find(b=>b.type==='text').text||'').slice(0,60)) || cat,
-    blocks, ts: Date.now()
-  };
+  const title = aTitle.value.trim();
+  const category = aCat.value.trim();
+  if(!title) return alert("Title required");
+
+  const blocks = [];
+  for(const el of blocksList.children){
+    if(el.tagName==="TEXTAREA") blocks.push({type:"text", text:el.value});
+    else if(el.querySelector("input[type=text]")) blocks.push({type:"image", url:el.querySelector("input[type=text]").value});
+  }
+
+  if(blocks.length===0) return alert("Add text or image block");
+
   try{
     if(editingId){
-      await db.collection('vasai_news').doc(editingId).update(doc);
-      editingId = null;
-      showLoginMsg('Article updated');
+      await updateDoc(doc(db,"vasai_news",editingId), { title, category, blocks });
+      editingId=null;
+      alert("Post updated!");
     } else {
-      await db.collection('vasai_news').add(doc);
-      showLoginMsg('Article published');
+      await addDoc(collection(db,"vasai_news"), { title, category, blocks, ts:Date.now(), author:user.email });
+      alert("Post published!");
     }
-    // clear editor
-    aTitle.value=''; aCat.value=''; blocksList.innerHTML=''; aContent.value='';
-    loadAdminList();
-  }catch(e){ console.error(e); showLoginMsg('Publish failed'); }
-});
+    aTitle.value=""; aCat.value=""; blocksList.innerHTML="";
+    loadPosts();
+  } catch(e){ alert("Publish failed"); console.error(e); }
+};
 
-/* clear editor */
-clearEditorBtn.addEventListener('click', ()=>{ aTitle.value=''; aCat.value=''; blocksList.innerHTML=''; editingId=null; });
+// 🔹 CLEAR EDITOR
+clearBtn.onclick = () => { aTitle.value=""; aCat.value=""; blocksList.innerHTML=""; editingId=null; };
 
-/* admin list: show docs with edit/delete */
-async function loadAdminList(){
-  adminList.innerHTML = '<div class="small">Loading...</div>';
-  const snap = await db.collection('vasai_news').orderBy('ts','desc').get();
-  adminList.innerHTML = '';
-  snap.forEach(doc=>{
-    const d = doc.data();
-    const row = document.createElement('div');
-    row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.gap='8px'; row.style.padding='6px 0';
-    row.innerHTML = `<div style="flex:1"><strong style="display:block">${d.title}</strong><div class="small">${d.category} • ${new Date(d.ts).toLocaleString()}</div></div>
-      <div style="display:flex;gap:6px">
-        <button class="btn ghost" data-id="${doc.id}">Edit</button>
-        <button class="btn" data-id="${doc.id}">Delete</button>
-      </div>`;
-    const editBtn = row.querySelector('.btn.ghost');
-    const delBtn = row.querySelector('.btn:not(.ghost)');
-    editBtn.onclick = async ()=>{
-      editingId = doc.id;
-      aTitle.value = d.title; aCat.value = d.category || '';
-      blocksList.innerHTML = '';
-      (d.blocks||[]).forEach(b=> {
-        if(b.type==='text') createTextBlock({text:b.text,color:b.color});
-        else createImageBlock({url:b.url});
-      });
-      showLoginMsg('Loaded for edit');
-    };
-    delBtn.onclick = async ()=>{
-      if(!confirm('Delete this article?')) return;
-      await db.collection('vasai_news').doc(doc.id).delete();
-      showLoginMsg('Deleted');
-    };
-    adminList.appendChild(row);
+// 🔹 LOAD POSTS
+async function loadPosts(){
+  postsArea.innerHTML="";
+  const q = query(collection(db,"vasai_news"), orderBy("ts","desc"));
+  const snap = await getDocs(q);
+  snap.forEach(docSnap => {
+    const d = docSnap.data();
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `<h3>${d.title}</h3>
+      <div class="meta">${d.category} • ${new Date(d.ts).toLocaleString()}</div>`;
+    d.blocks.forEach(b=>{
+      if(b.type==="text") div.innerHTML += `<p>${b.text}</p>`;
+      else if(b.type==="image") div.innerHTML += `<img src="${b.url}" class="mt-2 w-full rounded">`;
+    });
+
+    // Admin edit/delete buttons
+    const user = auth.currentUser;
+    if(user && user.email===ADMIN_EMAIL){
+      const btnDiv = document.createElement("div"); btnDiv.className="flex gap-2 mt-2";
+      const editBtn = document.createElement("button"); editBtn.className="bg-gray-200 px-2 py-1 rounded"; editBtn.textContent="Edit";
+      const delBtn = document.createElement("button"); delBtn.className="bg-red-500 text-white px-2 py-1 rounded"; delBtn.textContent="Delete";
+
+      editBtn.onclick = () => {
+        editingId = docSnap.id;
+        aTitle.value=d.title; aCat.value=d.category;
+        blocksList.innerHTML="";
+        d.blocks.forEach(b=>{
+          if(b.type==="text"){ const t=document.createElement("textarea"); t.className="border w-full p-2 rounded mt-2"; t.value=b.text; blocksList.appendChild(t);}
+          else if(b.type==="image"){ 
+            const div = document.createElement("div"); 
+            div.className="mt-2"; 
+            const inputFile = document.createElement("input"); inputFile.type="file"; inputFile.accept="image/*"; inputFile.className="border p-1 rounded w-full"; 
+            const urlInput = document.createElement("input"); urlInput.type="text"; urlInput.className="border p-1 rounded w-full mt-1"; urlInput.value=b.url;
+            div.appendChild(inputFile); div.appendChild(urlInput); blocksList.appendChild(div);
+          }
+        });
+        window.scrollTo({top:0,behavior:"smooth"});
+      };
+      delBtn.onclick = async () => {
+        if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",docSnap.id)).then(()=>loadPosts());
+      };
+
+      btnDiv.appendChild(editBtn);
+      btnDiv.appendChild(delBtn);
+      div.appendChild(btnDiv);
+    }
+
+    postsArea.appendChild(div);
   });
 }
-
-/* --- realtime listeners: articles, breaking_texts, settings (logo) --- */
-db.collection('vasai_news').orderBy('ts','desc').onSnapshot(snapshot=>{
-  const arr=[];
-  snapshot.forEach(doc=>{ const d=doc.data(); d.id=doc.id; arr.push(d); });
-  ARTICLES = arr;
-  render();
-  // ticker2: latest 5 headlines
-  const last5 = ARTICLES.slice(0,5).map(x=> x.title );
-  ticker2Inner.textContent = last5.join('   •   ');
-  // live-bar highlight latest title briefly
-  if(ARTICLES[0]){ document.getElementById('ticker1').style.display='block'; }
-});
-
-db.collection('breaking_texts').orderBy('ts','desc').limit(10).onSnapshot(snapshot=>{
-  const arr = [];
-  snapshot.forEach(doc=> arr.push(doc.data().text));
-  if(arr.length) ticker1Inner.textContent = arr.join('   •   ');
-  else ticker1Inner.textContent = '● LIVE';
-});
-
-// settings -> branding logo
-db.collection('settings').doc('branding').onSnapshot(doc=>{
-  const data = doc.data();
-  if(data && data.logo){ siteLogoImg.src = data.logo; logoUrl.value = data.logo; }
-});
-
-/* --- initial --- */
-renderCategories(); render();
-
-/* --- social share helpers --- */
-function shareWhatsApp(){ window.open('https://wa.me/?text=' + encodeURIComponent(document.title + ' ' + location.href), '_blank'); }
-function shareFacebook(){ window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(location.href), '_blank'); }
-function shareX(){ window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(document.title + ' ' + location.href), '_blank'); }
-function shareTelegram(){ window.open('https://t.me/share/url?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(document.title), '_blank'); }
-
 </script>
 </body>
 </html>
