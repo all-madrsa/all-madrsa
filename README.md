@@ -1,4 +1,4 @@
-[# Zara Samajik Seva Sanstha Dashboard](https://all-madrsa.netlify.app/)
+https://all-madrsa.netlify.app/
 - Firebase Realtime Database based accounting system
 - Google login authentication
 - Admin email: zaradigitalseva@gmail.com
