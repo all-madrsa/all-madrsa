@@ -19,13 +19,13 @@
 
 <!-- ADMIN PANEL -->
 <section id="editorArea" class="hidden p-4 border-t">
-  <h2 class="text-lg font-semibold mb-2">Create / Edit Post</h2>
+  <h2 class="text-lg font-semibold mb-2">Create Post (Admin Only)</h2>
   <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Post Title" />
   <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category" />
   <div id="blocksList" class="mb-3"></div>
-  <div class="flex gap-2 mb-2">
-    <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text</button>
-    <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
+  <div class="flex gap-2">
+    <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text Block</button>
+    <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image Block</button>
   </div>
   <button id="publishBtn" class="mt-3 bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
 </section>
@@ -34,9 +34,9 @@
 <section id="postsArea" class="p-4 grid gap-3"></section>
 
 <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -58,6 +58,7 @@ const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const editorArea = document.getElementById("editorArea");
 const postsArea = document.getElementById("postsArea");
+const blocksList = document.getElementById("blocksList");
 
 // 🔹 LOGIN / LOGOUT
 loginBtn.onclick = () => {
@@ -73,9 +74,9 @@ auth.onAuthStateChanged(user => {
     logoutBtn.classList.remove("hidden");
     editorArea.classList.remove("hidden");
   } else {
-    editorArea.classList.add("hidden");
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
+    editorArea.classList.add("hidden");
   }
   loadPosts();
 });
@@ -88,18 +89,16 @@ async function loadPosts(){
     const d = doc.data();
     const div = document.createElement("div");
     div.className = "p-3 bg-white rounded shadow";
-    div.innerHTML = `
-      <h3 class="font-semibold text-lg">${d.title}</h3>
+    div.innerHTML = `<h3 class="font-semibold text-lg">${d.title}</h3>
       <p class="text-sm text-gray-600">${d.category} • ${new Date(d.ts).toLocaleString()}</p>
-      <p class="mt-2">${(d.blocks || []).map(b => b.text || "").join("<br>")}</p>
+      <p class="mt-2">${(d.blocks||[]).map(b => b.type==='text'?b.text:'').join("<br>")}</p>
+      ${ (d.blocks||[]).map(b => b.type==='image'?`<img src="${b.url}" class="mt-2 rounded w-full max-w-md">`:'').join('') }
     `;
     postsArea.appendChild(div);
   });
 }
 
-// 🔹 BLOCKS
-const blocksList = document.getElementById("blocksList");
-
+// 🔹 ADD TEXT BLOCK
 document.getElementById("addTextBtn").onclick = () => {
   const inp = document.createElement("textarea");
   inp.className = "border w-full p-2 rounded mt-2";
@@ -107,40 +106,48 @@ document.getElementById("addTextBtn").onclick = () => {
   blocksList.appendChild(inp);
 };
 
+// 🔹 ADD IMAGE BLOCK
 document.getElementById("addImageBtn").onclick = () => {
-  const div = document.createElement("div");
-  div.className = "mt-2";
-  div.innerHTML = `
-    <input type="file" class="block-file border p-2 w-full rounded" accept="image/*">
-    <input type="text" class="block-url border p-2 w-full rounded mt-1" placeholder="Uploaded image URL" readonly>
-  `;
-  const fileInput = div.querySelector(".block-file");
-  const urlInput = div.querySelector(".block-url");
-  fileInput.addEventListener("change", async ()=>{
-    if(!fileInput.files.length) return;
+  const wrapper = document.createElement("div");
+  wrapper.className = "mt-2 flex gap-2 items-center";
+  const fileInp = document.createElement("input");
+  fileInp.type = "file";
+  fileInp.accept = "image/*";
+  const urlInp = document.createElement("input");
+  urlInp.type = "text";
+  urlInp.placeholder = "Uploaded image URL";
+  urlInp.className = "border p-2 rounded w-full";
+  wrapper.appendChild(fileInp);
+  wrapper.appendChild(urlInp);
+  blocksList.appendChild(wrapper);
+
+  fileInp.onchange = async () => {
+    if(!fileInp.files.length) return;
+    const file = fileInp.files[0];
+    const form = new FormData();
+    form.append('image', file);
     try{
-      const form = new FormData();
-      form.append("image", fileInput.files[0]);
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:"POST", body:form });
+      urlInp.value = "Uploading...";
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body: form });
       const data = await res.json();
-      if(data.success) urlInput.value = data.data.url;
-      else throw new Error("Upload failed");
-    }catch(e){ alert("Upload failed"); console.error(e); }
-  });
-  blocksList.appendChild(div);
+      if(data.success) urlInp.value = data.data.url;
+      else urlInp.value = "";
+    }catch(e){ urlInp.value = ""; alert("Upload failed"); }
+  };
 };
 
 // 🔹 PUBLISH POST
-document.getElementById("publishBtn").onclick = async ()=>{
+document.getElementById("publishBtn").onclick = async () => {
   const user = auth.currentUser;
-  if(!user || user.email !== ADMIN_EMAIL){ alert("Only admin can post!"); return; }
+  if(!user || user.email !== ADMIN_EMAIL) return alert("Only admin can post!");
   const title = document.getElementById("aTitle").value;
   const category = document.getElementById("aCat").value;
   const blocks = [];
-  blocksList.querySelectorAll("textarea").forEach(t=>blocks.push({type:"text", text:t.value}));
-  blocksList.querySelectorAll(".block-url").forEach(u=>{ if(u.value) blocks.push({type:"image", url:u.value}); });
+  blocksList.querySelectorAll("textarea").forEach(t => blocks.push({ type:'text', text:t.value }));
+  blocksList.querySelectorAll("input[type=text]").forEach(t => { if(t.value) blocks.push({ type:'image', url:t.value }) });
+
   if(!title) return alert("Title required");
-  await db.collection("vasai_news").add({ title, category, blocks, ts: Date.now(), author:user.email });
+  await db.collection("vasai_news").add({ title, category, blocks, ts: Date.now(), author: user.email });
   alert("Post published!");
   document.getElementById("aTitle").value = "";
   document.getElementById("aCat").value = "";
