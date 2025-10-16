@@ -1,14 +1,17 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Vasai Live — Admin Post Management</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vasai Live — Admin News Portal</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: Inter, sans-serif; }
+  .block-editor.drag-over { border: 2px dashed #0ea5a4; }
+</style>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
-<!-- HEADER -->
 <header class="bg-blue-800 text-white p-4 flex justify-between items-center">
   <h1 class="text-xl font-semibold">Vasai Live News</h1>
   <div>
@@ -17,26 +20,26 @@
   </div>
 </header>
 
-<!-- ADMIN PANEL -->
 <section id="editorArea" class="hidden p-4 border-t">
-  <h2 class="text-lg font-semibold mb-2">Create / Edit Post (Admin Only)</h2>
-  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Post Title (Heading)" />
+  <h2 class="text-lg font-semibold mb-2">Create / Edit Post</h2>
+  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Post Title" />
   <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category" />
-  <div id="blocksList" class="mb-3"></div>
+  
   <div class="flex gap-2 mb-2">
-    <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text Block</button>
-    <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image Block</button>
+    <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text</button>
+    <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
   </div>
-  <button id="publishBtn" class="mt-2 bg-blue-700 text-white px-4 py-2 rounded">Publish / Update</button>
+  
+  <div id="blocksList"></div>
+  
+  <button id="publishBtn" class="mt-3 bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
 </section>
 
-<!-- PUBLIC POSTS LIST -->
 <section id="postsArea" class="p-4 grid gap-3"></section>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -52,7 +55,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
+const IMGBB_KEY = "YOUR_IMGBB_KEY"; // Replace with your IMGBB key
 
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -60,15 +63,11 @@ const editorArea = document.getElementById("editorArea");
 const postsArea = document.getElementById("postsArea");
 const blocksList = document.getElementById("blocksList");
 
-let editingPostId = null; // 🔹 for edit
-
-// 🔹 LOGIN / LOGOUT
-loginBtn.onclick = () => { const provider = new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(provider); };
+loginBtn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 logoutBtn.onclick = () => auth.signOut();
 
-// 🔹 AUTH CHECK
 auth.onAuthStateChanged(user => {
-  if(user && user.email === ADMIN_EMAIL){
+  if(user && user.email===ADMIN_EMAIL){
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
     editorArea.classList.remove("hidden");
@@ -80,134 +79,153 @@ auth.onAuthStateChanged(user => {
   loadPosts();
 });
 
-// 🔹 LOAD POSTS
-async function loadPosts(){
-  postsArea.innerHTML = "";
-  const snap = await db.collection("vasai_news").orderBy("ts","desc").get();
-  snap.forEach(doc => {
-    const d = doc.data();
-    const div = document.createElement("div");
-    div.className = "p-3 bg-white rounded shadow";
-    let blocksHTML = (d.blocks||[]).map(b => b.type==='text'?`<p class="mt-1">${b.text}</p>`:'').join('');
-    blocksHTML += (d.blocks||[]).map(b => b.type==='image'?`<img src="${b.url}" class="mt-2 rounded w-full max-w-md">`:'').join('');
-
-    div.innerHTML = `
-      <h3 class="font-bold text-lg">${d.title}</h3>
-      <p class="text-sm text-gray-600">${d.category} • ${new Date(d.ts).toLocaleString()}</p>
-      ${blocksHTML}
-      ${auth.currentUser && auth.currentUser.email === ADMIN_EMAIL ? `
-        <div class="mt-2 flex gap-2">
-          <button onclick="editPost('${doc.id}')" class="bg-yellow-400 px-2 py-1 rounded text-white">Edit</button>
-          <button onclick="deletePost('${doc.id}')" class="bg-red-600 px-2 py-1 rounded text-white">Delete</button>
-        </div>
-      `:''}
-    `;
-    postsArea.appendChild(div);
-  });
+// --- Drag & Drop Blocks ---
+function makeBlocksSortable() {
+  let dragSrcEl = null;
+  function handleDragStart(e){ dragSrcEl=this; e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/html', this.innerHTML); this.style.opacity='0.4'; }
+  function handleDragOver(e){ if(e.preventDefault)e.preventDefault(); e.dataTransfer.dropEffect='move'; return false; }
+  function handleDragEnter(){ this.classList.add('drag-over'); }
+  function handleDragLeave(){ this.classList.remove('drag-over'); }
+  function handleDrop(e){ if(e.stopPropagation)e.stopPropagation(); if(dragSrcEl!==this){ dragSrcEl.innerHTML=this.innerHTML; this.innerHTML=e.dataTransfer.getData('text/html'); attachBlockEvents(dragSrcEl); attachBlockEvents(this);} return false;}
+  function handleDragEnd(){ this.style.opacity='1'; blocksList.querySelectorAll('.block-editor').forEach(b=>b.classList.remove('drag-over')); }
+  function attachBlockEvents(block){
+    block.setAttribute('draggable','true');
+    block.ondragstart=handleDragStart;
+    block.ondragover=handleDragOver;
+    block.ondragenter=handleDragEnter;
+    block.ondragleave=handleDragLeave;
+    block.ondrop=handleDrop;
+    block.ondragend=handleDragEnd;
+  }
+  blocksList.querySelectorAll('.block-editor').forEach(block=>attachBlockEvents(block));
 }
 
-// 🔹 ADD TEXT BLOCK
-document.getElementById("addTextBtn").onclick = () => {
-  const inp = document.createElement("textarea");
-  inp.className = "border w-full p-2 rounded mt-2";
-  inp.placeholder = "Write text...";
-  blocksList.appendChild(inp);
-};
+// --- Create Blocks ---
+function createTextBlock(initial={text:''}){
+  const wrap=document.createElement('div');
+  wrap.className='block-editor border p-2 mt-2 rounded bg-white';
+  wrap.innerHTML=`
+    <textarea class="block-text w-full p-2 rounded" placeholder="Text block...">${initial.text||''}</textarea>
+    <button class="btn remove-block mt-1 bg-red-500 text-white px-2 py-1 rounded">Remove</button>
+  `;
+  wrap.querySelector('.remove-block').onclick = ()=>wrap.remove();
+  blocksList.appendChild(wrap);
+  makeBlocksSortable();
+}
 
-// 🔹 ADD IMAGE BLOCK
-document.getElementById("addImageBtn").onclick = () => {
-  const wrapper = document.createElement("div");
-  wrapper.className = "mt-2 flex gap-2 items-center";
-  const fileInp = document.createElement("input");
-  fileInp.type = "file";
-  fileInp.accept = "image/*";
-  const urlInp = document.createElement("input");
-  urlInp.type = "text";
-  urlInp.placeholder = "Uploaded image URL";
-  urlInp.className = "border p-2 rounded w-full";
-  wrapper.appendChild(fileInp);
-  wrapper.appendChild(urlInp);
-  blocksList.appendChild(wrapper);
-
-  fileInp.onchange = async () => {
-    if(!fileInp.files.length) return;
-    const file = fileInp.files[0];
-    const form = new FormData();
-    form.append('image', file);
+function createImageBlock(initial={url:''}){
+  const wrap=document.createElement('div');
+  wrap.className='block-editor border p-2 mt-2 rounded bg-white';
+  wrap.innerHTML=`
+    <input type="file" class="block-file w-full mb-1" accept="image/*">
+    <input type="text" class="block-url w-full p-2 rounded mb-1" placeholder="Image URL" value="${initial.url||''}" readonly>
+    <button class="btn remove-block bg-red-500 text-white px-2 py-1 rounded">Remove</button>
+  `;
+  wrap.querySelector('.remove-block').onclick=()=>wrap.remove();
+  const fileInput=wrap.querySelector('.block-file');
+  const urlInput=wrap.querySelector('.block-url');
+  fileInput.addEventListener('change', async ()=>{
+    if(!fileInput.files.length)return;
     try{
-      urlInp.value = "Uploading...";
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body: form });
-      const data = await res.json();
-      if(data.success) urlInp.value = data.data.url;
-      else urlInp.value = "";
-    }catch(e){ urlInp.value = ""; alert("Upload failed"); }
-  };
-};
+      const form=new FormData();
+      form.append('image',fileInput.files[0]);
+      const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {method:'POST', body:form});
+      const data=await res.json();
+      if(data.success){ urlInput.value=data.data.url; alert('Image uploaded'); }
+      else throw new Error('Upload failed');
+    }catch(e){ console.error(e); alert('Upload failed'); }
+  });
+  blocksList.appendChild(wrap);
+  makeBlocksSortable();
+}
 
-// 🔹 PUBLISH / UPDATE POST
-document.getElementById("publishBtn").onclick = async () => {
+document.getElementById('addTextBtn').onclick=()=>createTextBlock();
+document.getElementById('addImageBtn').onclick=()=>createImageBlock();
+
+// --- Publish ---
+document.getElementById('publishBtn').onclick=async ()=>{
   const user = auth.currentUser;
-  if(!user || user.email !== ADMIN_EMAIL) return alert("Only admin can post!");
-
-  const title = document.getElementById("aTitle").value;
-  const category = document.getElementById("aCat").value;
-  const blocks = [];
-  blocksList.querySelectorAll("textarea").forEach(t => blocks.push({ type:'text', text:t.value }));
-  blocksList.querySelectorAll("input[type=text]").forEach(t => { if(t.value) blocks.push({ type:'image', url:t.value }) });
-
-  if(!title) return alert("Title required");
-
-  if(editingPostId){ // 🔹 update
-    await db.collection("vasai_news").doc(editingPostId).set({ title, category, blocks, ts: Date.now(), author: user.email });
-    editingPostId = null;
-  } else { // 🔹 new post
-    await db.collection("vasai_news").add({ title, category, blocks, ts: Date.now(), author: user.email });
-  }
-
-  alert("Post saved!");
-  document.getElementById("aTitle").value = "";
-  document.getElementById("aCat").value = "";
-  blocksList.innerHTML = "";
+  if(!user || user.email!==ADMIN_EMAIL){ alert('Only admin can post!'); return; }
+  const title=document.getElementById('aTitle').value.trim();
+  const category=document.getElementById('aCat').value.trim();
+  if(!title)return alert('Title required');
+  const blocks=[...blocksList.querySelectorAll('.block-editor')].map(b=>{
+    const t=b.querySelector('.block-text');
+    if(t)return {type:'text', text:t.value};
+    const img=b.querySelector('.block-url');
+    if(img)return {type:'image', url:img.value};
+    return null;
+  }).filter(x=>x);
+  await db.collection('vasai_news').add({title, category, blocks, ts: Date.now(), author:user.email});
+  alert('Post published!');
+  document.getElementById('aTitle').value='';
+  document.getElementById('aCat').value='';
+  blocksList.innerHTML='';
   loadPosts();
 };
 
-// 🔹 EDIT POST
-window.editPost = async (id) => {
-  const doc = await db.collection("vasai_news").doc(id).get();
-  const data = doc.data();
-  if(!data) return;
-  editingPostId = id;
-  document.getElementById("aTitle").value = data.title;
-  document.getElementById("aCat").value = data.category;
-  blocksList.innerHTML = "";
-  data.blocks.forEach(b => {
-    if(b.type==='text'){
-      const t = document.createElement("textarea");
-      t.className="border w-full p-2 rounded mt-2";
-      t.value=b.text;
-      blocksList.appendChild(t);
-    } else if(b.type==='image'){
-      const wrapper = document.createElement("div");
-      wrapper.className="mt-2 flex gap-2 items-center";
-      const urlInp = document.createElement("input");
-      urlInp.type="text";
-      urlInp.className="border p-2 rounded w-full";
-      urlInp.value=b.url;
-      wrapper.appendChild(urlInp);
-      blocksList.appendChild(wrapper);
-    }
+// --- Edit/Delete ---
+async function editPost(id){
+  const doc=await db.collection('vasai_news').doc(id).get();
+  const d=doc.data();
+  document.getElementById('aTitle').value=d.title;
+  document.getElementById('aCat').value=d.category;
+  blocksList.innerHTML='';
+  (d.blocks||[]).forEach(b=>{
+    if(b.type==='text') createTextBlock({text:b.text});
+    else if(b.type==='image') createImageBlock({url:b.url});
   });
-};
+  document.getElementById('publishBtn').onclick=async ()=>{
+    const blocks=[...blocksList.querySelectorAll('.block-editor')].map(b=>{
+      const t=b.querySelector('.block-text'); if(t)return {type:'text',text:t.value};
+      const img=b.querySelector('.block-url'); if(img)return {type:'image',url:img.value};
+      return null;
+    }).filter(x=>x);
+    await db.collection('vasai_news').doc(id).set({
+      title: document.getElementById('aTitle').value,
+      category: document.getElementById('aCat').value,
+      blocks, ts: Date.now(), author: user.email
+    });
+    alert('Post updated!'); blocksList.innerHTML=''; loadPosts();
+  };
+}
 
-// 🔹 DELETE POST
-window.deletePost = async (id) => {
-  if(confirm("Are you sure to delete this post?")){
-    await db.collection("vasai_news").doc(id).delete();
-    loadPosts();
-  }
-};
+async function deletePost(id){
+  if(confirm('Delete this post?')){ await db.collection('vasai_news').doc(id).delete(); loadPosts(); }
+}
 
-loadPosts();
+// --- Load posts ---
+async function loadPosts(){
+  postsArea.innerHTML='';
+  const snap=await db.collection('vasai_news').orderBy('ts','desc').get();
+  snap.forEach(doc=>{
+    const d=doc.data();
+    const div=document.createElement('div');
+    div.className='p-3 bg-white rounded shadow';
+    div.innerHTML=`
+      <h3 class="font-semibold text-lg">${d.title}</h3>
+      <p class="text-sm text-gray-600">${d.category} • ${new Date(d.ts).toLocaleString()}</p>
+      <div class="mt-2">${(d.blocks||[]).map(b=>{
+        if(b.type==='text') return `<p>${b.text}</p>`;
+        if(b.type==='image') return `<img src="${b.url}" class="my-2 w-full rounded">`;
+        return '';
+      }).join('')}</div>
+    `;
+    if(auth.currentUser && auth.currentUser.email===ADMIN_EMAIL){
+      const editBtn=document.createElement('button');
+      editBtn.className='bg-yellow-400 px-2 py-1 rounded mr-2 mt-2';
+      editBtn.textContent='Edit';
+      editBtn.onclick=()=>editPost(doc.id);
+      const delBtn=document.createElement('button');
+      delBtn.className='bg-red-500 text-white px-2 py-1 rounded mt-2';
+      delBtn.textContent='Delete';
+      delBtn.onclick=()=>deletePost(doc.id);
+      div.appendChild(editBtn);
+      div.appendChild(delBtn);
+    }
+    postsArea.appendChild(div);
+  });
+}
 </script>
 </body>
 </html>
