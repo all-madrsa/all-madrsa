@@ -6,8 +6,8 @@
 <title>Vasai Live News</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;}
-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;}
+body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;margin:0;padding:0;}
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1e40af;color:white;border-radius:0;margin-bottom:6px;}
 .header-left{display:flex;align-items:center;}
 header img{height:50px;width:50px;border-radius:6px;margin-right:8px;}
 header h1{text-shadow:2px 2px 4px #000;font-weight:800;font-size:22px;}
@@ -22,10 +22,12 @@ header h1{text-shadow:2px 2px 4px #000;font-weight:800;font-size:22px;}
 .modal-close{position:absolute;top:8px;right:8px;background:#f87171;color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;}
 textarea{resize:none;}
 .ticker{background:#1e40af;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
+.ticker span{display:inline-block;padding-right:50px;animation:scroll 15s linear infinite;}
 .notice-ticker{background:#f59e0b;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
-.ticker span, .notice-ticker span{display:inline-block;padding-right:50px;animation:scroll 15s linear infinite;}
+.notice-ticker span{display:inline-block;padding-right:50px;animation:scroll 20s linear infinite;}
 @keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
-.category-btns{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;}
+@keyframes noticeScroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.category-btns{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding:0 4px;}
 .category-btns button{flex-shrink:0;padding:4px 8px;border-radius:6px;border:1px solid #3b82f6;color:#3b82f6;cursor:pointer;}
 .category-btns button.active{background:#3b82f6;color:white;}
 .social-share{display:flex;gap:6px;margin-top:8px;}
@@ -34,9 +36,10 @@ textarea{resize:none;}
 </head>
 <body class="p-2">
 
+<!-- HEADER -->
 <header>
   <div class="header-left">
-    <img src="YOUR_LOGO_PATH_HERE" alt="Logo">
+    <img src="https://i.postimg.cc/vTb8F94w/vasalive-png.jpg" alt="Logo">
     <h1>Vasai Live News</h1>
   </div>
   <div class="header-buttons">
@@ -47,9 +50,18 @@ textarea{resize:none;}
   </div>
 </header>
 
-<!-- SCROLLING TICKERS -->
+<!-- NEWS TICKER -->
 <div class="ticker"><span id="tickerText">Loading latest news...</span></div>
-<div class="notice-ticker"><span id="noticeText">Admin notice here...</span></div>
+
+<!-- ADMIN NOTICE PANEL -->
+<section id="noticeEditor" class="hidden p-2 mb-2 bg-orange-500 rounded shadow text-white">
+  <h2 class="font-semibold mb-2">Admin Notice</h2>
+  <textarea id="noticeInput" class="w-full p-2 rounded text-black" placeholder="Type notice here..."></textarea>
+  <button id="updateNoticeBtn" class="bg-yellow-600 px-3 py-1 rounded mt-2 text-white">Update Notice</button>
+</section>
+
+<!-- NOTICE TICKER -->
+<div class="notice-ticker"><span id="noticeText">No notices yet...</span></div>
 
 <!-- CATEGORY FILTER -->
 <div class="category-btns" id="categoryBtns"></div>
@@ -116,7 +128,12 @@ const modalContent = document.getElementById("modalContent");
 const modalClose = document.getElementById("modalClose");
 const categoryBtns = document.getElementById("categoryBtns");
 const tickerText = document.getElementById("tickerText");
+
+// Notice
+const noticeEditor = document.getElementById("noticeEditor");
+const noticeInput = document.getElementById("noticeInput");
 const noticeText = document.getElementById("noticeText");
+const updateNoticeBtn = document.getElementById("updateNoticeBtn");
 
 let editingId = null;
 let currentCategory = null;
@@ -134,17 +151,25 @@ onAuthStateChanged(auth,user=>{
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
     editorArea.classList.remove("hidden");
+    noticeEditor.classList.remove("hidden");
   } else {
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
     editorArea.classList.add("hidden");
+    noticeEditor.classList.add("hidden");
   }
   loadPosts();
 });
 
+// ADMIN NOTICE UPDATE
+updateNoticeBtn.onclick = ()=>{
+  noticeText.textContent = noticeInput.value || "No notice";
+  noticeInput.value = "";
+};
+
 // ADD BLOCKS
 document.getElementById("addTextBtn").onclick = ()=>{ const t=document.createElement("textarea"); t.className="border w-full p-2 rounded mt-2"; t.placeholder="Text..."; blocksList.appendChild(t); };
-document.getElementById("addImageBtn").onclick = ()=>{ 
+document.getElementById("addImageBtn").onclick = ()=>{
   const div=document.createElement("div"); div.className="mt-2";
   const inputFile=document.createElement("input"); inputFile.type="file"; inputFile.accept="image/*"; inputFile.className="border p-1 rounded w-full";
   const urlInput=document.createElement("input"); urlInput.type="text"; urlInput.placeholder="Uploaded URL"; urlInput.className="border p-1 rounded w-full mt-1";
@@ -195,7 +220,6 @@ async function loadPosts(){
   snap.forEach(docSnap=>{ const d=docSnap.data(); d.id=docSnap.id; posts.push(d); if(d.category) categories.add(d.category); });
   tickerText.innerHTML = posts.slice(0,5).map(p=>p.title).join(" • ");
 
-  // CATEGORY BUTTONS
   const allBtn=document.createElement("button"); allBtn.textContent="All"; allBtn.className="active";
   allBtn.onclick=()=>{ currentCategory=null; Array.from(categoryBtns.children).forEach(b=>b.classList.remove("active")); allBtn.classList.add("active"); renderPosts(posts);}
   categoryBtns.appendChild(allBtn);
