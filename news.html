@@ -7,31 +7,12 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;}
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:10px 12px;
-  background:#1e40af;
-  color:white;
-  border-radius:6px;
-  margin-bottom:6px;
-}
-header .logo-text{
-  font-weight:900;
-  font-size:22px;
-  color:#fff;
-  text-shadow:
-     2px 2px 0 #1f2937,
-     4px 4px 0 #3b82f6,
-     6px 6px 0 #60a5fa;
-}
-header img{
-  height:40px;
-  width:40px;
-  border-radius:6px;
-  margin-right:8px;
-}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;}
+header img{height:50px;width:50px;border-radius:6px;margin-right:8px;}
+header h1{font-weight:700;font-size:22px;text-shadow:2px 2px 5px #000;}
+header .btn3d{padding:6px 10px;margin-left:6px;font-weight:700;color:#fff;text-shadow:2px 2px 2px #000;border-radius:4px;border:2px solid #fff;cursor:pointer;transform:translateY(0);transition:0.2s;}
+header .btn3d:hover{transform:translateY(-2px);box-shadow:2px 2px 5px #000;}
+header #loginBtn{padding:4px 8px;font-size:12px;}
 .card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);padding:12px;margin-bottom:12px;cursor:pointer;}
 .card img{width:100%;border-radius:6px;margin-bottom:6px;}
 .card h3{font-weight:700;margin-bottom:4px;font-size:18px;}
@@ -40,7 +21,7 @@ header img{
 .modal{background:#fff;border-radius:10px;max-width:500px;width:90%;max-height:80%;overflow-y:auto;padding:16px;position:relative;}
 .modal-close{position:absolute;top:8px;right:8px;background:#f87171;color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;}
 textarea{resize:none;}
-.ticker{background:#1e40af;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
+.ticker{background:#1e40af;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;font-weight:700;}
 .ticker span{display:inline-block;padding-right:50px;animation:scroll 15s linear infinite;}
 @keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
 .category-btns{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;}
@@ -54,51 +35,38 @@ textarea{resize:none;}
 
 <header>
   <div class="flex items-center">
-    <img id="logoImg" src="" alt="Logo">
-    <div class="logo-text">Vasai Live News</div>
+    <img src="https://i.ibb.co/7vYrGfz/vasai-logo.png" alt="Logo">
+    <h1>Vasai Live News</h1>
   </div>
-  <div>
-    <button id="loginBtn" class="bg-blue-700 text-white px-3 py-1 rounded">Admin Login</button>
-    <button id="logoutBtn" class="hidden bg-red-600 text-white px-3 py-1 rounded">Logout</button>
+  <div class="flex items-center">
+    <button id="loginBtn" class="bg-blue-700 text-white rounded">Admin Login</button>
+    <button id="logoutBtn" class="hidden bg-red-600 text-white rounded px-2 py-1 text-sm">Logout</button>
+    <button class="btn3d">About</button>
+    <button class="btn3d">Contact</button>
   </div>
 </header>
 
-<!-- SCROLLING TEXT (Ticker) -->
-<div class="ticker">
-  <span id="tickerText">Loading latest news...</span>
-</div>
+<div class="ticker"><span id="tickerText">Loading latest news...</span></div>
 
-<!-- ADMIN SCROLLING TEXT EDITOR -->
-<section id="tickerEditor" class="hidden mb-2">
-  <input id="tickerInput" class="border p-2 w-full rounded" placeholder="Enter scrolling text for header">
-  <button id="saveTicker" class="bg-blue-700 text-white px-3 py-1 rounded mt-1">Save</button>
-</section>
-
-<!-- CATEGORY FILTER -->
 <div class="category-btns" id="categoryBtns"></div>
 
-<!-- ADMIN POST PANEL -->
 <section id="editorArea" class="hidden p-2 mb-4 bg-white rounded shadow">
   <h2 class="font-semibold mb-2">Create / Edit Post</h2>
   <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Title">
   <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category">
-  
   <div class="flex gap-2 mb-2">
     <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text</button>
     <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
   </div>
   <div id="blocksList" class="mb-3"></div>
-  
   <div class="flex gap-2">
     <button id="publishBtn" class="bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
     <button id="clearBtn" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
   </div>
 </section>
 
-<!-- POSTS LIST -->
 <section id="postsArea"></section>
 
-<!-- MODAL -->
 <div id="modalBg" class="modal-bg flex">
   <div class="modal">
     <button id="modalClose" class="modal-close">X</button>
@@ -109,7 +77,7 @@ textarea{resize:none;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -119,7 +87,6 @@ const firebaseConfig = {
   messagingSenderId: "619313835874",
   appId: "1:619313835874:web:312ec03e62fd49d3d92e60"
 };
-
 const IMGBB_API_KEY = "c4bc97c133edb76e062de6d070df67e4";
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
@@ -127,37 +94,30 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const editorArea = document.getElementById("editorArea");
-const blocksList = document.getElementById("blocksList");
-const postsArea = document.getElementById("postsArea");
-const aTitle = document.getElementById("aTitle");
-const aCat = document.getElementById("aCat");
-const publishBtn = document.getElementById("publishBtn");
-const clearBtn = document.getElementById("clearBtn");
-const modalBg = document.getElementById("modalBg");
-const modalContent = document.getElementById("modalContent");
-const modalClose = document.getElementById("modalClose");
-const categoryBtns = document.getElementById("categoryBtns");
-const tickerText = document.getElementById("tickerText");
-const tickerEditor = document.getElementById("tickerEditor");
-const tickerInput = document.getElementById("tickerInput");
-const saveTicker = document.getElementById("saveTicker");
-const logoImg = document.getElementById("logoImg");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+const editorArea=document.getElementById("editorArea");
+const blocksList=document.getElementById("blocksList");
+const postsArea=document.getElementById("postsArea");
+const aTitle=document.getElementById("aTitle");
+const aCat=document.getElementById("aCat");
+const publishBtn=document.getElementById("publishBtn");
+const clearBtn=document.getElementById("clearBtn");
+const modalBg=document.getElementById("modalBg");
+const modalContent=document.getElementById("modalContent");
+const modalClose=document.getElementById("modalClose");
+const categoryBtns=document.getElementById("categoryBtns");
+const tickerText=document.getElementById("tickerText");
 
-let editingId = null;
-let currentCategory = null;
-
-// FIXED LOGO - user can set manually
-logoImg.src = "https://i.ibb.co/7vYrGfz/vasai-logo.png"; // yaha apna logo ka link
+let editingId=null;
+let currentCategory=null;
 
 // LOGIN / LOGOUT
-loginBtn.onclick = async () => {
-  const provider = new GoogleAuthProvider();
-  try { await signInWithPopup(auth, provider); } catch(e){ alert("Login failed"); console.error(e);}
+loginBtn.onclick = async ()=>{
+  const provider=new GoogleAuthProvider();
+  try{ await signInWithPopup(auth,provider); }catch(e){alert("Login failed"); console.error(e);}
 };
-logoutBtn.onclick = async ()=>await signOut(auth);
+logoutBtn.onclick=async()=>await signOut(auth);
 
 // AUTH STATE
 onAuthStateChanged(auth,user=>{
@@ -165,32 +125,109 @@ onAuthStateChanged(auth,user=>{
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
     editorArea.classList.remove("hidden");
-    tickerEditor.classList.remove("hidden");
   } else {
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
     editorArea.classList.add("hidden");
-    tickerEditor.classList.add("hidden");
   }
   loadPosts();
 });
 
-// SCROLLING TEXT SAVE
-saveTicker.onclick = async () => {
-  const text = tickerInput.value.trim();
-  if(!text) return alert("Enter text");
-  localStorage.setItem("tickerText", text);
-  tickerText.textContent = text;
-  alert("Scrolling text updated");
+// ADD BLOCKS
+document.getElementById("addTextBtn").onclick=()=>{
+  const t=document.createElement("textarea"); t.className="border w-full p-2 rounded mt-2"; t.placeholder="Text..."; blocksList.appendChild(t);
+};
+document.getElementById("addImageBtn").onclick=()=>{
+  const div=document.createElement("div"); div.className="mt-2";
+  const inputFile=document.createElement("input"); inputFile.type="file"; inputFile.accept="image/*"; inputFile.className="border p-1 rounded w-full";
+  const urlInput=document.createElement("input"); urlInput.type="text"; urlInput.placeholder="Uploaded URL"; urlInput.className="border p-1 rounded w-full mt-1";
+  div.appendChild(inputFile); div.appendChild(urlInput); blocksList.appendChild(div);
+  inputFile.addEventListener("change",async()=>{
+    if(!inputFile.files.length)return;
+    const file=inputFile.files[0];
+    const form=new FormData(); form.append("image",file);
+    try{
+      const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:form});
+      const data=await res.json();
+      if(data.success){ urlInput.value=data.data.url; alert("Image uploaded");}
+      else throw new Error("Upload failed");
+    }catch(e){alert("Upload failed"); console.error(e);}
+  });
 };
 
-// Load ticker text on page load
-if(localStorage.getItem("tickerText")){
-  tickerText.textContent = localStorage.getItem("tickerText");
+// PUBLISH
+publishBtn.onclick=async()=>{
+  const user=auth.currentUser; if(!user || user.email!==ADMIN_EMAIL) return alert("Only admin can post!");
+  const title=aTitle.value.trim(); const category=aCat.value.trim()||"Uncategorized";
+  if(!title) return alert("Title required");
+  const blocks=[]; for(const el of blocksList.children){
+    if(el.tagName==="TEXTAREA") blocks.push({type:"text",text:el.value});
+    else if(el.querySelector("input[type=text]")) blocks.push({type:"image",url:el.querySelector("input[type=text]").value});
+  }
+  if(blocks.length===0) return alert("Add text or image block");
+  try{
+    if(editingId){
+      await updateDoc(doc(db,"vasai_news",editingId),{title,category,blocks,ts:Date.now()});
+      editingId=null; alert("Post updated!");
+    }else{
+      await addDoc(collection(db,"vasai_news"),{title,category,blocks,ts:Date.now(),author:user.email});
+      alert("Post published!");
+    }
+    aTitle.value=""; aCat.value=""; blocksList.innerHTML=""; loadPosts();
+  }catch(e){alert("Publish failed");console.error(e);}
+};
+
+// CLEAR
+clearBtn.onclick=()=>{aTitle.value="";aCat.value="";blocksList.innerHTML="";editingId=null;};
+
+// LOAD POSTS
+async function loadPosts(){
+  postsArea.innerHTML=""; categoryBtns.innerHTML="";
+  const snap=await getDocs(query(collection(db,"vasai_news"),orderBy("ts","desc")));
+  const categories=new Set(); const posts=[];
+  snap.forEach(docSnap=>{ const d=docSnap.data(); d.id=docSnap.id; posts.push(d); if(d.category) categories.add(d.category); });
+
+  tickerText.innerHTML = posts.slice(0,5).map(p=>p.title).join(" • ");
+
+  const allBtn=document.createElement("button"); allBtn.textContent="All"; allBtn.className="active";
+  allBtn.onclick=()=>{ currentCategory=null; Array.from(categoryBtns.children).forEach(b=>b.classList.remove("active")); allBtn.classList.add("active"); renderPosts(posts);}
+  categoryBtns.appendChild(allBtn);
+  categories.forEach(cat=>{ const btn=document.createElement("button"); btn.textContent=cat;
+    btn.onclick=()=>{ currentCategory=cat; Array.from(categoryBtns.children).forEach(b=>b.classList.remove("active")); btn.classList.add("active"); renderPosts(posts);}
+    categoryBtns.appendChild(btn);
+  });
+
+  renderPosts(posts);
 }
 
-// The rest of the code for posts (add/edit/delete, modal) same as previous version
+// RENDER POSTS
+function renderPosts(posts){
+  postsArea.innerHTML="";
+  const filtered=currentCategory?posts.filter(p=>p.category===currentCategory):posts;
+  filtered.forEach(d=>{
+    const card=document.createElement("div"); card.className="card";
+    const firstImg=d.blocks.find(b=>b.type==="image")?.url||"";
+    card.innerHTML=`${firstImg?`<img src="${firstImg}">`:''}<h3>${d.title}</h3><div class="meta">${d.category} • ${new Date(d.ts).toLocaleString()}</div>`;
+    card.onclick=()=>{
+      modalContent.innerHTML=`<h2 class="text-lg font-bold mb-2">${d.title}</h2><div class="meta mb-2">${d.category}</div>`;
+      d.blocks.forEach(b=>{ if(b.type==="text") modalContent.innerHTML+=`<p class="mb-2">${b.text}</p>`; else if(b.type==="image") modalContent.innerHTML+=`<img src="${b.url}" class="w-full mb-2 rounded">`; });
+      modalContent.innerHTML+='<div class="social-share"><button onclick="navigator.share({title:`'+d.title+'`,url:window.location.href})">Share</button></div>';
+      const user=auth.currentUser;
+      if(user && user.email===ADMIN_EMAIL){
+        const editBtn=document.createElement("button"); editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2"; editBtn.textContent="Edit";
+        const delBtn=document.createElement("button"); delBtn.className="bg-red-500 text-white px-3 py-1 rounded"; delBtn.textContent="Delete";
+        editBtn.onclick=(e)=>{ e.stopPropagation(); editingId=d.id; aTitle.value=d.title; aCat.value=d.category; blocksList.innerHTML=""; d.blocks.forEach(b=>{if(b.type==="text"){const t=document.createElement("textarea");t.className="border w-full p-2 rounded mt-2";t.value=b.text;blocksList.appendChild(t);}else if(b.type==="image"){const div=document.createElement("div"); const inputFile=document.createElement("input"); inputFile.type="file"; inputFile.accept="image/*"; inputFile.className="border p-1 rounded w-full"; const urlInput=document.createElement("input"); urlInput.type="text"; urlInput.className="border p-1 rounded w-full mt-1"; urlInput.value=b.url; div.appendChild(inputFile); div.appendChild(urlInput); blocksList.appendChild(div);} }); modalBg.style.display="none"; };
+        delBtn.onclick=async(e)=>{ e.stopPropagation(); if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id)).then(()=>loadPosts()); modalBg.style.display="none"; };
+        modalContent.appendChild(editBtn); modalContent.appendChild(delBtn);
+      }
+      modalBg.style.display="flex";
+    };
+    postsArea.appendChild(card);
+  });
+}
 
+modalClose.onclick=()=>{modalBg.style.display="none";}
+modalBg.onclick=e=>{if(e.target===modalBg) modalBg.style.display="none";}
 </script>
 </body>
 </html>
