@@ -1,12 +1,20 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vasai Live News</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {
   background:#f6f7fb;
   color:#0b2540;
   font-family:Arial,sans-serif;
   overflow-x:hidden;
-  margin-bottom:80px; /* नीचे space ताकि content footer से छिपे नहीं */
+  margin-bottom:80px; /* नीचे space ताकि content ढके नहीं */
 }
 
+/* HEADER */
 header {
   display:flex;
   align-items:center;
@@ -19,6 +27,11 @@ header {
   top:0;
   z-index:100;
 }
+.header-left{display:flex;align-items:center;}
+header img{height:50px;width:50px;border-radius:6px;margin-right:8px;}
+header h1{text-shadow:2px 2px 4px #000;font-weight:800;font-size:22px;}
+.header-buttons{display:flex;gap:6px;}
+.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;text-shadow:1px 1px 2px #000;}
 
 /* नीचे वाली patti (news ticker) */
 .ticker {
@@ -28,13 +41,13 @@ header {
   overflow:hidden;
   white-space:nowrap;
   position:fixed;
-  bottom:36px;     /* ऊपर notice patti के लिए जगह */
+  bottom:36px;      /* notice patti के ऊपर */
   left:0;
   right:0;
   z-index:90;
 }
 
-/* नीचे notice wali patti */
+/* notice patti */
 .notice-ticker {
   background:#dc2626;
   color:white;
@@ -42,23 +55,49 @@ header {
   overflow:hidden;
   white-space:nowrap;
   position:fixed;
-  bottom:0;        /* बिल्कुल नीचे */
+  bottom:0;         /* बिल्कुल नीचे */
   left:0;
   right:0;
   z-index:91;
 }
 
-/* दोनों ka animation */
-.ticker span,
-.notice-ticker span {
+/* Animation */
+.ticker span, .notice-ticker span {
   display:inline-block;
   padding-right:50px;
-  animation:scroll 20s linear infinite;
+  animation:scroll 18s linear infinite;
 }
-
-/* Animation keyframes */
 @keyframes scroll {
   0% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
 </style>
+</head>
+<body class="p-2">
+
+<header>
+  <div class="header-left">
+    <img src="https://via.placeholder.com/50" alt="Logo">
+    <h1>Vasai Live News</h1>
+  </div>
+  <div class="header-buttons">
+    <button class="bg-yellow-500 text-white">About</button>
+    <button class="bg-green-500 text-white">Contact</button>
+  </div>
+</header>
+
+<!-- Sample content -->
+<div class="p-4 space-y-3">
+  <div class="bg-white rounded p-3 shadow">यहां आपकी न्यूज़ पोस्ट्स दिखेंगी...</div>
+  <div class="bg-white rounded p-3 shadow">दूसरी पोस्ट...</div>
+  <div class="bg-white rounded p-3 shadow">तीसरी पोस्ट...</div>
+  <div class="bg-white rounded p-3 shadow">चौथी पोस्ट...</div>
+  <div class="bg-white rounded p-3 shadow">पाँचवी पोस्ट...</div>
+</div>
+
+<!-- नीचे वाली चलती patti -->
+<div class="ticker"><span>📰 Breaking News: Vasai Live News Portal अब हुआ और भी शानदार! | नई खबरें हर पल, हर जगह!</span></div>
+<div class="notice-ticker"><span>📢 Admin Notice: आज सर्वर में maintenance रहेगा रात 10 बजे से 12 बजे तक।</span></div>
+
+</body>
+</html>
