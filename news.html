@@ -1,14 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vasai Live — Admin News Portal</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Vasai Live News — Admin Only</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<style>
-  body { font-family: Inter, sans-serif; }
-  .block-editor.drag-over { border: 2px dashed #0ea5a4; }
-</style>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
@@ -22,16 +18,13 @@
 
 <section id="editorArea" class="hidden p-4 border-t">
   <h2 class="text-lg font-semibold mb-2">Create / Edit Post</h2>
-  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Post Title" />
-  <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category" />
-  
-  <div class="flex gap-2 mb-2">
+  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Post Title"/>
+  <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category"/>
+  <div id="blocksList" class="mb-3"></div>
+  <div class="flex gap-2">
     <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text</button>
     <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
   </div>
-  
-  <div id="blocksList"></div>
-  
   <button id="publishBtn" class="mt-3 bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
 </section>
 
@@ -43,19 +36,19 @@
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:312ec03e62fd49d3d92e60"
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  projectId:"all-madrsa",
+  storageBucket:"all-madrsa.appspot.com",
+  messagingSenderId:"619313835874",
+  appId:"1:619313835874:web:312ec03e62fd49d3d92e60"
 };
-firebase.initializeApp(firebaseConfig);
+const IMGBB_KEY = "c4bc97c133edb76e062de6d070df67e4"; // apni key
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
+const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-const IMGBB_KEY = "YOUR_IMGBB_KEY"; // Replace with your IMGBB key
 
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -63,169 +56,128 @@ const editorArea = document.getElementById("editorArea");
 const postsArea = document.getElementById("postsArea");
 const blocksList = document.getElementById("blocksList");
 
-loginBtn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+let editingId = null;
+
+// 🔹 LOGIN / LOGOUT
+loginBtn.onclick = () => { const provider = new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(provider); };
 logoutBtn.onclick = () => auth.signOut();
 
-auth.onAuthStateChanged(user => {
+// 🔹 AUTH CHECK
+auth.onAuthStateChanged(user=>{
   if(user && user.email===ADMIN_EMAIL){
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
     editorArea.classList.remove("hidden");
   } else {
+    editorArea.classList.add("hidden");
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
-    editorArea.classList.add("hidden");
   }
   loadPosts();
 });
 
-// --- Drag & Drop Blocks ---
-function makeBlocksSortable() {
-  let dragSrcEl = null;
-  function handleDragStart(e){ dragSrcEl=this; e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/html', this.innerHTML); this.style.opacity='0.4'; }
-  function handleDragOver(e){ if(e.preventDefault)e.preventDefault(); e.dataTransfer.dropEffect='move'; return false; }
-  function handleDragEnter(){ this.classList.add('drag-over'); }
-  function handleDragLeave(){ this.classList.remove('drag-over'); }
-  function handleDrop(e){ if(e.stopPropagation)e.stopPropagation(); if(dragSrcEl!==this){ dragSrcEl.innerHTML=this.innerHTML; this.innerHTML=e.dataTransfer.getData('text/html'); attachBlockEvents(dragSrcEl); attachBlockEvents(this);} return false;}
-  function handleDragEnd(){ this.style.opacity='1'; blocksList.querySelectorAll('.block-editor').forEach(b=>b.classList.remove('drag-over')); }
-  function attachBlockEvents(block){
-    block.setAttribute('draggable','true');
-    block.ondragstart=handleDragStart;
-    block.ondragover=handleDragOver;
-    block.ondragenter=handleDragEnter;
-    block.ondragleave=handleDragLeave;
-    block.ondrop=handleDrop;
-    block.ondragend=handleDragEnd;
-  }
-  blocksList.querySelectorAll('.block-editor').forEach(block=>attachBlockEvents(block));
-}
-
-// --- Create Blocks ---
-function createTextBlock(initial={text:''}){
-  const wrap=document.createElement('div');
-  wrap.className='block-editor border p-2 mt-2 rounded bg-white';
-  wrap.innerHTML=`
-    <textarea class="block-text w-full p-2 rounded" placeholder="Text block...">${initial.text||''}</textarea>
-    <button class="btn remove-block mt-1 bg-red-500 text-white px-2 py-1 rounded">Remove</button>
-  `;
-  wrap.querySelector('.remove-block').onclick = ()=>wrap.remove();
-  blocksList.appendChild(wrap);
-  makeBlocksSortable();
-}
-
-function createImageBlock(initial={url:''}){
-  const wrap=document.createElement('div');
-  wrap.className='block-editor border p-2 mt-2 rounded bg-white';
-  wrap.innerHTML=`
-    <input type="file" class="block-file w-full mb-1" accept="image/*">
-    <input type="text" class="block-url w-full p-2 rounded mb-1" placeholder="Image URL" value="${initial.url||''}" readonly>
-    <button class="btn remove-block bg-red-500 text-white px-2 py-1 rounded">Remove</button>
-  `;
-  wrap.querySelector('.remove-block').onclick=()=>wrap.remove();
-  const fileInput=wrap.querySelector('.block-file');
-  const urlInput=wrap.querySelector('.block-url');
-  fileInput.addEventListener('change', async ()=>{
-    if(!fileInput.files.length)return;
+// 🔹 ADD BLOCKS
+document.getElementById("addTextBtn").onclick = ()=>{
+  const ta=document.createElement("textarea");
+  ta.className="border w-full p-2 rounded mt-2";
+  ta.placeholder="Write text...";
+  blocksList.appendChild(ta);
+};
+document.getElementById("addImageBtn").onclick = ()=>{
+  const div=document.createElement("div");
+  div.className="flex gap-2 mt-2";
+  const file=document.createElement("input");
+  file.type="file"; file.accept="image/*";
+  const urlInp=document.createElement("input"); urlInp.placeholder="Uploaded image URL"; urlInp.className="border p-2 rounded w-full";
+  const btn=document.createElement("button"); btn.textContent="Upload"; btn.className="bg-blue-600 text-white px-2 rounded";
+  btn.onclick=async ()=>{
+    if(!file.files.length){ alert("Select file"); return; }
+    btn.disabled=true; btn.textContent="Uploading...";
+    const fd=new FormData(); fd.append("image", file.files[0]);
     try{
-      const form=new FormData();
-      form.append('image',fileInput.files[0]);
-      const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {method:'POST', body:form});
+      const res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {method:"POST", body:fd});
       const data=await res.json();
-      if(data.success){ urlInput.value=data.data.url; alert('Image uploaded'); }
-      else throw new Error('Upload failed');
-    }catch(e){ console.error(e); alert('Upload failed'); }
-  });
-  blocksList.appendChild(wrap);
-  makeBlocksSortable();
-}
+      if(data.success){ urlInp.value=data.data.url; alert("Uploaded!"); }
+      else{ alert("Upload failed"); }
+    }catch(e){ alert("Upload failed"); console.error(e); }
+    btn.disabled=false; btn.textContent="Upload";
+  };
+  div.appendChild(file); div.appendChild(urlInp); div.appendChild(btn);
+  blocksList.appendChild(div);
+};
 
-document.getElementById('addTextBtn').onclick=()=>createTextBlock();
-document.getElementById('addImageBtn').onclick=()=>createImageBlock();
-
-// --- Publish ---
-document.getElementById('publishBtn').onclick=async ()=>{
-  const user = auth.currentUser;
-  if(!user || user.email!==ADMIN_EMAIL){ alert('Only admin can post!'); return; }
-  const title=document.getElementById('aTitle').value.trim();
-  const category=document.getElementById('aCat').value.trim();
-  if(!title)return alert('Title required');
-  const blocks=[...blocksList.querySelectorAll('.block-editor')].map(b=>{
-    const t=b.querySelector('.block-text');
-    if(t)return {type:'text', text:t.value};
-    const img=b.querySelector('.block-url');
-    if(img)return {type:'image', url:img.value};
+// 🔹 PUBLISH / UPDATE POST
+document.getElementById("publishBtn").onclick=async ()=>{
+  const user=auth.currentUser;
+  if(!user || user.email!==ADMIN_EMAIL){ alert("Only admin can post!"); return; }
+  const title=document.getElementById("aTitle").value.trim();
+  const category=document.getElementById("aCat").value.trim()||"Local";
+  const blocks=[...blocksList.children].map(el=>{
+    if(el.tagName==="TEXTAREA") return {type:"text", text:el.value};
+    const urlInp=el.querySelector("input[type=text]");
+    if(urlInp) return {type:"image", url:urlInp.value};
     return null;
   }).filter(x=>x);
-  await db.collection('vasai_news').add({title, category, blocks, ts: Date.now(), author:user.email});
-  alert('Post published!');
-  document.getElementById('aTitle').value='';
-  document.getElementById('aCat').value='';
-  blocksList.innerHTML='';
+  if(!title || blocks.length===0){ alert("Title and at least one block required"); return; }
+
+  const doc={title, category, blocks, ts:Date.now(), author:user.email};
+  if(editingId){ await db.collection("vasai_news").doc(editingId).set(doc); editingId=null; alert("Post updated!"); }
+  else{ await db.collection("vasai_news").add(doc); alert("Post published!"); }
+
+  document.getElementById("aTitle").value=""; document.getElementById("aCat").value=""; blocksList.innerHTML="";
   loadPosts();
 };
 
-// --- Edit/Delete ---
-async function editPost(id){
-  const doc=await db.collection('vasai_news').doc(id).get();
-  const d=doc.data();
-  document.getElementById('aTitle').value=d.title;
-  document.getElementById('aCat').value=d.category;
-  blocksList.innerHTML='';
-  (d.blocks||[]).forEach(b=>{
-    if(b.type==='text') createTextBlock({text:b.text});
-    else if(b.type==='image') createImageBlock({url:b.url});
-  });
-  document.getElementById('publishBtn').onclick=async ()=>{
-    const blocks=[...blocksList.querySelectorAll('.block-editor')].map(b=>{
-      const t=b.querySelector('.block-text'); if(t)return {type:'text',text:t.value};
-      const img=b.querySelector('.block-url'); if(img)return {type:'image',url:img.value};
-      return null;
-    }).filter(x=>x);
-    await db.collection('vasai_news').doc(id).set({
-      title: document.getElementById('aTitle').value,
-      category: document.getElementById('aCat').value,
-      blocks, ts: Date.now(), author: user.email
-    });
-    alert('Post updated!'); blocksList.innerHTML=''; loadPosts();
-  };
-}
-
-async function deletePost(id){
-  if(confirm('Delete this post?')){ await db.collection('vasai_news').doc(id).delete(); loadPosts(); }
-}
-
-// --- Load posts ---
+// 🔹 LOAD POSTS
 async function loadPosts(){
-  postsArea.innerHTML='';
-  const snap=await db.collection('vasai_news').orderBy('ts','desc').get();
+  postsArea.innerHTML="";
+  const snap=await db.collection("vasai_news").orderBy("ts","desc").get();
   snap.forEach(doc=>{
     const d=doc.data();
-    const div=document.createElement('div');
-    div.className='p-3 bg-white rounded shadow';
+    const div=document.createElement("div");
+    div.className="p-3 bg-white rounded shadow";
     div.innerHTML=`
       <h3 class="font-semibold text-lg">${d.title}</h3>
       <p class="text-sm text-gray-600">${d.category} • ${new Date(d.ts).toLocaleString()}</p>
       <div class="mt-2">${(d.blocks||[]).map(b=>{
-        if(b.type==='text') return `<p>${b.text}</p>`;
-        if(b.type==='image') return `<img src="${b.url}" class="my-2 w-full rounded">`;
-        return '';
-      }).join('')}</div>
+        if(b.type==="text") return `<p>${b.text}</p>`;
+        if(b.type==="image") return `<img src="${b.url}" class="my-2 w-full rounded">`;
+        return "";
+      }).join("")}</div>
     `;
     if(auth.currentUser && auth.currentUser.email===ADMIN_EMAIL){
-      const editBtn=document.createElement('button');
-      editBtn.className='bg-yellow-400 px-2 py-1 rounded mr-2 mt-2';
-      editBtn.textContent='Edit';
-      editBtn.onclick=()=>editPost(doc.id);
-      const delBtn=document.createElement('button');
-      delBtn.className='bg-red-500 text-white px-2 py-1 rounded mt-2';
-      delBtn.textContent='Delete';
-      delBtn.onclick=()=>deletePost(doc.id);
-      div.appendChild(editBtn);
-      div.appendChild(delBtn);
+      const editBtn=document.createElement("button");
+      editBtn.className="bg-yellow-400 px-2 py-1 rounded mr-2 mt-2";
+      editBtn.textContent="Edit"; editBtn.onclick=()=>editPost(doc.id);
+      const delBtn=document.createElement("button");
+      delBtn.className="bg-red-500 text-white px-2 py-1 rounded mt-2";
+      delBtn.textContent="Delete"; delBtn.onclick=()=>deletePost(doc.id);
+      div.appendChild(editBtn); div.appendChild(delBtn);
     }
     postsArea.appendChild(div);
   });
 }
+
+// 🔹 EDIT / DELETE
+async function editPost(id){
+  const doc=await db.collection("vasai_news").doc(id).get();
+  if(!doc.exists) return;
+  const d=doc.data();
+  editingId=id; document.getElementById("aTitle").value=d.title;
+  document.getElementById("aCat").value=d.category||"Local";
+  blocksList.innerHTML="";
+  (d.blocks||[]).forEach(b=>{
+    if(b.type==="text"){ const ta=document.createElement("textarea"); ta.value=b.text; ta.className="border w-full p-2 rounded mt-2"; blocksList.appendChild(ta);}
+    if(b.type==="image"){
+      const div=document.createElement("div"); div.className="flex gap-2 mt-2";
+      const urlInp=document.createElement("input"); urlInp.value=b.url; urlInp.placeholder="Uploaded image URL"; urlInp.className="border p-2 rounded w-full";
+      div.appendChild(urlInp); blocksList.appendChild(div);
+    }
+  });
+}
+async function deletePost(id){ if(confirm("Delete this post?")){ await db.collection("vasai_news").doc(id).delete(); loadPosts(); } }
+
+loadPosts();
 </script>
 </body>
 </html>
