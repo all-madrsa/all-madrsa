@@ -3,36 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vasai Live News</title>
+<title>All Madrasa News Portal</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<style>
-body{
-  background:#f6f7fb;
-  color:#0b2540;
-  font-family:Arial,sans-serif;
-  overflow-x:hidden;
-  margin-bottom:85px; /* नीचे की patti के लिए space */
-}
+<!-- Firebase CDN -->
+<script type="module" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 
-/* HEADER */
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:10px 14px;
-  background:#1e40af;
-  color:white;
-  position:sticky;
-  top:0;
-  z-index:100;
-}
+<style>
+body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;overflow-x:hidden;margin-bottom:90px;}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1e40af;color:white;position:sticky;top:0;z-index:100;}
 header img{height:45px;width:45px;border-radius:8px;margin-right:8px;}
 header h1{font-weight:800;font-size:20px;text-shadow:1px 1px 2px #000;}
 .header-left{display:flex;align-items:center;}
 .header-buttons{display:flex;gap:6px;}
 .header-buttons button{padding:5px 10px;border-radius:5px;font-size:13px;font-weight:600;}
 
-/* POSTS */
 .posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:10px;}
 .card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);transition:transform .2s;cursor:pointer;}
 .card:hover{transform:scale(1.02);}
@@ -41,40 +27,11 @@ header h1{font-weight:800;font-size:20px;text-shadow:1px 1px 2px #000;}
 .card-body h3{font-size:18px;font-weight:700;margin-bottom:4px;}
 .card-body p{font-size:14px;color:#555;}
 
-/* BOTTOM FIXED TICKERS */
-.ticker, .notice-ticker {
-  overflow:hidden;
-  white-space:nowrap;
-  position:fixed;
-  left:0; right:0;
-  color:white;
-  z-index:99;
-}
-.ticker {
-  background:#1e40af;
-  padding:6px;
-  bottom:36px;
-}
-.notice-ticker {
-  background:#dc2626;
-  padding:6px;
-  bottom:0;
-}
-.ticker span, .notice-ticker span {
-  display:inline-block;
-  padding-right:50px;
-  animation:scroll 18s linear infinite;
-}
-@keyframes scroll {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-
-/* SMALL DEVICES */
-@media (max-width:600px){
-  header h1{font-size:18px;}
-  .ticker, .notice-ticker{font-size:13px;}
-}
+.ticker,.notice-ticker{overflow:hidden;white-space:nowrap;position:fixed;left:0;right:0;color:white;z-index:99;}
+.ticker{background:#1e40af;padding:6px;bottom:36px;}
+.notice-ticker{background:#dc2626;padding:6px;bottom:0;}
+.ticker span,.notice-ticker span{display:inline-block;padding-right:50px;animation:scroll 18s linear infinite;}
+@keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
 </style>
 </head>
 <body class="p-2">
@@ -82,46 +39,163 @@ header h1{font-weight:800;font-size:20px;text-shadow:1px 1px 2px #000;}
 <header>
   <div class="header-left">
     <img src="https://via.placeholder.com/50" alt="Logo">
-    <h1>Vasai Live News</h1>
+    <h1>All Madrasa News</h1>
   </div>
   <div class="header-buttons">
-    <button class="bg-yellow-500 text-white">About</button>
-    <button class="bg-green-500 text-white">Contact</button>
+    <button id="loginBtn" class="bg-blue-600 text-white">Admin Login</button>
+    <button id="logoutBtn" class="hidden bg-red-600 text-white">Logout</button>
   </div>
 </header>
 
-<!-- CONTENT -->
-<section class="posts-grid">
-  <div class="card">
-    <img src="https://picsum.photos/300/150?random=1">
-    <div class="card-body">
-      <h3>स्थानीय चुनाव की तैयारी</h3>
-      <p>Vasai में राजनीतिक हलचल तेज़...</p>
-    </div>
-  </div>
-  <div class="card">
-    <img src="https://picsum.photos/300/150?random=2">
-    <div class="card-body">
-      <h3>बारिश ने बढ़ाई मुश्किलें</h3>
-      <p>लगातार बारिश से शहर में जलभराव...</p>
-    </div>
-  </div>
-  <div class="card">
-    <img src="https://picsum.photos/300/150?random=3">
-    <div class="card-body">
-      <h3>Vasai Live App लॉन्च</h3>
-      <p>अब खबरें मोबाइल पर सीधी मिलेंगी...</p>
-    </div>
-  </div>
+<!-- NOTICE EDITOR -->
+<div id="noticeEditor" class="hidden bg-white p-2 rounded shadow mb-3">
+  <input id="noticeInput" class="border p-2 w-full rounded mb-2" placeholder="Admin Notice लिखें...">
+  <button id="saveNoticeBtn" class="bg-blue-600 text-white px-3 py-1 rounded">Save Notice</button>
+</div>
+
+<!-- POST EDITOR -->
+<section id="editorArea" class="hidden p-2 bg-white rounded shadow mb-4">
+  <h2 class="font-semibold mb-2">नई न्यूज़ डालें</h2>
+  <input id="titleInput" class="border p-2 w-full mb-2 rounded" placeholder="News Title">
+  <textarea id="descInput" class="border p-2 w-full mb-2 rounded" placeholder="News Description"></textarea>
+  <input type="file" id="imageFile" class="mb-2">
+  <button id="postBtn" class="bg-green-600 text-white px-4 py-2 rounded">Publish</button>
 </section>
 
-<!-- नीचे की Pattiyan -->
-<div class="ticker">
-  <span>📰 Latest News: Vasai Live अब और तेज़ — अब हर खबर तुरंत! | मौसम अपडेट | ट्रैफिक अलर्ट्स | स्थानीय कार्यक्रम</span>
-</div>
-<div class="notice-ticker">
-  <span>📢 Admin Notice: आज रात 10 बजे से 12 बजे तक सर्वर अपग्रेड रहेगा। सेविंग से पहले ध्यान दें!</span>
-</div>
+<!-- POSTS AREA -->
+<section class="posts-grid" id="postsArea"></section>
 
+<!-- SCROLLING TEXTS -->
+<div class="ticker"><span id="tickerText">Loading latest news...</span></div>
+<div class="notice-ticker"><span id="noticeText">Admin notice...</span></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+// 🔹 आपकी Firebase सेटिंग
+const firebaseConfig = {
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  projectId:"all-madrsa",
+  storageBucket:"all-madrsa.appspot.com",
+  messagingSenderId:"619313835874",
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
+};
+
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+
+// Firebase Init
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+let isAdmin = false;
+
+// DOM Elements
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const editorArea = document.getElementById("editorArea");
+const postBtn = document.getElementById("postBtn");
+const postsArea = document.getElementById("postsArea");
+const noticeEditor = document.getElementById("noticeEditor");
+const noticeText = document.getElementById("noticeText");
+const noticeInput = document.getElementById("noticeInput");
+const saveNoticeBtn = document.getElementById("saveNoticeBtn");
+const tickerText = document.getElementById("tickerText");
+const imageFile = document.getElementById("imageFile");
+
+// LOGIN
+loginBtn.onclick = () => {
+  const email = prompt("Enter admin email:");
+  const pass = prompt("Enter password:");
+  signInWithEmailAndPassword(auth, email, pass)
+    .catch(e => alert("Login failed: " + e.message));
+};
+
+// LOGOUT
+logoutBtn.onclick = () => signOut(auth);
+
+// AUTH STATE
+onAuthStateChanged(auth, user => {
+  if (user && user.email === ADMIN_EMAIL) {
+    isAdmin = true;
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+    editorArea.classList.remove("hidden");
+    noticeEditor.classList.remove("hidden");
+  } else {
+    isAdmin = false;
+    loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
+    editorArea.classList.add("hidden");
+    noticeEditor.classList.add("hidden");
+  }
+});
+
+// LOAD POSTS
+function loadPosts() {
+  onSnapshot(collection(db, "vasai_news"), snapshot => {
+    postsArea.innerHTML = "";
+    let latest = [];
+    snapshot.forEach(docSnap => {
+      const d = docSnap.data();
+      d.id = docSnap.id;
+      latest.push(d);
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <img src="${d.image || 'https://via.placeholder.com/300x150'}">
+        <div class="card-body">
+          <h3>${d.title}</h3>
+          <p>${d.desc.substring(0, 80)}...</p>
+          ${isAdmin ? `<button class='bg-red-500 text-white px-2 py-1 rounded text-sm deleteBtn' data-id='${d.id}'>Delete</button>` : ""}
+        </div>`;
+      postsArea.appendChild(div);
+    });
+    if (latest.length > 0) tickerText.textContent = "📰 " + latest.map(x => x.title).join(" | ");
+    document.querySelectorAll(".deleteBtn").forEach(btn => {
+      btn.onclick = async () => {
+        if (confirm("Delete this post?")) await deleteDoc(doc(db, "vasai_news", btn.dataset.id));
+      };
+    });
+  });
+}
+loadPosts();
+
+// ADD POST
+postBtn.onclick = async () => {
+  const title = titleInput.value.trim();
+  const desc = descInput.value.trim();
+  const file = imageFile.files[0];
+  if (!title || !desc) return alert("Please fill title & description");
+
+  let imageURL = "";
+  if (file) {
+    const formData = new FormData();
+    formData.append("image", file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+    const data = await res.json();
+    imageURL = data.data.url;
+  }
+
+  await addDoc(collection(db, "vasai_news"), { title, desc, image: imageURL, time: Date.now() });
+  titleInput.value = descInput.value = "";
+  imageFile.value = "";
+  alert("✅ News added!");
+};
+
+// NOTICE
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+onSnapshot(doc(db, "system", "notice"), snap => {
+  if (snap.exists()) noticeText.textContent = snap.data().text;
+});
+saveNoticeBtn.onclick = async () => {
+  const val = noticeInput.value.trim();
+  await setDoc(doc(db, "system", "notice"), { text: val });
+  alert("Notice updated!");
+};
+</script>
 </body>
 </html>
