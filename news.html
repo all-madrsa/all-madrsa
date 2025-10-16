@@ -1,196 +1,198 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vasai Live — Admin Only Posting</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vasai Live — Admin Only Posting</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
-  <!-- HEADER -->
-  <header class="bg-blue-800 text-white p-4 flex justify-between items-center">
-    <h1 class="text-xl font-semibold">Vasai Live News</h1>
-    <div>
-      <button id="loginBtn" class="bg-white text-blue-800 px-3 py-1 rounded">Login with Google</button>
-      <button id="logoutBtn" class="hidden bg-red-600 px-3 py-1 rounded">Logout</button>
-    </div>
-  </header>
+<!-- HEADER -->
+<header class="bg-blue-800 text-white p-4 flex justify-between items-center">
+  <h1 class="text-xl font-semibold">Vasai Live News</h1>
+  <div>
+    <button id="loginBtn" class="bg-white text-blue-800 px-3 py-1 rounded">Login with Google</button>
+    <button id="logoutBtn" class="hidden bg-red-600 px-3 py-1 rounded">Logout</button>
+  </div>
+</header>
 
-  <!-- ADMIN PANEL -->
-  <section id="brandingArea" class="hidden p-4">
-    <h2 class="text-lg font-semibold mb-2">Branding Panel (Admin)</h2>
-    <textarea id="brandMsg" class="border w-full p-2 rounded" placeholder="Write brand message..."></textarea>
-    <button id="saveBrand" class="mt-2 bg-blue-700 text-white px-3 py-1 rounded">Save Branding</button>
-  </section>
+<!-- ADMIN PANEL -->
+<section id="brandingArea" class="hidden p-4">
+  <h2 class="text-lg font-semibold mb-2">Branding Panel (Admin)</h2>
+  <textarea id="brandMsg" class="border w-full p-2 rounded" placeholder="Write brand message..."></textarea>
+  <button id="saveBrand" class="mt-2 bg-blue-700 text-white px-3 py-1 rounded">Save Branding</button>
+</section>
 
-  <!-- POST EDITOR (ADMIN ONLY) -->
-  <section id="editorArea" class="hidden p-4 border-t">
-    <h2 class="text-lg font-semibold mb-2">Create / Edit Post</h2>
-    <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Post Title" />
-    <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category" />
-    <div id="blocksList" class="mb-3"></div>
-    <div class="flex gap-2">
-      <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text</button>
-      <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
-    </div>
-    <button id="publishBtn" class="mt-3 bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
-  </section>
+<!-- POST EDITOR (ADMIN ONLY) -->
+<section id="editorArea" class="hidden p-4 border-t">
+  <h2 class="text-lg font-semibold mb-2">Create / Edit Post</h2>
+  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Post Title" />
+  <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category" />
+  <div id="blocksList" class="mb-3"></div>
+  <div class="flex gap-2">
+    <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text</button>
+    <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
+  </div>
+  <button id="publishBtn" class="mt-3 bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
+</section>
 
-  <!-- PUBLIC POSTS LIST -->
-  <section id="postsArea" class="p-4 grid gap-3"></section>
+<!-- PUBLIC POSTS LIST -->
+<section id="postsArea" class="p-4 grid gap-3"></section>
 
-  <!-- Firebase SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-      authDomain: "all-madrsa.firebaseapp.com",
-      projectId: "all-madrsa",
-      storageBucket: "all-madrsa.appspot.com",
-      messagingSenderId: "619313835874",
-      appId: "1:619313835874:web:312ec03e62fd49d3d92e60"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain: "all-madrsa.firebaseapp.com",
+  projectId: "all-madrsa",
+  storageBucket: "all-madrsa.appspot.com",
+  messagingSenderId: "619313835874",
+  appId: "1:619313835874:web:312ec03e62fd49d3d92e60"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
+const storage = getStorage();
 
-    const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const editorArea = document.getElementById("editorArea");
-    const postsArea = document.getElementById("postsArea");
-    const blocksList = document.getElementById("blocksList");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const editorArea = document.getElementById("editorArea");
+const brandingArea = document.getElementById("brandingArea");
+const postsArea = document.getElementById("postsArea");
+const blocksList = document.getElementById("blocksList");
 
-    // 🔹 LOGIN / LOGOUT
-    loginBtn.onclick = async () => {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    };
-    logoutBtn.onclick = () => signOut(auth);
+// 🔹 LOGIN / LOGOUT
+loginBtn.onclick = async () => {
+  const provider = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, provider); } catch(e){ alert(e.message); }
+};
+logoutBtn.onclick = () => signOut(auth);
 
-    // 🔹 AUTH CHECK
-    onAuthStateChanged(auth, async (user) => {
-      if (user && user.email === ADMIN_EMAIL) {
-        loginBtn.classList.add("hidden");
-        logoutBtn.classList.remove("hidden");
-        editorArea.classList.remove("hidden");
-      } else {
-        editorArea.classList.add("hidden");
-        loginBtn.classList.remove("hidden");
-        logoutBtn.classList.add("hidden");
-      }
-      loadPosts();
+// 🔹 AUTH CHECK
+onAuthStateChanged(auth, (user) => {
+  if(user && user.email === ADMIN_EMAIL){
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+    editorArea.classList.remove("hidden");
+    brandingArea.classList.remove("hidden");
+  } else {
+    editorArea.classList.add("hidden");
+    brandingArea.classList.add("hidden");
+    loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
+  }
+  loadPosts();
+});
+
+// 🔹 LOAD POSTS
+async function loadPosts(){
+  postsArea.innerHTML = "";
+  const q = query(collection(db, "vasai_news"), orderBy("ts","desc"));
+  const snap = await getDocs(q);
+  snap.forEach(doc => {
+    const d = doc.data();
+    const div = document.createElement("div");
+    div.className = "p-3 bg-white rounded shadow";
+    let blocksHtml = "";
+    (d.blocks || []).forEach(b => {
+      if(b.type==="text") blocksHtml += `<p>${b.text}</p>`;
+      if(b.type==="image") blocksHtml += `<img src="${b.url}" class="w-full rounded mt-2 shadow" />`;
     });
+    div.innerHTML = `
+      <h3 class="font-semibold text-lg">${d.title}</h3>
+      <p class="text-sm text-gray-600">${d.category} • ${new Date(d.ts).toLocaleString()}</p>
+      ${blocksHtml}
+    `;
+    postsArea.appendChild(div);
+  });
+}
 
-    // 🔹 LOAD POSTS
-    async function loadPosts() {
-      postsArea.innerHTML = "";
-      const q = query(collection(db, "vasai_news"), orderBy("ts", "desc"));
-      const snap = await getDocs(q);
-      snap.forEach(doc => {
-        const d = doc.data();
-        const div = document.createElement("div");
-        div.className = "p-3 bg-white rounded shadow";
-        let html = `<h3 class="font-semibold text-lg">${d.title}</h3>`;
-        html += `<p class="text-sm text-gray-600">${d.category} • ${new Date(d.ts).toLocaleString()}</p>`;
-        (d.blocks || []).forEach(b => {
-          if (b.type === "text") html += `<p class="mt-2">${b.text}</p>`;
-          if (b.type === "image") html += `<img src="${b.url}" class="mt-2 w-full rounded shadow" />`;
-        });
-        div.innerHTML = html;
-        postsArea.appendChild(div);
-      });
+// 🔹 ADD TEXT BLOCK
+document.getElementById("addTextBtn").onclick = () => {
+  const inp = document.createElement("textarea");
+  inp.className = "border w-full p-2 rounded mt-2";
+  inp.placeholder = "Write text...";
+  blocksList.appendChild(inp);
+};
+
+// 🔹 ADD IMAGE BLOCK
+document.getElementById("addImageBtn").onclick = () => {
+  const input = document.createElement("input");
+  input.type = "file"; input.accept="image/*"; input.click();
+
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const uploading = document.createElement("p");
+    uploading.textContent = "Uploading image...";
+    uploading.className = "text-sm text-gray-500 mt-2";
+    blocksList.appendChild(uploading);
+
+    try {
+      const fileRef = ref(storage, 'posts/'+Date.now()+'_'+file.name);
+      const snapshot = await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+
+      uploading.remove();
+
+      const img = document.createElement("img");
+      img.src = url;
+      img.className = "w-full rounded mt-2 shadow";
+      blocksList.appendChild(img);
+
+      const hidden = document.createElement("input");
+      hidden.type = "hidden"; hidden.dataset.type="image"; hidden.value = url;
+      blocksList.appendChild(hidden);
+
+      alert("✅ Image uploaded successfully!");
+    } catch(err){
+      uploading.remove();
+      console.error(err);
+      alert("❌ Upload failed: "+err.message);
     }
+  };
+};
 
-    // 🔹 ADD TEXT BLOCK
-    document.getElementById("addTextBtn").onclick = () => {
-      const inp = document.createElement("textarea");
-      inp.className = "border w-full p-2 rounded mt-2";
-      inp.placeholder = "Write text...";
-      blocksList.appendChild(inp);
-    };
+// 🔹 PUBLISH POST
+document.getElementById("publishBtn").onclick = async () => {
+  const user = auth.currentUser;
+  if(!user || user.email!==ADMIN_EMAIL){ alert("Only admin can post!"); return; }
 
-    // 🔹 ADD IMAGE BLOCK
-    document.getElementById("addImageBtn").onclick = async () => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.click();
+  const title = document.getElementById("aTitle").value;
+  const category = document.getElementById("aCat").value;
 
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+  if(!title) return alert("Title is required");
 
-        const uploading = document.createElement("p");
-        uploading.textContent = "Uploading image...";
-        uploading.className = "text-sm text-gray-500 mt-2";
-        blocksList.appendChild(uploading);
+  const blocks = [];
+  blocksList.querySelectorAll("textarea, input[type=hidden]").forEach(el => {
+    if(el.tagName==="TEXTAREA") blocks.push({type:"text", text:el.value});
+    if(el.dataset.type==="image") blocks.push({type:"image", url:el.value});
+  });
 
-        try {
-          const fileRef = ref(storage, 'posts/' + Date.now() + '_' + file.name);
-          const snap = await uploadBytes(fileRef, file);
-          const imgUrl = await getDownloadURL(snap.ref);
+  await addDoc(collection(db,"vasai_news"),{
+    title, category, blocks,
+    ts: Date.now(),
+    author: user.email
+  });
 
-          uploading.remove();
-          const img = document.createElement("img");
-          img.src = imgUrl;
-          img.className = "w-full rounded mt-2 shadow";
+  alert("Post published!");
+  document.getElementById("aTitle").value = "";
+  document.getElementById("aCat").value = "";
+  blocksList.innerHTML = "";
+  loadPosts();
+};
 
-          const hidden = document.createElement("input");
-          hidden.type = "hidden";
-          hidden.dataset.type = "image";
-          hidden.value = imgUrl;
-
-          blocksList.appendChild(img);
-          blocksList.appendChild(hidden);
-          alert("✅ Image uploaded successfully!");
-        } catch (err) {
-          console.error(err);
-          uploading.remove();
-          alert("❌ Upload failed: " + err.message);
-        }
-      };
-    };
-
-    // 🔹 PUBLISH POST
-    document.getElementById("publishBtn").onclick = async () => {
-      const user = auth.currentUser;
-      if (!user || user.email !== ADMIN_EMAIL) {
-        alert("Only admin can post!");
-        return;
-      }
-
-      const title = document.getElementById("aTitle").value.trim();
-      const category = document.getElementById("aCat").value.trim();
-      if (!title) return alert("Title is required");
-
-      const blocks = [...blocksList.querySelectorAll("textarea, input[type=hidden]")].map(el => {
-        if (el.dataset.type === "image") return { type: "image", url: el.value };
-        return { type: "text", text: el.value };
-      }).filter(b => (b.type === "text" && b.text.trim()) || (b.type === "image" && b.url.trim()));
-
-      if (blocks.length === 0) return alert("Add at least one text or image block");
-
-      await addDoc(collection(db, "vasai_news"), {
-        title, category, blocks, ts: Date.now(), author: user.email
-      });
-
-      alert("✅ Post published!");
-      document.getElementById("aTitle").value = "";
-      document.getElementById("aCat").value = "";
-      blocksList.innerHTML = "";
-      loadPosts();
-    };
-
-    loadPosts();
-  </script>
+loadPosts();
+</script>
 </body>
 </html>
