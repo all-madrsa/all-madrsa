@@ -40,12 +40,11 @@ textarea{resize:none;}
 
 <header>
   <div class="flex items-center">
+    <!-- Logo link directly from code -->
     <img id="logoImg" src="https://via.placeholder.com/50x50?text=VL" alt="Logo">
     <h1 class="font-bold text-xl">Vasai Live News</h1>
   </div>
   <div class="header-buttons">
-    <input id="logoInput" type="file" class="hidden">
-    <button onclick="document.getElementById('logoInput').click()" class="bg-yellow-400 text-white">Upload Logo</button>
     <button class="bg-yellow-400 text-white">About</button>
     <button class="bg-green-500 text-white">Contact</button>
     <button id="loginBtn" class="bg-blue-700 text-white">Login</button>
@@ -81,11 +80,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase
 const firebaseConfig = {apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",authDomain:"all-madrsa.firebaseapp.com",projectId:"all-madrsa",storageBucket:"all-madrsa.appspot.com",messagingSenderId:"619313835874",appId:"1:619313835874:web:e33f0c8bdef6d1a7f31e9f"};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
 const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
 
@@ -102,8 +101,6 @@ const modalClose=document.getElementById("modalClose");
 const modalContent=document.getElementById("modalContent");
 const noticeText=document.getElementById("noticeText");
 const headlineText=document.getElementById("headlineText");
-const logoImg=document.getElementById("logoImg");
-const logoInput=document.getElementById("logoInput");
 
 // Auth
 loginBtn.onclick = async()=>{const provider=new GoogleAuthProvider();await signInWithPopup(auth,provider);}
@@ -120,18 +117,10 @@ async function uploadToImgBB(file){
   const data=await res.json(); return data.data.url;
 }
 
-// Logo upload
-logoInput.onchange=async()=>{
-  if(logoInput.files.length>0){
-    const url=await uploadToImgBB(logoInput.files[0]);
-    logoImg.src=url;
-  }
-}
-
 // Editor
 document.getElementById("addTextBtn").onclick = ()=>{const t=document.createElement("textarea");t.placeholder="Write paragraph...";t.dataset.type="text";t.className="border p-2 w-full mb-2 rounded";blocksList.appendChild(t);}
 document.getElementById("addImageBtn").onclick = ()=>{const div=document.createElement("div");div.className="mb-2 border p-2 rounded bg-gray-50";const inp=document.createElement("input");inp.type="file";inp.dataset.type="image";inp.className="w-full";div.appendChild(inp);blocksList.appendChild(div);}
-document.getElementById("clearBtn").onclick = ()=>{aTitle.value=aCat.value="";blocksList.innerHTML="";editingId=null;}
+document.getElementById("clearBtn").onclick = ()=>{aTitle.value=aCat.value="";blocksList.innerHTML="";editingId=null}
 
 // Publish news
 document.getElementById("publishBtn").onclick = async()=>{
@@ -189,19 +178,19 @@ function showModal(d){
       editingId=d.id;aTitle.value=d.title;aCat.value=d.category;blocksList.innerHTML="";
       d.blocks.forEach(b=>{
         if(b.type==="text"){const t=document.createElement("textarea");t.value=b.text;t.dataset.type="text";t.className="border p-2 w-full mb-2 rounded";blocksList.appendChild(t);}
-        else if(b.type==="image"){const div=document.createElement("div");div.className="mb-2 border p-2 rounded bg-gray-50";const inp=document.createElement("input");inp.type="file";inp.dataset.type="image";div.appendChild(inp);blocksList.appendChild(div);}
-      });
-      modalBg.style.display="none";
+        else{const div=document.createElement("div");div.className="mb-2 border p-2 rounded bg-gray-50";const info=document.createElement("p");info.textContent="Existing image:";const img=document.createElement("img");img.src=b.url;img.className="w-full mb-1 rounded";div.appendChild(info);div.appendChild(img);blocksList.appendChild(div);}
+      });modalBg.style.display="none";
     };
     const delBtn=document.createElement("button");delBtn.textContent="Delete";delBtn.className="bg-red-500 text-white px-3 py-1 rounded";
-    delBtn.onclick=async()=>{if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id));modalBg.style.display="none";};
+    delBtn.onclick=async()=>{if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id));modalBg.style.display="none";}
     modalContent.appendChild(editBtn);modalContent.appendChild(delBtn);
   }
   modalBg.style.display="flex";
 }
 
-// Admin notice (hardcoded for now, can be Firestore)
+// Admin notice (Firestore can be used here instead of hardcoded)
 noticeText.textContent="Welcome to Vasai Live News! Admin can update this notice.";
 </script>
+
 </body>
 </html>
