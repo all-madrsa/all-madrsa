@@ -8,29 +8,31 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-
 <style>
 body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;overflow-x:hidden;}
 header{display:flex;align-items:center;justify-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;position:sticky;top:0;z-index:100;}
 header img{height:45px;width:45px;border-radius:6px;margin-right:8px;}
 header h1{text-shadow:1px 1px 3px #000;font-weight:800;font-size:20px;}
-.header-buttons button{padding:4px 8px;font-size:12px;border-radius:4px;font-weight:600;}
+.header-buttons{display:flex;gap:6px;}
+.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;text-shadow:1px 1px 2px #000;}
 .ticker,.notice-ticker{color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
 .ticker{background:#1e40af;}
 .notice-ticker{background:#dc2626;}
 .ticker span,.notice-ticker span{display:inline-block;padding-right:50px;animation:scroll 20s linear infinite;}
 @keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
-.posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;}
-.card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);transition:transform 0.2s;}
+.category-btns{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;}
+.category-btns button{flex-shrink:0;padding:4px 8px;border-radius:6px;border:1px solid #3b82f6;color:#3b82f6;cursor:pointer;}
+.category-btns button.active{background:#3b82f6;color:white;}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+.card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);cursor:pointer;transition:transform 0.2s;}
 .card:hover{transform:scale(1.02);}
-.card img{width:100%;height:180px;object-fit:cover;}
+.card img{width:100%;max-height:180px;object-fit:contain;background:#f1f1f1;}
 .card-body{padding:8px;}
 .card-body h3{font-weight:700;font-size:18px;margin-bottom:4px;}
 .card-body p{font-size:14px;color:#555;margin-bottom:6px;}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:200;}
-.modal{background:#fff;border-radius:10px;max-width:700px;width:95%;max-height:85%;overflow-y:auto;padding:16px;position:relative;}
+.modal{background:#fff;border-radius:10px;max-width:600px;width:90%;max-height:80%;overflow-y:auto;padding:16px;position:relative;}
 .modal-close{position:absolute;top:8px;right:8px;background:#f87171;color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;}
-.modal img{max-width:100%;border-radius:6px;margin:8px 0;}
 </style>
 </head>
 <body class="p-2">
@@ -46,25 +48,26 @@ header h1{text-shadow:1px 1px 3px #000;font-weight:800;font-size:20px;}
   </div>
 </header>
 
-<div class="ticker"><span id="tickerText">Breaking News Loading...</span></div>
-<div class="notice-ticker"><span id="noticeText">Notice Loading...</span></div>
+<div class="ticker"><span id="tickerText">Loading latest headlines...</span></div>
+<div class="notice-ticker"><span id="noticeText">Loading notice...</span></div>
 
 <div id="noticeEditor" class="hidden mb-2">
-  <input type="text" id="noticeInput" class="border p-1 w-full rounded" placeholder="Write notice to scroll">
+  <input type="text" id="noticeInput" class="border p-1 w-full rounded" placeholder="Write notice here...">
   <button id="saveNoticeBtn" class="bg-blue-700 text-white px-3 py-1 mt-1 rounded">Save Notice</button>
 </div>
+
+<div class="category-btns" id="categoryBtns"></div>
 
 <section id="editorArea" class="hidden p-2 mb-4 bg-white rounded shadow">
   <h2 class="font-semibold mb-2">📰 Create / Edit Post</h2>
   <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Title">
   <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category">
-  <textarea id="aText" class="border p-2 w-full mb-2 rounded" rows="5" placeholder="Write news (You can insert &lt;img src='url'&gt; tags between paragraphs)"></textarea>
+  <textarea id="aText" class="border p-2 w-full mb-2 rounded" rows="6" placeholder="Write content here... (use [image:URL] for inline images)"></textarea>
   <input id="aImg" class="border p-2 w-full mb-2 rounded" placeholder="Main Image URL (optional)">
   <div class="flex gap-2">
     <button id="publishBtn" class="bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
     <button id="clearBtn" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
   </div>
-  <p class="text-xs mt-1 text-gray-500">💡 You can upload image to <a href="https://imgbb.com/" target="_blank" class="text-blue-600 underline">imgbb.com</a> and paste link here.</p>
 </section>
 
 <section class="posts-grid" id="postsArea"></section>
@@ -81,7 +84,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, onSnapshot, orderBy, query, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain: "all-madrsa.firebaseapp.com",
@@ -94,11 +96,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const ADMIN_EMAIL = "admin@example.com"; // ⚠️ change this
-
+const ADMIN_EMAIL = "admin@example.com"; // change to your real admin email
+let currentCategory = "";
 let editingId = null;
 
-// Elements
+// DOM
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const editorArea = document.getElementById("editorArea");
@@ -110,7 +112,7 @@ const modalBg = document.getElementById("modalBg");
 const modalClose = document.getElementById("modalClose");
 const modalContent = document.getElementById("modalContent");
 
-// 🔐 Auth
+// Auth
 loginBtn.onclick = async () => {
   const provider = new GoogleAuthProvider();
   await signInWithPopup(auth, provider);
@@ -133,25 +135,26 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// 📰 Posts live
+// Live Posts
 const postsRef = collection(db, "vasai_news");
 onSnapshot(query(postsRef, orderBy("time", "desc")), snap => {
   const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderPosts(posts);
+  makeCategories(posts);
 });
 
-// 🚨 Notice live
+// Notice Live
 const noticeRef = doc(db, "settings", "notice");
 onSnapshot(noticeRef, snap => {
-  if (snap.exists()) noticeText.textContent = snap.data().text;
+  if (snap.exists()) noticeText.textContent = snap.data().text || "";
 });
 document.getElementById("saveNoticeBtn").onclick = async () => {
-  const val = document.getElementById("noticeInput").value.trim();
+  const val = document.getElementById("noticeInput").value;
   await setDoc(noticeRef, { text: val });
   alert("Notice updated!");
 };
 
-// ➕ Publish
+// Publish
 document.getElementById("publishBtn").onclick = async () => {
   const title = aTitle.value.trim();
   const cat = aCat.value.trim();
@@ -167,50 +170,79 @@ document.getElementById("publishBtn").onclick = async () => {
   }
   clearFields();
 };
-
 document.getElementById("clearBtn").onclick = clearFields;
-function clearFields(){ aTitle.value=aCat.value=aText.value=aImg.value=""; editingId=null; }
+function clearFields(){aTitle.value=aCat.value=aText.value=aImg.value="";editingId=null;}
 
-// 📰 Render
+// Category
+function makeCategories(posts){
+  const cats = [...new Set(posts.map(p=>p.category).filter(Boolean))];
+  const btns = document.getElementById("categoryBtns");
+  btns.innerHTML = `<button class="${!currentCategory?"active":""}" onclick="filterCat('')">All</button>` +
+    cats.map(c=>`<button class="${c===currentCategory?"active":""}" onclick="filterCat('${c}')">${c}</button>`).join("");
+}
+window.filterCat = (c)=>{ currentCategory=c; getDocs(postsRef).then(snap=>renderPosts(snap.docs.map(d=>({id:d.id,...d.data()})))); }
+
+// Render
 function renderPosts(posts){
   postsArea.innerHTML="";
-  posts.forEach(d=>{
-    const img = d.image || "https://via.placeholder.com/400x200?text=News";
+  const filtered=currentCategory?posts.filter(p=>p.category===currentCategory):posts;
+  filtered.forEach(d=>{
+    const img = d.image || "https://via.placeholder.com/300x150?text=No+Image";
+    const excerpt = d.text.length>100?d.text.substring(0,100)+"...":d.text;
     const card=document.createElement("div");
     card.className="card";
-    card.innerHTML=`<img src="${img}"><div class="card-body"><h3>${d.title}</h3><p>${(d.text.replace(/<[^>]+>/g,'').slice(0,120))}...</p><button class='bg-blue-600 text-white px-2 py-1 rounded text-sm'>Read More</button></div>`;
+    card.innerHTML=`<img src="${img}"><div class="card-body"><h3>${d.title}</h3><p>${excerpt}</p><button class='bg-blue-600 text-white px-2 py-1 rounded text-sm'>Read More</button></div>`;
     card.onclick=()=>showModal(d);
     postsArea.appendChild(card);
   });
 }
 
-// 📖 Modal
+// Modal
+function formatNews(text) {
+  return text.split("\n").map(line => {
+    const match = line.match(/\[image:(.*?)\]/);
+    if (match) return `<img src="${match[1]}" class="w-full rounded my-2">`;
+    return `<p>${line}</p>`;
+  }).join("");
+}
+
 function showModal(d){
-  modalContent.innerHTML=`<h2 class="text-xl font-bold mb-2">${d.title}</h2>
-  <p class="text-sm text-gray-500 mb-2">${d.category||""}</p>
-  <img src="${d.image||""}" class="mb-2 rounded">
-  <div class="prose max-w-none">${d.text}</div>`;
-  
+  modalContent.innerHTML=`
+    <h2 class="text-lg font-bold mb-2">${d.title}</h2>
+    <p class="text-sm text-gray-500 mb-2">${d.category||""}</p>
+    <img src="${d.image||""}" class="w-full mb-2 rounded">
+    <div class="space-y-2">${formatNews(d.text)}</div>`;
+
   const user=auth.currentUser;
   if(user && user.email===ADMIN_EMAIL){
-    const editBtn=document.createElement("button");
-    editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2";
-    editBtn.textContent="Edit";
-    editBtn.onclick=()=>{editingId=d.id;aTitle.value=d.title;aCat.value=d.category;aText.value=d.text;aImg.value=d.image;modalBg.style.display='none';};
-    const delBtn=document.createElement("button");
-    delBtn.className="bg-red-500 text-white px-3 py-1 rounded";
-    delBtn.textContent="Delete";
-    delBtn.onclick=async()=>{if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id)); modalBg.style.display='none';};
-    modalContent.appendChild(editBtn);
-    modalContent.appendChild(delBtn);
+    const adminBtns=document.createElement("div");
+    adminBtns.className="flex gap-2 mt-3";
+    adminBtns.innerHTML=`
+      <button class='bg-gray-300 px-3 py-1 rounded' onclick="startEdit('${d.id}','${encodeURIComponent(d.title)}','${encodeURIComponent(d.category||"")}','${encodeURIComponent(d.text)}','${encodeURIComponent(d.image||"")}')">✏️ Edit</button>
+      <button class='bg-red-500 text-white px-3 py-1 rounded' onclick="deletePost('${d.id}')">🗑 Delete</button>`;
+    modalContent.appendChild(adminBtns);
   }
   modalBg.style.display="flex";
 }
 modalClose.onclick=()=>modalBg.style.display="none";
-modalBg.onclick=e=>{if(e.target===modalBg) modalBg.style.display="none";}
+modalBg.onclick=e=>{if(e.target===modalBg) modalBg.style.display="none";};
 
-// Demo ticker
-tickerText.textContent="Welcome to Vasai Live News — Fast, Real and Local Updates!";
+window.startEdit = (id, title, cat, text, img) => {
+  editingId=id;
+  aTitle.value=decodeURIComponent(title);
+  aCat.value=decodeURIComponent(cat);
+  aText.value=decodeURIComponent(text);
+  aImg.value=decodeURIComponent(img);
+  modalBg.style.display="none";
+  editorArea.scrollIntoView({behavior:"smooth"});
+};
+window.deletePost = async (id) => {
+  if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",id));
+  modalBg.style.display="none";
+};
+
+// Headline ticker
+tickerText.textContent="Breaking: Vasai Live News Portal launched with real-time updates!";
 </script>
 </body>
 </html>
