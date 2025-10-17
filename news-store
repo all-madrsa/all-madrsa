@@ -5,30 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vasai Live News</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 <style>
-body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;overflow-x:hidden;}
-header{display:flex;align-items:center;justify-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;position:sticky;top:0;z-index:100;}
-.header-left{display:flex;align-items:center;}
-header img{height:50px;width:50px;border-radius:6px;margin-right:8px;}
-header h1{text-shadow:2px 2px 4px #000;font-weight:800;font-size:22px;}
-.header-buttons{display:flex;gap:6px;}
-.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;text-shadow:1px 1px 2px #000;}
-.ticker{background:#1e40af;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
-.ticker span{display:inline-block;padding-right:50px;animation:scroll 20s linear infinite;}
-.notice-ticker{background:#dc2626;color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
-.notice-ticker span{display:inline-block;padding-right:50px;animation:scroll 25s linear infinite;}
-.category-btns{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;}
-.category-btns button{flex-shrink:0;padding:4px 8px;border-radius:6px;border:1px solid #3b82f6;color:#3b82f6;cursor:pointer;}
-.category-btns button.active{background:#3b82f6;color:white;}
-.posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;}
+header{display:flex;align-items:center;justify-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;position:sticky;top:0;z-index:100;}
+header img{height:45px;width:45px;border-radius:6px;margin-right:8px;}
+.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:12px;}
 .card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);cursor:pointer;transition:transform 0.2s;}
 .card:hover{transform:scale(1.02);}
 .card img{width:100%;height:150px;object-fit:cover;}
-.card-body{padding:8px;}
-.card-body h3{font-weight:700;font-size:18px;margin-bottom:4px;}
-.card-body p{font-size:14px;color:#555;margin-bottom:6px;}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:200;}
-.modal{background:#fff;border-radius:10px;max-width:600px;width:90%;max-height:80%;overflow-y:auto;padding:16px;position:relative;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:200;}
+.modal{background:#fff;border-radius:10px;max-width:650px;width:90%;max-height:85%;overflow-y:auto;padding:16px;position:relative;}
 .modal-close{position:absolute;top:8px;right:8px;background:#f87171;color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;}
 textarea{resize:none;}
 </style>
@@ -36,39 +26,31 @@ textarea{resize:none;}
 <body class="p-2">
 
 <header>
-  <div class="header-left">
-    <img src="file:///C:/Users/YourPC/Path/Logo.png" alt="Logo">
-    <h1>Vasai Live News</h1>
+  <div class="flex items-center">
+    <img src="https://via.placeholder.com/50x50?text=VL" alt="Logo">
+    <h1 class="font-bold text-xl">Vasai Live News</h1>
   </div>
   <div class="header-buttons">
     <button id="loginBtn" class="bg-blue-700 text-white">Login</button>
     <button id="logoutBtn" class="hidden bg-red-600 text-white">Logout</button>
-    <button class="bg-yellow-500 text-white">About</button>
-    <button class="bg-green-500 text-white">Contact</button>
   </div>
 </header>
 
-<div class="ticker"><span id="tickerText">Loading latest news...</span></div>
-<div class="notice-ticker"><span id="noticeText">Admin notice...</span></div>
-<div id="noticeEditor" class="hidden mb-2">
-  <input type="text" id="noticeInput" class="border p-1 w-full rounded" placeholder="Write notice">
-  <button id="saveNoticeBtn" class="bg-blue-700 text-white px-3 py-1 mt-1 rounded">Save Notice</button>
-</div>
-
-<div class="category-btns" id="categoryBtns"></div>
-
-<section id="editorArea" class="hidden p-2 mb-4 bg-white rounded shadow">
-  <h2 class="font-semibold mb-2">Create / Edit Post</h2>
-  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Title">
+<section id="editorArea" class="hidden p-3 mt-2 bg-white rounded shadow">
+  <h2 class="font-semibold mb-2">📰 Create / Edit News</h2>
+  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="News Title">
   <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category">
+
   <div class="flex gap-2 mb-2">
     <button id="addTextBtn" class="bg-gray-200 px-3 py-1 rounded">Add Text</button>
     <button id="addImageBtn" class="bg-gray-200 px-3 py-1 rounded">Add Image</button>
   </div>
+  
   <div id="blocksList" class="mb-3"></div>
+
   <div class="flex gap-2">
     <button id="publishBtn" class="bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
-    <button id="clearBtn" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
+    <button id="clearBtn" class="bg-gray-300 px-4 py-2 rounded">Clear</button>
   </div>
 </section>
 
@@ -82,49 +64,201 @@ textarea{resize:none;}
 </div>
 
 <script type="module">
-// Firebase and admin logic same as previous, just rendering posts differently
-// Posts will now show excerpt in card with "Read More" button
-// Modal shows full content with admin edit/delete buttons
-// Tickers remain sticky
-// Admin can edit notice
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// ... Insert same Firebase setup, login/logout, admin check, add/edit/delete, notice save/load ...
+// 🔥 Firebase Config
+const firebaseConfig = {
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  projectId:"all-madrsa",
+  storageBucket:"all-madrsa.appspot.com",
+  messagingSenderId:"619313835874",
+  appId:"1:619313835874:web:e33f0c8bdef6d1a7f31e9f"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Updated renderPosts function for professional card style
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+
+let editingId = null;
+
+// DOM elements
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const editorArea = document.getElementById("editorArea");
+const postsArea = document.getElementById("postsArea");
+const blocksList = document.getElementById("blocksList");
+
+// Auth
+loginBtn.onclick = async () => {
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
+};
+logoutBtn.onclick = () => signOut(auth);
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+    if (user.email === ADMIN_EMAIL) {
+      editorArea.classList.remove("hidden");
+    }
+  } else {
+    loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
+    editorArea.classList.add("hidden");
+  }
+});
+
+// 🖼 ImgBB Upload
+async function uploadToImgBB(file){
+  const form = new FormData();
+  form.append("image", file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:"POST",body:form});
+  const data = await res.json();
+  return data.data.url;
+}
+
+// ➕ Add Text Block
+document.getElementById("addTextBtn").onclick = ()=>{
+  const t = document.createElement("textarea");
+  t.className="border p-2 w-full mb-2 rounded";
+  t.placeholder="Write paragraph...";
+  t.dataset.type="text";
+  blocksList.appendChild(t);
+};
+
+// ➕ Add Image Block
+document.getElementById("addImageBtn").onclick = ()=>{
+  const div=document.createElement("div");
+  div.className="mb-2 border p-2 rounded bg-gray-50";
+  const input=document.createElement("input");
+  input.type="file";
+  input.className="w-full";
+  input.dataset.type="image";
+  div.appendChild(input);
+  blocksList.appendChild(div);
+};
+
+// 🧹 Clear Editor
+document.getElementById("clearBtn").onclick = ()=>{
+  aTitle.value=aCat.value="";
+  blocksList.innerHTML="";
+  editingId=null;
+};
+
+// 📰 Publish Post
+document.getElementById("publishBtn").onclick = async ()=>{
+  const title=aTitle.value.trim();
+  const category=aCat.value.trim();
+  if(!title) return alert("Enter title first!");
+
+  const blocks=[];
+  const children=blocksList.children;
+  for(const el of children){
+    if(el.dataset.type==="text" || el.tagName==="TEXTAREA"){
+      if(el.value.trim()) blocks.push({type:"text",text:el.value.trim()});
+    }
+    else{
+      const fileInput=el.querySelector("input[type=file]");
+      if(fileInput && fileInput.files.length>0){
+        const url=await uploadToImgBB(fileInput.files[0]);
+        blocks.push({type:"image",url});
+      }
+    }
+  }
+
+  if(blocks.length===0) return alert("Please add some content!");
+  if(editingId){
+    await updateDoc(doc(db,"vasai_news",editingId),{title,category,blocks,time:Date.now()});
+    alert("Post updated!");
+  }else{
+    await addDoc(collection(db,"vasai_news"),{title,category,blocks,time:Date.now()});
+    alert("Post published!");
+  }
+  aTitle.value=aCat.value=""; blocksList.innerHTML=""; editingId=null;
+};
+
+// 🔁 Live Load
+onSnapshot(query(collection(db,"vasai_news"),orderBy("time","desc")),snap=>{
+  const posts=snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderPosts(posts);
+});
+
+// 🧩 Render
 function renderPosts(posts){
   postsArea.innerHTML="";
-  const filtered=currentCategory?posts.filter(p=>p.category===currentCategory):posts;
-  filtered.forEach(d=>{
-    const card=document.createElement("div"); card.className="card";
-    const firstImg=d.blocks.find(b=>b.type==="image")?.url||"https://via.placeholder.com/300x150?text=No+Image";
-    const excerpt = d.blocks.find(b=>b.type==="text")?.text.substring(0,100)+"...";
-    card.innerHTML=`<img src="${firstImg}"><div class="card-body"><h3>${d.title}</h3><p>${excerpt}</p><button class="bg-blue-600 text-white px-2 py-1 rounded text-sm">Read More</button></div>`;
-    card.onclick=()=>{ showModal(d); };
+  posts.forEach(d=>{
+    const firstImg=d.blocks.find(b=>b.type==="image")?.url || "https://via.placeholder.com/300x150?text=No+Image";
+    const firstText=d.blocks.find(b=>b.type==="text")?.text?.substring(0,80)+"..." || "";
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<img src="${firstImg}"><div class="p-2"><h3 class="font-bold">${d.title}</h3><p class="text-sm text-gray-600">${firstText}</p></div>`;
+    card.onclick=()=>showModal(d);
     postsArea.appendChild(card);
   });
 }
 
-// showModal function shows full post with admin options
+// 📰 Modal
+const modalBg=document.getElementById("modalBg");
+const modalClose=document.getElementById("modalClose");
+const modalContent=document.getElementById("modalContent");
+
 function showModal(d){
-  modalContent.innerHTML=`<h2 class="text-lg font-bold mb-2">${d.title}</h2>`;
+  modalContent.innerHTML=`<h2 class='text-lg font-bold mb-2'>${d.title}</h2>`;
   d.blocks.forEach(b=>{
-    if(b.type==="text") modalContent.innerHTML+=`<p class="mb-2">${b.text}</p>`;
-    else if(b.type==="image") modalContent.innerHTML+=`<img src="${b.url}" class="w-full mb-2 rounded">`;
+    if(b.type==="text") modalContent.innerHTML+=`<p class='mb-2 text-gray-800 leading-relaxed'>${b.text}</p>`;
+    else if(b.type==="image") modalContent.innerHTML+=`<img src='${b.url}' class='w-full mb-3 rounded shadow'>`;
   });
+
   const user=auth.currentUser;
   if(user && user.email===ADMIN_EMAIL){
-    const editBtn=document.createElement("button"); editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2"; editBtn.textContent="Edit";
-    const delBtn=document.createElement("button"); delBtn.className="bg-red-500 text-white px-3 py-1 rounded"; delBtn.textContent="Delete";
-    editBtn.onclick=(e)=>{ e.stopPropagation(); editingId=d.id; aTitle.value=d.title; aCat.value=d.category; blocksList.innerHTML=""; d.blocks.forEach(b=>{if(b.type==="text"){const t=document.createElement("textarea");t.className="border w-full p-2 rounded mt-2";t.value=b.text;blocksList.appendChild(t);}else if(b.type==="image"){const div=document.createElement("div"); const urlInput=document.createElement("input"); urlInput.type="text"; urlInput.className="border w-full p-1 rounded mt-1"; urlInput.value=b.url; div.appendChild(urlInput); blocksList.appendChild(div);} }); modalBg.style.display="none"; };
-    delBtn.onclick=async(e)=>{ e.stopPropagation(); if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id)).then(()=>loadPosts()); modalBg.style.display="none"; };
-    modalContent.appendChild(editBtn); modalContent.appendChild(delBtn);
+    const editBtn=document.createElement("button");
+    editBtn.textContent="Edit";
+    editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2";
+    editBtn.onclick=()=>{
+      editingId=d.id;
+      aTitle.value=d.title;
+      aCat.value=d.category;
+      blocksList.innerHTML="";
+      d.blocks.forEach(b=>{
+        if(b.type==="text"){
+          const t=document.createElement("textarea");
+          t.className="border p-2 w-full mb-2 rounded";
+          t.value=b.text;
+          t.dataset.type="text";
+          blocksList.appendChild(t);
+        }else{
+          const div=document.createElement("div");
+          div.className="mb-2 border p-2 rounded bg-gray-50";
+          const info=document.createElement("p");
+          info.textContent="Existing image:";
+          const img=document.createElement("img");
+          img.src=b.url;
+          img.className="w-full mb-1 rounded";
+          div.appendChild(info);
+          div.appendChild(img);
+          blocksList.appendChild(div);
+        }
+      });
+      modalBg.style.display="none";
+    };
+    const delBtn=document.createElement("button");
+    delBtn.textContent="Delete";
+    delBtn.className="bg-red-500 text-white px-3 py-1 rounded";
+    delBtn.onclick=async()=>{if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id)); modalBg.style.display="none";};
+    modalContent.appendChild(editBtn);
+    modalContent.appendChild(delBtn);
   }
   modalBg.style.display="flex";
 }
 
-modalClose.onclick=()=>{modalBg.style.display="none";}
+modalClose.onclick=()=>modalBg.style.display="none";
 modalBg.onclick=e=>{if(e.target===modalBg) modalBg.style.display="none";}
-
 </script>
 </body>
 </html>
