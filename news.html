@@ -1,235 +1,429 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vasai Live News</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Vasai Live News — Working</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <style>
-body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;overflow-x:hidden;}
-header{display:flex;align-items:center;justify-between;padding:8px 12px;background:#1e40af;color:white;border-radius:6px;margin-bottom:6px;position:sticky;top:0;z-index:100;}
-.header-left{display:flex;align-items:center;}
-header img{height:45px;width:45px;border-radius:6px;margin-right:8px;}
-header h1{text-shadow:1px 1px 3px #000;font-weight:800;font-size:20px;}
-.header-buttons{display:flex;gap:6px;}
-.header-buttons button{padding:3px 6px;font-size:12px;border-radius:4px;font-weight:600;text-shadow:1px 1px 2px #000;cursor:pointer;}
-.ticker,.notice-ticker{color:white;padding:6px;overflow:hidden;white-space:nowrap;margin-bottom:6px;}
-.ticker{background:#1e40af;}
-.notice-ticker{background:#dc2626;}
-.ticker span,.notice-ticker span{display:inline-block;padding-right:50px;animation:scroll 20s linear infinite;}
-@keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
-.category-btns{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;}
-.category-btns button{flex-shrink:0;padding:4px 8px;border-radius:6px;border:1px solid #3b82f6;color:#3b82f6;cursor:pointer;}
-.category-btns button.active{background:#3b82f6;color:white;}
-.posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
-.card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);cursor:pointer;transition:transform 0.2s;}
-.card:hover{transform:scale(1.02);}
-.card img{width:100%;height:150px;object-fit:cover;}
-.card-body{padding:8px;}
-.card-body h3{font-weight:700;font-size:18px;margin-bottom:4px;}
-.card-body p{font-size:14px;color:#555;margin-bottom:6px;}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:200;}
-.modal{background:#fff;border-radius:10px;max-width:600px;width:90%;max-height:80%;overflow-y:auto;padding:16px;position:relative;}
-.modal-close{position:absolute;top:8px;right:8px;background:#f87171;color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;}
+  body{background:#f6f7fb;color:#0b2540;font-family:Arial,sans-serif;overflow-x:hidden;margin-bottom:100px;}
+  header{display:flex;align-items:center;justify-between;padding:10px 14px;background:#1e40af;color:white;position:sticky;top:0;z-index:100;border-radius:6px;margin:8px;}
+  header img{height:44px;width:44px;border-radius:6px;margin-right:8px;}
+  header h1{font-weight:800;font-size:20px;text-shadow:1px 1px 2px #000;}
+  .ticker,.notice-ticker{color:white;padding:8px;overflow:hidden;white-space:nowrap;position:fixed;left:0;right:0;z-index:95;}
+  .ticker{background:#1e40af;bottom:44px;}
+  .notice-ticker{background:#dc2626;bottom:0;}
+  .ticker span,.notice-ticker span{display:inline-block;padding-right:60px;animation:scroll 18s linear infinite;}
+  @keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+  .posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;padding:16px;}
+  .card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.06);cursor:pointer;transition:transform .15s;}
+  .card:hover{transform:scale(1.02);}
+  .card img{width:100%;height:150px;object-fit:cover;}
+  .card-body{padding:10px;}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:200;}
+  .modal{background:#fff;border-radius:10px;max-width:800px;width:95%;max-height:85%;overflow-y:auto;padding:18px;position:relative;}
+  .modal-close{position:absolute;top:8px;right:8px;background:#f87171;color:white;border:none;border-radius:6px;padding:6px;cursor:pointer;}
+  .hidden-el{display:none;}
+  .input, textarea { width:100%; padding:8px; border-radius:6px; border:1px solid #ddd; }
+  .small { font-size:13px; padding:6px 10px; }
 </style>
-</head>
-<body class="p-2">
 
-<header>
-  <div class="header-left">
-    <img src="https://via.placeholder.com/50x50?text=VL" alt="Logo">
+<!-- Firebase v8 CDN (compat style) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+</head>
+<body>
+
+<header class="mx-2">
+  <div class="flex items-center">
+    <img src="https://via.placeholder.com/44x44?text=VL" alt="Logo">
     <h1>Vasai Live News</h1>
   </div>
-  <div class="header-buttons">
-    <button id="loginBtn" class="bg-blue-700 text-white">Login</button>
-    <button id="logoutBtn" class="hidden bg-red-600 text-white">Logout</button>
+  <div class="flex gap-2 items-center">
+    <button id="loginBtn" class="bg-blue-700 text-white small rounded">Admin Login</button>
+    <button id="logoutBtn" class="bg-red-600 text-white small rounded hidden-el">Logout</button>
   </div>
 </header>
 
-<div class="ticker"><span id="tickerText">Loading latest headlines...</span></div>
-<div class="notice-ticker"><span id="noticeText">Loading notice...</span></div>
-
-<div id="noticeEditor" class="hidden mb-2">
-  <input type="text" id="noticeInput" class="border p-1 w-full rounded" placeholder="Write notice">
-  <button id="saveNoticeBtn" class="bg-blue-700 text-white px-3 py-1 mt-1 rounded">Save Notice</button>
+<!-- Editor + Notice (admin only) -->
+<div id="noticeEditor" class="mx-4 my-2 hidden-el">
+  <div class="bg-white p-3 rounded shadow">
+    <label class="block mb-1 small font-semibold">Admin Notice (bottom red bar)</label>
+    <input id="noticeInput" class="input mb-2" placeholder="Write notice..." />
+    <div class="flex gap-2">
+      <button id="saveNoticeBtn" class="bg-blue-700 text-white small rounded">Save Notice</button>
+    </div>
+  </div>
 </div>
 
-<div class="category-btns" id="categoryBtns"></div>
-
-<section id="editorArea" class="hidden p-2 mb-4 bg-white rounded shadow">
-  <h2 class="font-semibold mb-2">Create / Edit Post</h2>
-  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Title">
-  <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category">
-  <textarea id="aText" class="border p-2 w-full mb-2 rounded" rows="4" placeholder="Write content..."></textarea>
-  <input type="file" id="aImgFile" class="border p-2 w-full mb-2 rounded">
-  <div class="flex gap-2">
-    <button id="publishBtn" class="bg-blue-700 text-white px-4 py-2 rounded">Publish</button>
-    <button id="clearBtn" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
+<div id="editorArea" class="mx-4 my-2 hidden-el">
+  <div class="bg-white p-3 rounded shadow">
+    <h2 class="font-bold mb-2">Create / Edit Post (Admin)</h2>
+    <input id="titleField" class="input mb-2" placeholder="Title" />
+    <input id="catField" class="input mb-2" placeholder="Category (e.g. Local, Sports)" />
+    <textarea id="textField" class="input mb-2" rows="5" placeholder="Full content..."></textarea>
+    <div class="mb-2">
+      <label class="block small mb-1">Image (optional)</label>
+      <input type="file" id="imageFile" />
+      <div id="uploadStatus" class="text-sm text-gray-600 mt-1"></div>
+    </div>
+    <div class="flex gap-2">
+      <button id="savePostBtn" class="bg-green-600 text-white small rounded">Publish</button>
+      <button id="clearBtn" class="bg-gray-200 small rounded">Clear</button>
+    </div>
   </div>
-</section>
+</div>
 
-<section class="posts-grid" id="postsArea"></section>
+<!-- Category buttons container -->
+<div id="categoryBtns" class="mx-4 my-2 flex gap-2 overflow-auto"></div>
 
+<!-- Posts grid -->
+<section id="postsGrid" class="posts-grid mx-2"></section>
+
+<!-- Modal -->
 <div id="modalBg" class="modal-bg flex">
   <div class="modal">
-    <button id="modalClose" class="modal-close">X</button>
+    <button id="modalClose" class="modal-close">Close</button>
     <div id="modalContent"></div>
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, orderBy, query, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+<!-- Bottom tickers -->
+<div class="ticker"><span id="tickerText">Loading latest headlines...</span></div>
+<div class="notice-ticker"><span id="noticeText">Loading notice...</span></div>
 
-// Firebase
+<script>
+/* ---------------------------
+   Put your Firebase config here
+   (You confirmed this config)
+   --------------------------- */
 const firebaseConfig = {
-  apiKey: "AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
-  authDomain: "all-madrsa.firebaseapp.com",
-  projectId: "all-madrsa",
-  storageBucket: "all-madrsa.appspot.com",
-  messagingSenderId: "619313835874",
-  appId: "1:619313835874:web:e33f0c8bdef6d1a7f31e9f"
+  apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
+  authDomain:"all-madrsa.firebaseapp.com",
+  projectId:"all-madrsa",
+  storageBucket:"all-madrsa.appspot.com",
+  messagingSenderId:"619313835874",
+  appId:"1:619313835874:web:e387e1297663b11fc2463b11fc2463b"
 };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
 
-const ADMIN_EMAIL = "admin@example.com"; // Change to your admin email
-let currentCategory = "";
+/* Admin email (who can see editor) */
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com"; // <-- keep your admin email here
+
+/* Initialize Firebase (v8 style) */
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+/* DOM shortcuts */
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const editorArea = document.getElementById('editorArea');
+const noticeEditor = document.getElementById('noticeEditor');
+const postsGrid = document.getElementById('postsGrid');
+const modalBg = document.getElementById('modalBg');
+const modalClose = document.getElementById('modalClose');
+const modalContent = document.getElementById('modalContent');
+const titleField = document.getElementById('titleField');
+const catField = document.getElementById('catField');
+const textField = document.getElementById('textField');
+const imageFile = document.getElementById('imageFile');
+const savePostBtn = document.getElementById('savePostBtn');
+const clearBtn = document.getElementById('clearBtn');
+const uploadStatus = document.getElementById('uploadStatus');
+const noticeInput = document.getElementById('noticeInput');
+const saveNoticeBtn = document.getElementById('saveNoticeBtn');
+const tickerText = document.getElementById('tickerText');
+const noticeText = document.getElementById('noticeText');
+const categoryBtns = document.getElementById('categoryBtns');
+
+let currentUser = null;
 let editingId = null;
+let currentCategory = "";
 
-// DOM
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const editorArea = document.getElementById("editorArea");
-const noticeEditor = document.getElementById("noticeEditor");
-const postsArea = document.getElementById("postsArea");
-const noticeText = document.getElementById("noticeText");
-const tickerText = document.getElementById("tickerText");
-const modalBg = document.getElementById("modalBg");
-const modalClose = document.getElementById("modalClose");
+/* ---------- Auth handlers ---------- */
+/* Login: show a simple email/password prompt first; if admin uses Google it's optional */
+loginBtn.addEventListener('click', async () => {
+  // Prefer Google popup (easier). If you want email/password, uncomment below.
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await auth.signInWithPopup(provider);
+  } catch (err) {
+    alert('Login failed: ' + err.message);
+  }
+});
 
-// Auth
-loginBtn.onclick = async () => {
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
-};
-logoutBtn.onclick = () => signOut(auth);
+logoutBtn.addEventListener('click', () => auth.signOut());
 
 auth.onAuthStateChanged(user => {
+  currentUser = user;
   if (user) {
-    loginBtn.classList.add("hidden");
-    logoutBtn.classList.remove("hidden");
-    if (user.email === ADMIN_EMAIL) {
-      editorArea.classList.remove("hidden");
-      noticeEditor.classList.remove("hidden");
+    loginBtn.classList.add('hidden');
+    logoutBtn.classList.remove('hidden');
+    // show admin-only areas if email matches
+    if (user.email && user.email.toLowerCase() === (ADMIN_EMAIL || '').toLowerCase()) {
+      editorArea.classList.remove('hidden-el');
+      editorArea.classList.remove('hidden');
+      noticeEditor.classList.remove('hidden-el');
+      noticeEditor.classList.remove('hidden');
+    } else {
+      editorArea.classList.add('hidden');
+      noticeEditor.classList.add('hidden');
     }
   } else {
-    loginBtn.classList.remove("hidden");
-    logoutBtn.classList.add("hidden");
-    editorArea.classList.add("hidden");
-    noticeEditor.classList.add("hidden");
+    loginBtn.classList.remove('hidden');
+    logoutBtn.classList.add('hidden');
+    editorArea.classList.add('hidden');
+    noticeEditor.classList.add('hidden');
   }
 });
 
-// Posts live
-const postsRef = collection(db, "vasai_news");
-onSnapshot(query(postsRef, orderBy("time","desc")), snap => {
-  const posts = snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderPosts(posts);
-  makeCategories(posts);
-});
+/* ---------- Live posts listener ---------- */
+const postsRef = db.collection('vasai_news');
 
-// Notice live
-const noticeRef = doc(db,"settings","notice");
-onSnapshot(noticeRef, snap=>{
-  if(snap.exists()) noticeText.textContent = snap.data().text;
-});
-document.getElementById("saveNoticeBtn").onclick = async()=>{
-  const val = document.getElementById("noticeInput").value;
-  await setDoc(noticeRef,{text:val});
-  alert("Notice updated!");
-};
-
-// Publish post
-document.getElementById("publishBtn").onclick = async()=>{
-  const title = aTitle.value.trim();
-  const cat = aCat.value.trim();
-  const text = aText.value.trim();
-  const file = aImgFile.files[0];
-  if(!title||!text) return alert("Title and content required");
-
-  let imageUrl = "";
-  if(file){
-    const imgRef = ref(storage, "vasai_news/"+Date.now()+"_"+file.name);
-    await uploadBytes(imgRef,file);
-    imageUrl = await getDownloadURL(imgRef);
-  }
-
-  if(editingId){
-    await updateDoc(doc(db,"vasai_news",editingId),{title,category:cat,text,image:imageUrl,time:Date.now()});
-    editingId=null;
-  }else{
-    await addDoc(postsRef,{title,category:cat,text,image:imageUrl,time:Date.now()});
-  }
-  clearFields();
-};
-
-// Clear fields
-document.getElementById("clearBtn").onclick = clearFields;
-function clearFields(){ aTitle.value=aCat.value=aText.value=""; aImgFile.value=""; editingId=null; }
-
-// Categories
-function makeCategories(posts){
-  const cats = [...new Set(posts.map(p=>p.category).filter(Boolean))];
-  const btns = document.getElementById("categoryBtns");
-  btns.innerHTML=`<button class="${!currentCategory?"active":""}" onclick="filterCat('')">All</button>`+
-    cats.map(c=>`<button class="${c===currentCategory?"active":""}" onclick="filterCat('${c}')">${c}</button>`).join("");
-}
-window.filterCat=(c)=>{currentCategory=c;getDocs(postsRef).then(snap=>renderPosts(snap.docs.map(d=>({id:d.id,...d.data()}))))}
-
-// Render posts
-function renderPosts(posts){
-  postsArea.innerHTML="";
-  const filtered = currentCategory ? posts.filter(p=>p.category===currentCategory) : posts;
-  filtered.forEach(d=>{
-    const img = d.image || "https://via.placeholder.com/300x150?text=No+Image";
-    const excerpt = d.text.length>100 ? d.text.substring(0,100)+"..." : d.text;
-    const card = document.createElement("div");
-    card.className="card";
-    card.innerHTML=`<img src="${img}"><div class="card-body"><h3>${d.title}</h3><p>${excerpt}</p><button class='bg-blue-600 text-white px-2 py-1 rounded text-sm'>Read More</button></div>`;
-    card.onclick = ()=>showModal(d);
-    postsArea.appendChild(card);
+function snapshotHandler(snapshot) {
+  const posts = [];
+  snapshot.forEach(doc => {
+    posts.push({ id: doc.id, ...doc.data() });
   });
-
-  // Update ticker dynamically
-  if(filtered.length) tickerText.textContent = filtered[0].title;
+  renderPosts(posts);
+  setupCategories(posts);
+  updateTicker(posts);
 }
 
-// Modal
-function showModal(d){
-  modalContent.innerHTML=`<h2 class="text-lg font-bold mb-2">${d.title}</h2><p class="text-sm text-gray-500 mb-2">${d.category||""}</p><img src="${d.image||""}" class="w-full mb-2 rounded"><p>${d.text}</p>`;
-  const user=auth.currentUser;
-  if(user && user.email===ADMIN_EMAIL){
-    const editBtn=document.createElement("button");
-    editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2"; editBtn.textContent="Edit";
-    editBtn.onclick=()=>{editingId=d.id;aTitle.value=d.title;aCat.value=d.category;aText.value=d.text;modalBg.style.display='none';};
-    const delBtn=document.createElement("button");
-    delBtn.className="bg-red-500 text-white px-3 py-1 rounded"; delBtn.textContent="Delete";
-    delBtn.onclick=async()=>{if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id)); modalBg.style.display='none';};
-    modalContent.appendChild(editBtn); modalContent.appendChild(delBtn);
+// Live updates ordered by time desc
+postsRef.orderBy('time','desc').onSnapshot(snapshotHandler);
+
+/* ---------- Notice listener ---------- */
+const noticeRef = db.collection('settings').doc('notice');
+noticeRef.onSnapshot(doc => {
+  if (doc.exists) {
+    noticeText.textContent = doc.data().text || "";
+  } else {
+    noticeText.textContent = "";
   }
-  modalBg.style.display="flex";
+});
+
+/* ---------- Save notice (admin) ---------- */
+saveNoticeBtn.addEventListener('click', async () => {
+  if (!currentUser || currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    return alert('Only admin can update notice');
+  }
+  const text = noticeInput.value.trim();
+  await noticeRef.set({ text });
+  alert('Notice updated');
+});
+
+/* ---------- Create / Edit Post ---------- */
+savePostBtn.addEventListener('click', async () => {
+  if (!currentUser || currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    return alert('Only admin can publish posts');
+  }
+  const title = titleField.value.trim();
+  const category = catField.value.trim();
+  const text = textField.value.trim();
+  if (!title || !text) return alert('Title and content required');
+
+  // handle image upload if file chosen
+  let imageUrl = '';
+  const file = imageFile.files[0];
+  if (file) {
+    uploadStatus.textContent = 'Uploading image...';
+    const path = 'vasai_news_images/' + Date.now() + '_' + file.name;
+    const storageRef = storage.ref().child(path);
+    try {
+      const snap = await storageRef.put(file);
+      imageUrl = await snap.ref.getDownloadURL();
+      uploadStatus.textContent = 'Image uploaded';
+    } catch (err) {
+      uploadStatus.textContent = '';
+      alert('Image upload failed: ' + err.message);
+      return;
+    }
+  }
+
+  const payload = {
+    title,
+    category,
+    text,
+    image: imageUrl || '',
+    time: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    if (editingId) {
+      await postsRef.doc(editingId).update(payload);
+      editingId = null;
+      alert('Post updated');
+    } else {
+      await postsRef.add(payload);
+      alert('Post published');
+    }
+    clearForm();
+  } catch (err) {
+    alert('Error saving post: ' + err.message);
+  } finally {
+    uploadStatus.textContent = '';
+  }
+});
+
+/* Clear form */
+clearBtn.addEventListener('click', clearForm);
+function clearForm(){
+  titleField.value = '';
+  catField.value = '';
+  textField.value = '';
+  imageFile.value = '';
+  editingId = null;
+  uploadStatus.textContent = '';
 }
-modalClose.onclick = ()=>modalBg.style.display="none";
-modalBg.onclick = e=>{if(e.target===modalBg) modalBg.style.display="none";}
+
+/* ---------- Render posts ---------- */
+function renderPosts(posts){
+  postsGrid.innerHTML = '';
+  const filtered = currentCategory ? posts.filter(p=>p.category === currentCategory) : posts;
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const img = p.image ? p.image : 'https://via.placeholder.com/600x300?text=No+Image';
+    const excerpt = p.text.length > 120 ? p.text.substring(0,120) + '...' : p.text;
+    card.innerHTML = `
+      <img src="${img}" alt="">
+      <div class="card-body">
+        <h3 class="font-bold">${escapeHtml(p.title)}</h3>
+        <p class="text-sm text-gray-600">${escapeHtml(excerpt)}</p>
+        <div class="mt-2 flex gap-2">
+          <button class="readBtn bg-blue-600 text-white small rounded">Read More</button>
+          ${currentUser && currentUser.email && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? `<button class="delBtn bg-red-500 text-white small rounded">Delete</button>` : ''}
+        </div>
+      </div>
+    `;
+    // click handlers
+    card.querySelector('.readBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      showModal(p);
+    });
+    if (card.querySelector('.delBtn')) {
+      card.querySelector('.delBtn').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!confirm('Delete this post?')) return;
+        try {
+          await postsRef.doc(p.id).delete();
+          alert('Deleted');
+        } catch (err) {
+          alert('Delete failed: ' + err.message);
+        }
+      });
+    }
+    // also open modal on card click
+    card.addEventListener('click', ()=> showModal(p));
+    postsGrid.appendChild(card);
+  });
+}
+
+/* ---------- Modal ---------- */
+modalClose.addEventListener('click', ()=> modalBg.style.display = 'none');
+modalBg.addEventListener('click', (e) => { if (e.target === modalBg) modalBg.style.display = 'none'; });
+
+function showModal(post){
+  modalContent.innerHTML = `
+    <h2 class="text-2xl font-bold mb-2">${escapeHtml(post.title)}</h2>
+    <p class="text-sm text-gray-500 mb-2">${escapeHtml(post.category || '')}</p>
+    ${post.image ? `<img src="${post.image}" class="w-full rounded mb-4" />` : ''}
+    <div class="mb-4">${escapeHtml(post.text).replace(/\n/g,'<br>')}</div>
+  `;
+  // admin controls in modal
+  if (currentUser && currentUser.email && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()){
+    const editBtn = document.createElement('button');
+    editBtn.className = 'bg-gray-200 small rounded mr-2 px-3 py-1';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => {
+      editingId = post.id;
+      titleField.value = post.title || '';
+      catField.value = post.category || '';
+      textField.value = post.text || '';
+      imageFile.value = '';
+      modalBg.style.display = 'none';
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+    const delBtn = document.createElement('button');
+    delBtn.className = 'bg-red-500 small rounded text-white px-3 py-1';
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('Delete this post?')) return;
+      try {
+        await postsRef.doc(post.id).delete();
+        alert('Deleted');
+        modalBg.style.display = 'none';
+      } catch (err) {
+        alert('Delete failed: ' + err.message);
+      }
+    });
+    modalContent.appendChild(editBtn);
+    modalContent.appendChild(delBtn);
+  }
+  modalBg.style.display = 'flex';
+}
+
+/* ---------- Categories ---------- */
+function setupCategories(posts){
+  const cats = Array.from(new Set(posts.map(p => p.category).filter(Boolean)));
+  categoryBtns.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = !currentCategory ? 'small rounded px-3 py-1 bg-blue-500 text-white' : 'small rounded px-3 py-1 border';
+  allBtn.textContent = 'All';
+  allBtn.addEventListener('click', ()=> { currentCategory = ''; refreshByCategory(posts); });
+  categoryBtns.appendChild(allBtn);
+  cats.forEach(c => {
+    const b = document.createElement('button');
+    b.className = c === currentCategory ? 'small rounded px-3 py-1 bg-blue-500 text-white' : 'small rounded px-3 py-1 border';
+    b.textContent = c;
+    b.addEventListener('click', ()=> { currentCategory = c; refreshByCategory(posts); });
+    categoryBtns.appendChild(b);
+  });
+}
+function refreshByCategory(posts) {
+  setupCategories(posts);
+  renderPosts(posts);
+}
+
+/* ---------- Ticker ---------- */
+function updateTicker(posts){
+  if (!posts || posts.length === 0) {
+    tickerText.textContent = 'No headlines yet';
+    return;
+  }
+  // Build a combined string of top 6 titles
+  const top = posts.slice(0,6).map(p => p.title).join('  |  ');
+  tickerText.textContent = top;
+}
+
+/* ---------- Utility: escape HTML ---------- */
+function escapeHtml(unsafe) {
+  if (!unsafe && unsafe !== '') return '';
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/* ---------- Initial load: load recent posts once in case onSnapshot is delayed ---------- */
+(async function initialLoad(){
+  try {
+    const snap = await postsRef.orderBy('time','desc').limit(20).get();
+    const posts = [];
+    snap.forEach(d => posts.push({ id: d.id, ...d.data() }));
+    renderPosts(posts);
+    setupCategories(posts);
+    updateTicker(posts);
+  } catch (err) {
+    console.warn('Initial load failed', err);
+  }
+})();
 </script>
 </body>
 </html>
