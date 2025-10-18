@@ -1,14 +1,14 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vasai Live News</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
@@ -18,12 +18,12 @@ const firebaseConfig = {
   messagingSenderId:"619313835874",
   appId:"1:619313835874:web:e33f0c8bdef6d1a7f31e9f"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+const IMGBB_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
 
 let editingId = null;
 
@@ -39,27 +39,24 @@ const postsArea = document.getElementById("postsArea");
 const blocksList = document.getElementById("blocksList");
 const aTitle = document.getElementById("aTitle");
 const aCat = document.getElementById("aCat");
-const modalBg = document.getElementById("modalBg");
-const modalClose = document.getElementById("modalClose");
-const modalContent = document.getElementById("modalContent");
 const noticeText = document.getElementById("noticeText");
 const headlineText = document.getElementById("headlineText");
 
 const noticeRef = doc(db,"settings","notice");
 
-// Auth
-loginBtn.onclick = async () => { await signInWithPopup(auth, new GoogleAuthProvider()); }
-logoutBtn.onclick = () => signOut(auth);
+// Login / Logout
+loginBtn.onclick = async ()=>{ await signInWithPopup(auth,new GoogleAuthProvider()); }
+logoutBtn.onclick = ()=>signOut(auth);
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(user=>{
   if(user){
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
-    if(user.email === ADMIN_EMAIL){
+    if(user.email===ADMIN_EMAIL){
       editorArea.classList.remove("hidden");
       noticeEditor.classList.remove("hidden");
     }
-  } else {
+  }else{
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
     editorArea.classList.add("hidden");
@@ -70,81 +67,79 @@ auth.onAuthStateChanged(user => {
 // ImgBB Upload
 async function uploadToImgBB(file){
   const form = new FormData();
-  form.append("image", file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:"POST", body:form });
+  form.append("image",file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{method:"POST",body:form});
   const data = await res.json();
   return data.data.url;
 }
 
-// News Editor
-document.getElementById("addTextBtn").onclick = () => {
+// Add blocks
+document.getElementById("addTextBtn").onclick = ()=>{
   const t = document.createElement("textarea");
-  t.placeholder = "Write paragraph...";
-  t.dataset.type = "text";
-  t.className = "border p-2 w-full mb-2 rounded";
+  t.placeholder = "Type paragraph...";
+  t.dataset.type="text";
+  t.className="border p-2 w-full mb-2 rounded";
   blocksList.appendChild(t);
 }
-document.getElementById("addImageBtn").onclick = () => {
+document.getElementById("addImageBtn").onclick = ()=>{
   const div = document.createElement("div");
-  div.className = "mb-2 border p-2 rounded bg-gray-50";
+  div.className="mb-2 border p-2 rounded bg-gray-50";
   const inp = document.createElement("input");
-  inp.type = "file"; inp.dataset.type="image"; inp.className="w-full";
+  inp.type="file"; inp.dataset.type="image"; inp.className="w-full";
   div.appendChild(inp);
   blocksList.appendChild(div);
 }
-document.getElementById("clearBtn").onclick = () => {
-  aTitle.value = aCat.value = "";
-  blocksList.innerHTML = "";
-  editingId = null;
+document.getElementById("clearBtn").onclick=()=>{
+  aTitle.value=aCat.value="";
+  blocksList.innerHTML="";
+  editingId=null;
 }
 
-// Publish / Update
-document.getElementById("publishBtn").onclick = async () => {
-  const title = aTitle.value.trim();
-  const cat = aCat.value.trim();
-  if(!title) return alert("Enter title!");
-  const blocks = [];
+// Publish
+document.getElementById("publishBtn").onclick=async()=>{
+  const title=aTitle.value.trim();
+  const cat=aCat.value.trim();
+  if(!title)return alert("Enter title!");
+  const blocks=[];
   for(const el of blocksList.children){
-    if(el.dataset.type === "text" || el.tagName === "TEXTAREA"){
-      if(el.value.trim()) blocks.push({type:"text", text:el.value.trim()});
-    } else if(el.dataset.type === "image"){
+    if(el.dataset.type==="text" || el.tagName==="TEXTAREA"){
+      if(el.value.trim())blocks.push({type:"text",text:el.value.trim()});
+    }else if(el.dataset.type==="image"){
       if(el.querySelector("input").files.length>0){
         const url = await uploadToImgBB(el.querySelector("input").files[0]);
-        blocks.push({type:"image", url});
+        blocks.push({type:"image",url});
       }
     }
   }
-  if(blocks.length===0) return alert("Add content!");
+  if(blocks.length===0)return alert("Add content!");
   if(editingId){
     await updateDoc(doc(db,"vasai_news",editingId),{title,category:cat,blocks,time:Date.now()});
-    editingId = null;
-  } else {
+    editingId=null;
+  }else{
     await addDoc(collection(db,"vasai_news"),{title,category:cat,blocks,time:Date.now()});
   }
-  aTitle.value = aCat.value = "";
-  blocksList.innerHTML = "";
+  aTitle.value=aCat.value="";
+  blocksList.innerHTML="";
 }
 
 // Notice
-saveNoticeBtn.onclick = async () => {
-  const text = noticeInput.value.trim();
-  if(!text) return alert("Enter notice text!");
+saveNoticeBtn.onclick=async()=>{
+  const text=noticeInput.value.trim();
+  if(!text)return alert("Enter notice!");
   await setDoc(noticeRef,{text});
   noticeInput.value="";
 }
-deleteNoticeBtn.onclick = async () => {
-  if(confirm("Delete scrolling notice?")){
-    await setDoc(noticeRef,{text:""});
-  }
+deleteNoticeBtn.onclick=async()=>{
+  if(confirm("Delete notice?")) await setDoc(noticeRef,{text:""});
 }
 
-// Load News & Notice
-onSnapshot(query(collection(db,"vasai_news"),orderBy("time","desc")), snap => {
-  const posts = snap.docs.map(d=>({id:d.id,...d.data()}));
+// Load News
+onSnapshot(query(collection(db,"vasai_news"),orderBy("time","desc")),snap=>{
+  const posts=snap.docs.map(d=>({id:d.id,...d.data()}));
   renderPosts(posts);
-  headlineText.textContent = posts.slice(0,5).map(p=>p.title).join(" — ") || "";
+  headlineText.textContent=posts.slice(0,5).map(p=>p.title).join(" — ") || "";
 });
-onSnapshot(noticeRef, snap => {
+onSnapshot(noticeRef,snap=>{
   noticeText.textContent = snap.exists() && snap.data().text ? snap.data().text : "";
 });
 
@@ -152,72 +147,20 @@ onSnapshot(noticeRef, snap => {
 function renderPosts(posts){
   postsArea.innerHTML="";
   posts.forEach(d=>{
-    const firstImg = d.blocks.find(b=>b.type==="image")?.url || "https://via.placeholder.com/300x150?text=No+Image";
-    const firstText = d.blocks.find(b=>b.type==="text")?.text?.substring(0,80)+"..." || "";
-    const card = document.createElement("div");
+    const firstImg=d.blocks.find(b=>b.type==="image")?.url || "https://via.placeholder.com/300x150?text=No+Image";
+    const firstText=d.blocks.find(b=>b.type==="text")?.text?.substring(0,80)+"..." || "";
+    const card=document.createElement("div");
     card.className="card";
-    card.innerHTML = `<img src="${firstImg}"><div class="card-body"><h3>${d.title}</h3><p>${firstText}</p>
-    <div class="social-share">
-    <button onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),'_blank');event.stopPropagation();">FB</button>
-    <button onclick="window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(location.href),'_blank');event.stopPropagation();">WA</button>
-    <button onclick="window.open('https://twitter.com/intent/tweet?url='+encodeURIComponent(location.href),'_blank');event.stopPropagation();">TW</button>
-    </div>`;
-    card.onclick = () => showModal(d);
+    card.innerHTML=`<img src="${firstImg}" class="w-full h-36 object-cover rounded"><div class="p-2"><h3 class="font-bold">${d.title}</h3><p>${firstText}</p></div>`;
     postsArea.appendChild(card);
   });
-}
-
-// Modal
-modalClose.onclick = () => modalBg.style.display="none";
-modalBg.onclick = e => { if(e.target===modalBg) modalBg.style.display="none"; }
-
-function showModal(d){
-  modalContent.innerHTML=`<h2 class="text-lg font-bold mb-2">${d.title}</h2>`;
-  d.blocks.forEach(b=>{
-    if(b.type==="text") modalContent.innerHTML+=`<p class="mb-2 text-gray-800 leading-relaxed">${b.text}</p>`;
-    else if(b.type==="image") modalContent.innerHTML+=`<img src="${b.url}" class="w-full mb-3 rounded shadow">`;
-  });
-  const user = auth.currentUser;
-  if(user && user.email === ADMIN_EMAIL){
-    const editBtn = document.createElement("button");
-    editBtn.textContent="Edit"; editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2";
-    editBtn.onclick=()=>{
-      editingId = d.id;
-      aTitle.value = d.title;
-      aCat.value = d.category;
-      blocksList.innerHTML="";
-      d.blocks.forEach(b=>{
-        if(b.type==="text"){
-          const t = document.createElement("textarea");
-          t.value = b.text; t.dataset.type="text"; t.className="border p-2 w-full mb-2 rounded";
-          blocksList.appendChild(t);
-        } else {
-          const div = document.createElement("div");
-          div.className="mb-2 border p-2 rounded bg-gray-50";
-          const img = document.createElement("img");
-          img.src = b.url; img.className="w-full mb-1 rounded";
-          div.appendChild(img);
-          blocksList.appendChild(div);
-        }
-      });
-      modalBg.style.display="none";
-    }
-    const delBtn = document.createElement("button");
-    delBtn.textContent="Delete"; delBtn.className="bg-red-500 text-white px-3 py-1 rounded";
-    delBtn.onclick=async()=>{ if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id)); modalBg.style.display="none";}
-    modalContent.appendChild(editBtn); modalContent.appendChild(delBtn);
-  }
-  modalBg.style.display="flex";
 }
 </script>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
 <header class="flex justify-between items-center p-3 bg-blue-800 text-white sticky top-0 z-50 shadow">
-  <div class="flex items-center">
-    <img id="logoImg" src="https://i.postimg.cc/vTb8F94w/vasalive-png.jpg" class="h-12 w-12 rounded mr-2">
-    <h1 class="text-xl font-bold">Vasai Live News</h1>
-  </div>
+  <h1 class="text-xl font-bold">Vasai Live News</h1>
   <div>
     <button id="loginBtn" class="bg-blue-600 px-3 py-1 rounded">Login</button>
     <button id="logoutBtn" class="hidden bg-red-600 px-3 py-1 rounded">Logout</button>
@@ -243,23 +186,13 @@ function showModal(d){
   <button id="clearBtn">Clear</button>
 </section>
 
-<section class="posts-grid" id="postsArea"></section>
-
-<div id="modalBg" class="fixed inset-0 hidden bg-black bg-opacity-50 flex justify-center items-center">
-  <div class="bg-white p-4 rounded max-w-lg w-11/12 overflow-auto relative">
-    <button id="modalClose" class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded">X</button>
-    <div id="modalContent"></div>
-  </div>
-</div>
+<section class="posts-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 m-2" id="postsArea"></section>
 
 <style>
 @keyframes scroll {0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
 .animate-scroll{display:inline-block;padding-right:50px;animation:scroll 20s linear infinite;}
-.posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin:10px;}
 .card{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:0.2s;}
-.card img{width:100%;height:150px;object-fit:cover;}
 .card:hover{transform:scale(1.02);}
-.card-body{padding:8px;}
 </style>
 
 </body>
