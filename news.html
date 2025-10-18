@@ -11,28 +11,28 @@
 <style>
 body { background:#f6f7fb; color:#0b2540; font-family:Arial,sans-serif; margin:0; padding:0; }
 header { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#1e40af; color:white; position:sticky; top:0; z-index:300; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
-header img { height:50px; width:50px; border-radius:6px; margin-right:8px; object-fit:cover; }
-.header-buttons button { padding:6px 12px; margin-left:6px; border-radius:6px; font-weight:600; text-shadow:1px 1px 2px #000; transition:transform 0.2s; }
-.header-buttons button:hover { transform:translateY(-2px) scale(1.05); }
-.notice-ticker,.headline-ticker { min-height:28px; overflow:hidden; white-space:nowrap; color:white; position:sticky; z-index:250; }
+header img { height:50px; width:50px; border-radius:6px; margin-right:8px; object-fit:cover;}
+.header-buttons button { padding:6px 12px; margin-left:6px; border-radius:6px; font-weight:600; text-shadow:1px 1px 2px #000; transition:transform 0.2s;}
+.header-buttons button:hover { transform:translateY(-2px) scale(1.05);}
+.notice-ticker,.headline-ticker { min-height:28px; overflow:hidden; white-space:nowrap; color:white; position:sticky; z-index:250;}
 .notice-ticker { background:#dc2626; padding:6px; top:56px; }
 .headline-ticker { background:#1e40af; padding:6px; top:88px; }
 .ticker-text,.headline-text,.notice-text { display:inline-block; padding-right:50px; animation:scroll 20s linear infinite; }
 @keyframes scroll { 0% { transform:translateX(100%); } 100% { transform:translateX(-100%); } }
 .posts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; padding:8px; margin-top:116px; }
-.card { background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 20px rgba(2,6,23,0.06); cursor:pointer; transition:transform 0.2s; position:relative; }
+.card { background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 20px rgba(2,6,23,0.06); cursor:pointer; transition:transform 0.2s; position:relative;}
 .card:hover { transform:scale(1.02); }
-.card img { width:100%; height:150px; object-fit:cover; }
+.card img { width:100%; height:150px; object-fit:cover;}
 .card-body { padding:8px; }
-.card-body h3 { font-weight:700; font-size:18px; margin-bottom:4px; }
-.card-body p { font-size:14px; color:#555; margin-bottom:6px; }
-.social-share { display:flex; gap:4px; margin-top:4px; }
-.social-share button { font-size:12px; padding:2px 4px; border-radius:4px; cursor:pointer; }
+.card-body h3 { font-weight:700; font-size:18px; margin-bottom:4px;}
+.card-body p { font-size:14px; color:#555; margin-bottom:6px;}
+.social-share { display:flex; gap:4px; margin-top:4px;}
+.social-share button { font-size:12px; padding:2px 4px; border-radius:4px; cursor:pointer;}
 .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 400; overflow: hidden; }
-.modal { background:#fff; border-radius:10px; max-width:650px; width:90%; max-height:85%; overflow-y:auto; padding:16px; position:relative; }
-.editor { padding:12px; background:#fff; margin:6px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-.editor input, .editor textarea { border:1px solid #ccc; border-radius:6px; padding:6px; margin-bottom:6px; width:100%; }
-.editor button { padding:6px 12px; margin-right:6px; border-radius:6px; background:#1e40af; color:white; }
+.modal { background:#fff; border-radius:10px; max-width:650px; width:90%; max-height:85%; overflow-y:auto; padding:16px; position:relative;}
+.editor { padding:12px; background:#fff; margin:6px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+.editor input, .editor textarea { border:1px solid #ccc; border-radius:6px; padding:6px; margin-bottom:6px; width:100%;}
+.editor button { padding:6px 12px; margin-right:6px; border-radius:6px; background:#1e40af; color:white;}
 </style>
 </head>
 <body>
@@ -118,6 +118,8 @@ const modalClose=document.getElementById("modalClose");
 const modalContent=document.getElementById("modalContent");
 const noticeText=document.getElementById("noticeText");
 const headlineText=document.getElementById("headlineText");
+const aTitle=document.getElementById("aTitle");
+const aCat=document.getElementById("aCat");
 
 const noticeRef = doc(db,"settings","notice");
 
@@ -156,77 +158,59 @@ document.getElementById("addTextBtn").onclick=()=>{
   t.className="border p-2 w-full mb-2 rounded";
   blocksList.appendChild(t);
 }
-
 document.getElementById("addImageBtn").onclick=()=>{
   const div=document.createElement("div");
   div.className="mb-2 border p-2 rounded bg-gray-50";
-
   const inp=document.createElement("input");
   inp.type="file"; inp.dataset.type="image"; inp.className="w-full";
-
-  const preview=document.createElement("img");
-  preview.className="w-full mt-1 rounded"; preview.style.display="none";
-
-  inp.onchange=()=>{
-    if(inp.files && inp.files[0]){
-      const reader=new FileReader();
-      reader.onload=e=>{
-        preview.src=e.target.result;
-        preview.style.display="block";
-      }
-      reader.readAsDataURL(inp.files[0]);
-    }
-  }
-
-  div.appendChild(inp);
-  div.appendChild(preview);
+  const imgPreview=document.createElement("img");
+  imgPreview.style.width="100%";
+  imgPreview.style.marginTop="4px"; imgPreview.style.borderRadius="6px";
+  inp.onchange=()=>{ if(inp.files && inp.files[0]) imgPreview.src=URL.createObjectURL(inp.files[0]); };
+  div.appendChild(inp); div.appendChild(imgPreview);
   blocksList.appendChild(div);
 }
-
 document.getElementById("clearBtn").onclick=()=>{
-  aTitle.value=aCat.value="";
-  blocksList.innerHTML="";
-  editingId=null;
+  aTitle.value=aCat.value=""; blocksList.innerHTML=""; editingId=null;
 }
 
 // --- Publish / Update News ---
 document.getElementById("publishBtn").onclick=async()=>{
-  const title=aTitle.value.trim();
-  const cat=aCat.value.trim();
-  if(!title)return alert("Enter title!");
+  const title=aTitle.value.trim(); const cat=aCat.value.trim();
+  if(!title) return alert("Enter title!");
   const blocks=[];
   for(const el of blocksList.children){
-    if(el.dataset.type==="text"||el.tagName==="TEXTAREA"){
-      if(el.value.trim())blocks.push({type:"text",text:el.value.trim()});
-    }else if(el.dataset.type==="image"){
-      if(el.querySelector("input").files.length>0){
-        const url=await uploadToImgBB(el.querySelector("input").files[0]);
-        blocks.push({type:"image",url});
+    if(el.dataset.type==="text" || el.tagName==="TEXTAREA"){
+      if(el.value.trim()) blocks.push({type:"text", text:el.value.trim()});
+    } else if(el.dataset.type==="image"){
+      const fileInput=el.querySelector("input");
+      if(fileInput.files.length>0){
+        const url=await uploadToImgBB(fileInput.files[0]);
+        blocks.push({type:"image", url});
+      } else {
+        const previewSrc=el.querySelector("img").src;
+        if(previewSrc) blocks.push({type:"image", url:previewSrc});
       }
     }
   }
-  if(blocks.length===0)return alert("Add content!");
+  if(blocks.length===0) return alert("Add content!");
   if(editingId){
     await updateDoc(doc(db,"vasai_news",editingId),{title,category:cat,blocks,time:Date.now()});
     editingId=null;
-  }else{
+  } else {
     await addDoc(collection(db,"vasai_news"),{title,category:cat,blocks,time:Date.now()});
   }
-  aTitle.value=aCat.value="";
-  blocksList.innerHTML="";
+  aTitle.value=aCat.value=""; blocksList.innerHTML="";
 }
 
-// --- Notice Add / Edit / Delete ---
+// --- Notice ---
 saveNoticeBtn.onclick=async()=>{
   const text=noticeInput.value.trim();
-  if(!text)return alert("Enter notice text!");
-  await setDoc(noticeRef,{text});
-  noticeInput.value="";
+  if(!text) return alert("Enter notice text!");
+  await setDoc(noticeRef,{text}); noticeInput.value="";
 }
 deleteNoticeBtn.onclick=async()=>{
-  if(confirm("Delete scrolling notice?")){
-    await setDoc(noticeRef,{text:""});
-  }
+  if(confirm("Delete scrolling notice?")) await setDoc(noticeRef,{text:""});
 }
 
 // --- Load News & Notice ---
@@ -246,47 +230,39 @@ function renderPosts(posts){
   posts.forEach(d=>{
     const firstImg=d.blocks.find(b=>b.type==="image")?.url || "https://via.placeholder.com/300x150?text=No+Image";
     const firstText=d.blocks.find(b=>b.type==="text")?.text?.substring(0,80)+"..." || "";
-    const card=document.createElement("div");card.className="card";
+    const card=document.createElement("div"); card.className="card";
     card.innerHTML=`<img src="${firstImg}"><div class="card-body"><h3>${d.title}</h3><p>${firstText}</p>
     <div class="social-share">
     <button onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),'_blank');event.stopPropagation();">FB</button>
     <button onclick="window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(location.href),'_blank');event.stopPropagation();">WA</button>
     <button onclick="window.open('https://twitter.com/intent/tweet?url='+encodeURIComponent(location.href),'_blank');event.stopPropagation();">TW</button>
     </div>`;
-    card.onclick=()=>showModal(d);
-    postsArea.appendChild(card);
+    card.onclick=()=>showModal(d); postsArea.appendChild(card);
   });
 }
 
 // --- Modal ---
 modalClose.onclick=()=>modalBg.style.display="none";
-modalBg.onclick=e=>{if(e.target===modalBg)modalBg.style.display="none";}
+modalBg.onclick=e=>{ if(e.target===modalBg) modalBg.style.display="none"; }
 
 function showModal(d){
   modalContent.innerHTML=`<h2 class="text-lg font-bold mb-2">${d.title}</h2>`;
   d.blocks.forEach(b=>{
-    if(b.type==="text")modalContent.innerHTML+=`<p class="mb-2 text-gray-800 leading-relaxed">${b.text}</p>`;
-    else if(b.type==="image")modalContent.innerHTML+=`<img src="${b.url}" class="w-full mb-3 rounded shadow">`;
+    if(b.type==="text") modalContent.innerHTML+=`<p class="mb-2 text-gray-800 leading-relaxed">${b.text}</p>`;
+    else if(b.type==="image") modalContent.innerHTML+=`<img src="${b.url}" class="w-full mb-3 rounded shadow">`;
   });
   const user=auth.currentUser;
   if(user && user.email===ADMIN_EMAIL){
     const editBtn=document.createElement("button");
     editBtn.textContent="Edit"; editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2";
-    editBtn.onclick=()=>{
-      editingId=d.id;
-      aTitle.value=d.title; aCat.value=d.category; blocksList.innerHTML="";
+    editBtn.onclick=()=>{ editingId=d.id; aTitle.value=d.title; aCat.value=d.category; blocksList.innerHTML="";
       d.blocks.forEach(b=>{
-        if(b.type==="text"){
-          const t=document.createElement("textarea"); t.value=b.text;
-          t.dataset.type="text"; t.className="border p-2 w-full mb-2 rounded"; blocksList.appendChild(t);
-        }else{
-          const div=document.createElement("div"); div.className="mb-2 border p-2 rounded bg-gray-50";
-          const img=document.createElement("img"); img.src=b.url; img.className="w-full mb-1 rounded"; div.appendChild(img); blocksList.appendChild(div);
-        }
-      });
-      modalBg.style.display="none";
+        if(b.type==="text"){ const t=document.createElement("textarea"); t.value=b.text; t.dataset.type="text"; t.className="border p-2 w-full mb-2 rounded"; blocksList.appendChild(t);}
+        else { const div=document.createElement("div"); div.className="mb-2 border p-2 rounded bg-gray-50"; const img=document.createElement("img"); img.src=b.url; img.className="w-full mb-1 rounded"; div.appendChild(img); blocksList.appendChild(div);}
+      }); modalBg.style.display="none";
     };
-    const delBtn=document.createElement("button"); delBtn.textContent="Delete"; delBtn.className="bg-red-500 text-white px-3 py-1 rounded";
+    const delBtn=document.createElement("button");
+    delBtn.textContent="Delete"; delBtn.className="bg-red-500 text-white px-3 py-1 rounded";
     delBtn.onclick=async()=>{ if(confirm("Delete this post?")) await deleteDoc(doc(db,"vasai_news",d.id)); modalBg.style.display="none"; }
     modalContent.appendChild(editBtn); modalContent.appendChild(delBtn);
   }
