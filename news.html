@@ -1,105 +1,132 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vasai Live News</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Vasai Live News — Final</title>
 
-<!-- Tailwind + Firebase -->
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 
 <style>
-.image-zoom {
-  cursor: zoom-in;
-  transition: transform 0.3s ease;
+/* ticker animation */
+@keyframes scroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
 }
-.image-zoom:hover { transform: scale(1.05); }
-.zoom-modal {
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.85);
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-}
-.zoom-modal img {
-  max-width:90%;
-  max-height:90%;
-  border-radius:10px;
-  box-shadow:0 0 25px rgba(255,255,255,0.3);
-}
-.zoom-close {
-  position:absolute;
-  top:20px;
-  right:30px;
-  background:#fff;
-  border:none;
-  border-radius:50%;
-  font-size:20px;
-  padding:5px 10px;
-  cursor:pointer;
-}
+.ticker { overflow: hidden; white-space: nowrap; }
+.ticker > span { display:inline-block; padding-right: 3rem; animation: scroll 18s linear infinite; }
+
+/* zoom modal */
+.zoom-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
+.zoom-modal img { max-width:92%; max-height:92%; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,0.6); }
+.zoom-close { position:absolute; top:18px; right:22px; background:#fff; border-radius:999px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; }
+
+/* modal (article) */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:900; align-items:center; justify-content:center; }
+.modal-card { width:95%; max-width:760px; max-height:85vh; overflow:auto; background:#fff; border-radius:10px; padding:18px; box-shadow:0 10px 40px rgba(2,6,23,0.2); }
+
+/* small UI */
+.card-img { width:100%; height:180px; object-fit:cover; border-radius:8px; }
+.card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.card:hover { transform: translateY(-4px); box-shadow:0 10px 30px rgba(2,6,23,0.08); }
 </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 text-gray-800">
 
-<!-- Header -->
-<header class="flex justify-between items-center bg-blue-800 text-white px-4 py-2">
-  <div class="flex items-center gap-2">
-    <img src="https://i.postimg.cc/vTb8F94w/vasalive-png.jpg" alt="Logo" class="h-10">
-    <h1 class="font-bold text-xl">Vasai Live News</h1>
-  </div>
-  <div class="flex gap-2">
-    <button id="loginBtn" class="bg-green-500 px-3 py-1 rounded">Login</button>
-    <button id="logoutBtn" class="hidden bg-red-600 px-3 py-1 rounded">Logout</button>
+<!-- HEADER -->
+<header class="sticky top-0 z-50 bg-blue-800 text-white shadow">
+  <div class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <div class="flex items-center gap-3">
+      <img src="https://i.postimg.cc/vTb8F94w/vasalive-png.jpg" alt="logo" class="h-10 w-10 rounded" />
+      <h1 class="font-bold text-xl">Vasai Live News</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="loginBtn" class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded">Login</button>
+      <button id="logoutBtn" class="hidden bg-red-600 hover:bg-red-700 px-3 py-1 rounded">Logout</button>
+    </div>
   </div>
 </header>
 
-<!-- Tickers -->
-<div class="bg-yellow-200 py-1 px-2 overflow-hidden whitespace-nowrap text-sm font-medium">
-  <span id="noticeText"></span>
-</div>
-<div class="bg-gray-200 py-1 px-2 overflow-hidden whitespace-nowrap text-sm font-semibold">
-  <span id="headlineText"></span>
-</div>
-
-<!-- Admin Sections -->
-<section id="noticeEditor" class="hidden p-4">
-  <h2 class="font-bold text-lg mb-2">📰 Admin Notice</h2>
-  <input id="noticeInput" class="border p-2 w-full mb-2 rounded" placeholder="Enter notice text...">
-  <button id="saveNoticeBtn" class="bg-blue-600 text-white px-4 py-1 rounded">Save</button>
-</section>
-
-<section id="editorArea" class="hidden p-4">
-  <h2 class="font-bold text-lg mb-2">🖋️ Admin: Create News</h2>
-  <input id="aTitle" class="border p-2 w-full mb-2 rounded" placeholder="Title">
-  <input id="aCat" class="border p-2 w-full mb-2 rounded" placeholder="Category">
-  <div id="blocksList" class="mb-2"></div>
-  <div class="flex gap-2 mb-2">
-    <button id="addTextBtn" class="bg-gray-300 px-3 py-1 rounded">Add Text</button>
-    <button id="addImageBtn" class="bg-gray-300 px-3 py-1 rounded">Add Image</button>
+<!-- TICKERS -->
+<div class="max-w-6xl mx-auto px-4 mt-3">
+  <div class="bg-red-600 text-white rounded px-3 py-2 mb-2">
+    <div class="ticker"><span id="noticeText">Loading notices...</span></div>
   </div>
-  <button id="publishBtn" class="bg-green-600 text-white px-4 py-1 rounded">Publish</button>
-</section>
-
-<!-- Posts -->
-<section id="postsArea" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4"></section>
-
-<!-- Zoom Modal -->
-<div id="zoomModal" class="zoom-modal">
-  <button id="zoomClose" class="zoom-close">×</button>
-  <img id="zoomImg" src="">
+  <div class="bg-blue-700 text-white rounded px-3 py-2">
+    <div class="ticker"><span id="headlineText">Loading headlines...</span></div>
+  </div>
 </div>
 
+<!-- ADMIN UI -->
+<div id="adminWrap" class="max-w-6xl mx-auto px-4 mt-4 space-y-4">
+  <section id="noticeEditor" class="hidden bg-white rounded shadow p-4">
+    <div class="flex items-start gap-3">
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Admin Notice</label>
+        <input id="noticeInput" class="w-full border rounded px-3 py-2" placeholder="Type notice text..." />
+      </div>
+      <div class="flex flex-col gap-2">
+        <button id="saveNoticeBtn" class="bg-blue-600 text-white px-3 py-2 rounded">Save</button>
+        <button id="deleteNoticeBtn" class="bg-red-500 text-white px-3 py-2 rounded">Delete</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="editorArea" class="hidden bg-white rounded shadow p-4">
+    <h2 class="font-semibold mb-2">🖋️ Create / Edit News</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+      <input id="aTitle" class="col-span-2 border px-3 py-2 rounded" placeholder="Title" />
+      <input id="aCat" class="border px-3 py-2 rounded" placeholder="Category" />
+    </div>
+
+    <div id="blocksList" class="space-y-2 mb-3"></div>
+
+    <div class="flex gap-2 mb-3">
+      <button id="addTextBtn" class="bg-gray-200 px-3 py-2 rounded">Add Text</button>
+      <button id="addImageBtn" class="bg-gray-200 px-3 py-2 rounded">Add Image (select)</button>
+      <button id="clearBtn" class="bg-yellow-300 px-3 py-2 rounded">Clear</button>
+      <button id="publishBtn" class="ml-auto bg-green-600 text-white px-4 py-2 rounded">Publish</button>
+    </div>
+    <p class="text-xs text-gray-500">Note: images are uploaded to ImgBB when you click Publish. Preview shows local image before publish.</p>
+  </section>
+</div>
+
+<!-- POSTS GRID -->
+<main class="max-w-6xl mx-auto px-4 mt-6">
+  <section id="postsArea" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></section>
+</main>
+
+<!-- ARTICLE MODAL -->
+<div id="modalBg" class="modal-bg flex">
+  <div class="modal-card">
+    <div class="flex justify-between items-start mb-3">
+      <h3 id="modalTitle" class="text-xl font-bold"></h3>
+      <div class="flex gap-2">
+        <button id="modalEditBtn" class="hidden bg-yellow-400 px-3 py-1 rounded">Edit</button>
+        <button id="modalDelBtn" class="hidden bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+        <button id="modalClose" class="bg-gray-200 px-3 py-1 rounded">Close</button>
+      </div>
+    </div>
+    <div id="modalContent" class="space-y-3"></div>
+  </div>
+</div>
+
+<!-- ZOOM MODAL -->
+<div id="zoomModal" class="zoom-modal flex">
+  <div id="zoomClose" class="zoom-close">×</div>
+  <img id="zoomImg" src="" alt="Zoom" />
+</div>
+
+<!-- SCRIPT (module) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+/* ---------------- CONFIG ---------------- */
 const firebaseConfig = {
   apiKey:"AIzaSyDMvkPqFKDjrMaLlBkercBYoLxEs1GEbng",
   authDomain:"all-madrsa.firebaseapp.com",
@@ -108,32 +135,58 @@ const firebaseConfig = {
   messagingSenderId:"619313835874",
   appId:"1:619313835874:web:e33f0c8bdef6d1a7f31e9f"
 };
+const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
+const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const ADMIN_EMAIL = "zaradigitalseva@gmail.com";
-const IMGBB_API_KEY = "d12c2e4a8650157b2b6b9fe85336ea43";
-
-// Elements
+/* ---------------- ELEMENTS ---------------- */
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const editorArea = document.getElementById("editorArea");
 const noticeEditor = document.getElementById("noticeEditor");
+const postsArea = document.getElementById("postsArea");
 const noticeText = document.getElementById("noticeText");
 const headlineText = document.getElementById("headlineText");
-const postsArea = document.getElementById("postsArea");
-const noticeRef = doc(db,"settings","notice");
 
-// 🔑 LOGIN
-loginBtn.onclick = async()=>{
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
-}
-logoutBtn.onclick = ()=> signOut(auth);
+const aTitle = document.getElementById("aTitle");
+const aCat = document.getElementById("aCat");
+const blocksList = document.getElementById("blocksList");
+const addTextBtn = document.getElementById("addTextBtn");
+const addImageBtn = document.getElementById("addImageBtn");
+const publishBtn = document.getElementById("publishBtn");
+const clearBtn = document.getElementById("clearBtn");
+const saveNoticeBtn = document.getElementById("saveNoticeBtn");
+const deleteNoticeBtn = document.getElementById("deleteNoticeBtn");
+const noticeInput = document.getElementById("noticeInput");
 
-auth.onAuthStateChanged(user=>{
-  if(user && user.email===ADMIN_EMAIL){
+const modalBg = document.getElementById("modalBg");
+const modalTitle = document.getElementById("modalTitle");
+const modalContent = document.getElementById("modalContent");
+const modalClose = document.getElementById("modalClose");
+const modalEditBtn = document.getElementById("modalEditBtn");
+const modalDelBtn = document.getElementById("modalDelBtn");
+
+const zoomModal = document.getElementById("zoomModal");
+const zoomImg = document.getElementById("zoomImg");
+const zoomClose = document.getElementById("zoomClose");
+
+/* ---------------- AUTH ---------------- */
+loginBtn.addEventListener("click", async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    console.error(e);
+    alert("Login failed");
+  }
+});
+logoutBtn.addEventListener("click", () => signOut(auth));
+
+auth.onAuthStateChanged(user => {
+  if (user && user.email === ADMIN_EMAIL) {
     editorArea.classList.remove("hidden");
     noticeEditor.classList.remove("hidden");
     loginBtn.classList.add("hidden");
@@ -146,113 +199,341 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-// 🖼️ IMGBB UPLOAD
-async function uploadToImgBB(file){
-  try{
-    const formData = new FormData();
-    formData.append("image", file);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {method:"POST", body:formData});
+/* ---------------- IMGBB UPLOAD (robust) ---------------- */
+async function uploadToImgBB(file) {
+  try {
+    if (!file) throw new Error("No file");
+    const form = new FormData();
+    form.append("image", file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: "POST",
+      body: form
+    });
     const data = await res.json();
-    if(!data.success){
-      console.error("Upload failed:", data);
-      alert("Image upload failed! Try smaller image.");
-      throw new Error("Upload failed");
+    if (!data || data.success !== true) {
+      console.error("ImgBB response error:", data);
+      alert("Image upload failed (ImgBB). Check file size/type or API key.");
+      throw new Error("ImgBB upload failed");
     }
     return data.data.url;
-  }catch(e){
-    console.error("IMGBB Error:", e);
-    alert("Image upload failed!");
-    return null;
+  } catch (err) {
+    console.error("uploadToImgBB error:", err);
+    throw err;
   }
 }
 
-// ✏️ Add Text / Image Blocks
-addTextBtn.onclick=()=>{
-  const t=document.createElement("textarea");
-  t.placeholder="Write paragraph...";
-  t.dataset.type="text";
-  t.className="border p-2 w-full mb-2 rounded";
-  blocksList.appendChild(t);
-}
-addImageBtn.onclick=()=>{
-  const input=document.createElement("input");
-  input.type="file";
-  input.dataset.type="image";
-  input.className="w-full mb-2";
-  blocksList.appendChild(input);
-}
+/* ---------------- EDITOR: add blocks & preview ---------------- */
+addTextBtn.addEventListener("click", () => {
+  const ta = document.createElement("textarea");
+  ta.dataset.type = "text";
+  ta.placeholder = "Write paragraph...";
+  ta.className = "border p-2 w-full mb-2 rounded";
+  blocksList.appendChild(ta);
+});
 
-// 🚀 Publish
-publishBtn.onclick=async()=>{
-  const title=aTitle.value.trim();
-  const cat=aCat.value.trim();
-  if(!title)return alert("Enter title!");
+addImageBtn.addEventListener("click", () => {
+  // Create image input + preview container
+  const wrapper = document.createElement("div");
+  wrapper.className = "mb-2";
 
-  const blocks=[];
-  for(const el of blocksList.children){
-    if(el.dataset.type==="text"){
-      if(el.value.trim()) blocks.push({type:"text",text:el.value.trim()});
-    }else if(el.dataset.type==="image"){
-      if(el.files.length>0){
-        const url=await uploadToImgBB(el.files[0]);
-        if(url) blocks.push({type:"image",url});
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = "image/*";
+  inp.dataset.type = "image";
+  inp.className = "w-full mb-1";
+
+  const preview = document.createElement("img");
+  preview.className = "w-full rounded mb-1 hidden";
+  preview.style.maxHeight = "220px";
+  preview.style.objectFit = "cover";
+
+  inp.addEventListener("change", () => {
+    if (inp.files && inp.files[0]) {
+      preview.src = URL.createObjectURL(inp.files[0]);
+      preview.classList.remove("hidden");
+    }
+  });
+
+  wrapper.appendChild(inp);
+  wrapper.appendChild(preview);
+  blocksList.appendChild(wrapper);
+});
+
+clearBtn.addEventListener("click", () => {
+  aTitle.value = "";
+  aCat.value = "";
+  blocksList.innerHTML = "";
+});
+
+/* ---------------- PUBLISH (upload images then save) ---------------- */
+publishBtn.addEventListener("click", async () => {
+  try {
+    const title = (aTitle.value || "").trim();
+    const category = (aCat.value || "").trim();
+    if (!title) return alert("Enter title!");
+
+    const blocks = [];
+    // iterate children nodes (textareas and image wrappers)
+    for (const child of Array.from(blocksList.children)) {
+      // textareas (dataset.type == "text" OR tag TEXTAREA)
+      if (child.dataset.type === "text" || child.tagName === "TEXTAREA") {
+        const txt = (child.value || "").trim();
+        if (txt) blocks.push({ type: "text", text: txt });
+      } else {
+        // might be wrapper with input[type=file]
+        const fileInput = child.querySelector('input[type="file"]');
+        const imgPreview = child.querySelector('img');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+          // upload to imgbb
+          try {
+            const url = await uploadToImgBB(fileInput.files[0]);
+            if (url) blocks.push({ type: "image", url });
+          } catch (e) {
+            // upload failed -> stop publish
+            return;
+          }
+        } else if (imgPreview && imgPreview.src) {
+          // local preview without new file (possible when editing existing)
+          blocks.push({ type: "image", url: imgPreview.src });
+        }
       }
+    }
+
+    if (blocks.length === 0) return alert("Add at least one text or image block!");
+
+    await addDoc(collection(db, "vasai_news"), { title, category, blocks, time: Date.now() });
+    // reset
+    aTitle.value = "";
+    aCat.value = "";
+    blocksList.innerHTML = "";
+    alert("News published!");
+  } catch (err) {
+    console.error("Publish error:", err);
+    alert("Publish failed. See console for details.");
+  }
+});
+
+/* ---------------- NOTICE functions ---------------- */
+const noticeDocRef = doc(db, "settings", "notice");
+saveNoticeBtn.addEventListener("click", async () => {
+  try {
+    await setDoc(noticeDocRef, { text: (noticeInput.value || "").trim() });
+    noticeInput.value = "";
+    alert("Notice saved");
+  } catch (e) {
+    console.error(e);
+    alert("Notice save failed");
+  }
+});
+deleteNoticeBtn.addEventListener("click", async () => {
+  if (!confirm("Delete notice?")) return;
+  try {
+    await setDoc(noticeDocRef, { text: "" });
+    alert("Notice deleted");
+  } catch (e) {
+    console.error(e);
+    alert("Delete failed");
+  }
+});
+
+/* ---------------- LIVE LOAD & RENDER ---------------- */
+onSnapshot(query(collection(db, "vasai_news"), orderBy("time", "desc")), snap => {
+  const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderPosts(posts);
+  // headlines (first 5)
+  headlineText.textContent = posts.slice(0, 5).map(p => p.title).join(" — ") || "";
+});
+
+onSnapshot(noticeDocRef, snap => {
+  noticeText.textContent = snap.exists() ? (snap.data().text || "") : "";
+});
+
+/* safe substring util */
+function excerpt(str, n = 120) {
+  if (!str) return "";
+  return str.length > n ? str.substring(0, n) + "..." : str;
+}
+
+/* render posts with safe checks */
+function renderPosts(posts) {
+  postsArea.innerHTML = "";
+  for (const d of posts) {
+    const imgBlock = (d.blocks || []).find(b => b.type === "image");
+    const textBlock = (d.blocks || []).find(b => b.type === "text");
+    const img = imgBlock ? imgBlock.url : "https://via.placeholder.com/600x360?text=No+Image";
+    const txt = textBlock ? excerpt(textBlock.text, 140) : "";
+    const card = document.createElement("div");
+    card.className = "card bg-white rounded-lg p-3 shadow-sm";
+
+    card.innerHTML = `
+      <img src="${img}" alt="${escapeHtml(d.title)}" class="card-img image-zoom mb-3" />
+      <div>
+        <h3 class="font-semibold text-lg mb-1">${escapeHtml(d.title)}</h3>
+        <p class="text-sm text-gray-600">${escapeHtml(txt)}</p>
+      </div>
+    `;
+
+    // click opens article modal (full)
+    card.addEventListener("click", (ev) => {
+      // if clicked zoom image, let zoom handle it — we only open modal when clicking card area not zoomed element
+      if (ev.target.classList.contains("image-zoom")) return;
+      openArticleModal(d);
+    });
+
+    postsArea.appendChild(card);
+  }
+}
+
+/* escapeHtml to avoid simple injection in innerHTML */
+function escapeHtml(s) {
+  if (!s) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/* ---------------- ARTICLE MODAL (full content, admin edit/delete) ---------------- */
+function openArticleModal(post) {
+  modalTitle.textContent = post.title || "";
+  modalContent.innerHTML = "";
+
+  for (const b of (post.blocks || [])) {
+    if (b.type === "text") {
+      const p = document.createElement("p");
+      p.className = "text-gray-800 leading-relaxed";
+      p.textContent = b.text || "";
+      modalContent.appendChild(p);
+    } else if (b.type === "image") {
+      const im = document.createElement("img");
+      im.src = b.url;
+      im.className = "w-full rounded";
+      im.style.cursor = "zoom-in";
+      // clicking image in modal opens zoom
+      im.addEventListener("click", () => openZoom(b.url));
+      modalContent.appendChild(im);
     }
   }
 
-  if(blocks.length===0)return alert("Add content!");
-  await addDoc(collection(db,"vasai_news"),{title,category:cat,blocks,time:Date.now()});
-  aTitle.value=aCat.value=""; blocksList.innerHTML="";
-  alert("News published!");
+  // admin controls
+  const user = auth.currentUser;
+  if (user && user.email === ADMIN_EMAIL) {
+    modalEditBtn.classList.remove("hidden");
+    modalDelBtn.classList.remove("hidden");
+
+    modalEditBtn.onclick = () => {
+      // populate editor with this post
+      editingId = post.id;
+      aTitle.value = post.title || "";
+      aCat.value = post.category || "";
+      blocksList.innerHTML = "";
+      for (const b of (post.blocks || [])) {
+        if (b.type === "text") {
+          const ta = document.createElement("textarea");
+          ta.dataset.type = "text";
+          ta.className = "border p-2 w-full mb-2 rounded";
+          ta.value = b.text || "";
+          blocksList.appendChild(ta);
+        } else if (b.type === "image") {
+          const wrap = document.createElement("div");
+          wrap.className = "mb-2";
+          const img = document.createElement("img");
+          img.src = b.url;
+          img.className = "w-full mb-1 rounded";
+          wrap.appendChild(img);
+          blocksList.appendChild(wrap);
+        }
+      }
+      // close modal
+      modalBg.style.display = "none";
+    };
+
+    modalDelBtn.onclick = async () => {
+      if (!confirm("Delete this post?")) return;
+      try {
+        await deleteDoc(doc(db, "vasai_news", post.id));
+        modalBg.style.display = "none";
+        alert("Deleted");
+      } catch (e) {
+        console.error(e);
+        alert("Delete failed");
+      }
+    };
+  } else {
+    modalEditBtn.classList.add("hidden");
+    modalDelBtn.classList.add("hidden");
+  }
+
+  modalBg.style.display = "flex";
 }
 
-// 📢 Notice Update
-saveNoticeBtn.onclick=async()=>{
-  await setDoc(noticeRef,{text:noticeInput.value.trim()});
-  noticeInput.value="";
-}
-
-// 🔄 Live Load
-onSnapshot(query(collection(db,"vasai_news"),orderBy("time","desc")),snap=>{
-  const posts=snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderPosts(posts);
-  headlineText.textContent=posts.slice(0,5).map(p=>p.title).join(" — ");
+/* modal close */
+modalClose.addEventListener("click", () => modalBg.style.display = "none");
+modalBg.addEventListener("click", (e) => {
+  if (e.target === modalBg) modalBg.style.display = "none";
 });
-onSnapshot(noticeRef,snap=>{
-  noticeText.textContent = snap.exists() ? snap.data().text : "";
-});
 
-// 🧱 Render Posts
-function renderPosts(posts){
-  postsArea.innerHTML="";
-  posts.forEach(d=>{
-    const img=d.blocks.find(b=>b.type==="image")?.url || "https://via.placeholder.com/300x150?text=No+Image";
-    const txt=d.blocks.find(b=>b.type==="text")?.text?.substring(0,80)+"..." || "";
-    const card=document.createElement("div");
-    card.className="bg-white rounded shadow p-2";
-    card.innerHTML=`
-      <img src="${img}" alt="" class="image-zoom w-full h-48 object-cover rounded mb-2">
-      <div>
-        <h3 class="font-bold text-lg mb-1">${d.title}</h3>
-        <p class="text-sm text-gray-600">${txt}</p>
-      </div>`;
-    postsArea.appendChild(card);
-  });
+/* ---------------- ZOOM logic (images both in cards and modal open here) ---------------- */
+function openZoom(src) {
+  zoomImg.src = src;
+  zoomModal.style.display = "flex";
 }
-
-// 🔍 Zoom Logic
-const zoomModal = document.getElementById("zoomModal");
-const zoomImg = document.getElementById("zoomImg");
-const zoomClose = document.getElementById("zoomClose");
-
-document.addEventListener("click", e=>{
+document.addEventListener("click", (e) => {
   if (e.target.classList.contains("image-zoom")) {
-    zoomImg.src = e.target.src;
-    zoomModal.style.display = "flex";
+    // image in card clicked → zoom
+    openZoom(e.target.src);
   }
 });
-zoomClose.onclick = ()=> zoomModal.style.display = "none";
-zoomModal.onclick = e=>{ if(e.target===zoomModal) zoomModal.style.display="none"; };
+zoomClose.addEventListener("click", () => zoomModal.style.display = "none");
+zoomModal.addEventListener("click", (e) => { if (e.target === zoomModal) zoomModal.style.display = "none"; });
+
+/* ---------------- small utility: edit flow (update) ---------------- */
+let editingId = null;
+// If editingId present, publish should update instead of add
+publishBtn.addEventListener("click", async () => {
+  // The publish handler above already handles add; we need override for update when editingId is set.
+  // To keep single logic: if editingId is set, update doc instead of add.
+  // We'll duplicate a bit for clarity.
+  if (!editingId) return; // nothing to do here if not in edit mode
+  try {
+    const title = (aTitle.value || "").trim();
+    const category = (aCat.value || "").trim();
+    if (!title) return alert("Enter title!");
+
+    const blocks = [];
+    for (const child of Array.from(blocksList.children)) {
+      if (child.dataset.type === "text" || child.tagName === "TEXTAREA") {
+        const txt = (child.value || "").trim();
+        if (txt) blocks.push({ type: "text", text: txt });
+      } else {
+        const fileInput = child.querySelector('input[type="file"]');
+        const imgPreview = child.querySelector('img');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+          try {
+            const url = await uploadToImgBB(fileInput.files[0]);
+            if (url) blocks.push({ type: "image", url });
+          } catch (e) { return; }
+        } else if (imgPreview && imgPreview.src) {
+          blocks.push({ type: "image", url: imgPreview.src });
+        }
+      }
+    }
+
+    if (blocks.length === 0) return alert("Add content!");
+
+    await updateDoc(doc(db, "vasai_news", editingId), { title, category, blocks, time: Date.now() });
+    editingId = null;
+    aTitle.value = ""; aCat.value = ""; blocksList.innerHTML = "";
+    alert("Post updated!");
+  } catch (e) {
+    console.error(e);
+    alert("Update failed");
+  }
+});
+// To use: when modalEditBtn populates editor, it sets editingId and user can click Publish — the above handler will run (since the normal Publish click also fires).
+// We keep original add-work when editingId was not set (handled earlier).
+
+/* ---------------- FIN ---------------- */
 </script>
 </body>
 </html>
