@@ -72,33 +72,44 @@ header img { height:50px; width:50px; border-radius:6px; object-fit:cover; margi
 .social-share button { font-size:12px; padding:2px 4px; border-radius:4px; cursor:pointer; }
 
 /* ---------- MODAL ---------- */
-
 .modal-bg, .zoom-modal {
   display: none;
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.85);
   z-index: 9999;
-  justify-content: center;
-  align-items: center;
-  overflow-y: auto;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow-y:auto;
 }
 .modal, .zoom-modal img {
   background: #fff;
   border-radius: 10px;
   max-width: 90%;
-  max-height: 90%;
+  max-height: 90vh;
   padding: 16px;
   object-fit: contain;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
 }
 
+/* Close buttons */
+.modal-close, .zoom-close {
+  position:absolute;
+  top:20px;
+  right:20px;
+  background:#fff;
+  border:none;
+  border-radius:50%;
+  font-size:20px;
+  padding:5px 10px;
+  cursor:pointer;
+  z-index:10000;
+}
 
-
-
-
-
-
-
+/* Image hover zoom */
+.image-zoom { cursor:zoom-in; transition: transform 0.3s ease; }
+.image-zoom:hover { transform:scale(1.05); }
 
 /* ---------- ADMIN EDITOR ---------- */
 .editor { display:none; padding:12px; margin:6px; background:#fff; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
@@ -123,14 +134,14 @@ header img { height:50px; width:50px; border-radius:6px; object-fit:cover; margi
 <div class="headline-ticker"><span class="ticker-text" id="headlineText"></span></div>
 
 <!-- Admin Notice -->
-<section id="noticeEditor" class="editor">
+<section id="noticeEditor" class="editor hidden">
   <h2>📰 Admin Notice</h2>
   <input id="noticeInput" placeholder="Type notice here...">
   <button id="saveNoticeBtn">Save</button>
 </section>
 
 <!-- Admin News Editor -->
-<section id="editorArea" class="editor">
+<section id="editorArea" class="editor hidden">
   <h2>🖋️ Admin: Create/Edit News</h2>
   <input id="aTitle" placeholder="Title">
   <input id="aCat" placeholder="Category">
@@ -200,13 +211,13 @@ logoutBtn.onclick = ()=>signOut(auth);
 
 auth.onAuthStateChanged(user=>{
   if(user && user.email===ADMIN_EMAIL){
-    editorArea.style.display="block";
-    noticeEditor.style.display="block";
+    editorArea.classList.remove("hidden");
+    noticeEditor.classList.remove("hidden");
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
   }else{
-    editorArea.style.display="none";
-    noticeEditor.style.display="none";
+    editorArea.classList.add("hidden");
+    noticeEditor.classList.add("hidden");
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
   }
@@ -235,11 +246,11 @@ document.getElementById("addImageBtn").onclick=()=>{
   blocksList.appendChild(inp);
 }
 
-// PUBLISH NEWS
+// PUBLISH / UPDATE NEWS
 document.getElementById("publishBtn").onclick=async()=>{
   const title=document.getElementById("aTitle").value.trim();
   const cat=document.getElementById("aCat").value.trim();
-  if(!title)return alert("Enter title!");
+  if(!title) return alert("Enter title!");
   const blocks=[];
   for(const el of blocksList.children){
     if(el.dataset.type==="text") blocks.push({type:"text",text:el.value.trim()});
@@ -249,7 +260,14 @@ document.getElementById("publishBtn").onclick=async()=>{
     }
   }
   if(blocks.length===0) return alert("Add content!");
-  await addDoc(collection(db,"vasai_news"),{title,category:cat,blocks,time:Date.now()});
+
+  if(editingId){
+    await updateDoc(doc(db,"vasai_news",editingId),{title,category:cat,blocks});
+    editingId=null;
+  } else {
+    await addDoc(collection(db,"vasai_news"),{title,category:cat,blocks,time:Date.now()});
+  }
+
   document.getElementById("aTitle").value="";
   document.getElementById("aCat").value="";
   blocksList.innerHTML="";
@@ -285,16 +303,22 @@ function renderPosts(posts){
 
   // IMAGE ZOOM CLICK
   document.querySelectorAll(".image-zoom").forEach(img=>{
-    img.onclick=e=>{ e.stopPropagation(); zoomImg.src=img.src; zoomModal.style.display="flex"; }
+    img.onclick=e=>{ e.stopPropagation(); zoomImg.src=img.src; zoomModal.style.display="flex"; document.body.style.overflow="hidden"; }
   });
 }
 
 // MODAL
-modalClose.onclick=()=>modalBg.style.display="none";
-modalBg.onclick=e=>{if(e.target===modalBg) modalBg.style.display="none";}
+modalClose.onclick=()=>{
+  modalBg.style.display="none";
+  document.body.style.overflow="auto";
+};
+modalBg.onclick=e=>{if(e.target===modalBg){modalBg.style.display="none"; document.body.style.overflow="auto";}}
 
 // ZOOM
-zoomModal.querySelector(".zoom-close").onclick=()=>zoomModal.style.display="none";
+zoomModal.querySelector(".zoom-close").onclick=()=>{
+  zoomModal.style.display="none";
+  document.body.style.overflow="auto";
+};
 
 // SHOW MODAL + ADMIN EDIT/DELETE
 function showModal(d){
@@ -304,13 +328,17 @@ function showModal(d){
     else if(b.type==="image") modalContent.innerHTML+=`<img src="${b.url}" class="w-full mb-2 image-zoom">`;
   });
 
+  modalContent.querySelectorAll("img").forEach(img=>{img.onclick=e=>e.stopPropagation();});
+
   const user=auth.currentUser;
   if(user && user.email===ADMIN_EMAIL){
     const editBtn=document.createElement("button");
     editBtn.textContent="Edit"; editBtn.className="bg-gray-200 px-3 py-1 rounded mr-2";
     editBtn.onclick=()=>{
-      editingId=d.id; document.getElementById("aTitle").value=d.title;
-      document.getElementById("aCat").value=d.category; blocksList.innerHTML="";
+      editingId=d.id; 
+      document.getElementById("aTitle").value=d.title;
+      document.getElementById("aCat").value=d.category; 
+      blocksList.innerHTML="";
       d.blocks.forEach(b=>{
         if(b.type==="text"){
           const t=document.createElement("textarea"); t.value=b.text; t.dataset.type="text"; t.className="border p-2 w-full mb-2 rounded";
@@ -331,6 +359,7 @@ function showModal(d){
     modalContent.appendChild(delBtn);
   }
   modalBg.style.display="flex";
+  document.body.style.overflow="hidden";
 }
 </script>
 </body>
