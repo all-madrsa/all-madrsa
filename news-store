@@ -72,32 +72,71 @@ header img { height:50px; width:50px; border-radius:6px; object-fit:cover; margi
 .social-share button { font-size:12px; padding:2px 4px; border-radius:4px; cursor:pointer; }
 
 /* ---------- MODAL ---------- */
+
+
+/* Overlay background */
 .modal-bg, .zoom-modal {
-  display:none;
-  position:fixed;
-  inset:0;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,0.85);
-  z-index:9999;
+  display: none;           /* hidden by default */
+  position: fixed;         /* cover entire viewport */
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 9999;           /* above all content */
+  display: flex;           /* center modal content */
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;        /* scroll if content is taller than viewport */
 }
-.modal, .zoom-modal img {
-  background:#fff;
-  border-radius:10px;
-  max-width:90%;
-  max-height:90%;
-  padding:16px;
-  overflow-y:auto;
+
+/* Modal container */
+.modal {
+  background: #fff;
+  border-radius: 10px;
+  max-width: 90%;
+  max-height: 90%;
+  padding: 16px;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
+
+/* Zoom image modal */
+.zoom-modal img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 10px;
+  box-shadow: 0 0 25px rgba(255,255,255,0.3);
+  object-fit: contain;
+}
+
+/* Close buttons */
 .modal-close, .zoom-close {
-  position:absolute;
-  top:20px;
-  right:30px;
-  background:#fff; border:none; border-radius:50%;
-  font-size:20px; padding:5px 10px; cursor:pointer;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  padding: 5px 10px;
+  cursor: pointer;
+  z-index: 10000;          /* above modal content */
 }
-.image-zoom { cursor:zoom-in; transition: transform 0.3s ease; }
-.image-zoom:hover { transform:scale(1.05); }
+
+/* Image hover zoom */
+.image-zoom {
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+.image-zoom:hover {
+  transform: scale(1.05);
+}
+
+
+
+
+
+
+
 
 /* ---------- ADMIN EDITOR ---------- */
 .editor { display:none; padding:12px; margin:6px; background:#fff; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
