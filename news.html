@@ -98,10 +98,18 @@ header img{height:50px;width:50px;border-radius:6px;margin-right:8px;object-fit:
   </div>
 </div>
 
-<div id="zoomModal" class="zoom-modal flex">
-  <button class="zoom-close">X</button>
-  <img id="zoomImg" src="">
-</div>
+// Zoom open
+modalContent.querySelectorAll("img.image-zoom").forEach(img => {
+  img.onclick = (e) => {
+    e.stopPropagation();
+    zoomImg.src = img.src;
+    zoomModal.style.display = "flex";
+  }
+});
+
+// Zoom close
+document.querySelector(".zoom-close").onclick = () => zoomModal.style.display = "none";
+zoomModal.onclick = e => { if(e.target === zoomModal) zoomModal.style.display = "none"; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
